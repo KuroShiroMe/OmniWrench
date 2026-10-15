@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import shutil
+import ssl
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -11,6 +12,25 @@ from typing import Callable
 from omniwrench import APP_ID, __version__
 
 USER_AGENT = f"{APP_ID}/{__version__}"
+
+
+def _ssl_context() -> ssl.SSLContext:
+    """Zertifikatsprüfung über den Windows-Zertifikatspeicher (wie Browser).
+
+    Wichtig in Firmennetzen mit TLS-Inspection: Deren Stammzertifikate sind per GPO im
+    Windows-Speicher hinterlegt, erfüllen aber oft nicht die strengere X.509-Prüfung,
+    die Python ab 3.13 standardmäßig erzwingt.
+    """
+    try:
+        import truststore
+        return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+    except ImportError:
+        ctx = ssl.create_default_context()
+        ctx.verify_flags &= ~getattr(ssl, "VERIFY_X509_STRICT", 0)
+        return ctx
+
+
+_SSL = _ssl_context()
 
 # Optional gesetzt vom Hauptprogramm (aus dem Tresor): GitHub-Token für private Repos / höheres Rate-Limit
 github_token: str | None = None
@@ -49,7 +69,7 @@ def _request(url: str, accept: str | None = None) -> urllib.request.Request:
 def get_bytes(url: str, accept: str | None = None, timeout: float = 30) -> bytes:
     if not is_remote(url):
         return local_path(url).read_bytes()
-    with urllib.request.urlopen(_request(url, accept), timeout=timeout) as resp:
+    with urllib.request.urlopen(_request(url, accept), timeout=timeout, context=_SSL) as resp:
         return resp.read()
 
 
@@ -59,7 +79,7 @@ def download(url: str, target: Path, progress: Callable[[int, int], None] | None
     if not is_remote(url):
         shutil.copyfile(local_path(url), target)
         return target
-    with urllib.request.urlopen(_request(url, accept), timeout=60) as resp, open(target, "wb") as f:
+    with urllib.request.urlopen(_request(url, accept), timeout=60, context=_SSL) as resp, open(target, "wb") as f:
         total = int(resp.headers.get("Content-Length") or 0)
         done = 0
         while chunk := resp.read(256 * 1024):
