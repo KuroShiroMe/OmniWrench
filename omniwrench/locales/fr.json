@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "« {entry} » n'est pas une sous-classe de ToolBase",
   "err.checksum": "La somme de contrôle du téléchargement ne correspond pas - installation annulée.",
   "err.unsafe_path": "Chemin non sûr dans le paquet : {path}",
-  "err.min_app_version": "Cet outil nécessite Admin Tools {required} ou plus récent (installé : {installed}).",
+  "err.min_app_version": "Cet outil nécessite OmniWrench {required} ou plus récent (installé : {installed}).",
   "err.platform": "Cet outil ne prend pas en charge ce système d'exploitation.",
   "err.still_missing": "Des prérequis sont toujours manquants :",
   "err.installer_load": "Impossible de charger install.py",

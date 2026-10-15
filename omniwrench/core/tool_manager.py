@@ -18,8 +18,8 @@ from typing import Callable
 
 from PySide6.QtCore import QObject, Signal
 
-from admintools import __version__
-from admintools.sdk import InstallContext, ToolBase, ToolContext
+from omniwrench import __version__
+from omniwrench.sdk import InstallContext, ToolBase, ToolContext
 
 from . import i18n, prerequisites
 from .i18n import tr
@@ -58,7 +58,7 @@ class InstalledTool:
 
 
 def _module_prefix(tool_id: str) -> str:
-    return "admintools_tool_" + "".join(c if c.isalnum() else "_" for c in tool_id)
+    return "omniwrench_tool_" + "".join(c if c.isalnum() else "_" for c in tool_id)
 
 
 def _rmtree(path: Path) -> None:
@@ -150,7 +150,7 @@ class ToolManager(QObject):
             if digest.lower() != expected_sha256.lower():
                 raise ManifestError(tr("err.checksum"))
             progress(tr("prog.checksum_ok"))
-        with tempfile.TemporaryDirectory(prefix="admintools_pkg_") as tmp:
+        with tempfile.TemporaryDirectory(prefix="omniwrench_pkg_") as tmp:
             tmp_path = Path(tmp)
             with zipfile.ZipFile(zip_path) as zf:
                 for member in zf.namelist():

@@ -1,7 +1,7 @@
 {
   "format": 1,
-  "name": "Admin Tools Store",
-  "generated": "2026-10-15T10:06:55+00:00",
+  "name": "OmniWrench Store",
+  "generated": "2026-10-15T10:39:46+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -9,7 +9,7 @@
       "version": "1.1.0",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
-      "author": "Admin Tools",
+      "author": "DarkMatter",
       "category": "MS Server Tools/Active Directory",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
@@ -44,7 +44,7 @@
         }
       },
       "download_url": "packages/ms.ad-user-lookup-1.1.0.zip",
-      "sha256": "50ba295b4b097844d8cb475264a9a572feecbec33f9ec952e5ffe89e9d4aaaaf",
+      "sha256": "96d05eacad7082a5d4f97d6061c2af3aaee83cb42ee1bf5c95d0bf6f7da76cf3",
       "size": 5549
     },
     {
@@ -53,7 +53,7 @@
       "version": "1.1.0",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-      "author": "Admin Tools",
+      "author": "DarkMatter",
       "category": "Network/IP Tools",
       "color": "#0ea5e9",
       "entry": "tool:SubnetCalculator",
@@ -92,8 +92,8 @@
         }
       },
       "download_url": "packages/net.subnet-calculator-1.1.0.zip",
-      "sha256": "049b6873dd0ff2137b829d9dd1377f97d017e34840d915836514032f3852e4f0",
-      "size": 7204
+      "sha256": "64bd5317af7b2662b116820fe85980fcf171b6c668667682b1792b9965ef5e8b",
+      "size": 7208
     }
   ]
 }

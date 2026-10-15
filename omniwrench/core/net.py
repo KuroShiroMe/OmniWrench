@@ -8,7 +8,7 @@ import urllib.request
 from pathlib import Path
 from typing import Callable
 
-from admintools import APP_ID, __version__
+from omniwrench import APP_ID, __version__
 
 USER_AGENT = f"{APP_ID}/{__version__}"
 

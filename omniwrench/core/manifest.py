@@ -5,7 +5,7 @@ Jedes Tool ist ein Ordner (bzw. ZIP) mit mindestens diesen Dateien:
     tool.json    Metadaten  (Anzeigename, Beschreibung, Kategoriepfad, Version, Voraussetzungen ...)
     config.json  Einstellungen (Schema + Standardwerte der tool-spezifischen Einstellungen)
     install.py   Installationsroutine (check / install / uninstall)
-    <entry>.py   Python-Modul mit der Tool-Klasse (siehe admintools.sdk.ToolBase)
+    <entry>.py   Python-Modul mit der Tool-Klasse (siehe omniwrench.sdk.ToolBase)
 
 Details: docs/TOOL_ENTWICKLUNG.md
 """

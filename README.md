@@ -1,4 +1,6 @@
-# Admin Tools
+# OmniWrench
+
+*Das Universalwerkzeug für Administratoren, von **DarkMatter**.*
 
 Modulare Toolsammlung für Administratoren. Tools werden wie aus einem App-Store aus GitHub-Repositories
 installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, winget-Pakete, Python-Pakete).
@@ -20,7 +22,7 @@ installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, win
 * **Updates**: Das Hauptprogramm prüft GitHub Releases, die Tools werden per Versionsvergleich mit dem Store-Katalog
   aktualisiert.
 * **Mehrsprachig**: Deutsch, Englisch, Französisch, Spanisch sowie Badisch, Bayrisch, Scots und Posh English.
-  Die Sprachdateien liegen in `admintools/locales/` und in `<tool>/locales/`. Jedes Tool übernimmt automatisch die
+  Die Sprachdateien liegen in `omniwrench/locales/` und in `<tool>/locales/`. Jedes Tool übernimmt automatisch die
   Programmsprache, falls es sie mitbringt, sonst Englisch. In den Tool-Einstellungen lässt sich die Sprache pro Tool
   festlegen. Eine neue Sprache ergänzt man, indem man `en.json` kopiert, übersetzt und `_meta` anpasst;
   `python scripts/check_locales.py` zeigt fehlende Texte.
@@ -40,7 +42,7 @@ lokalen Entwicklungs-Store (`store/`) installieren.
 
 ```
 main.py                     Startpunkt
-admintools/
+omniwrench/
   sdk.py                    Öffentliche API für Tools (ToolBase, ToolContext, InstallContext)
   core/                     Logik ohne Oberfläche
     vault.py                Verschlüsselter Tresor (Passwort-/Zertifikat-Anmeldung)
@@ -64,15 +66,25 @@ docs/TOOL_ENTWICKLUNG.md    Anleitung für neue Tools
 
 | Pfad | Inhalt |
 |---|---|
-| `%APPDATA%\AdminTools\` | `settings.json`, `vault.json` (verschlüsselt), `tool_settings\`, `layout.json` |
-| `%LOCALAPPDATA%\AdminTools\` | `tools\` (installierte Tools), `tool_data\`, `logs\` |
+| `%APPDATA%\DarkMatter\OmniWrench\` | `settings.json`, `vault.json` (verschlüsselt), `tool_settings\`, `layout.json` |
+| `%LOCALAPPDATA%\DarkMatter\OmniWrench\` | `tools\` (installierte Tools), `tool_data\`, `logs\` |
 
-Mit der Umgebungsvariable `ADMINTOOLS_HOME` liegt alles in einem Ordner (portabler Betrieb, Tests).
+Mit der Umgebungsvariable `OMNIWRENCH_HOME` liegt alles in einem Ordner (portabler Betrieb, Tests).
 
-## GitHub einrichten
+## Veröffentlichen
 
-* **Tools:** `python scripts/build_store.py` ausführen und `store/` pushen. Die Repository-URL
-  `https://raw.githubusercontent.com/<owner>/<repo>/main/store/index.json` unter *Extras › Einstellungen › Repositories* eintragen.
-* **Hauptprogramm:** Release mit Tag `vX.Y.Z` und einem ZIP-Asset `AdminTools-X.Y.Z.zip` (kompletter Programmordner)
-  anlegen. `owner/repo` unter *Einstellungen › Updates* eintragen. Die Version steht in `admintools/__init__.py`.
-* Für private Repositories ein GitHub-Token hinterlegen. Es wird im Tresor gespeichert.
+Repository: [github.com/Steffi-Tech/OmniWrench](https://github.com/Steffi-Tech/OmniWrench). Das Programm ist
+standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
+
+* **Tools aktualisieren:** `version` in der `tool.json` erhöhen, `python scripts/build_store.py` ausführen,
+  `store/` committen und pushen. Der offizielle Store
+  (`https://raw.githubusercontent.com/Steffi-Tech/OmniWrench/main/store/index.json`) zeigt das Update sofort an.
+* **Hauptprogramm veröffentlichen:** Version in `omniwrench/__init__.py` erhöhen, committen, dann:
+
+  ```powershell
+  python scripts/build_release.py          # erzeugt dist\OmniWrench-X.Y.Z.zip aus dem letzten Commit
+  gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip --title "OmniWrench X.Y.Z" --notes "…"
+  ```
+
+  Installierte Programme finden das Release über *Extras › Nach Updates suchen* bzw. beim Start.
+* **Private Repositories** brauchen ein GitHub-Token (*Einstellungen › Updates*). Es wird im Tresor gespeichert.

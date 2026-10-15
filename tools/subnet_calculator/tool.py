@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QSpinBox, QSplitter, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from admintools.sdk import ToolBase
+from omniwrench.sdk import ToolBase
 
 THOUSANDS = {"de": ".", "fr": " ", "es": "."}
 

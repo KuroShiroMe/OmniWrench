@@ -7,10 +7,10 @@ from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget,
 )
 
-from admintools import APP_NAME, __version__
-from admintools.core import certificates
-from admintools.core.i18n import tr
-from admintools.core.vault import Vault, VaultError
+from omniwrench import APP_NAME, VENDOR, __version__
+from omniwrench.core import certificates
+from omniwrench.core.i18n import tr
+from omniwrench.core.vault import Vault, VaultError
 
 from . import theme
 from .widgets import label, make_button
@@ -90,6 +90,7 @@ class LoginDialog(QDialog):
         self.lay.setSpacing(10)
 
         self.lay.addWidget(label(APP_NAME, "PageTitle"))
+        self.lay.addWidget(label(f"by {VENDOR}", "Muted"))
         if self.setup_mode:
             self.lay.addWidget(label(tr("login.setup_intro"), "PageSubtitle", wrap=True))
             self._build_setup()

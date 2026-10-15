@@ -5,18 +5,28 @@ from __future__ import annotations
 import copy
 from typing import Any
 
+from omniwrench import GITHUB_REPO, OFFICIAL_STORE_URL, VENDOR
+
 from .jsonio import read_json, write_json
 from .paths import APP_DIR, SETTINGS_FILE
 
+def _default_repositories() -> list[dict]:
+    repos = []
+    # Beim Start aus dem Quellcode zusätzlich den lokal gebauten Store anbieten (für Tool-Entwicklung)
+    local_store = APP_DIR / "store" / "index.json"
+    if local_store.exists():
+        repos.append({"name": "Local development store", "url": str(local_store), "enabled": True})
+    repos.append({"name": f"{VENDOR} Store", "url": OFFICIAL_STORE_URL, "enabled": True})
+    return repos
+
+
 DEFAULTS: dict[str, Any] = {
     # GitHub-Repository des Hauptprogramms für Updates ("owner/repo")
-    "app_update_repo": "",
+    "app_update_repo": GITHUB_REPO,
     "check_updates_on_start": True,
     "include_prereleases": False,
     # Tool-Repositories: Liste von index.json-URLs (https://, file:// oder lokaler Pfad)
-    "repositories": [
-        {"name": "Local development store", "url": str(APP_DIR / "store" / "index.json"), "enabled": True},
-    ],
+    "repositories": _default_repositories(),
     "theme": "dark",
     # Sprache des Hauptprogramms (leer = Windows-Anzeigesprache, sonst Englisch)
     "language": "",

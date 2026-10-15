@@ -9,9 +9,9 @@ from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLineEdit, QScrollArea, QSplitter, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
-from admintools.core.i18n import tr
-from admintools.core.repository import CatalogEntry
-from admintools.core.versioning import is_newer
+from omniwrench.core.i18n import tr
+from omniwrench.core.repository import CatalogEntry
+from omniwrench.core.versioning import is_newer
 
 from .widgets import clear_layout, label, make_button, tool_icon
 

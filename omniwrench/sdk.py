@@ -2,7 +2,7 @@
 
 Ein Tool importiert ausschließlich aus diesem Modul (und PySide6):
 
-    from admintools.sdk import ToolBase
+    from omniwrench.sdk import ToolBase
 
     class Tool(ToolBase):
         def create_widget(self, parent):
@@ -19,9 +19,9 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
-from admintools import __version__ as APP_VERSION  # noqa: F401 - Re-Export für Tools
-from admintools.core.i18n import tool_translator, tr
-from admintools.core.powershell import PSResult, ps_quote, run_ps, run_ps_elevated, run_ps_json
+from omniwrench import __version__ as APP_VERSION  # noqa: F401 - Re-Export für Tools
+from omniwrench.core.i18n import tool_translator, tr
+from omniwrench.core.powershell import PSResult, ps_quote, run_ps, run_ps_elevated, run_ps_json
 
 # Reservierter Einstellungsschlüssel für die Sprachwahl eines Tools ("auto" oder Sprachcode)
 LANGUAGE_KEY = "_language"
@@ -29,9 +29,9 @@ LANGUAGE_KEY = "_language"
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QWidget
 
-    from admintools.core.manifest import ToolManifest
-    from admintools.core.tool_settings import ToolSettingsStore
-    from admintools.core.vault import Vault
+    from omniwrench.core.manifest import ToolManifest
+    from omniwrench.core.tool_settings import ToolSettingsStore
+    from omniwrench.core.vault import Vault
 
 __all__ = [
     "APP_VERSION", "ToolBase", "ToolContext", "InstallContext", "PSResult", "ps_quote", "run_async", "LANGUAGE_KEY",
@@ -43,7 +43,7 @@ def run_async(fn, on_done=None, on_error=None, on_progress=None) -> None:
 
     Ist on_progress gesetzt, erhält fn als einziges Argument eine progress(str)-Funktion.
     """
-    from admintools.ui.workers import run_async as _run_async
+    from omniwrench.ui.workers import run_async as _run_async
     _run_async(fn, on_done, on_error, on_progress)
 
 

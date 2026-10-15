@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' isnae a ToolBase",
   "err.checksum": "The checksum disnae match - nae chance, install stopped.",
   "err.unsafe_path": "Dodgy path in the package: {path}",
-  "err.min_app_version": "This tool needs Admin Tools {required} or newer (ye've got: {installed}).",
+  "err.min_app_version": "This tool needs OmniWrench {required} or newer (ye've got: {installed}).",
   "err.platform": "This tool disnae work on this operatin system.",
   "err.still_missing": "Still missin some bits:",
   "err.installer_load": "Couldnae load install.py",

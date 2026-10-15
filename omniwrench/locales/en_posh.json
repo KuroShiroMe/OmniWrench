@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' is not of the ToolBase lineage",
   "err.checksum": "The checksum does not tally - installation abandoned forthwith.",
   "err.unsafe_path": "A most suspicious path in the parcel: {path}",
-  "err.min_app_version": "This instrument requires Admin Tools {required} or later (in residence: {installed}).",
+  "err.min_app_version": "This instrument requires OmniWrench {required} or later (in residence: {installed}).",
   "err.platform": "This instrument does not consort with this operating system.",
   "err.still_missing": "Necessities remain outstanding:",
   "err.installer_load": "install.py could not be summoned",

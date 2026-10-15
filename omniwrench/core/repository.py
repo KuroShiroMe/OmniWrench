@@ -84,6 +84,6 @@ def available_updates(catalog: Catalog, manager: ToolManager) -> dict[str, Catal
 
 def install_from_catalog(entry: CatalogEntry, manager: ToolManager, progress: Callable[[str], None]) -> None:
     progress(tr("prog.download", name=entry.manifest.display_name, version=entry.manifest.version))
-    with tempfile.TemporaryDirectory(prefix="admintools_dl_") as tmp:
+    with tempfile.TemporaryDirectory(prefix="omniwrench_dl_") as tmp:
         zip_path = net.download(entry.download_url, Path(tmp) / "package.zip")
         manager.install_zip(zip_path, progress, expected_sha256=entry.manifest.sha256)

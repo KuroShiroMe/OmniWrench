@@ -1,8 +1,8 @@
-"""Startpunkt von Admin Tools."""
+"""Startpunkt von OmniWrench."""
 
 import sys
 
-from admintools.app import main
+from omniwrench.app import main
 
 if __name__ == "__main__":
     sys.exit(main())

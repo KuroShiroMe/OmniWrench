@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' ist keine Unterklasse von ToolBase",
   "err.checksum": "Prüfsumme des Downloads stimmt nicht überein - Installation abgebrochen.",
   "err.unsafe_path": "Unsicherer Pfad im Paket: {path}",
-  "err.min_app_version": "Das Tool benötigt Admin Tools {required} oder neuer (installiert: {installed}).",
+  "err.min_app_version": "Das Tool benötigt OmniWrench {required} oder neuer (installiert: {installed}).",
   "err.platform": "Das Tool unterstützt dieses Betriebssystem nicht.",
   "err.still_missing": "Voraussetzungen fehlen weiterhin:",
   "err.installer_load": "install.py konnte nicht geladen werden",

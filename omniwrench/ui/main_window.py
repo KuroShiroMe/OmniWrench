@@ -18,16 +18,16 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from admintools import APP_NAME, __version__
-from admintools.core import app_updater, repository
-from admintools.core.i18n import tr
-from admintools.core.jsonio import read_json, write_json
-from admintools.core.paths import APP_DIR, LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
-from admintools.core.repository import Catalog, CatalogEntry
-from admintools.core.settings import AppSettings
-from admintools.core.tool_manager import ToolManager
-from admintools.core.vault import Vault
-from admintools.sdk import ToolBase
+from omniwrench import APP_NAME, GITHUB_REPO, VENDOR, __version__
+from omniwrench.core import app_updater, repository
+from omniwrench.core.i18n import tr
+from omniwrench.core.jsonio import read_json, write_json
+from omniwrench.core.paths import APP_DIR, LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
+from omniwrench.core.repository import Catalog, CatalogEntry
+from omniwrench.core.settings import AppSettings
+from omniwrench.core.tool_manager import ToolManager
+from omniwrench.core.vault import Vault
+from omniwrench.sdk import ToolBase
 
 from . import theme
 from .home_page import HomePage
@@ -623,7 +623,8 @@ class MainWindow(QMainWindow):
     def _about(self) -> None:
         QMessageBox.about(self, tr("about.title", app=APP_NAME),
                           f"<h3>{APP_NAME} {__version__}</h3><p>{tr('about.text')}</p>"
-                          f"<p>{tr('about.installed', count=len(self.manager.tools))}</p>")
+                          f"<p>{tr('about.installed', count=len(self.manager.tools))}</p>"
+                          f"<p>© {VENDOR} · <a href='https://github.com/{GITHUB_REPO}'>github.com/{GITHUB_REPO}</a></p>")
 
     def closeEvent(self, event):  # noqa: N802
         if not self._force_quit:

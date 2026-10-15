@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' is not a subclass of ToolBase",
   "err.checksum": "Checksum of the download does not match - installation aborted.",
   "err.unsafe_path": "Unsafe path in package: {path}",
-  "err.min_app_version": "This tool requires Admin Tools {required} or newer (installed: {installed}).",
+  "err.min_app_version": "This tool requires OmniWrench {required} or newer (installed: {installed}).",
   "err.platform": "This tool does not support this operating system.",
   "err.still_missing": "Requirements are still missing:",
   "err.installer_load": "install.py could not be loaded",

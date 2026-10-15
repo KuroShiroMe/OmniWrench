@@ -12,8 +12,8 @@ from PySide6.QtWidgets import (
     QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 
-from admintools.core.i18n import tr
-from admintools.core.manifest import ToolManifest
+from omniwrench.core.i18n import tr
+from omniwrench.core.manifest import ToolManifest
 
 from . import theme
 from .workers import run_async

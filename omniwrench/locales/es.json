@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "«{entry}» no es una subclase de ToolBase",
   "err.checksum": "La suma de comprobación de la descarga no coincide - instalación cancelada.",
   "err.unsafe_path": "Ruta no segura en el paquete: {path}",
-  "err.min_app_version": "Esta herramienta requiere Admin Tools {required} o posterior (instalada: {installed}).",
+  "err.min_app_version": "Esta herramienta requiere OmniWrench {required} o posterior (instalada: {installed}).",
   "err.platform": "Esta herramienta no es compatible con este sistema operativo.",
   "err.still_missing": "Siguen faltando requisitos:",
   "err.installer_load": "No se pudo cargar install.py",

@@ -11,19 +11,19 @@ from PySide6.QtCore import QLibraryInfo, Qt, QTranslator
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from admintools import APP_ID, APP_NAME, __version__
-from admintools.core import i18n, net, paths
-from admintools.core.i18n import tr
-from admintools.core.settings import AppSettings
-from admintools.core.tool_manager import ToolManager
-from admintools.core.vault import Vault
+from omniwrench import APP_ID, APP_NAME, __version__
+from omniwrench.core import i18n, net, paths
+from omniwrench.core.i18n import tr
+from omniwrench.core.settings import AppSettings
+from omniwrench.core.tool_manager import ToolManager
+from omniwrench.core.vault import Vault
 
 _qt_translator: QTranslator | None = None
 
 
 def _setup_logging() -> None:
     handler = logging.handlers.RotatingFileHandler(
-        paths.LOG_DIR / "admintools.log", maxBytes=2_000_000, backupCount=3, encoding="utf-8")
+        paths.LOG_DIR / "omniwrench.log", maxBytes=2_000_000, backupCount=3, encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s %(name)s: %(message)s"))
     root = logging.getLogger()
     root.setLevel(logging.INFO)
@@ -34,7 +34,7 @@ def _setup_logging() -> None:
 
 def _excepthook(exc_type, exc, tb) -> None:
     text = "".join(traceback.format_exception(exc_type, exc, tb))
-    logging.getLogger("admintools").error("Unbehandelter Fehler:\n%s", text)
+    logging.getLogger("omniwrench").error("Unbehandelter Fehler:\n%s", text)
     if QApplication.instance():
         QMessageBox.critical(None, APP_NAME, tr("app.unexpected_error", error=exc))
 
@@ -59,7 +59,7 @@ def main() -> int:
     paths.ensure_dirs()
     _setup_logging()
     sys.excepthook = _excepthook
-    logging.getLogger("admintools").info("%s %s startet", APP_NAME, __version__)
+    logging.getLogger("omniwrench").info("%s %s startet", APP_NAME, __version__)
 
     if sys.platform == "win32":
         import ctypes
@@ -73,8 +73,8 @@ def main() -> int:
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(QIcon(str(paths.RESOURCES_DIR / "app.svg")))
 
-    from admintools.ui import theme  # nach QApplication importieren
-    from admintools.ui.login_dialog import LoginDialog
+    from omniwrench.ui import theme  # nach QApplication importieren
+    from omniwrench.ui.login_dialog import LoginDialog
 
     settings = AppSettings()
     apply_language(app, settings.get("language", ""))
@@ -85,7 +85,7 @@ def main() -> int:
         return 0
     net.github_token = vault.get("app:github_token") or None
 
-    from admintools.ui.main_window import MainWindow
+    from omniwrench.ui.main_window import MainWindow
 
     manager = ToolManager(vault)
     windows: list[MainWindow] = []

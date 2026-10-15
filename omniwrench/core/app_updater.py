@@ -1,7 +1,7 @@
 """Update-Prüfung für das Hauptprogramm über GitHub Releases.
 
 Erwartet im konfigurierten Repository ("owner/repo") Releases mit Tag "vX.Y.Z"
-und einem ZIP-Asset, dessen Name mit "AdminTools" beginnt. Das ZIP enthält den
+und einem ZIP-Asset, dessen Name mit "OmniWrench" beginnt. Das ZIP enthält den
 kompletten Programmordner und wird nach dem Beenden über den bestehenden
 Ordner entpackt (siehe apply_update).
 """
@@ -16,7 +16,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from admintools import __version__
+from omniwrench import __version__
 
 from . import net
 from .paths import APP_DIR
@@ -48,7 +48,7 @@ def check_for_update(repo: str, include_prereleases: bool = False) -> AppRelease
             return None  # Releases sind neueste zuerst sortiert
         asset = next(
             (a for a in rel.get("assets", [])
-             if a["name"].lower().endswith(".zip") and a["name"].lower().startswith("admintools")),
+             if a["name"].lower().endswith(".zip") and a["name"].lower().startswith("omniwrench")),
             None,
         )
         return AppRelease(
@@ -62,7 +62,7 @@ def check_for_update(repo: str, include_prereleases: bool = False) -> AppRelease
 
 
 def download_update(release: AppRelease) -> Path:
-    target = Path(tempfile.mkdtemp(prefix="admintools_update_")) / "update.zip"
+    target = Path(tempfile.mkdtemp(prefix="omniwrench_update_")) / "update.zip"
     return net.download(release.asset_url, target)
 
 

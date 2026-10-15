@@ -60,7 +60,7 @@ def compare(locales_dir: Path, required: set[str]) -> int:
 
 def app_keys() -> set[str]:
     keys: set[str] = set()
-    for py in (ROOT / "admintools").rglob("*.py"):
+    for py in (ROOT / "omniwrench").rglob("*.py"):
         keys |= set(KEY_PATTERN.findall(py.read_text(encoding="utf-8")))
     # dynamisch zusammengesetzte Schlüssel
     keys |= {f"req.{k}" for k in ("python", "windows_capabilities", "windows_features", "powershell_modules", "winget")}
@@ -80,5 +80,5 @@ if __name__ == "__main__":
         tool = Path(sys.argv[1])
         rc = compare(tool / "locales", tool_keys(tool))
     else:
-        rc = compare(ROOT / "admintools" / "locales", app_keys())
+        rc = compare(ROOT / "omniwrench" / "locales", app_keys())
     sys.exit(1 if rc else 0)

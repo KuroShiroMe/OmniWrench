@@ -11,13 +11,13 @@ from PySide6.QtWidgets import (
     QSpinBox, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
-from admintools.core import i18n, net
-from admintools.core.i18n import AUTO, Translator, tr
-from admintools.core.manifest import SettingDef
-from admintools.core.settings import AppSettings
-from admintools.core.tool_manager import InstalledTool
-from admintools.core.vault import Vault
-from admintools.sdk import LANGUAGE_KEY
+from omniwrench.core import i18n, net
+from omniwrench.core.i18n import AUTO, Translator, tr
+from omniwrench.core.manifest import SettingDef
+from omniwrench.core.settings import AppSettings
+from omniwrench.core.tool_manager import InstalledTool
+from omniwrench.core.vault import Vault
+from omniwrench.sdk import LANGUAGE_KEY
 
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
 from .widgets import label, make_button, tool_icon

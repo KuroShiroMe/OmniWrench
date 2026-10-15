@@ -22,7 +22,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from admintools.core.manifest import validate_package  # noqa: E402
+from omniwrench.core.manifest import validate_package  # noqa: E402
 
 EXCLUDE_DIRS = {"__pycache__", "_lib", ".git"}
 EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
@@ -31,7 +31,7 @@ EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
 def build(tools_dir: Path, store_dir: Path, base_url: str | None) -> None:
     packages = store_dir / "packages"
     packages.mkdir(parents=True, exist_ok=True)
-    index = {"format": 1, "name": "Admin Tools Store",
+    index = {"format": 1, "name": "OmniWrench Store",
              "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "tools": []}
 
     for tool_dir in sorted(p for p in tools_dir.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))):

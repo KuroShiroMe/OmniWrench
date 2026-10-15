@@ -10,7 +10,7 @@ from PySide6.QtWidgets import (
     QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from admintools.sdk import ToolBase, run_async
+from omniwrench.sdk import ToolBase, run_async
 
 COLUMNS = ["SamAccountName", "Name", "Enabled", "LockedOut", "LastLogonDate", "mail"]
 

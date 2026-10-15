@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' isch kei ToolBase",
   "err.checksum": "D Prüfsumm bassd nit - Finger weg, Installation abbroche.",
   "err.unsafe_path": "Komischer Pfad im Paket: {path}",
-  "err.min_app_version": "Des Werkzeigle will Admin Tools {required} oder neier (druff: {installed}).",
+  "err.min_app_version": "Des Werkzeigle will OmniWrench {required} oder neier (druff: {installed}).",
   "err.platform": "Des Werkzeigle kann mit dem Betriebssystem nix aafange.",
   "err.still_missing": "Do fehlt immer no ebbes:",
   "err.installer_load": "install.py will nit lade",

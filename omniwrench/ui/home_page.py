@@ -7,8 +7,8 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLineEdit, QScrollArea, QVBoxLayout, QWidget
 
-from admintools.core.i18n import tr
-from admintools.core.tool_manager import InstalledTool
+from omniwrench.core.i18n import tr
+from omniwrench.core.tool_manager import InstalledTool
 
 from .widgets import FlowLayout, clear_layout, label, make_button, tool_icon
 

@@ -244,7 +244,7 @@
   "err.entry_not_toolbase": "'{entry}' is koa ToolBase",
   "err.checksum": "De Prüfsumm passt ned - Finger weg, Installation obrochn.",
   "err.unsafe_path": "Gspassiger Pfad im Packerl: {path}",
-  "err.min_app_version": "Des Werkzeigl mog Admin Tools {required} oda neier (drauf: {installed}).",
+  "err.min_app_version": "Des Werkzeigl mog OmniWrench {required} oda neier (drauf: {installed}).",
   "err.platform": "Des Werkzeigl ko mit dem Betriebssystem nix ofanga.",
   "err.still_missing": "Do fehlt oiwei no wos:",
   "err.installer_load": "install.py mog ned lodn",

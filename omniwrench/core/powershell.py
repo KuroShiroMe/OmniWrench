@@ -83,7 +83,7 @@ def run_ps_elevated(script: str, timeout: float | None = 3600) -> PSResult:
     Das Skript wird in eine Temp-Datei geschrieben, die Ausgabe in eine Logdatei
     umgeleitet und nach Abschluss zurückgelesen.
     """
-    workdir = Path(tempfile.mkdtemp(prefix="admintools_elev_"))
+    workdir = Path(tempfile.mkdtemp(prefix="omniwrench_elev_"))
     script_file = workdir / "run.ps1"
     log_file = workdir / "run.log"
     wrapped = (

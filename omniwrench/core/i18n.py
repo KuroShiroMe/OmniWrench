@@ -12,7 +12,7 @@ Sprachdateien sind flache JSON-Dateien "<code>.json" mit Schlüssel -> Text:
 * "_meta.fallback" legt fest, welche Sprache für fehlende Schlüssel einspringt
   (z. B. Badisch -> Deutsch -> Englisch). Englisch ist immer die letzte Stufe.
 
-Hauptprogramm:  admintools/locales/<code>.json
+Hauptprogramm:  omniwrench/locales/<code>.json
 Tools:          <tool>/locales/<code>.json   (siehe docs/TOOL_ENTWICKLUNG.md)
 """
 

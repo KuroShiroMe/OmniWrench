@@ -1,10 +1,10 @@
 """Zentrale Pfade der Anwendung.
 
 Standard:
-    Roaming (%APPDATA%\\AdminTools)       -> Einstellungen, Tresor, Tool-Einstellungen
-    Lokal   (%LOCALAPPDATA%\\AdminTools)  -> installierte Tools, Cache, Logs
+    Roaming (%APPDATA%\\DarkMatter\\OmniWrench)       -> Einstellungen, Tresor, Tool-Einstellungen
+    Lokal   (%LOCALAPPDATA%\\DarkMatter\\OmniWrench)  -> installierte Tools, Cache, Logs
 
-Mit der Umgebungsvariable ADMINTOOLS_HOME kann alles in einen Ordner
+Mit der Umgebungsvariable OMNIWRENCH_HOME kann alles in einen Ordner
 umgeleitet werden (z. B. für eine portable Installation).
 """
 
@@ -14,17 +14,17 @@ import os
 import sys
 from pathlib import Path
 
-from admintools import APP_ID
+from omniwrench import APP_ID, VENDOR
 
 
 def _base_dirs() -> tuple[Path, Path]:
-    home = os.environ.get("ADMINTOOLS_HOME")
+    home = os.environ.get("OMNIWRENCH_HOME")
     if home:
         base = Path(home)
         return base / "config", base / "local"
     roaming = Path(os.environ.get("APPDATA", Path.home() / "AppData" / "Roaming"))
     local = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
-    return roaming / APP_ID, local / APP_ID
+    return roaming / VENDOR / APP_ID, local / VENDOR / APP_ID
 
 
 CONFIG_DIR, LOCAL_DIR = _base_dirs()

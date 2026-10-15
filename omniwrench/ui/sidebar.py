@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QLineEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
-from admintools.core.i18n import tr
+from omniwrench.core.i18n import tr
 
 from .widgets import label, make_button, tool_icon
 
