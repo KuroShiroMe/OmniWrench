@@ -1,0 +1,57 @@
+# Architecture (where is what)
+
+```
+main.py                       -> omniwrench.app.main()
+omniwrench/__init__.py        APP_NAME, VENDOR, __version__, GITHUB_REPO, OFFICIAL_STORE_URL
+omniwrench/app.py             logging, language+Qt translator, theme, LoginDialog, credentials.init, MainWindow loop
+                              (restartRequested -> rebuild window without re-login; setQuitOnLastWindowClosed(False))
+omniwrench/sdk.py             PUBLIC API for tools: ToolBase, ToolContext, InstallContext, run_async, LANGUAGE_KEY,
+                              pick_credential, CredentialField, PSResult, ps_quote
+omniwrench/core/              (Qt-free except tool_manager QObject)
+  paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
+  vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>"
+  certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
+  powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC, log file + icacls)
+  manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
+                              translations…), SettingDef, validate_package, localized()/display_name/category_path
+  tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners
+  tool_manager.py             ToolManager(QObject): refresh, create_instance, install_zip/dir (backup+rollback),
+                              _install_prerequisites (check() first), uninstall, repair; module prefix omniwrench_tool_<id>
+  prerequisites.py            pip (_lib), elevated capabilities/features, PS modules, winget
+  repository.py               load_catalog(repos), available_updates, install_from_catalog
+  app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
+  net.py                      urllib + truststore SSL, github_token header
+  i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language
+  icons.py                    Lucide library (names, svg), resolve(icon, icon_text, name, dir, data) -> IconSpec
+  credentials.py              Credential, CredentialProvider, LocalProvider (vault "app:credentials"),
+                              CredentialManager (providers list, all(), resolve(ref)), generate_password; init()/manager()
+  settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes)
+omniwrench/ui/
+  main_window.py              QtAds dock manager; home/store docks; open_tool/close_tool/reload_tool_tabs;
+                              tool menu; install/uninstall/check/repair; updates; lock; layout save/restore
+  home_page.py                ToolTile (FitLabel), DetailsPanel, HomePage (filter, select_tool)
+  store_page.py               StoreCard, StorePage (category tree, filters)
+  sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
+  settings_dialogs.py         _Field/build_settings_form (schema -> widgets, translated via tool locale),
+                              ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
+  credentials.py              PasswordEdit, CredentialEditDialog, PasswordManagerWidget/Dialog,
+                              CredentialPickerDialog, pick_credential, CredentialField (ref linking)
+  login_dialog.py             setup/unlock, CertificateCombo
+  icon_browser.py             Extras › icon library dialog (simple)
+  widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog
+  theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly
+  workers.py                  run_async (QThreadPool, signals)
+omniwrench/locales/*.json     8 languages, ~280 keys
+omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
+tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup)
+store/                        index.json + packages/*.zip (generated, committed)
+scripts/                      build_store, build_release, check_locales, update_icons
+docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
+```
+
+## Key mechanisms
+- Tool loading: package `omniwrench_tool_<id>` via importlib with submodule_search_locations; `_lib` added to sys.path.
+- Settings value of type credential: `{"username","password"}` or with `"ref": "local:<id>"` (linked). get_credential resolves ref.
+- Tool language: reserved setting key `_language`; change -> MainWindow.reload_tool_tabs (new instance).
+- Layout persistence: layout.json (geometry, QtAds state, open tool dock names `tool:<id>:<n>`).
+- Store index entries = tool.json + download_url + sha256 + translations (+ icon_data for custom image icons).
