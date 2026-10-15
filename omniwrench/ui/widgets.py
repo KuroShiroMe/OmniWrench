@@ -58,8 +58,8 @@ def make_button(text: str, primary: bool = False, danger: bool = False, on_click
     return btn
 
 
-def label(text: str, object_name: str = "", wrap: bool = False) -> QLabel:
-    lbl = QLabel(text)
+def label(text: str, object_name: str = "", wrap: bool = False, parent: QWidget | None = None) -> QLabel:
+    lbl = QLabel(text, parent)
     if object_name:
         lbl.setObjectName(object_name)
     lbl.setWordWrap(wrap)

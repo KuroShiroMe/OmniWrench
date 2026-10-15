@@ -114,6 +114,17 @@ def stylesheet(c: dict[str, str]) -> str:
     #ToolCard {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 10px; }}
     #ToolCard:hover {{ border-color: {c['accent']}; background: {c['surface2']}; }}
     #ToolCard QLabel {{ background: transparent; }}
+    #ToolTile {{ background: transparent; border: 1px solid transparent; border-radius: 12px; }}
+    #ToolTile:hover {{ background: {c['surface']}; border-color: {c['border']}; }}
+    #ToolTile[selected="true"] {{ background: {c['surface2']}; border-color: {c['accent']}; }}
+    #ToolTile QLabel {{ background: transparent; }}
+    #TileName {{ font-size: 9.5pt; }}
+    QLabel#UpdateDot {{ background: {c['warning']}; border-radius: 5px; }}
+    #DetailsPanel {{ background: {c['surface']}; border-left: 1px solid {c['border']}; }}
+    #DetailsPanel QScrollArea, #DetailsContent {{ background: {c['surface']}; }}
+    QPushButton#FlatButton {{ background: transparent; border: none; padding: 4px 8px; color: {c['muted']}; }}
+    QPushButton#FlatButton:hover {{ color: {c['text']}; background: {c['surface2']}; }}
+
     #CardTitle {{ font-size: 11pt; font-weight: 600; }}
     #CardMeta {{ color: {c['muted']}; font-size: 8.5pt; }}
     #CardDesc {{ color: {c['text']}; }}
@@ -134,9 +145,11 @@ def ads_stylesheet(c: dict[str, str] | None = None) -> str:
     ads--CDockContainerWidget {{ background: {c['bg']}; }}
     ads--CDockAreaWidget {{ background: {c['bg']}; }}
     ads--CDockAreaTitleBar {{ background: {c['bg']}; border-bottom: 1px solid {c['border']}; }}
-    ads--CDockWidgetTab {{ background: {c['bg']}; border: none; padding: 0 4px; }}
+    ads--CDockWidgetTab {{ background: {c['bg']}; border: none; border-top: 2px solid transparent;
+                           padding: 4px 6px 4px 8px; }}
     ads--CDockWidgetTab[activeTab="true"] {{ background: {c['surface']}; border-top: 2px solid {c['accent']}; }}
-    ads--CDockWidgetTab QLabel {{ color: {c['muted']}; padding: 4px; }}
+    /* Kein padding am Label: QtAds berechnet die Tab-Breite aus dem Text, Padding schneidet ihn sonst ab */
+    ads--CDockWidgetTab QLabel {{ color: {c['muted']}; background: transparent; }}
     ads--CDockWidgetTab[activeTab="true"] QLabel {{ color: {c['text']}; }}
     ads--CDockWidget {{ background: {c['bg']}; }}
     ads--CDockSplitter::handle {{ background: {c['border']}; }}

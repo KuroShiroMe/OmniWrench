@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "Bavarian", "native": "Boarisch", "fallback": "de"},
-
+  "_meta": {
+    "name": "Bavarian",
+    "native": "Boarisch",
+    "fallback": "de"
+  },
   "common.add": "Dazuadoa",
   "common.close": "Zuamacha",
   "common.error_short": "Zefix: {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Wegdoa",
   "common.version": "Version {version}",
   "category.other": "Sonstigs Glump",
-
   "nav.home": "Dahoam",
   "nav.store": "Kramerladn",
   "sidebar.installed": "Meine Werkzeigl",
   "sidebar.filter": "Suacha …",
-
   "menu.file": "&Datei",
   "menu.install_zip": "Werkzeigl aus ana &ZIP-Datei draufspuin …",
   "menu.install_folder": "Werkzeigl aus am &Ordner draufspuin …",
@@ -35,7 +36,6 @@
   "about.text": "A Kistn voller Werkzeigl für Admins - da schaugst, gell?",
   "about.installed": "Werkzeigl drauf: {count}",
   "app.unexpected_error": "Kruzifix, do is wos schiafganga:\n\n{error}\n\nGenauers steht im Log-Ordner.",
-
   "home.title": "Meine Werkzeigl",
   "home.subtitle": "{count} Werkzeigl drauf",
   "home.subtitle_updates": "{count} Update(s) wartn",
@@ -44,7 +44,6 @@
   "home.empty_title": "No gar nix drauf",
   "home.empty_text": "Im Kramerladn findst Werkzeigl, sauber nach Sortn sortiert.",
   "home.update_badge": "Neichs: {version}",
-
   "store.loading": "Katalog werd ghoit …",
   "store.search": "Im Kramerladn suacha …",
   "store.refresh": "Nomoi schaugn",
@@ -61,7 +60,6 @@
   "store.update_to": "Auf {version} bringa",
   "store.empty": "Do is nix.",
   "store.error": "Da Kramerladn spinnt: {error}",
-
   "toolmenu.settings": "Eistellunga …",
   "toolmenu.update": "Aufpolieren",
   "toolmenu.update_to": "Auf {version} bringa",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Owaschmeißn …",
   "tool.start_error_title": "Des mog ned",
   "tool.start_error": "'{name}' mog oafach ned ospringa:\n\n{error}",
-
   "install.tool_open_title": "Is no offn",
   "install.tool_open": "'{name}' is no offn und werd jetz zuagmacht. Weidamacha?",
   "install.requirements_title": "Des braucht's no",
@@ -95,7 +92,6 @@
   "task.done": "{title} - fertig",
   "task.failed": "{title} - in d Hosn ganga",
   "task.error": "ZEFIX: {error}",
-
   "updates.searching": "Schau nach Neichkeitn …",
   "updates.tools_available": "{count} Werkzeigl-Update(s) do.",
   "updates.tools_current": "Ois auf am neiestn Stand, fei.",
@@ -113,7 +109,6 @@
   "updates.later": "Späda",
   "updates.downloading": "Hoi {app} {version} owa …",
   "updates.restarting": "Owaglodn. Des Programm startet jetz nei.",
-
   "login.title_setup": "Eirichtn",
   "login.title_unlock": "Omeidn",
   "login.setup_intro": "Griaß di! Sog, wia des Programm zuagsperrt wern soi. Passwörter vo de Werkzeigl wern mit dem Schlüssl verschlüsselt aufghobn.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nFingerabdruck: {thumb}\nGüitig bis: {date}",
   "login.checking": "Schau ma des Passwort o …",
   "login.cert_busy": "Meid di mit Zertifikat o … (vielleicht PIN eigebn)",
-
   "cert.loading": "Zertifikate wern ghoit …",
   "cert.reload": "Zertifikate nomoi hoin",
   "cert.none_found": "Koa passends Zertifikat gfundn",
   "cert.choose": "– such wos aus –",
   "cert.tooltip": "{subject}\nAussteller: {issuer}",
   "cert.display": "{name}  (güitig bis {date}, {thumb}…)",
-
   "settings.tool_title": "Eistellunga - {name}",
   "settings.tool_language": "Sprooch",
   "settings.tool_language_hint": "'Vo sejba' nimmt de Sprooch vom Hauptprogramm, wenn's Werkzeigl de ko, sonst Englisch.",
@@ -158,7 +151,6 @@
   "settings.browse": "Suacha …",
   "settings.username_placeholder": "Benutzername (z. B. DOMÄNE\\admin)",
   "settings.password_placeholder": "Passwort",
-
   "appsettings.title": "Eistellunga",
   "appsettings.tab_general": "Allgemein",
   "appsettings.tab_repos": "Repositories",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Zertifikat dazuadoa",
   "appsettings.add_cert_text": "Such da a RSA-Zertifikat mit privatm Schlüssl ausm Benutzerspeicher aus:",
   "appsettings.remove_method_confirm": "De Omeideart wirkle wegdoa?",
-
   "req.python": "Python-Packerl",
   "req.windows_capabilities": "Windows-Funktion",
   "req.windows_features": "Windows-Feature",
   "req.powershell_modules": "PowerShell-Modul",
   "req.winget": "winget-Packerl",
-
   "prog.download": "Hoi {name} {version} owa …",
   "prog.checksum_ok": "Prüfsumm passt",
   "prog.package_ok": "Packerl '{name}' {version} ogschaut - passt",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Schau nachm PowerShell-Modul {name} …",
   "prog.check_winget": "Schau nachm winget-Packerl {name} …",
   "prog.pip_install": "Spui Python-Packerl drauf: {packages}",
-
   "err.vault_need_method": "A Omeideart muaßt scho hom.",
   "err.vault_cert_test": "Des Zertifikat hod an Test ned bestandn.",
   "err.vault_wrong_password": "Foischs Masterpasswort - nomoi!",
@@ -248,5 +237,19 @@
   "err.platform": "Des Werkzeigl ko mit dem Betriebssystem nix ofanga.",
   "err.still_missing": "Do fehlt oiwei no wos:",
   "err.installer_load": "install.py mog ned lodn",
-  "err.catalog_entry": "Eitrag hin ({error})"
+  "err.catalog_entry": "Eitrag hin ({error})",
+  "home.hint": "Oamoi klicka zoagt de Details, zwoamoi macht's Werkzeigl auf.",
+  "details.close": "Details zuamacha",
+  "details.description": "Wos's duad",
+  "details.info": "Infos",
+  "details.version": "Version",
+  "details.category": "Sortn",
+  "details.author": "Gmacht vo",
+  "details.id": "Tool-ID",
+  "details.requirements": "Braucht",
+  "details.none": "nix",
+  "details.homepage": "Website",
+  "prog.precheck": "Schau, ob scho ois do is …",
+  "prog.precheck_failed": "Vorher-Schaugn hod ned highaut ({error}) - spui de Sachan hoid drauf.",
+  "prog.requirements_present": "Is scho ois do - nix zum doa, passt scho."
 }

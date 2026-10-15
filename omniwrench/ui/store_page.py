@@ -89,7 +89,7 @@ class StorePage(QWidget):
         header.addLayout(titles, 1)
         self.search = QLineEdit(placeholderText="🔍  " + tr("store.search"))
         self.search.setClearButtonEnabled(True)
-        self.search.setMinimumWidth(140)
+        self.search.setMinimumWidth(200)
         self.search.setMaximumWidth(280)
         self.search.textChanged.connect(self._render)
         header.addWidget(self.search, alignment=Qt.AlignmentFlag.AlignVCenter)

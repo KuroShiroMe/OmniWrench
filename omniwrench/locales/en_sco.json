@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "Scots", "native": "Scots", "fallback": "en"},
-
+  "_meta": {
+    "name": "Scots",
+    "native": "Scots",
+    "fallback": "en"
+  },
   "common.add": "Pit in",
   "common.close": "Shut",
   "common.error_short": "Och naw: {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Tak oot",
   "common.version": "Version {version}",
   "category.other": "Odds an sods",
-
   "nav.home": "Hame",
   "nav.store": "Wee Shop",
   "sidebar.installed": "Ma tools",
   "sidebar.filter": "Hae a look …",
-
   "menu.file": "&File",
   "menu.install_zip": "Pit a tool on fae a &ZIP file …",
   "menu.install_folder": "Pit a tool on fae a &folder …",
@@ -35,7 +36,6 @@
   "about.text": "A braw wee kist o tools fir admins.",
   "about.installed": "Tools pit on: {count}",
   "app.unexpected_error": "Crivvens, somethin's gone pure wrang:\n\n{error}\n\nHae a keek in the log folder.",
-
   "home.title": "Ma tools",
   "home.subtitle": "{count} tool(s) pit on",
   "home.subtitle_updates": "{count} update(s) waitin",
@@ -44,7 +44,6 @@
   "home.empty_title": "Nae tools yet",
   "home.empty_text": "The wee shop's got tools a' sortit by kind.",
   "home.update_badge": "New yin: {version}",
-
   "store.loading": "Fetchin the catalogue …",
   "store.search": "Hunt in the wee shop …",
   "store.refresh": "Hae anither look",
@@ -61,7 +60,6 @@
   "store.update_to": "Bring up tae {version}",
   "store.empty": "Nae tools here.",
   "store.error": "The wee shop's no richt: {error}",
-
   "toolmenu.settings": "Settins …",
   "toolmenu.update": "Update",
   "toolmenu.update_to": "Bring up tae {version}",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Bin it …",
   "tool.start_error_title": "It's no wantin tae start",
   "tool.start_error": "'{name}' jist willnae start:\n\n{error}",
-
   "install.tool_open_title": "It's still open",
   "install.tool_open": "'{name}' is still open an'll get shut fir this. Cairry on?",
   "install.requirements_title": "Whit it needs",
@@ -95,7 +92,6 @@
   "task.done": "{title} - a' done",
   "task.failed": "{title} - went pure pear-shaped",
   "task.error": "OCH NAW: {error}",
-
   "updates.searching": "Lookin fir new stuff …",
   "updates.tools_available": "{count} tool update(s) waitin.",
   "updates.tools_current": "A' the tools are up tae date. Pure dead brilliant.",
@@ -113,7 +109,6 @@
   "updates.later": "Efter",
   "updates.downloading": "Fetchin {app} {version} …",
   "updates.restarting": "Got it. The program's gonnae restart tae pit the update on.",
-
   "login.title_setup": "Settin up",
   "login.title_unlock": "Log in",
   "login.setup_intro": "Hullawrerr! Pick hoo the program's tae be locked. The tools' passwirds an logins get keepit scrambled wi this key.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nThumbprint: {thumb}\nGuid till: {date}",
   "login.checking": "Checkin the passwird …",
   "login.cert_busy": "Loggin in wi the certificate … (pit in yer PIN if it asks)",
-
   "cert.loading": "Fetchin certificates …",
   "cert.reload": "Fetch the certificates again",
   "cert.none_found": "Nae guid certificate fund",
   "cert.choose": "– pick yin –",
   "cert.tooltip": "{subject}\nGien oot by: {issuer}",
   "cert.display": "{name}  (guid till {date}, {thumb}…)",
-
   "settings.tool_title": "Settins - {name}",
   "settings.tool_language": "Leid",
   "settings.tool_language_hint": "'Automatic' uses the program's leid if the tool kens it, itherwise English.",
@@ -158,7 +151,6 @@
   "settings.browse": "Hae a look …",
   "settings.username_placeholder": "User name (like DOMAIN\\admin)",
   "settings.password_placeholder": "Passwird",
-
   "appsettings.title": "Settins",
   "appsettings.tab_general": "General",
   "appsettings.tab_repos": "Repositories",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Pit in a certificate",
   "appsettings.add_cert_text": "Pick an RSA certificate wi a private key fae the user store:",
   "appsettings.remove_method_confirm": "Ye sure ye want tae tak oot this wey o loggin in?",
-
   "req.python": "Python package",
   "req.windows_capabilities": "Windaes capability",
   "req.windows_features": "Windaes feature",
   "req.powershell_modules": "PowerShell module",
   "req.winget": "winget package",
-
   "prog.download": "Fetchin {name} {version} …",
   "prog.checksum_ok": "Checksum's fine",
   "prog.package_ok": "Package '{name}' {version} looks braw",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Checkin PowerShell module {name} …",
   "prog.check_winget": "Checkin winget package {name} …",
   "prog.pip_install": "Pittin on Python packages: {packages}",
-
   "err.vault_need_method": "Ye need at least yin wey tae log in.",
   "err.vault_cert_test": "The certificate failed its wee test.",
   "err.vault_wrong_password": "That's no the richt maister passwird.",
@@ -248,5 +237,19 @@
   "err.platform": "This tool disnae work on this operatin system.",
   "err.still_missing": "Still missin some bits:",
   "err.installer_load": "Couldnae load install.py",
-  "err.catalog_entry": "dodgy entry ({error})"
+  "err.catalog_entry": "dodgy entry ({error})",
+  "home.hint": "Click a tool fir the details, double-click tae open it.",
+  "details.close": "Shut the details",
+  "details.description": "Whit it does",
+  "details.info": "Info",
+  "details.version": "Version",
+  "details.category": "Kind",
+  "details.author": "Made by",
+  "details.id": "Tool ID",
+  "details.requirements": "Needs",
+  "details.none": "naethin",
+  "details.homepage": "Website",
+  "prog.precheck": "Checkin if it's got a' it needs awready …",
+  "prog.precheck_failed": "Couldnae check first ({error}) - pittin on whit it needs.",
+  "prog.requirements_present": "It's got a' it needs awready - naethin tae dae."
 }

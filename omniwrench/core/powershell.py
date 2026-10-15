@@ -9,6 +9,7 @@ import os
 import re
 import subprocess
 import tempfile
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -86,13 +87,18 @@ def run_ps_elevated(script: str, timeout: float | None = 3600) -> PSResult:
     workdir = Path(tempfile.mkdtemp(prefix="omniwrench_elev_"))
     script_file = workdir / "run.ps1"
     log_file = workdir / "run.log"
+    user = f"{os.environ.get('USERDOMAIN', '')}\\{os.environ.get('USERNAME', '')}".lstrip("\\")
+    # Kein Start-Transcript: Die Datei bliebe ggf. gesperrt bzw. gehört dem erhöhten Prozess.
+    # Stattdessen Ausgabe sammeln, am Ende in einem Rutsch schreiben und dem
+    # aufrufenden (nicht erhöhten) Benutzer explizit Leserechte geben.
     wrapped = (
         "$ErrorActionPreference='Stop'\n"
         "$ProgressPreference='SilentlyContinue'\n"
-        f"Start-Transcript -Path '{log_file}' -Force | Out-Null\n"
         "$code = 0\n"
-        "try {\n" + script + "\n} catch { Write-Output (\"ERROR: \" + $_); $code = 1 }\n"
-        "Stop-Transcript | Out-Null\n"
+        "$out = try { & {\n" + script + "\n} *>&1 | Out-String -Width 300 }"
+        " catch { \"ERROR: \" + $_; $code = 1 }\n"
+        f"[IO.File]::WriteAllText({ps_quote(str(log_file))}, [string]$out, [Text.Encoding]::UTF8)\n"
+        f"icacls {ps_quote(str(log_file))} /grant {ps_quote(user + ':R')} | Out-Null\n"
         "exit $code\n"
     )
     script_file.write_text(wrapped, encoding="utf-8-sig")
@@ -105,10 +111,22 @@ def run_ps_elevated(script: str, timeout: float | None = 3600) -> PSResult:
         res = run_ps(launcher, timeout=timeout)
     except subprocess.TimeoutExpired:
         return PSResult(1, "", tr("err.elevated_timeout"))
-    log = log_file.read_text(encoding="utf-8", errors="replace") if log_file.exists() else ""
+    log = _read_log(log_file)
     if not res.ok and not log:
         return PSResult(res.returncode, "", res.stderr or tr("err.elevated_cancelled"))
     return PSResult(res.returncode, log, res.stderr)
+
+
+def _read_log(path: Path) -> str:
+    """Liest die Logdatei der Admin-Sitzung; wartet kurz, falls Virenscanner o. Ä. sie noch sperren."""
+    for _ in range(20):
+        if not path.exists():
+            return ""
+        try:
+            return path.read_text(encoding="utf-8-sig", errors="replace").strip()
+        except PermissionError:
+            time.sleep(0.25)
+    return ""
 
 
 def ps_quote(value: str) -> str:

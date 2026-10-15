@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "French", "native": "Français", "fallback": "en"},
-
+  "_meta": {
+    "name": "French",
+    "native": "Français",
+    "fallback": "en"
+  },
   "common.add": "Ajouter",
   "common.close": "Fermer",
   "common.error_short": "Erreur : {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Supprimer",
   "common.version": "Version {version}",
   "category.other": "Divers",
-
   "nav.home": "Accueil",
   "nav.store": "Boutique",
   "sidebar.installed": "Outils installés",
   "sidebar.filter": "Filtrer …",
-
   "menu.file": "&Fichier",
   "menu.install_zip": "Installer un outil depuis un fichier &ZIP …",
   "menu.install_folder": "Installer un outil depuis un d&ossier …",
@@ -35,7 +36,6 @@
   "about.text": "Collection d'outils modulaire pour administrateurs.",
   "about.installed": "Outils installés : {count}",
   "app.unexpected_error": "Erreur inattendue :\n\n{error}\n\nVoir le dossier des journaux pour plus de détails.",
-
   "home.title": "Mes outils",
   "home.subtitle": "{count} outil(s) installé(s)",
   "home.subtitle_updates": "{count} mise(s) à jour disponible(s)",
@@ -44,7 +44,6 @@
   "home.empty_title": "Aucun outil installé pour l'instant",
   "home.empty_text": "La boutique propose des outils classés par catégorie.",
   "home.update_badge": "Mise à jour vers {version}",
-
   "store.loading": "Chargement du catalogue …",
   "store.search": "Rechercher dans la boutique …",
   "store.refresh": "Actualiser",
@@ -61,7 +60,6 @@
   "store.update_to": "Mettre à jour vers {version}",
   "store.empty": "Aucun outil trouvé.",
   "store.error": "Erreur de la boutique : {error}",
-
   "toolmenu.settings": "Paramètres …",
   "toolmenu.update": "Mettre à jour",
   "toolmenu.update_to": "Mettre à jour vers {version}",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Désinstaller …",
   "tool.start_error_title": "Erreur au démarrage",
   "tool.start_error": "Impossible de démarrer « {name} » :\n\n{error}",
-
   "install.tool_open_title": "Outil ouvert",
   "install.tool_open": "« {name} » est ouvert et va être fermé. Continuer ?",
   "install.requirements_title": "Prérequis",
@@ -95,7 +92,6 @@
   "task.done": "{title} - terminé",
   "task.failed": "{title} - échec",
   "task.error": "ERREUR : {error}",
-
   "updates.searching": "Recherche de mises à jour …",
   "updates.tools_available": "{count} mise(s) à jour d'outils disponible(s).",
   "updates.tools_current": "Tous les outils sont à jour.",
@@ -113,7 +109,6 @@
   "updates.later": "Plus tard",
   "updates.downloading": "Téléchargement de {app} {version} …",
   "updates.restarting": "Téléchargement terminé. Le programme va redémarrer pour appliquer la mise à jour.",
-
   "login.title_setup": "Configuration",
   "login.title_unlock": "Connexion",
   "login.setup_intro": "Bienvenue ! Choisissez comment protéger le programme. Les mots de passe et identifiants des outils sont chiffrés avec cette clé.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nEmpreinte : {thumb}\nValide jusqu'au : {date}",
   "login.checking": "Vérification du mot de passe …",
   "login.cert_busy": "Connexion avec le certificat … (saisir le code PIN si demandé)",
-
   "cert.loading": "Chargement des certificats …",
   "cert.reload": "Recharger la liste des certificats",
   "cert.none_found": "Aucun certificat approprié trouvé",
   "cert.choose": "– veuillez choisir –",
   "cert.tooltip": "{subject}\nÉmetteur : {issuer}",
   "cert.display": "{name}  (valide jusqu'au {date}, {thumb}…)",
-
   "settings.tool_title": "Paramètres - {name}",
   "settings.tool_language": "Langue",
   "settings.tool_language_hint": "« Automatique » utilise la langue du programme si l'outil la propose, sinon l'anglais.",
@@ -158,7 +151,6 @@
   "settings.browse": "Parcourir …",
   "settings.username_placeholder": "Nom d'utilisateur (p. ex. DOMAINE\\admin)",
   "settings.password_placeholder": "Mot de passe",
-
   "appsettings.title": "Paramètres",
   "appsettings.tab_general": "Général",
   "appsettings.tab_repos": "Dépôts",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Ajouter un certificat",
   "appsettings.add_cert_text": "Choisissez un certificat RSA avec clé privée dans le magasin de l'utilisateur :",
   "appsettings.remove_method_confirm": "Voulez-vous vraiment supprimer cette méthode de connexion ?",
-
   "req.python": "Paquet Python",
   "req.windows_capabilities": "Fonctionnalité Windows",
   "req.windows_features": "Rôle/fonctionnalité Windows",
   "req.powershell_modules": "Module PowerShell",
   "req.winget": "Paquet winget",
-
   "prog.download": "Téléchargement de {name} {version} …",
   "prog.checksum_ok": "Somme de contrôle OK",
   "prog.package_ok": "Paquet « {name} » {version} vérifié",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Vérification du module PowerShell {name} …",
   "prog.check_winget": "Vérification du paquet winget {name} …",
   "prog.pip_install": "Installation des paquets Python : {packages}",
-
   "err.vault_need_method": "Au moins une méthode de connexion est requise.",
   "err.vault_cert_test": "Le déchiffrement de test avec le certificat a échoué.",
   "err.vault_wrong_password": "Mot de passe maître incorrect.",
@@ -248,5 +237,19 @@
   "err.platform": "Cet outil ne prend pas en charge ce système d'exploitation.",
   "err.still_missing": "Des prérequis sont toujours manquants :",
   "err.installer_load": "Impossible de charger install.py",
-  "err.catalog_entry": "entrée invalide ({error})"
+  "err.catalog_entry": "entrée invalide ({error})",
+  "home.hint": "Un clic affiche les détails, un double-clic ouvre l'outil.",
+  "details.close": "Fermer les détails",
+  "details.description": "Description",
+  "details.info": "Informations",
+  "details.version": "Version",
+  "details.category": "Catégorie",
+  "details.author": "Auteur",
+  "details.id": "ID de l'outil",
+  "details.requirements": "Prérequis",
+  "details.none": "aucun",
+  "details.homepage": "Site web",
+  "prog.precheck": "Vérification des prérequis déjà présents …",
+  "prog.precheck_failed": "Échec de la vérification préalable ({error}) - installation des prérequis.",
+  "prog.requirements_present": "Tous les prérequis sont déjà présents - rien à installer."
 }

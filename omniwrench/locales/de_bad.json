@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "Baden dialect", "native": "Badisch", "fallback": "de"},
-
+  "_meta": {
+    "name": "Baden dialect",
+    "native": "Badisch",
+    "fallback": "de"
+  },
   "common.add": "Dezue due",
   "common.close": "Zuemache",
   "common.error_short": "Mischt: {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Wegmache",
   "common.version": "Version {version}",
   "category.other": "Allerlei",
-
   "nav.home": "Dehoim",
   "nav.store": "Lädele",
   "sidebar.installed": "Mini Werkzeigle",
   "sidebar.filter": "Sueche …",
-
   "menu.file": "&Datei",
   "menu.install_zip": "Werkzeigle us ere &ZIP-Datei druffmache …",
   "menu.install_folder": "Werkzeigle us em &Ordner druffmache …",
@@ -35,7 +36,6 @@
   "about.text": "E Kischt voll Werkzeigle fir Admins - gell, do staunsch!",
   "about.installed": "Werkzeigle druff: {count}",
   "app.unexpected_error": "Jesses, do isch ebbes schiefgloffe:\n\n{error}\n\nGenauers stoht im Log-Ordner.",
-
   "home.title": "Mini Werkzeigle",
   "home.subtitle": "{count} Werkzeigle druff",
   "home.subtitle_updates": "{count} Update(s) wartet",
@@ -44,7 +44,6 @@
   "home.empty_title": "No gar nix druff",
   "home.empty_text": "Im Lädele findsch Werkzeigle, schää noch Sorte sortiert.",
   "home.update_badge": "Neiers: {version}",
-
   "store.loading": "Katalog wird gholt …",
   "store.search": "Im Lädele sueche …",
   "store.refresh": "Nomol luege",
@@ -61,7 +60,6 @@
   "store.update_to": "Uff {version} bringe",
   "store.empty": "Do isch nix.",
   "store.error": "S Lädele spinnt: {error}",
-
   "toolmenu.settings": "Iistellige …",
   "toolmenu.update": "Neiere",
   "toolmenu.update_to": "Uff {version} bringe",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Runterschmeiße …",
   "tool.start_error_title": "Des will nit",
   "tool.start_error": "'{name}' will partout nit aaspringe:\n\n{error}",
-
   "install.tool_open_title": "Isch no uff",
   "install.tool_open": "'{name}' isch no uff und wird jetz zuegmacht. Weitermache?",
   "install.requirements_title": "Des brucht's no",
@@ -95,7 +92,6 @@
   "task.done": "{title} - fertig",
   "task.failed": "{title} - in d Hos gange",
   "task.error": "MISCHT: {error}",
-
   "updates.searching": "Lueg noch Neiem …",
   "updates.tools_available": "{count} Werkzeigle-Update(s) do.",
   "updates.tools_current": "Alles uff em neiste Stand, gell.",
@@ -113,7 +109,6 @@
   "updates.later": "Spöter",
   "updates.downloading": "Hol {app} {version} runter …",
   "updates.restarting": "Runterglade. S Programm startet jetz nei.",
-
   "login.title_setup": "Iirichte",
   "login.title_unlock": "Aamelde",
   "login.setup_intro": "Grüß Gott! Sag, wie s Programm abgschlosse werre soll. Passwörter vu de Werkzeigle werre mit dem Schlüssel verschlüsselt uffghobe.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nFingerabdruck: {thumb}\nGültig bis: {date}",
   "login.checking": "Lueg s Passwort aa …",
   "login.cert_busy": "Meld di mit Zertifikat aa … (villicht PIN iigebe)",
-
   "cert.loading": "Zertifikat werre gholt …",
   "cert.reload": "Zertifikat nomol hole",
   "cert.none_found": "Kei passends Zertifikat gfunde",
   "cert.choose": "– such ebbes us –",
   "cert.tooltip": "{subject}\nAussteller: {issuer}",
   "cert.display": "{name}  (gültig bis {date}, {thumb}…)",
-
   "settings.tool_title": "Iistellige - {name}",
   "settings.tool_language": "Sproch",
   "settings.tool_language_hint": "'Vu sälwer' nimmt d Sproch vum Hauptprogramm, wenn s Werkzeigle sie kann, sunscht Englisch.",
@@ -158,7 +151,6 @@
   "settings.browse": "Sueche …",
   "settings.username_placeholder": "Benutzername (z. B. DOMÄNE\\admin)",
   "settings.password_placeholder": "Passwort",
-
   "appsettings.title": "Iistellige",
   "appsettings.tab_general": "Allgemein",
   "appsettings.tab_repos": "Repositories",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Zertifikat dezue due",
   "appsettings.add_cert_text": "Such dir e RSA-Zertifikat mit privatem Schlüssel us em Benutzerspeicher us:",
   "appsettings.remove_method_confirm": "Die Aameldeart wirklich wegmache?",
-
   "req.python": "Python-Paket",
   "req.windows_capabilities": "Windows-Funktion",
   "req.windows_features": "Windows-Feature",
   "req.powershell_modules": "PowerShell-Modul",
   "req.winget": "winget-Paket",
-
   "prog.download": "Hol {name} {version} runter …",
   "prog.checksum_ok": "Prüfsumm bassd",
   "prog.package_ok": "Paket '{name}' {version} aagluegt - bassd",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Lueg noch em PowerShell-Modul {name} …",
   "prog.check_winget": "Lueg noch em winget-Paket {name} …",
   "prog.pip_install": "Mach Python-Pakete druff: {packages}",
-
   "err.vault_need_method": "E Aameldeart muesch scho ha.",
   "err.vault_cert_test": "S Zertifikat hät de Test nit bstande.",
   "err.vault_wrong_password": "Falsches Masterpasswort - nomol!",
@@ -248,5 +237,19 @@
   "err.platform": "Des Werkzeigle kann mit dem Betriebssystem nix aafange.",
   "err.still_missing": "Do fehlt immer no ebbes:",
   "err.installer_load": "install.py will nit lade",
-  "err.catalog_entry": "Iitrag kaputt ({error})"
+  "err.catalog_entry": "Iitrag kaputt ({error})",
+  "home.hint": "Eimol klicke zeigt d Details, zweimol macht s Werkzeigle uff.",
+  "details.close": "Details zuemache",
+  "details.description": "Was es macht",
+  "details.info": "Infos",
+  "details.version": "Version",
+  "details.category": "Sorte",
+  "details.author": "Gmacht vu",
+  "details.id": "Tool-ID",
+  "details.requirements": "Brucht",
+  "details.none": "nix",
+  "details.homepage": "Website",
+  "prog.precheck": "Lueg, ob scho alles do isch …",
+  "prog.precheck_failed": "Vorher-Luege hät nit klappt ({error}) - mach d Sache halt druff.",
+  "prog.requirements_present": "Isch scho alles do - nix z due, gell."
 }

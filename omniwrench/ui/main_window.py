@@ -338,10 +338,15 @@ class MainWindow(QMainWindow):
         menu.addSeparator()
         menu.addAction(tr("toolmenu.check"), lambda: self.check_tool(tool_id))
         menu.addAction(tr("toolmenu.repair"), lambda: self.repair_tool(tool_id))
-        menu.addAction(tr("toolmenu.open_folder"), lambda: self._open_path(tool.path))
+        menu.addAction(tr("toolmenu.open_folder"), lambda: self.open_tool_folder(tool_id))
         menu.addSeparator()
         menu.addAction(tr("toolmenu.uninstall"), lambda: self.uninstall_tool(tool_id))
         menu.exec(global_pos)
+
+    def open_tool_folder(self, tool_id: str) -> None:
+        tool = self.manager.get(tool_id)
+        if tool:
+            self._open_path(tool.path)
 
     def open_tool_settings(self, tool_id: str) -> None:
         tool = self.manager.get(tool_id)

@@ -43,12 +43,18 @@ def _elevated_script(req: Requirements) -> str:
     return "\n".join(lines)
 
 
-def install_requirements(req: Requirements, pip_install: Callable[..., None], progress: Progress) -> None:
+def install_requirements(req: Requirements, pip_install: Callable[..., None], progress: Progress,
+                         system: bool = True) -> None:
+    """Installiert die Voraussetzungen. system=False überspringt Windows-Funktionen,
+    PowerShell-Module und winget (wenn check() des Tools sie bereits als erfüllt meldet)."""
     if req.is_empty():
         return
 
     if req.python:
         pip_install(*req.python)
+
+    if not system:
+        return
 
     if req.windows_capabilities or req.windows_features:
         progress(tr("prog.windows_features"))

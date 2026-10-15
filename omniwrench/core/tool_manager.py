@@ -192,10 +192,9 @@ class ToolManager(QObject):
             schema = load_settings_schema(target)
             settings = self._settings_for(manifest.id, schema)
             ctx = self._install_context(manifest, target, settings, progress)
-
-            prerequisites.install_requirements(manifest.requirements, ctx.pip_install, progress)
-
             installer = self._load_installer(manifest.id, target)
+
+            self._install_prerequisites(manifest, installer, ctx, progress)
             if old_version and hasattr(installer, "update"):
                 progress(tr("prog.run_update", old=old_version, new=manifest.version))
                 installer.update(ctx, old_version)
@@ -224,6 +223,26 @@ class ToolManager(QObject):
         data_dir.mkdir(parents=True, exist_ok=True)
         return InstallContext(manifest, tool_dir, data_dir, settings, self.vault, progress=progress)
 
+    def _install_prerequisites(self, manifest: ToolManifest, installer: ModuleType, ctx: InstallContext,
+                               progress: Progress) -> None:
+        """Installiert die Voraussetzungen aus tool.json.
+
+        Meldet check() aus install.py bereits alles als vorhanden, entfallen die
+        System-Voraussetzungen (Windows-Funktionen, PS-Module, winget) - und damit
+        auch die UAC-Abfrage.
+        """
+        req = manifest.requirements
+        system = True
+        if not req.is_empty() and hasattr(installer, "check"):
+            progress(tr("prog.precheck"))
+            try:
+                system = bool(installer.check(ctx))
+            except Exception as exc:  # noqa: BLE001 - im Zweifel installieren
+                progress(tr("prog.precheck_failed", error=exc))
+            if not system:
+                progress(tr("prog.requirements_present"))
+        prerequisites.install_requirements(req, ctx.pip_install, progress, system=system)
+
     def _load_installer(self, tool_id: str, tool_dir: Path) -> ModuleType:
         name = _module_prefix(tool_id) + "__install"
         spec = importlib.util.spec_from_file_location(name, tool_dir / INSTALL_FILE)
@@ -246,8 +265,8 @@ class ToolManager(QObject):
         """Führt Voraussetzungen + install() erneut aus."""
         tool = self.tools[tool_id]
         ctx = self._install_context(tool.manifest, tool.path, tool.settings, progress)
-        prerequisites.install_requirements(tool.manifest.requirements, ctx.pip_install, progress)
         installer = self._load_installer(tool_id, tool.path)
+        self._install_prerequisites(tool.manifest, installer, ctx, progress)
         if hasattr(installer, "install"):
             installer.install(ctx)
         progress(tr("prog.repaired"))

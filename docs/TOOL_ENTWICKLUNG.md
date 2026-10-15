@@ -31,7 +31,7 @@ falls eine Übersetzung fehlt.
 | `long_description` | | Ausführliche Beschreibung (Store, Tooltip) |
 | `author` | | |
 | `category` | | Kategoriepfad mit `/`, z. B. `MS Server Tools/Active Directory` |
-| `icon` | | Dateiname im Tool-Ordner (png/svg). Fehlt es, wird ein Icon mit Initialen erzeugt |
+| `icon` | | Bilddatei im Tool-Ordner (png/svg/ico, quadratisch, mind. 128 px), z. B. `"icon.png"`. Fehlt sie, wird ein Symbol mit Initialen in der Farbe `color` erzeugt |
 | `color` | | Akzentfarbe für das erzeugte Icon, z. B. `#0ea5e9` |
 | `entry` | | `"<modul>:<Klasse>"`, Standard `tool:Tool` |
 | `min_app_version` | | Mindestversion des Hauptprogramms |
@@ -42,7 +42,10 @@ falls eine Übersetzung fehlt.
 
 ### requirements
 
-Die Voraussetzungen installiert das Hauptprogramm **vor** `install()`:
+Die Voraussetzungen installiert das Hauptprogramm **vor** `install()`. Hat die `install.py` eine Funktion `check()`,
+wird sie vorher aufgerufen: Liefert sie eine leere Liste, gelten Windows-Funktionen, PowerShell-Module und
+winget-Pakete als vorhanden und werden übersprungen. Es erscheint dann keine UAC-Abfrage. Python-Pakete werden
+immer installiert.
 
 ```json
 "requirements": {

@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "Spanish", "native": "Español", "fallback": "en"},
-
+  "_meta": {
+    "name": "Spanish",
+    "native": "Español",
+    "fallback": "en"
+  },
   "common.add": "Añadir",
   "common.close": "Cerrar",
   "common.error_short": "Error: {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Quitar",
   "common.version": "Versión {version}",
   "category.other": "Otros",
-
   "nav.home": "Inicio",
   "nav.store": "Tienda",
   "sidebar.installed": "Herramientas instaladas",
   "sidebar.filter": "Filtrar …",
-
   "menu.file": "&Archivo",
   "menu.install_zip": "Instalar herramienta desde archivo &ZIP …",
   "menu.install_folder": "Instalar herramienta desde &carpeta …",
@@ -35,7 +36,6 @@
   "about.text": "Colección modular de herramientas para administradores.",
   "about.installed": "Herramientas instaladas: {count}",
   "app.unexpected_error": "Error inesperado:\n\n{error}\n\nConsulte la carpeta de registros para más detalles.",
-
   "home.title": "Mis herramientas",
   "home.subtitle": "{count} herramienta(s) instalada(s)",
   "home.subtitle_updates": "{count} actualización(es) disponible(s)",
@@ -44,7 +44,6 @@
   "home.empty_title": "Todavía no hay herramientas instaladas",
   "home.empty_text": "En la tienda encontrará herramientas ordenadas por categoría.",
   "home.update_badge": "Actualizar a {version}",
-
   "store.loading": "Cargando catálogo …",
   "store.search": "Buscar en la tienda …",
   "store.refresh": "Actualizar",
@@ -61,7 +60,6 @@
   "store.update_to": "Actualizar a {version}",
   "store.empty": "No se encontraron herramientas.",
   "store.error": "Error de la tienda: {error}",
-
   "toolmenu.settings": "Configuración …",
   "toolmenu.update": "Actualizar",
   "toolmenu.update_to": "Actualizar a {version}",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Desinstalar …",
   "tool.start_error_title": "Error al iniciar",
   "tool.start_error": "No se pudo iniciar «{name}»:\n\n{error}",
-
   "install.tool_open_title": "Herramienta abierta",
   "install.tool_open": "«{name}» está abierta y se cerrará para ello. ¿Continuar?",
   "install.requirements_title": "Requisitos",
@@ -95,7 +92,6 @@
   "task.done": "{title} - completado",
   "task.failed": "{title} - fallido",
   "task.error": "ERROR: {error}",
-
   "updates.searching": "Buscando actualizaciones …",
   "updates.tools_available": "{count} actualización(es) de herramientas disponible(s).",
   "updates.tools_current": "Todas las herramientas están actualizadas.",
@@ -113,7 +109,6 @@
   "updates.later": "Más tarde",
   "updates.downloading": "Descargando {app} {version} …",
   "updates.restarting": "Descarga completada. El programa se reiniciará para aplicar la actualización.",
-
   "login.title_setup": "Configuración inicial",
   "login.title_unlock": "Inicio de sesión",
   "login.setup_intro": "¡Bienvenido! Elija cómo proteger el programa. Las contraseñas y credenciales de las herramientas se guardan cifradas con esta clave.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nHuella digital: {thumb}\nVálido hasta: {date}",
   "login.checking": "Comprobando contraseña …",
   "login.cert_busy": "Iniciando sesión con certificado … (introduzca el PIN si se solicita)",
-
   "cert.loading": "Cargando certificados …",
   "cert.reload": "Recargar lista de certificados",
   "cert.none_found": "No se encontró ningún certificado adecuado",
   "cert.choose": "– seleccione –",
   "cert.tooltip": "{subject}\nEmisor: {issuer}",
   "cert.display": "{name}  (válido hasta {date}, {thumb}…)",
-
   "settings.tool_title": "Configuración - {name}",
   "settings.tool_language": "Idioma",
   "settings.tool_language_hint": "«Automático» usa el idioma del programa si la herramienta lo incluye; si no, inglés.",
@@ -158,7 +151,6 @@
   "settings.browse": "Examinar …",
   "settings.username_placeholder": "Nombre de usuario (p. ej. DOMINIO\\admin)",
   "settings.password_placeholder": "Contraseña",
-
   "appsettings.title": "Configuración",
   "appsettings.tab_general": "General",
   "appsettings.tab_repos": "Repositorios",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Añadir certificado",
   "appsettings.add_cert_text": "Seleccione un certificado RSA con clave privada del almacén del usuario:",
   "appsettings.remove_method_confirm": "¿Quitar realmente este método de inicio de sesión?",
-
   "req.python": "Paquete de Python",
   "req.windows_capabilities": "Funcionalidad de Windows",
   "req.windows_features": "Característica de Windows",
   "req.powershell_modules": "Módulo de PowerShell",
   "req.winget": "Paquete winget",
-
   "prog.download": "Descargando {name} {version} …",
   "prog.checksum_ok": "Suma de comprobación correcta",
   "prog.package_ok": "Paquete «{name}» {version} verificado",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Comprobando módulo de PowerShell {name} …",
   "prog.check_winget": "Comprobando paquete winget {name} …",
   "prog.pip_install": "Instalando paquetes de Python: {packages}",
-
   "err.vault_need_method": "Se requiere al menos un método de inicio de sesión.",
   "err.vault_cert_test": "El descifrado de prueba con el certificado falló.",
   "err.vault_wrong_password": "Contraseña maestra incorrecta.",
@@ -248,5 +237,19 @@
   "err.platform": "Esta herramienta no es compatible con este sistema operativo.",
   "err.still_missing": "Siguen faltando requisitos:",
   "err.installer_load": "No se pudo cargar install.py",
-  "err.catalog_entry": "entrada no válida ({error})"
+  "err.catalog_entry": "entrada no válida ({error})",
+  "home.hint": "Un clic muestra los detalles, un doble clic abre la herramienta.",
+  "details.close": "Cerrar detalles",
+  "details.description": "Descripción",
+  "details.info": "Información",
+  "details.version": "Versión",
+  "details.category": "Categoría",
+  "details.author": "Autor",
+  "details.id": "ID de herramienta",
+  "details.requirements": "Requisitos",
+  "details.none": "ninguno",
+  "details.homepage": "Sitio web",
+  "prog.precheck": "Comprobando si los requisitos ya se cumplen …",
+  "prog.precheck_failed": "La comprobación previa falló ({error}) - se instalan los requisitos.",
+  "prog.requirements_present": "Todos los requisitos ya están presentes - nada que instalar."
 }

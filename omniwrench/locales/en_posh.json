@@ -1,6 +1,9 @@
 {
-  "_meta": {"name": "Posh English", "native": "Posh English", "fallback": "en"},
-
+  "_meta": {
+    "name": "Posh English",
+    "native": "Posh English",
+    "fallback": "en"
+  },
   "common.add": "Do add",
   "common.close": "Dismiss",
   "common.error_short": "How frightfully awkward: {error}",
@@ -10,12 +13,10 @@
   "common.remove": "Dispense with",
   "common.version": "Edition {version}",
   "category.other": "Miscellanea",
-
   "nav.home": "The Drawing Room",
   "nav.store": "The Emporium",
   "sidebar.installed": "One's instruments",
   "sidebar.filter": "Peruse …",
-
   "menu.file": "&Correspondence",
   "menu.install_zip": "Acquire an instrument from a &ZIP parcel …",
   "menu.install_folder": "Acquire an instrument from a &folder …",
@@ -35,7 +36,6 @@
   "about.text": "A most distinguished collection of instruments for the discerning administrator.",
   "about.installed": "Instruments in one's possession: {count}",
   "app.unexpected_error": "Good heavens, something has gone terribly awry:\n\n{error}\n\nParticulars may be found in the ledger.",
-
   "home.title": "One's instruments",
   "home.subtitle": "{count} instrument(s) in residence",
   "home.subtitle_updates": "{count} refinement(s) awaiting your pleasure",
@@ -44,7 +44,6 @@
   "home.empty_title": "One possesses no instruments as yet",
   "home.empty_text": "The Emporium offers a splendid selection, arranged by category.",
   "home.update_badge": "Refinement to {version}",
-
   "store.loading": "The catalogue is being fetched, do be patient …",
   "store.search": "Peruse the Emporium …",
   "store.refresh": "Refresh, if you would",
@@ -61,7 +60,6 @@
   "store.update_to": "Refine to {version}",
   "store.empty": "Nothing of note, I'm afraid.",
   "store.error": "The Emporium is indisposed: {error}",
-
   "toolmenu.settings": "Preferences …",
   "toolmenu.update": "Refine",
   "toolmenu.update_to": "Refine to {version}",
@@ -71,7 +69,6 @@
   "toolmenu.uninstall": "Show it the door …",
   "tool.start_error_title": "Most unbecoming",
   "tool.start_error": "'{name}' declined to start, the cheek of it:\n\n{error}",
-
   "install.tool_open_title": "Currently engaged",
   "install.tool_open": "'{name}' is presently engaged and shall be dismissed for the purpose. Shall we proceed?",
   "install.requirements_title": "Necessities",
@@ -95,7 +92,6 @@
   "task.done": "{title} - concluded",
   "task.failed": "{title} - a dreadful failure",
   "task.error": "I SAY: {error}",
-
   "updates.searching": "Enquiring after improvements …",
   "updates.tools_available": "{count} instrument refinement(s) available.",
   "updates.tools_current": "All instruments are perfectly à la mode.",
@@ -113,7 +109,6 @@
   "updates.later": "Another time, perhaps",
   "updates.downloading": "Sending for {app} {version} …",
   "updates.restarting": "Delivery complete. The programme shall now restart to apply the refinement.",
-
   "login.title_setup": "Establishment",
   "login.title_unlock": "Admittance",
   "login.setup_intro": "Do come in! Kindly decide how the premises are to be secured. The instruments' passwords and credentials shall be kept under lock and key with it.",
@@ -136,14 +131,12 @@
   "login.cert_tooltip": "{subject}\nThumbprint: {thumb}\nValid until: {date}",
   "login.checking": "Verifying one's credentials …",
   "login.cert_busy": "Presenting one's certificate … (kindly furnish the PIN if asked)",
-
   "cert.loading": "Fetching certificates …",
   "cert.reload": "Fetch the certificates afresh",
   "cert.none_found": "No suitable certificate, alas",
   "cert.choose": "– do choose –",
   "cert.tooltip": "{subject}\nIssued by: {issuer}",
   "cert.display": "{name}  (valid until {date}, {thumb}…)",
-
   "settings.tool_title": "Preferences - {name}",
   "settings.tool_language": "Tongue",
   "settings.tool_language_hint": "'Automatic' adopts the programme's tongue if the instrument speaks it, otherwise plain English.",
@@ -158,7 +151,6 @@
   "settings.browse": "Peruse …",
   "settings.username_placeholder": "Name of the user (e.g. DOMAIN\\admin)",
   "settings.password_placeholder": "Password",
-
   "appsettings.title": "Preferences",
   "appsettings.tab_general": "General",
   "appsettings.tab_repos": "Repositories",
@@ -191,13 +183,11 @@
   "appsettings.add_cert_title": "Add a certificate",
   "appsettings.add_cert_text": "Do select an RSA certificate with private key from the user store:",
   "appsettings.remove_method_confirm": "Are you quite certain you wish to dispense with this means of admittance?",
-
   "req.python": "Python package",
   "req.windows_capabilities": "Windows capability",
   "req.windows_features": "Windows feature",
   "req.powershell_modules": "PowerShell module",
   "req.winget": "winget package",
-
   "prog.download": "Sending for {name} {version} …",
   "prog.checksum_ok": "Checksum entirely in order",
   "prog.package_ok": "Parcel '{name}' {version} inspected and approved",
@@ -215,7 +205,6 @@
   "prog.check_ps_module": "Enquiring after PowerShell module {name} …",
   "prog.check_winget": "Enquiring after winget package {name} …",
   "prog.pip_install": "Installing Python packages: {packages}",
-
   "err.vault_need_method": "At least one means of admittance is required.",
   "err.vault_cert_test": "The certificate did not pass muster.",
   "err.vault_wrong_password": "That is not the master password, I'm afraid.",
@@ -248,5 +237,19 @@
   "err.platform": "This instrument does not consort with this operating system.",
   "err.still_missing": "Necessities remain outstanding:",
   "err.installer_load": "install.py could not be summoned",
-  "err.catalog_entry": "irregular entry ({error})"
+  "err.catalog_entry": "irregular entry ({error})",
+  "home.hint": "A single click reveals the particulars; a double click summons the instrument.",
+  "details.close": "Dismiss the particulars",
+  "details.description": "Description",
+  "details.info": "Particulars",
+  "details.version": "Edition",
+  "details.category": "Department",
+  "details.author": "Craftsman",
+  "details.id": "Instrument ID",
+  "details.requirements": "Necessities",
+  "details.none": "none whatsoever",
+  "details.homepage": "Website",
+  "prog.precheck": "Ascertaining whether the necessities are already in hand …",
+  "prog.precheck_failed": "The preliminary enquiry failed ({error}) - procuring the necessities regardless.",
+  "prog.requirements_present": "Every necessity is already in hand - nothing further required."
 }
