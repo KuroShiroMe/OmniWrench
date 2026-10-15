@@ -19,6 +19,7 @@ from omniwrench.core.tool_manager import InstalledTool
 from omniwrench.core.vault import Vault
 from omniwrench.sdk import LANGUAGE_KEY
 
+from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
 from .widgets import label, make_button, tool_icon
 from .workers import run_async
@@ -112,15 +113,7 @@ class _Field:
         elif t == "secret":
             w = self._password_edit(value)
         elif t == "credential":
-            value = value or {}
-            w = QWidget()
-            lay = QVBoxLayout(w)
-            lay.setContentsMargins(0, 0, 0, 0)
-            w.user = QLineEdit(value.get("username", ""))
-            w.user.setPlaceholderText(tr("settings.username_placeholder"))
-            w.pw = self._password_edit(value.get("password", ""), tr("settings.password_placeholder"))
-            lay.addWidget(w.user)
-            lay.addWidget(w.pw)
+            w = CredentialField(value or {})
         elif t == "certificate":
             w = CertificateCombo(only_encryption=False)
             w.set_thumbprint(value or "")
@@ -145,7 +138,7 @@ class _Field:
         if t in ("path_file", "path_dir", "secret"):
             return w.edit.text()
         if t == "credential":
-            return {"username": w.user.text(), "password": w.pw.edit.text()}
+            return w.value()
         if t == "certificate":
             return w.thumbprint()
         return w.text()
@@ -270,6 +263,11 @@ class AppSettingsDialog(QDialog):
         tabs.addTab(self._repo_tab(), tr("appsettings.tab_repos"))
         tabs.addTab(self._update_tab(), tr("appsettings.tab_updates"))
         tabs.addTab(self._security_tab(), tr("appsettings.tab_security"))
+        pwm = QWidget()
+        pwm_lay = QVBoxLayout(pwm)
+        pwm_lay.addWidget(PasswordManagerWidget(pwm))
+        tabs.addTab(pwm, tr("pwm.title"))
+        self.tabs = tabs
         lay.addWidget(tabs, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._save)

@@ -35,7 +35,9 @@ from .login_dialog import LoginDialog
 from .settings_dialogs import AppSettingsDialog, ToolSettingsDialog
 from .sidebar import Sidebar
 from .store_page import StorePage
-from .widgets import TaskDialog, tool_icon
+from .credentials import PasswordManagerDialog
+from .icon_browser import IconBrowserDialog
+from .widgets import TaskDialog, library_icon, tool_icon
 from .workers import run_async
 
 log = logging.getLogger(__name__)
@@ -164,6 +166,11 @@ class MainWindow(QMainWindow):
 
         m = mb.addMenu(tr("menu.extras"))
         m.addAction(tr("menu.check_updates"), lambda: self.check_updates(manual=True))
+        act_pwm = m.addAction(tr("pwm.title"), QKeySequence("Ctrl+Shift+P"),
+                              lambda: PasswordManagerDialog(self, self.notify).exec())
+        act_pwm.setIcon(library_icon("key-round", 16))
+        m.addAction(tr("menu.icon_library"), lambda: IconBrowserDialog(self).exec())
+        m.addSeparator()
         m.addAction(tr("menu.settings"), QKeySequence("Ctrl+,"), self.open_app_settings)
 
         m = mb.addMenu(tr("menu.help"))
@@ -185,7 +192,10 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(message, timeout)
 
     # ========================================================= Navigation
-    def show_home(self) -> None:
+    def show_home(self, category_filter: tuple[str, ...] | None = None) -> None:
+        """Zeigt den Home-Tab; optional mit Kategorie-Filter (z. B. aus der Seitenleiste)."""
+        if isinstance(category_filter, tuple):
+            self.home_dock.widget().set_category_filter(category_filter)
         self.home_dock.toggleView(True)
         self.home_dock.setAsCurrentTab()
         self.home_dock.raise_()

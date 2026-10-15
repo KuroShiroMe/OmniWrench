@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import base64
 import hashlib
 from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import QPoint, QRect, QSize, Qt
-from PySide6.QtGui import QColor, QFont, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QByteArray, QPoint, QRect, QRectF, QSize, Qt
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
+from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
     QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 
+from omniwrench.core import icons
 from omniwrench.core.i18n import tr
 from omniwrench.core.manifest import ToolManifest
 
@@ -21,29 +24,174 @@ from .workers import run_async
 _ICON_COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#10b981", "#06b6d4", "#eab308", "#ef4444", "#6366f1"]
 
 
-def tool_icon(manifest: ToolManifest, tool_dir: Path | None = None, size: int = 48) -> QIcon:
-    """Icon aus dem Tool-Paket oder ein generiertes Icon mit Initialen."""
-    if tool_dir and manifest.icon and (tool_dir / manifest.icon).exists():
-        return QIcon(str(tool_dir / manifest.icon))
-    color = manifest.color or _ICON_COLORS[int(hashlib.md5(manifest.id.encode()).hexdigest(), 16) % len(_ICON_COLORS)]
-    words = [w for w in manifest.display_name.replace("-", " ").split() if w]
-    initials = "".join(w[0] for w in words[:2]).upper() or "?"
+def accent_color(manifest: ToolManifest) -> str:
+    """Akzentfarbe aus tool.json oder eine stabile Farbe passend zur Tool-ID."""
+    return manifest.color or _ICON_COLORS[int(hashlib.md5(manifest.id.encode()).hexdigest(), 16) % len(_ICON_COLORS)]
 
-    pix = QPixmap(size * 2, size * 2)  # doppelte Auflösung für HiDPI
+
+def _render_svg(svg: bytes, painter: QPainter, rect: QRectF, color: str) -> None:
+    # Lucide-Symbole zeichnen mit "currentColor" - hier durch die gewünschte Farbe ersetzen
+    renderer = QSvgRenderer(QByteArray(svg.replace(b"currentColor", color.encode())))
+    renderer.render(painter, rect)
+
+
+def library_icon(name: str, size: int = 24, color: str | None = None) -> QIcon:
+    """Einfarbiges Symbol aus der eingebauten Bibliothek (z. B. für Buttons und Menüs)."""
+    svg = icons.library_svg(name)
+    if svg is None:
+        return QIcon()
+    pix = QPixmap(size * 2, size * 2)
     pix.fill(Qt.GlobalColor.transparent)
     p = QPainter(pix)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    p.setBrush(QColor(color))
-    p.setPen(Qt.PenStyle.NoPen)
-    p.drawRoundedRect(0, 0, size * 2, size * 2, size * 0.45, size * 0.45)
-    font = QFont("Segoe UI", int(size * 0.62))
-    font.setBold(True)
-    p.setFont(font)
-    p.setPen(QColor("white"))
-    p.drawText(QRect(0, 0, size * 2, size * 2), Qt.AlignmentFlag.AlignCenter, initials)
+    _render_svg(svg, p, QRectF(0, 0, size * 2, size * 2), color or theme.current["text"])
     p.end()
     pix.setDevicePixelRatio(2)
     return QIcon(pix)
+
+
+_icon_cache: dict[tuple, QIcon] = {}
+
+
+def tool_icon(manifest: ToolManifest, tool_dir: Path | None = None, size: int = 48) -> QIcon:
+    """Symbol eines Tools: eigene Bilddatei, Bibliotheks-Symbol, eigenes Kürzel oder Initialen."""
+    spec = icons.resolve(manifest.icon, manifest.icon_text, manifest.display_name, tool_dir, manifest.icon_data)
+    if spec.kind == "file":
+        return QIcon(spec.value)
+    if spec.kind == "data":
+        pix = QPixmap()
+        pix.loadFromData(base64.b64decode(spec.value))
+        return QIcon(pix)
+
+    color = accent_color(manifest)
+    key = (spec, color, size)
+    if key in _icon_cache:
+        return _icon_cache[key]
+
+    s = size * 2  # doppelte Auflösung für HiDPI
+    pix = QPixmap(s, s)
+    pix.fill(Qt.GlobalColor.transparent)
+    p = QPainter(pix)
+    p.setRenderHint(QPainter.RenderHint.Antialiasing)
+    p.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+    p.setBrush(QColor(color))
+    p.setPen(Qt.PenStyle.NoPen)
+    p.drawRoundedRect(0, 0, s, s, s * 0.22, s * 0.22)
+    if spec.kind == "library":
+        inset = s * 0.2
+        _render_svg(icons.library_svg(spec.value), p, QRectF(inset, inset, s - 2 * inset, s - 2 * inset), "#ffffff")
+    else:
+        text = spec.value
+        font = QFont("Segoe UI")
+        font.setBold(True)
+        # Schriftgröße so wählen, dass auch 3-4 Zeichen ins Quadrat passen
+        font.setPixelSize(int(s * {1: 0.55, 2: 0.44, 3: 0.34}.get(len(text), 0.27)))
+        p.setFont(font)
+        p.setPen(QColor("white"))
+        p.drawText(QRect(0, 0, s, s), Qt.AlignmentFlag.AlignCenter, text)
+    p.end()
+    pix.setDevicePixelRatio(2)
+    icon = QIcon(pix)
+    _icon_cache[key] = icon
+    return icon
+
+
+class FitLabel(QWidget):
+    """Text, der sich an die Breite anpasst.
+
+    1. Einzeilig, Schrift wird dafür schrittweise bis single_min_pt verkleinert
+    2. Erst dann zweizeilig (Umbruch an Leerzeichen oder nach Bindestrichen), möglichst
+       gleich lange Zeilen, Schrift wieder ab max_pt bis min_pt
+    3. Notfalls wird die zweite Zeile mit "…" gekürzt
+    """
+
+    def __init__(self, text: str, max_pt: float = 10.0, min_pt: float = 7.5, single_min_pt: float = 8.5,
+                 parent: QWidget | None = None):
+        super().__init__(parent)
+        self._text = text
+        self.max_pt = max_pt
+        self.min_pt = min_pt
+        self.single_min_pt = single_min_pt
+        self._font = QFont(self.font())
+        self._lines: list[str] = [text]
+        self.setToolTip(text)
+
+    def text(self) -> str:
+        return self._text
+
+    def _font_at(self, pt: float) -> QFont:
+        f = QFont(self.font())
+        f.setPointSizeF(pt)
+        return f
+
+    def _sizes(self, minimum: float) -> list[float]:
+        sizes, pt = [], self.max_pt
+        while pt >= minimum - 0.01:
+            sizes.append(round(pt, 1))
+            pt -= 0.5
+        return sizes
+
+    def _splits(self) -> list[tuple[str, str]]:
+        """Mögliche Umbrüche: an Leerzeichen und direkt nach Bindestrichen."""
+        text, result = self._text, []
+        for i, ch in enumerate(text):
+            if ch == " ":
+                result.append((text[:i], text[i + 1:]))
+            elif ch == "-" and 0 < i < len(text) - 1:
+                result.append((text[:i + 1], text[i + 1:]))
+        return [(a.strip(), b.strip()) for a, b in result if a.strip() and b.strip()]
+
+    def _layout(self) -> None:
+        width = max(self.width(), 10)
+        words = self._text.split()
+        for pt in self._sizes(self.single_min_pt):
+            font = self._font_at(pt)
+            if QFontMetrics(font).horizontalAdvance(self._text) <= width:
+                self._font, self._lines = font, [self._text]
+                return
+        splits = self._splits()
+        if splits:
+            for pt in self._sizes(self.min_pt):
+                font = self._font_at(pt)
+                fm = QFontMetrics(font)
+                best = min(splits, key=lambda s: max(fm.horizontalAdvance(s[0]), fm.horizontalAdvance(s[1])))
+                if max(fm.horizontalAdvance(best[0]), fm.horizontalAdvance(best[1])) <= width:
+                    self._font, self._lines = font, list(best)
+                    return
+        # Zu lang: kleinste Schrift, erste Zeile so voll wie möglich, Rest gekürzt
+        font = self._font_at(self.min_pt)
+        fm = QFontMetrics(font)
+        first = words[0] if words else self._text
+        for i in range(len(words), 0, -1):
+            if fm.horizontalAdvance(" ".join(words[:i])) <= width:
+                first = " ".join(words[:i])
+                rest = " ".join(words[i:])
+                break
+        else:
+            rest = " ".join(words[1:])
+        lines = [fm.elidedText(first, Qt.TextElideMode.ElideRight, width)]
+        if rest:
+            lines.append(fm.elidedText(rest, Qt.TextElideMode.ElideRight, width))
+        self._font, self._lines = font, lines
+
+    def resizeEvent(self, event):  # noqa: N802
+        self._layout()
+        super().resizeEvent(event)
+
+    def sizeHint(self):  # noqa: N802
+        fm = QFontMetrics(self._font_at(self.max_pt))
+        return QSize(100, fm.lineSpacing() * 2)
+
+    def paintEvent(self, _event):  # noqa: N802
+        p = QPainter(self)
+        p.setFont(self._font)
+        p.setPen(self.palette().color(self.foregroundRole()))
+        fm = QFontMetrics(self._font)
+        y = 0
+        for line in self._lines:
+            p.drawText(QRect(0, y, self.width(), fm.lineSpacing()), Qt.AlignmentFlag.AlignHCenter, line)
+            y += fm.lineSpacing()
+        p.end()
 
 
 def make_button(text: str, primary: bool = False, danger: bool = False, on_click: Callable | None = None) -> QPushButton:
@@ -130,6 +278,7 @@ def clear_layout(layout: QLayout) -> None:
     while layout.count():
         item = layout.takeAt(0)
         if w := item.widget():
+            w.hide()  # sofort unsichtbar - deleteLater greift erst im nächsten Event-Loop-Durchlauf
             w.deleteLater()
         elif child := item.layout():
             clear_layout(child)

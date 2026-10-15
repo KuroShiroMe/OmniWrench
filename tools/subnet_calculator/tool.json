@@ -1,16 +1,26 @@
 {
   "id": "net.subnet-calculator",
   "name": "Subnet Calculator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
   "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
   "author": "DarkMatter",
   "category": "Network/IP Tools",
+  "icon": "network",
   "color": "#0ea5e9",
   "entry": "tool:SubnetCalculator",
-  "min_app_version": "0.2.0",
-  "platforms": ["windows"],
-  "tags": ["subnet", "cidr", "ipv4", "ipv6", "netmask", "netzmaske"],
+  "min_app_version": "0.3.0",
+  "platforms": [
+    "windows"
+  ],
+  "tags": [
+    "subnet",
+    "cidr",
+    "ipv4",
+    "ipv6",
+    "netmask",
+    "netzmaske"
+  ],
   "single_instance": false,
   "requirements": {}
 }

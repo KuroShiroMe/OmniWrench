@@ -7,7 +7,13 @@ installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, win
 
 ## Funktionen
 
-* **Home-Tab** (immer geöffnet): installierte Tools als Kacheln, nach Kategorien gruppiert, mit Suche
+* **Home-Tab** (immer geöffnet): installierte Tools als Kacheln (Symbol + Name), nach Kategorien gruppiert,
+  mit Suche und Kategorie-Filter. Ein Klick zeigt eine Detail-Leiste, ein Doppelklick öffnet das Tool.
+  Ein Doppelklick auf eine Kategorie in der Seitenleiste setzt den Filter.
+* **Symbol-Bibliothek**: rund 2.100 Symbole von [Lucide](https://lucide.dev) (ISC-Lizenz) für Tool-Kacheln,
+  alternativ eigene Bilddatei oder Kürzel
+* **Passwortmanager**: Zugangsdaten verschlüsselt im Tresor; überall, wo Tools Anmeldedaten brauchen,
+  per Schlüssel-Button übernehmbar (bleiben verknüpft)
 * **Store-Tab**: Tools aus einem oder mehreren Repositories, Kategoriebaum, Installieren und Aktualisieren
 * **Tool-Tabs**: Jedes Tool öffnet sich in einem eigenen Tab. Tabs lassen sich per Drag & Drop nebeneinander
   oder übereinander anordnen und als eigenes Fenster ausklinken (Qt Advanced Docking System).
@@ -59,6 +65,7 @@ tools/                      Quellcode der Tools (je ein Ordner)
 store/                      Generierter Store (index.json + ZIP-Pakete)
 scripts/build_store.py      Baut store/ aus tools/
 scripts/check_locales.py    Prüft Sprachdateien auf fehlende Texte
+scripts/update_icons.py     Aktualisiert die Symbol-Bibliothek (Lucide)
 docs/TOOL_ENTWICKLUNG.md    Anleitung für neue Tools
 ```
 

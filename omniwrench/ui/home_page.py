@@ -10,13 +10,13 @@ from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
-    QFormLayout, QFrame, QHBoxLayout, QLineEdit, QScrollArea, QSplitter, QVBoxLayout, QWidget,
+    QFormLayout, QFrame, QHBoxLayout, QLineEdit, QMenu, QScrollArea, QSplitter, QVBoxLayout, QWidget,
 )
 
 from omniwrench.core.i18n import tr
 from omniwrench.core.tool_manager import InstalledTool
 
-from .widgets import FlowLayout, clear_layout, label, make_button, tool_icon
+from .widgets import FitLabel, FlowLayout, clear_layout, label, library_icon, make_button, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -47,9 +47,7 @@ class ToolTile(QFrame):
         icon.setPixmap(tool_icon(tool.manifest, tool.path, self.ICON).pixmap(self.ICON, self.ICON))
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(icon)
-        name = label(tool.manifest.display_name, "TileName", wrap=True)
-        name.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
-        lay.addWidget(name, 1)
+        lay.addWidget(FitLabel(tool.manifest.display_name, max_pt=9.5, min_pt=7.5, single_min_pt=8.5), 1)
 
         if has_update:  # kleiner Punkt oben rechts
             dot = label("", "UpdateDot", parent=self)
@@ -202,9 +200,20 @@ class HomePage(QWidget):
         self.search.setMaximumWidth(280)
         self.search.textChanged.connect(self.refresh)
         header.addWidget(self.search, alignment=Qt.AlignmentFlag.AlignVCenter)
+        self.filter_btn = make_button(tr("home.filter"), on_click=self._show_filter_menu)
+        self.filter_btn.setIcon(library_icon("list-filter", 16))
+        header.addWidget(self.filter_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
         header.addWidget(make_button(tr("home.open_store"), primary=True, on_click=host.show_store),
                          alignment=Qt.AlignmentFlag.AlignVCenter)
         self.body.addLayout(header)
+
+        # Aktiver Kategorie-Filter als "Chip" mit Entfernen-Knopf
+        self.category_filter: tuple[str, ...] = ()
+        self.filter_chip = make_button("", on_click=lambda: self.set_category_filter(()))
+        self.filter_chip.setObjectName("FilterChip")
+        self.filter_chip.setToolTip(tr("home.filter_clear"))
+        self.filter_chip.hide()
+        self.body.addWidget(self.filter_chip, alignment=Qt.AlignmentFlag.AlignLeft)
 
         self.sections = QVBoxLayout()
         self.sections.setSpacing(8)
@@ -235,6 +244,38 @@ class HomePage(QWidget):
             tile.set_selected(False)
         self.details.hide()
 
+    # ------------------------------------------------------------ Filter
+    def set_category_filter(self, path: tuple[str, ...] | list[str]) -> None:
+        """Zeigt nur Tools dieser Kategorie (inkl. Unterkategorien); () = alle."""
+        self.category_filter = tuple(path)
+        if self.category_filter:
+            self.filter_chip.setText(" › ".join(self.category_filter) + "   ✕")
+            self.filter_chip.show()
+        else:
+            self.filter_chip.hide()
+        self.filter_btn.setProperty("active", bool(self.category_filter))
+        _repolish(self.filter_btn)
+        self.refresh()
+
+    def _show_filter_menu(self) -> None:
+        menu = QMenu(self)
+        act = menu.addAction(tr("home.filter_all"), lambda: self.set_category_filter(()))
+        act.setCheckable(True)
+        act.setChecked(not self.category_filter)
+        menu.addSeparator()
+        paths: set[tuple[str, ...]] = set()
+        for tool in self.host.manager.tools.values():
+            path = tuple(tool.manifest.category_path)
+            paths.update(path[:i] for i in range(1, len(path) + 1))
+        for path in sorted(paths):
+            count = sum(1 for t in self.host.manager.tools.values()
+                        if tuple(t.manifest.category_path[:len(path)]) == path)
+            text = "      " * (len(path) - 1) + f"{path[-1]}  ({count})"
+            act = menu.addAction(text, lambda p=path: self.set_category_filter(p))
+            act.setCheckable(True)
+            act.setChecked(path == self.category_filter)
+        menu.exec(self.filter_btn.mapToGlobal(self.filter_btn.rect().bottomLeft()))
+
     # ------------------------------------------------------------ Aufbau
     def refresh(self) -> None:
         clear_layout(self.sections)
@@ -255,6 +296,9 @@ class HomePage(QWidget):
             self.clear_selection()
             return
 
+        if self.category_filter:
+            n = len(self.category_filter)
+            tools = [t for t in tools if tuple(t.manifest.category_path[:n]) == self.category_filter]
         query = self.search.text().strip().lower()
         if query:
             tools = [t for t in tools if query in (t.manifest.display_name + t.manifest.display_description

@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
 from omniwrench import __version__ as APP_VERSION  # noqa: F401 - Re-Export für Tools
+from omniwrench.core import credentials
 from omniwrench.core.i18n import tool_translator, tr
 from omniwrench.core.powershell import PSResult, ps_quote, run_ps, run_ps_elevated, run_ps_json
 
@@ -35,7 +36,29 @@ if TYPE_CHECKING:
 
 __all__ = [
     "APP_VERSION", "ToolBase", "ToolContext", "InstallContext", "PSResult", "ps_quote", "run_async", "LANGUAGE_KEY",
+    "pick_credential", "CredentialField",
 ]
+
+
+def pick_credential(parent=None) -> tuple[str, str] | None:
+    """Öffnet den Auswahldialog des Passwortmanagers und liefert (Benutzer, Passwort) oder None.
+
+    Für eigene Anmeldemasken im Tool, z. B. ein "🔑"-Button neben Benutzer/Passwort-Feldern.
+    """
+    from omniwrench.ui.credentials import pick_credential as _pick
+    cred = _pick(parent)
+    return (cred.username, cred.password) if cred else None
+
+
+def CredentialField(value: dict | None = None, parent=None):  # noqa: N802 - verhält sich wie eine Klasse
+    """Fertiges Eingabefeld Benutzer + Passwort mit Button "Aus Passwortmanager".
+
+    field = CredentialField()
+    layout.addWidget(field)
+    user, password = field.value()["username"], field.value()["password"]
+    """
+    from omniwrench.ui.credentials import CredentialField as _Field
+    return _Field(value, parent)
 
 
 def run_async(fn, on_done=None, on_error=None, on_progress=None) -> None:
@@ -97,9 +120,19 @@ class _ContextBase:
         return run_ps_elevated(script, timeout=timeout)
 
     def get_credential(self, key: str) -> tuple[str, str] | None:
-        """Liefert (Benutzer, Passwort) einer Einstellung vom Typ "credential"."""
+        """Liefert (Benutzer, Passwort) einer Einstellung vom Typ "credential".
+
+        Ist die Einstellung mit einem Eintrag im Passwortmanager verknüpft, wird immer
+        dessen aktueller Stand geliefert.
+        """
         value = self.settings.get(key)
-        if not value or not value.get("username"):
+        if not value:
+            return None
+        if value.get("ref"):
+            cred = credentials.manager().resolve(value["ref"])
+            if cred:
+                return cred.username, cred.password
+        if not value.get("username"):
             return None
         return value.get("username", ""), value.get("password", "")
 

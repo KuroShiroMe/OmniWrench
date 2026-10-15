@@ -12,7 +12,7 @@ from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
 from omniwrench import APP_ID, APP_NAME, __version__
-from omniwrench.core import i18n, net, paths
+from omniwrench.core import credentials, i18n, net, paths
 from omniwrench.core.i18n import tr
 from omniwrench.core.settings import AppSettings
 from omniwrench.core.tool_manager import ToolManager
@@ -84,6 +84,7 @@ def main() -> int:
     if not LoginDialog(vault).exec():
         return 0
     net.github_token = vault.get("app:github_token") or None
+    credentials.init(vault)
 
     from omniwrench.ui.main_window import MainWindow
 

@@ -1,17 +1,28 @@
 {
   "id": "ms.ad-user-lookup",
   "name": "AD User Lookup",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Search users in Active Directory and show their details.",
   "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
   "author": "DarkMatter",
   "category": "MS Server Tools/Active Directory",
+  "icon": "user-search",
   "color": "#8b5cf6",
   "entry": "tool:AdUserLookup",
-  "min_app_version": "0.2.0",
-  "platforms": ["windows"],
-  "tags": ["active directory", "ad", "user", "benutzer", "rsat"],
+  "min_app_version": "0.3.0",
+  "platforms": [
+    "windows"
+  ],
+  "tags": [
+    "active directory",
+    "ad",
+    "user",
+    "benutzer",
+    "rsat"
+  ],
   "requirements": {
-    "windows_capabilities": ["Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0"]
+    "windows_capabilities": [
+      "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0"
+    ]
   }
 }

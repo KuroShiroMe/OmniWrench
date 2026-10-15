@@ -66,7 +66,9 @@ class ToolManifest:
     long_description: str = ""
     author: str = ""
     category: str = ""                   # Pfad mit "/", z. B. "Network/IP Tools" (übersetzbar)
-    icon: str = ""                       # Dateiname relativ zum Tool-Ordner (png/svg) oder leer
+    icon: str = ""                       # Bilddatei im Tool-Ordner ODER Name aus der Bibliothek (siehe core/icons.py)
+    icon_text: str = ""                  # eigenes Kürzel für das generierte Symbol (max. 4 Zeichen)
+    icon_data: str = ""                  # nur im Store: eingebettete Bilddatei (Base64), von build_store.py erzeugt
     color: str = ""                      # Akzentfarbe für die Kachel, z. B. "#3b82f6"
     entry: str = "tool:Tool"             # "<modul>:<Klasse>"
     min_app_version: str = "0.0.0"

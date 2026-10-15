@@ -12,6 +12,7 @@ Programm dann eintragen:
 from __future__ import annotations
 
 import argparse
+import base64
 import hashlib
 import json
 import sys
@@ -45,6 +46,9 @@ def build(tools_dir: Path, store_dir: Path, base_url: str | None) -> None:
                     continue
                 zf.write(f, rel.as_posix())
         entry = dict(manifest.raw)
+        icon_file = tool_dir / manifest.icon if manifest.icon else None
+        if icon_file and icon_file.is_file():  # eigene Bilddatei: für die Store-Ansicht einbetten
+            entry["icon_data"] = base64.b64encode(icon_file.read_bytes()).decode("ascii")
         if manifest.translations:  # übersetzte Namen/Beschreibungen/Kategorien aus locales/*.json
             entry["translations"] = manifest.translations
         entry["download_url"] = (base_url.rstrip("/") + "/" + zip_name) if base_url else f"packages/{zip_name}"

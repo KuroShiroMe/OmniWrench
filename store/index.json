@@ -1,19 +1,20 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-15T10:39:46+00:00",
+  "generated": "2026-10-15T11:44:14+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "DarkMatter",
       "category": "MS Server Tools/Active Directory",
+      "icon": "user-search",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
-      "min_app_version": "0.2.0",
+      "min_app_version": "0.3.0",
       "platforms": [
         "windows"
       ],
@@ -43,21 +44,22 @@
           "category": "MS Server Tools/Active Directory"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.1.0.zip",
-      "sha256": "96d05eacad7082a5d4f97d6061c2af3aaee83cb42ee1bf5c95d0bf6f7da76cf3",
-      "size": 5549
+      "download_url": "packages/ms.ad-user-lookup-1.2.0.zip",
+      "sha256": "84cf56e20ed5b21245fd3e38b0fb7433a05ffd66ea561b41392db62b51ce2123",
+      "size": 5573
     },
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.1.0",
+      "version": "1.2.0",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "DarkMatter",
       "category": "Network/IP Tools",
+      "icon": "network",
       "color": "#0ea5e9",
       "entry": "tool:SubnetCalculator",
-      "min_app_version": "0.2.0",
+      "min_app_version": "0.3.0",
       "platforms": [
         "windows"
       ],
@@ -91,9 +93,9 @@
           "category": "Network/IP Tools"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.1.0.zip",
-      "sha256": "64bd5317af7b2662b116820fe85980fcf171b6c668667682b1792b9965ef5e8b",
-      "size": 7208
+      "download_url": "packages/net.subnet-calculator-1.2.0.zip",
+      "sha256": "76863357ea15291bdc9e6fe9081a796666c001ba9147cabdaf7eb061f2e91628",
+      "size": 7226
     }
   ]
 }

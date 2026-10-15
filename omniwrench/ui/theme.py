@@ -122,6 +122,9 @@ def stylesheet(c: dict[str, str]) -> str:
     QLabel#UpdateDot {{ background: {c['warning']}; border-radius: 5px; }}
     #DetailsPanel {{ background: {c['surface']}; border-left: 1px solid {c['border']}; }}
     #DetailsPanel QScrollArea, #DetailsContent {{ background: {c['surface']}; }}
+    QPushButton#FilterChip {{ background: {c['selection']}; border: 1px solid {c['accent']}; border-radius: 13px;
+                              padding: 3px 12px; }}
+    QPushButton[active="true"] {{ border-color: {c['accent']}; color: {c['accent']}; }}
     QPushButton#FlatButton {{ background: transparent; border: none; padding: 4px 8px; color: {c['muted']}; }}
     QPushButton#FlatButton:hover {{ color: {c['text']}; background: {c['surface2']}; }}
 

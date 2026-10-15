@@ -31,14 +31,36 @@ falls eine Übersetzung fehlt.
 | `long_description` | | Ausführliche Beschreibung (Store, Tooltip) |
 | `author` | | |
 | `category` | | Kategoriepfad mit `/`, z. B. `MS Server Tools/Active Directory` |
-| `icon` | | Bilddatei im Tool-Ordner (png/svg/ico, quadratisch, mind. 128 px), z. B. `"icon.png"`. Fehlt sie, wird ein Symbol mit Initialen in der Farbe `color` erzeugt |
-| `color` | | Akzentfarbe für das erzeugte Icon, z. B. `#0ea5e9` |
+| `icon` | | Symbol, siehe [Symbole](#symbole) |
+| `icon_text` | | Eigenes Kürzel für das erzeugte Symbol (max. 4 Zeichen), z. B. `"EXO"` |
+| `color` | | Hintergrundfarbe des erzeugten Symbols, z. B. `#0ea5e9` |
 | `entry` | | `"<modul>:<Klasse>"`, Standard `tool:Tool` |
 | `min_app_version` | | Mindestversion des Hauptprogramms |
 | `platforms` | | Standard `["windows"]` |
 | `tags` | | Suchbegriffe |
 | `single_instance` | | `true` = nur ein Tab gleichzeitig |
 | `requirements` | | Voraussetzungen, siehe unten |
+
+### Symbole
+
+Das Symbol der Kachel wird in dieser Reihenfolge bestimmt:
+
+1. **Eigene Bilddatei:** `"icon": "icon.png"` (png/svg/ico, quadratisch, mind. 128 px, im Tool-Ordner).
+   `build_store.py` bettet sie in den Store-Katalog ein, damit sie auch im Store erscheint.
+2. **Symbol aus der Bibliothek:** `"icon": "server"`. Eingebaut sind rund 2.100 Symbole von
+   [Lucide](https://lucide.dev/icons) (ISC-Lizenz, frei auch für kommerzielle Nutzung).
+   Übersicht im Programm unter *Extras › Symbol-Bibliothek*; ein Klick kopiert den Namen.
+   Das Symbol wird weiß auf der Farbe `color` dargestellt.
+3. **Eigenes Kürzel:** `"icon_text": "EXO"` erzeugt ein Symbol mit diesem Text.
+4. **Nichts angegeben:** Anfangsbuchstaben des Namens (z. B. „DNS Cleanup“ → „DC“).
+
+```json
+"icon": "network",
+"color": "#0ea5e9"
+```
+
+Lange Namen passt die Kachel automatisch an: Erst wird die Schrift etwas verkleinert, dann an Leerzeichen
+oder nach Bindestrichen in zwei Zeilen umgebrochen.
 
 ### requirements
 
@@ -92,7 +114,7 @@ Aus dem Schema erzeugt das Hauptprogramm automatisch den Einstellungsdialog
 | `path_file`, `path_dir` | Pfad (mit Durchsuchen-Button) | JSON |
 | `certificate` | Fingerabdruck aus `Cert:\CurrentUser\My` | JSON |
 | `secret` | str (Passwort, Token, API-Key) | **Tresor, verschlüsselt** |
-| `credential` | `{"username": …, "password": …}` | **Tresor, verschlüsselt** |
+| `credential` | `{"username": …, "password": …}`, mit Button „Aus Passwortmanager“ | **Tresor, verschlüsselt** |
 
 Weitere Felder: `label`, `description`, `group` (eigener Tab im Dialog), `placeholder`, `required`.
 
@@ -156,6 +178,25 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | `notify(msg)` | Meldung in der Statusleiste |
 | `open_settings()` | Einstellungsdialog des Tools öffnen |
 | `log` | Logger (`%LOCALAPPDATA%\DarkMatter\OmniWrench\logs`) |
+
+### Zugangsdaten und Passwortmanager
+
+OmniWrench hat einen eingebauten Passwortmanager (*Extras › Passwortmanager*). Tools greifen so darauf zu:
+
+* **Einstellung vom Typ `credential`:** Der Einstellungsdialog zeigt automatisch Benutzer, Passwort und einen
+  Schlüssel-Button. Wird ein Eintrag übernommen, bleibt er **verknüpft**: Ändert sich das Passwort im Manager,
+  liefert `self.context.get_credential("key")` automatisch das neue.
+* **Eigene Anmeldemaske im Tool:** fertiges Feld mit Schlüssel-Button.
+
+  ```python
+  from omniwrench.sdk import CredentialField, pick_credential
+
+  self.login = CredentialField()                 # Benutzer + Passwort + 🔑
+  layout.addWidget(self.login)
+  user = self.login.value()["username"]
+
+  creds = pick_credential(parent_widget)         # nur der Auswahldialog -> (user, pw) oder None
+  ```
 
 Lang laufende Aufgaben (AD-Abfragen, Netzwerk-Scans) gehören mit `run_async(fn, on_done, on_error)` in einen
 Hintergrund-Thread. Die Callbacks laufen wieder im GUI-Thread.

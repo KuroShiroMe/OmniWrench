@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QLineEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget
 
 from omniwrench.core.i18n import tr
@@ -13,6 +13,8 @@ from .widgets import label, make_button, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
+
+CATEGORY_ROLE = Qt.ItemDataRole.UserRole + 1
 
 
 class Sidebar(QWidget):
@@ -31,7 +33,7 @@ class Sidebar(QWidget):
         nav_lay = QVBoxLayout(nav)
         nav_lay.setContentsMargins(0, 0, 0, 0)
         nav_lay.setSpacing(2)
-        nav_lay.addWidget(make_button("🏠   " + tr("nav.home"), on_click=host.show_home))
+        nav_lay.addWidget(make_button("🏠   " + tr("nav.home"), on_click=lambda: host.show_home()))
         nav_lay.addWidget(make_button("🛒   " + tr("nav.store"), on_click=host.show_store))
         lay.addWidget(nav)
 
@@ -46,10 +48,13 @@ class Sidebar(QWidget):
         self.tree.setHeaderHidden(True)
         self.tree.setIndentation(14)
         self.tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.tree.setExpandsOnDoubleClick(False)  # Doppelklick auf Kategorie = Filter auf Home
+        self.tree.itemDoubleClicked.connect(self._activated)
         self.tree.itemActivated.connect(self._activated)
         self.tree.customContextMenuRequested.connect(self._context_menu)
         lay.addWidget(self.tree, 1)
 
+        self._last_activation = None
         host.manager.toolsChanged.connect(self.refresh)
         host.catalogChanged.connect(self.refresh)
         self.refresh()
@@ -72,6 +77,8 @@ class Sidebar(QWidget):
                     font = node.font(0)
                     font.setBold(True)
                     node.setFont(0, font)
+                    node.setData(0, CATEGORY_ROLE, key)
+                    node.setToolTip(0, tr("sidebar.category_hint"))
                     (parent.addChild(node) if parent else self.tree.addTopLevelItem(node))
                     nodes[key] = node
                 parent = nodes[key]
@@ -83,10 +90,16 @@ class Sidebar(QWidget):
             parent.addChild(item)
         self.tree.expandAll()
 
-    def _activated(self, item: QTreeWidgetItem) -> None:
-        tool_id = item.data(0, Qt.ItemDataRole.UserRole)
-        if tool_id:
+    def _activated(self, item: QTreeWidgetItem, _column: int = 0) -> None:
+        # itemDoubleClicked und itemActivated feuern beide - nur einmal reagieren
+        if self._last_activation is item:
+            return
+        self._last_activation = item
+        QTimer.singleShot(0, lambda: setattr(self, "_last_activation", None))
+        if tool_id := item.data(0, Qt.ItemDataRole.UserRole):
             self.host.open_tool(tool_id)
+        elif category := item.data(0, CATEGORY_ROLE):
+            self.host.show_home(category_filter=tuple(category))
 
     def _context_menu(self, pos) -> None:
         item = self.tree.itemAt(pos)
