@@ -1,0 +1,41 @@
+{
+  "_meta": {"name": "German", "native": "Deutsch"},
+
+  "tool.name": "AD Benutzerabfrage",
+  "tool.description": "Benutzer im Active Directory suchen und Details anzeigen.",
+  "tool.long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
+  "tool.category": "MS Server Tools/Active Directory",
+
+  "settings.group.Connection": "Verbindung",
+  "settings.group.Login": "Anmeldung",
+  "settings.server.label": "Domänencontroller / Domäne",
+  "settings.server.placeholder": "leer = Domäne des angemeldeten Benutzers",
+  "settings.search_base.label": "Suchbasis (OU)",
+  "settings.use_credential.label": "Abweichende Anmeldedaten verwenden",
+  "settings.credential.label": "Anmeldedaten",
+  "settings.credential.description": "Wird verschlüsselt im Tresor gespeichert.",
+  "settings.max_results.label": "Max. Ergebnisse",
+
+  "ui.search_placeholder": "Name, Anmeldename oder E-Mail …",
+  "ui.search": "Suchen",
+  "ui.settings": "Einstellungen",
+  "ui.searching": "Suche läuft …",
+  "ui.found": "{count} Benutzer gefunden",
+  "ui.no_credential": "Abweichende Anmeldedaten aktiviert, aber nicht hinterlegt (⚙).",
+  "ui.error": "Fehler: {error}",
+  "ui.yes": "Ja",
+  "ui.no": "Nein",
+  "ui.groups": "Gruppen",
+  "col.SamAccountName": "Anmeldename",
+  "col.Name": "Name",
+  "col.Enabled": "Aktiv",
+  "col.LockedOut": "Gesperrt",
+  "col.LastLogonDate": "Letzte Anmeldung",
+  "col.mail": "E-Mail",
+
+  "install.checking": "Prüfe ActiveDirectory-Modul …",
+  "install.found": "ActiveDirectory-Modul gefunden.",
+  "install.not_found": "ActiveDirectory-Modul noch nicht verfügbar.",
+  "install.missing": "PowerShell-Modul 'ActiveDirectory' (RSAT: Active Directory-Tools)",
+  "install.keep_rsat": "RSAT-Tools bleiben installiert."
+}

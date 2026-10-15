@@ -1,0 +1,36 @@
+{
+  "settings": [
+    {
+      "key": "default_network",
+      "type": "string",
+      "label": "Default network at startup",
+      "default": "192.168.1.0/24",
+      "placeholder": "e.g. 10.0.0.0/16"
+    },
+    {
+      "key": "max_subnets",
+      "type": "int",
+      "label": "Max. subnets shown",
+      "default": 1024,
+      "min": 16,
+      "max": 65536,
+      "description": "Limits the table for very fine splits."
+    },
+    {
+      "key": "export_dir",
+      "type": "path_dir",
+      "label": "Export folder",
+      "default": "",
+      "group": "Export",
+      "description": "Default folder for CSV export."
+    },
+    {
+      "key": "csv_separator",
+      "type": "choice",
+      "label": "CSV separator",
+      "default": ";",
+      "group": "Export",
+      "options": [{"value": ";", "label": "Semicolon"}, {"value": ",", "label": "Comma"}, {"value": "\t", "label": "Tab"}]
+    }
+  ]
+}

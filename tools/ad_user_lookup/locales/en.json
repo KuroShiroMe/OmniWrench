@@ -1,0 +1,41 @@
+{
+  "_meta": {"name": "English", "native": "English"},
+
+  "tool.name": "AD User Lookup",
+  "tool.description": "Search users in Active Directory and show their details.",
+  "tool.long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
+  "tool.category": "MS Server Tools/Active Directory",
+
+  "settings.group.Connection": "Connection",
+  "settings.group.Login": "Login",
+  "settings.server.label": "Domain controller / domain",
+  "settings.server.placeholder": "empty = domain of the logged-on user",
+  "settings.search_base.label": "Search base (OU)",
+  "settings.use_credential.label": "Use different credentials",
+  "settings.credential.label": "Credentials",
+  "settings.credential.description": "Stored encrypted in the vault.",
+  "settings.max_results.label": "Max. results",
+
+  "ui.search_placeholder": "Name, logon name or e-mail …",
+  "ui.search": "Search",
+  "ui.settings": "Settings",
+  "ui.searching": "Searching …",
+  "ui.found": "{count} user(s) found",
+  "ui.no_credential": "Different credentials are enabled but not stored (⚙).",
+  "ui.error": "Error: {error}",
+  "ui.yes": "Yes",
+  "ui.no": "No",
+  "ui.groups": "Groups",
+  "col.SamAccountName": "Logon name",
+  "col.Name": "Name",
+  "col.Enabled": "Enabled",
+  "col.LockedOut": "Locked",
+  "col.LastLogonDate": "Last logon",
+  "col.mail": "E-mail",
+
+  "install.checking": "Checking ActiveDirectory module …",
+  "install.found": "ActiveDirectory module found.",
+  "install.not_found": "ActiveDirectory module not available yet.",
+  "install.missing": "PowerShell module 'ActiveDirectory' (RSAT: Active Directory tools)",
+  "install.keep_rsat": "RSAT tools remain installed."
+}

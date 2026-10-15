@@ -1,0 +1,99 @@
+{
+  "format": 1,
+  "name": "Admin Tools Store",
+  "generated": "2026-10-15T10:06:55+00:00",
+  "tools": [
+    {
+      "id": "ms.ad-user-lookup",
+      "name": "AD User Lookup",
+      "version": "1.1.0",
+      "description": "Search users in Active Directory and show their details.",
+      "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
+      "author": "Admin Tools",
+      "category": "MS Server Tools/Active Directory",
+      "color": "#8b5cf6",
+      "entry": "tool:AdUserLookup",
+      "min_app_version": "0.2.0",
+      "platforms": [
+        "windows"
+      ],
+      "tags": [
+        "active directory",
+        "ad",
+        "user",
+        "benutzer",
+        "rsat"
+      ],
+      "requirements": {
+        "windows_capabilities": [
+          "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0"
+        ]
+      },
+      "translations": {
+        "de": {
+          "name": "AD Benutzerabfrage",
+          "description": "Benutzer im Active Directory suchen und Details anzeigen.",
+          "long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
+          "category": "MS Server Tools/Active Directory"
+        },
+        "en": {
+          "name": "AD User Lookup",
+          "description": "Search users in Active Directory and show their details.",
+          "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
+          "category": "MS Server Tools/Active Directory"
+        }
+      },
+      "download_url": "packages/ms.ad-user-lookup-1.1.0.zip",
+      "sha256": "50ba295b4b097844d8cb475264a9a572feecbec33f9ec952e5ffe89e9d4aaaaf",
+      "size": 5549
+    },
+    {
+      "id": "net.subnet-calculator",
+      "name": "Subnet Calculator",
+      "version": "1.1.0",
+      "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
+      "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
+      "author": "Admin Tools",
+      "category": "Network/IP Tools",
+      "color": "#0ea5e9",
+      "entry": "tool:SubnetCalculator",
+      "min_app_version": "0.2.0",
+      "platforms": [
+        "windows"
+      ],
+      "tags": [
+        "subnet",
+        "cidr",
+        "ipv4",
+        "ipv6",
+        "netmask",
+        "netzmaske"
+      ],
+      "single_instance": false,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Subnetzrechner",
+          "description": "IPv4/IPv6-Netze berechnen und in Subnetze aufteilen.",
+          "long_description": "Berechnet Netzadresse, Broadcast, Netzmaske, Wildcard, Hostbereich und Anzahl der Hosts. Teilt Netze in gleich große Subnetze auf und exportiert die Liste als CSV.",
+          "category": "Netzwerk/IP-Tools"
+        },
+        "de_bad": {
+          "name": "Netzle-Rechner",
+          "description": "IPv4/IPv6-Netzle usrechne un in kleineri Stückle verteile.",
+          "long_description": "Rechnet Netzadress, Broadcast, Netzmask, Wildcard, Hostbereich un wie viel Hosts nei bassed. Verteilt Netze in gliich großi Stückle un schreibt d Lischt als CSV raus.",
+          "category": "Netzwerk/IP-Werkzeigle"
+        },
+        "en": {
+          "name": "Subnet Calculator",
+          "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
+          "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
+          "category": "Network/IP Tools"
+        }
+      },
+      "download_url": "packages/net.subnet-calculator-1.1.0.zip",
+      "sha256": "049b6873dd0ff2137b829d9dd1377f97d017e34840d915836514032f3852e4f0",
+      "size": 7204
+    }
+  ]
+}

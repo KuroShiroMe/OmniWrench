@@ -1,0 +1,42 @@
+{
+  "settings": [
+    {
+      "key": "server",
+      "type": "string",
+      "label": "Domain controller / domain",
+      "default": "",
+      "placeholder": "empty = domain of the logged-on user",
+      "group": "Connection"
+    },
+    {
+      "key": "search_base",
+      "type": "string",
+      "label": "Search base (OU)",
+      "default": "",
+      "placeholder": "OU=Users,DC=company,DC=local",
+      "group": "Connection"
+    },
+    {
+      "key": "use_credential",
+      "type": "bool",
+      "label": "Use different credentials",
+      "default": false,
+      "group": "Login"
+    },
+    {
+      "key": "credential",
+      "type": "credential",
+      "label": "Credentials",
+      "description": "Stored encrypted in the vault.",
+      "group": "Login"
+    },
+    {
+      "key": "max_results",
+      "type": "int",
+      "label": "Max. results",
+      "default": 200,
+      "min": 1,
+      "max": 5000
+    }
+  ]
+}

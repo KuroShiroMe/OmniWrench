@@ -1,0 +1,36 @@
+{
+  "_meta": {"name": "Baden dialect", "native": "Badisch"},
+
+  "tool.name": "Netzle-Rechner",
+  "tool.description": "IPv4/IPv6-Netzle usrechne un in kleineri Stückle verteile.",
+  "tool.long_description": "Rechnet Netzadress, Broadcast, Netzmask, Wildcard, Hostbereich un wie viel Hosts nei bassed. Verteilt Netze in gliich großi Stückle un schreibt d Lischt als CSV raus.",
+  "tool.category": "Netzwerk/IP-Werkzeigle",
+
+  "settings.default_network.label": "Netzle biim Start",
+  "settings.max_subnets.label": "Maximal so viel Stückle aazeige",
+  "settings.export_dir.label": "Export-Ordner",
+  "settings.csv_separator.label": "CSV-Trennzeiche",
+
+  "ui.network_label": "Netzle:",
+  "ui.invalid": "Des goht nit: {error}",
+  "ui.details": "Was des Netzle so hät",
+  "ui.split": "In Stückle verteile",
+  "ui.new_prefix": "Neis Präfix: /",
+  "ui.export": "Als CSV rausschriibe …",
+  "ui.split_info": "{count} Stückle",
+  "ui.split_info_limited": " – zeig nur die erschte {shown}",
+  "ui.exported": "{count} Stückle nach {path} gschriibe",
+  "col.network": "Netzle",
+  "col.first": "Erschter Host",
+  "col.last": "Letschter Host",
+
+  "d.input": "Iitippti Adress",
+  "d.network": "Netzadress",
+  "d.netmask": "Netzmask",
+  "d.first_host": "Erschter Host",
+  "d.last_host": "Letschter Host",
+  "d.usable_hosts": "Hosts, wo nei bassed",
+  "d.type": "Was fir e Adress",
+  "kind.private": "Privat - goht niemer ebbes aa",
+  "kind.global": "Öffentlich"
+}
