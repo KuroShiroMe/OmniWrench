@@ -1,7 +1,7 @@
 # Backlog / next steps
 
 ## Open / to verify with user
-- [ ] 0.6.0 on main (PRs #1-#5 merged); user tests on Windows (source + EXE). Release tag/GitHub release only after OK.
+- [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
       Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
       someone with Netwrix Enterprise Pro confirms it works.
@@ -20,8 +20,7 @@
 - IconForge: more icon sources (combo "source" prepared), e.g. custom user folders, other free libraries.
 - [ ] EXE build (scripts/build_exe.py) done, tested on Linux + CI; still to test on user's machine: start, login with
       smart card, tool install incl. pip (OmniVault/pykeepass), self-update from -win64.zip, UAC prerequisites.
-- Optional later: code signing of OmniWrench.exe (SmartScreen), installer (Inno Setup/MSIX), auto-upload of the
-  CI zip to the GitHub release.
+- Optional later: code signing of OmniWrench.exe (SmartScreen), installer (Inno Setup/MSIX).
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Native-speaker review of fr/es/dialect translations.
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0

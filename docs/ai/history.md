@@ -121,4 +121,6 @@
 - Preview sharpness at high scaling re-checked: render_pixmap uses max(2, screen DPR) (fixed before #4 merge); 200 %
   render sharp. No change needed.
 - Tested by offscreen renders 1400/1100/900/700/560 px (de, en, 200 %): no horizontal scrollbar. Store: only IconForge zip.
-
+- Release 0.6.0 (user OK "hau rein"): build-exe.yml now creates the GitHub release on tag v* (checks tag == app
+  version, build_release.py + build_exe.py --zip, source zip uploaded first, notes from
+  .github/release-notes/<tag>.md else --generate-notes; permissions contents: write). Tag v0.6.0 pushed.

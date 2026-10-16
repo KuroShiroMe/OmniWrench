@@ -39,6 +39,19 @@ Der lokale Entwicklungs-Store (`store\`) wird nicht mitgeliefert; die EXE nutzt 
 
 ## Veröffentlichen
 
+**Automatisch (empfohlen):** Version in `omniwrench/__init__.py` erhöhen, Release-Notizen in
+`.github/release-notes/vX.Y.Z.md` ablegen (optional, sonst erzeugt GitHub sie), committen und den Tag pushen:
+
+```powershell
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Der Workflow **EXE-Build** prüft, ob Tag und Programmversion zusammenpassen, baut beide Pakete und
+legt das GitHub-Release mit Quellpaket und EXE-Paket an.
+
+**Manuell:**
+
 Version in `omniwrench/__init__.py` erhöhen, committen, dann beide Pakete bauen und **zuerst das
 Quellpaket** hochladen (ältere Programmversionen nehmen das erste passende ZIP):
 
