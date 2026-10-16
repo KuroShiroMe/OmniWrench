@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from omniwrench import APP_NAME, GITHUB_REPO, VENDOR, __version__
-from omniwrench.core import app_updater, credentials, repository
+from omniwrench.core import app_updater, credentials, elevation, repository
 from omniwrench.core.i18n import tr
 from omniwrench.core.jsonio import read_json, write_json
 from omniwrench.core.paths import APP_DIR, LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
@@ -661,6 +661,11 @@ class MainWindow(QMainWindow):
                           f"<h3>{APP_NAME} {__version__}</h3><p>{tr('about.text')}</p>"
                           f"<p>{tr('about.installed', count=len(self.manager.tools))}</p>"
                           f"<p>© {VENDOR} · <a href='https://github.com/{GITHUB_REPO}'>github.com/{GITHUB_REPO}</a></p>")
+
+    def showEvent(self, event):  # noqa: N802
+        super().showEvent(event)
+        # UAC-Abfragen (Voraussetzungen installieren) diesem Fenster zuordnen -> erscheinen im Vordergrund
+        elevation.set_owner_window(int(self.winId()))
 
     def closeEvent(self, event):  # noqa: N802
         if not self._force_quit:

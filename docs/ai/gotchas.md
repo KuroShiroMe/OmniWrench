@@ -7,7 +7,16 @@
 - `git commit -F -` with here-string didn't work → write message to a file and use `-F file`.
 - `gh` installed but PATH not refreshed in tool shell → refresh PATH (see CLAUDE.md). `gh release create` prints a harmless "protocol error: received DATA after END_STREAM"; verify with `gh release view`.
 - Corporate TLS inspection: Python 3.13+ strict X.509 rejects proxy root ("Missing Authority Key Identifier") → use truststore (net.py `_SSL`).
-- Elevated PowerShell (UAC): don't use Start-Transcript for logs (file locked/owned by elevated proc) → collect output, WriteAllText, icacls grant user.
+- Elevated PowerShell (UAC): don't use Start-Transcript for logs (file locked/owned by elevated proc). Current design:
+  non-elevated parent creates the log file first (stays readable even if UAC runs under another admin account),
+  elevated wrapper appends lines; parent tails it. A non-elevated process can't kill the elevated one (timeout = give up waiting).
+- `Start-Process -Verb RunAs` from a hidden PowerShell: UAC prompt may only flash in the taskbar, cancel only as
+  localized error text → use ShellExecuteExW with the main window hwnd (core/elevation.py).
+- `-File` is subject to GPO execution policy (AllSigned) despite `-ExecutionPolicy Bypass`; `-EncodedCommand` is not
+  → elevated wrapper uses -EncodedCommand (falls back to -File above ~30k chars).
+- RSAT via Add-WindowsCapability fails on WSUS clients with 0x800f0954 unless GPO allows Windows Update for optional
+  components → shown as hint (no automatic policy/registry change).
+- Linux dev: pwsh 7 tarball from GitHub releases works for testing PowerShell wrappers (scratchpad).
 - Intune device cert in CurrentUser\My is signing-only (CNG KeyUsage=Signing) → can't decrypt.
 
 ## Qt / PySide6 / QtAds

@@ -103,3 +103,8 @@
   README has the required "Code signing policy" section (roles: Steffi-Tech = author/reviewer/approver,
   privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
   Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).
+
+## UAC prerequisites (2026-10-16, my choices)
+- Elevation via ShellExecuteExW (not Start-Process -Verb RunAs); already-elevated app runs without prompt.
+- WSUS/Features-on-Demand errors: only a hint text; OmniWrench never changes policies/registry on its own.
+- Restart needed: notice in the install log only, no automatic restart.

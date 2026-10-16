@@ -150,3 +150,13 @@
   expired session/token -> re-login); dialog renders for all three types. Store: only omnivault zip rebuilt.
 - Same PR, on request: OmniVault locales for fr, es, de_bad, de_by, en_sco, en_posh (all 51 keys) + fr/es for every
   label/description in connector_types.json (dialects fall back to de/en there via text()). Checked fr/es dialog renders.
+
+## 2026-10-16 — real UAC install of prerequisites (thread "Echte UAC-Installation")
+- New core/elevation.py: ShellExecuteExW "runas" (owner = main window via MainWindow.showEvent), detects UAC "No"
+  (1223), is_admin() skips the prompt when already elevated. Same code path in source and EXE.
+- run_ps_elevated rewritten: -EncodedCommand wrapper, user script base64-embedded (syntax errors land in the log),
+  log file pre-created by the user, output streamed live (on_output), errors as stderr, full powershell.exe path.
+- prerequisites: localized live progress per capability/feature, restart-needed notice, WSUS/FoD hint, clean
+  "UAC declined" error. SDK run_powershell_elevated(on_output=). 12 new/changed keys in all 8 locales.
+- Tested on Linux with pwsh 7.4 + mocked DISM cmdlets (install, present, restart, 0x800f0954, syntax error, exit code,
+  umlauts, >30k script via -File, cancel). Windows API part untested here -> user test.

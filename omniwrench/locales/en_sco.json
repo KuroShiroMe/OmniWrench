@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Only RSA certificates work fir scramblin.",
   "err.cert_decrypt": "Couldnae unscramble wi the certificate.",
   "err.elevated_timeout": "Took ower lang wi admin richts.",
-  "err.elevated_cancelled": "Cancelled (did ye say naw tae UAC?).",
+  "err.elevated_cancelled": "Nae admin richts gien (UAC prompt telt naw).",
   "err.windows_features": "Couldnae pit on the Windaes features.",
   "err.ps_module": "PowerShell module {name} willnae go on:",
   "err.winget": "winget package {name} willnae go on:",
@@ -303,5 +303,16 @@
   "pwm.remove_entry": "Tak it aff the list",
   "pwm.search_all": "Hunt through a' the passwird kists …",
   "pwm.searching": "Huntin through the linked kists …",
-  "pwm.source": "Comes fae"
+  "pwm.source": "Comes fae",
+  "prog.uac_prompt": "Askin fur admin richts. Say aye tae the Windaes prompt (UAC) …",
+  "prog.already_admin": "The program's awready rinnin wi admin richts, nae UAC prompt needit.",
+  "prog.elev_cap_install": "Pittin on Windaes capability {name} (could tak a wee while) …",
+  "prog.elev_cap_present": "Windaes capability {name} is awready on.",
+  "prog.elev_feat_install": "Switchin on feature {name} …",
+  "prog.elev_feat_present": "Feature {name} is awready switched on.",
+  "prog.elev_done": "{name}: aw done.",
+  "prog.restart_required": "Mind: Windaes needs a restart fur aw the chynges tae tak.",
+  "err.elevated_start": "Couldnae stert the admin session: {error}",
+  "err.elevated_failed": "Rinnin wi admin richts didnae work (exit code {code}).",
+  "err.feature_source_hint": "Windaes couldnae fetch the feature. Wi WSUS, the group policy \"Specify settings for optional component installation and component repair\" has tae let it come straucht frae Windaes Update, or pit the feature on frae a Features on Demand source."
 }

@@ -15,7 +15,9 @@
       Remove alpha tag per connector once confirmed.
 - [ ] SecretManagement connector: live test (module not installed on dev machine).
 - [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
-- [ ] Real UAC run of elevated prerequisite install (only simulated so far).
+- [ ] UAC prerequisites rebuilt on ShellExecuteExW (branch claude/real-uac-install-axo2h0); tested on Linux with pwsh +
+      mocked cmdlets only. User to test on Windows (source + EXE): RSAT install via AD User Lookup, UAC "No",
+      already-admin start, WSUS hint. Windows Server: RSAT capabilities don't exist there (would need features) - open.
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 

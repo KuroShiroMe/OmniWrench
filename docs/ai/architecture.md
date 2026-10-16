@@ -11,13 +11,16 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
   paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
   vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>"
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
-  powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC, log file + icacls)
+  powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
+                              wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
+  elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
   manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path
   tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners
   tool_manager.py             ToolManager(QObject): refresh, create_instance, install_zip/dir (backup+rollback),
                               _install_prerequisites (check() first), uninstall, repair; module prefix omniwrench_tool_<id>
-  prerequisites.py            pip (_lib), elevated capabilities/features, PS modules, winget
+  prerequisites.py            pip (_lib), elevated capabilities/features (##OW markers -> localized progress,
+                              restart notice, WSUS/FoD hint on 0x800f0954 etc.), PS modules, winget
   repository.py               load_catalog(repos), available_updates, install_from_catalog
   app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
   net.py                      urllib + truststore SSL, github_token header
