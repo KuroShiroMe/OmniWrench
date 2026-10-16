@@ -11,7 +11,7 @@ from PySide6.QtCore import QByteArray, QPoint, QRect, QRectF, QSize, Qt
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
-    QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
+    QBoxLayout, QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 
 from omniwrench.core import icons
@@ -19,6 +19,7 @@ from omniwrench.core.i18n import tr
 from omniwrench.core.manifest import ToolManifest
 
 from . import theme
+from .scaling import device_pixel_ratio, device_pixels, fit_to_screen
 from .workers import run_async
 
 _ICON_COLORS = ["#3b82f6", "#8b5cf6", "#ec4899", "#f97316", "#10b981", "#06b6d4", "#eab308", "#ef4444", "#6366f1"]
@@ -40,13 +41,16 @@ def library_icon(name: str, size: int = 24, color: str | None = None) -> QIcon:
     svg = icons.library_svg(name)
     if svg is None:
         return QIcon()
-    pix = QPixmap(size * 2, size * 2)
+    # In der Auflösung des schärfsten Bildschirms zeichnen (Windows-Skalierung x eigene Skalierung)
+    ratio = device_pixel_ratio()
+    s = device_pixels(size, ratio)
+    pix = QPixmap(s, s)
     pix.fill(Qt.GlobalColor.transparent)
     p = QPainter(pix)
     p.setRenderHint(QPainter.RenderHint.Antialiasing)
-    _render_svg(svg, p, QRectF(0, 0, size * 2, size * 2), color or theme.current["text"])
+    _render_svg(svg, p, QRectF(0, 0, s, s), color or theme.current["text"])
     p.end()
-    pix.setDevicePixelRatio(2)
+    pix.setDevicePixelRatio(s / size)
     return QIcon(pix)
 
 
@@ -64,11 +68,12 @@ def tool_icon(manifest: ToolManifest, tool_dir: Path | None = None, size: int = 
         return QIcon(pix)
 
     color = accent_color(manifest)
-    key = (spec, color, size)
+    ratio = device_pixel_ratio()
+    key = (spec, color, size, ratio)
     if key in _icon_cache:
         return _icon_cache[key]
 
-    s = size * 2  # doppelte Auflösung für HiDPI
+    s = device_pixels(size, ratio)  # in Bildschirmauflösung zeichnen, damit es auch bei 300 % scharf bleibt
     pix = QPixmap(s, s)
     pix.fill(Qt.GlobalColor.transparent)
     p = QPainter(pix)
@@ -90,7 +95,7 @@ def tool_icon(manifest: ToolManifest, tool_dir: Path | None = None, size: int = 
         p.setPen(QColor("white"))
         p.drawText(QRect(0, 0, s, s), Qt.AlignmentFlag.AlignCenter, text)
     p.end()
-    pix.setDevicePixelRatio(2)
+    pix.setDevicePixelRatio(s / size)
     icon = QIcon(pix)
     _icon_cache[key] = icon
     return icon
@@ -194,6 +199,21 @@ class FitLabel(QWidget):
         p.end()
 
 
+_BREAK_AFTER = ".~\\/_:@"
+
+
+def breakable(text: str) -> str:
+    """Erlaubt Zeilenumbrüche in langen Bezeichnern (z. B. Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0),
+    damit schmale Leisten nicht breiter werden als der Platz (unsichtbares Leerzeichen nach . ~ \\ / _ : @)."""
+    out, run = [], 0
+    for ch in text:
+        out.append(ch)
+        run = 0 if ch.isspace() else run + 1
+        if ch in _BREAK_AFTER and run > 8:
+            out.append("\u200b")
+    return "".join(out)
+
+
 def make_button(text: str, primary: bool = False, danger: bool = False, on_click: Callable | None = None) -> QPushButton:
     btn = QPushButton(text)
     if primary:
@@ -212,6 +232,47 @@ def label(text: str, object_name: str = "", wrap: bool = False, parent: QWidget 
         lbl.setObjectName(object_name)
     lbl.setWordWrap(wrap)
     return lbl
+
+
+class ResponsiveRow(QWidget):
+    """Zwei Bereiche nebeneinander (z. B. Seitentitel links, Suche und Buttons rechts).
+
+    Reicht die Breite nicht für beide, rutscht der rechte Bereich unter den linken -
+    so passt die Kopfzeile auch in kleine Fenster, ohne Inhalte abzuschneiden.
+    """
+
+    def __init__(self, left: QLayout, right: QLayout, parent: QWidget | None = None, left_width: int = 0,
+                 align: Qt.AlignmentFlag = Qt.AlignmentFlag.AlignVCenter):
+        super().__init__(parent)
+        self._align = align
+        self._left_width = left_width  # Breite, ab der der linke Teil genug Platz hat (0 = seine Wunschbreite)
+        self._left, self._right = QWidget(), QWidget()
+        self._left.setLayout(left)
+        self._right.setLayout(right)
+        for part in (left, right):
+            part.setContentsMargins(0, 0, 0, 0)
+        self._box = QBoxLayout(QBoxLayout.Direction.LeftToRight, self)
+        self._box.setContentsMargins(0, 0, 0, 0)
+        self._box.addWidget(self._left, 1)
+        self._box.addWidget(self._right, 0, align)
+
+    def _needed_width(self) -> int:
+        left = self._left_width or self._left.sizeHint().width()
+        return left + self._box.spacing() + self._right.sizeHint().width()
+
+    def minimumSizeHint(self):  # noqa: N802 - erlaubt dem Elternlayout, schmaler zu werden als beide Teile
+        hint = super().minimumSizeHint()
+        width = max(self._left.minimumSizeHint().width(), self._right.minimumSizeHint().width())
+        return QSize(width, hint.height())
+
+    def resizeEvent(self, event):  # noqa: N802
+        wide = event.size().width() >= self._needed_width()
+        direction = QBoxLayout.Direction.LeftToRight if wide else QBoxLayout.Direction.TopToBottom
+        if self._box.direction() != direction:
+            self._box.setDirection(direction)
+            self._box.setAlignment(self._right, self._align if wide else Qt.AlignmentFlag.AlignLeft)
+            self.updateGeometry()
+        super().resizeEvent(event)
 
 
 class FlowLayout(QLayout):
@@ -274,6 +335,83 @@ class FlowLayout(QLayout):
         return y + line_height - rect.y()
 
 
+class ColumnFlowLayout(QLayout):
+    """Gleich breite Spalten, deren Anzahl sich nach der verfügbaren Breite richtet.
+
+    Elemente sind mindestens `min_width` breit; ist Platz für mehr, kommen weitere Spalten
+    hinzu (z. B. Store-Karten: auf kleinen Fenstern untereinander, auf großen Monitoren nebeneinander).
+    Alle Elemente einer Zeile erhalten die Höhe des höchsten.
+    """
+
+    def __init__(self, parent: QWidget | None = None, min_width: int = 460, spacing: int = 10,
+                 max_columns: int = 6):
+        super().__init__(parent)
+        self._items = []
+        self._spacing = spacing
+        self.min_width = min_width
+        self.max_columns = max_columns
+        self.setContentsMargins(0, 0, 0, 0)
+
+    def addItem(self, item):  # noqa: N802
+        self._items.append(item)
+
+    def count(self):
+        return len(self._items)
+
+    def itemAt(self, index):  # noqa: N802
+        return self._items[index] if 0 <= index < len(self._items) else None
+
+    def takeAt(self, index):  # noqa: N802
+        return self._items.pop(index) if 0 <= index < len(self._items) else None
+
+    def expandingDirections(self):  # noqa: N802
+        return Qt.Orientation(0)
+
+    def hasHeightForWidth(self):  # noqa: N802
+        return True
+
+    def heightForWidth(self, width):  # noqa: N802
+        return self._do_layout(QRect(0, 0, width, 0), test=True)
+
+    def setGeometry(self, rect):  # noqa: N802
+        super().setGeometry(rect)
+        self._do_layout(rect, test=False)
+
+    def sizeHint(self):  # noqa: N802
+        return self.minimumSize()
+
+    def minimumSize(self):  # noqa: N802
+        size = QSize()
+        for item in self._items:
+            size = size.expandedTo(item.minimumSize())
+        return size
+
+    def columns(self, width: int) -> int:
+        return max(1, min(self.max_columns, (width + self._spacing) // (self.min_width + self._spacing)))
+
+    @staticmethod
+    def _height(item, width: int) -> int:
+        h = item.heightForWidth(width) if item.hasHeightForWidth() else -1
+        return max(h, item.minimumSize().height()) if h > 0 else item.sizeHint().height()
+
+    def _do_layout(self, rect: QRect, test: bool) -> int:
+        items = [i for i in self._items if not (i.widget() and i.widget().isHidden())]
+        if not items:
+            return 0
+        cols = self.columns(rect.width())
+        col_w = (rect.width() - (cols - 1) * self._spacing) / cols
+        y = rect.y()
+        for start in range(0, len(items), cols):
+            row = items[start:start + cols]
+            height = max(self._height(i, int(col_w)) for i in row)
+            if not test:
+                for n, item in enumerate(row):
+                    x = rect.x() + round(n * (col_w + self._spacing))
+                    item.setGeometry(QRect(x, y, int(col_w), height))
+            y += height + self._spacing
+        return y - self._spacing - rect.y()
+
+
 def clear_layout(layout: QLayout) -> None:
     while layout.count():
         item = layout.takeAt(0)
@@ -291,7 +429,7 @@ class TaskDialog(QDialog):
                  on_success: Callable[[object], None] | None = None):
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.resize(620, 380)
+        fit_to_screen(self, 620, 380)
         self.success = False
         self.result_value = None
         self._on_success = on_success

@@ -81,7 +81,9 @@ immer installiert.
 }
 ```
 
-* `python`: wird per pip in `<tool>/_lib` installiert und beim Laden in `sys.path` eingetragen
+* `python`: wird per pip in `<tool>/_lib` installiert und beim Laden in `sys.path` eingetragen.
+  In der EXE-Version nur Pakete mit fertigem Wheel (kein Kompilieren); Standardbibliothek und die gängigen
+  PySide6-Module sind eingebaut (Liste: `QT_MODULES` in `scripts/build_exe.py`).
 * `windows_capabilities` / `windows_features`: werden gemeinsam in **einer** Administrator-Sitzung installiert (eine UAC-Abfrage).
   Unter Windows Server läuft das über `Install-WindowsFeature`, auf Clients über `Enable-WindowsOptionalFeature`.
 * `powershell_modules`: `Install-Module -Scope CurrentUser`
@@ -170,7 +172,8 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | | |
 |---|---|
 | `settings.get(key)` / `settings.set(key, value)` | Einstellungen laut config.json (Secrets automatisch aus dem Tresor) |
-| `get_credential(key)` | `(benutzer, passwort)` einer `credential`-Einstellung |
+| `get_credential(key)` | `(benutzer, passwort)` einer `credential`-Einstellung (blockiert, solange ein externer Manager antwortet) |
+| `get_credential_async(key, on_done)` | dasselbe im Hintergrund, `on_done((benutzer, passwort) \| None)` läuft im GUI-Thread |
 | `secrets.get/set/delete(key)` | freier, verschlüsselter Speicher des Tools |
 | `tr(key, default=None, **platzhalter)` / `language` | Übersetzung aus `locales/` bzw. aktive Sprache |
 | `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\DarkMatter\OmniWrench\tool_data\<id>`) |
@@ -193,6 +196,9 @@ Grundregeln:
   (beim Sperren gelöscht).
 * Braucht ein Manager neue Anmeldedaten (z. B. geändertes Passwort), fragt OmniWrench selbst nach – ohne Fehlermeldung.
 * Ein Feld kann **mehrere** Zugangsdaten enthalten; der Benutzer wählt per Auswahlliste.
+* Externe Manager brauchen oft 1–3 s. Im GUI-Thread daher die `…_async`-Varianten nehmen, sonst friert
+  die Oberfläche so lange ein. In eigenen Hintergrund-Threads (`run_async`) geht auch der direkte Abruf;
+  eine nötige Anmelde-Rückfrage erscheint trotzdem korrekt im GUI-Thread.
 
 So nutzt du das im Tool:
 
@@ -201,6 +207,7 @@ So nutzt du das im Tool:
 
   ```python
   user, password = self.context.get_credential("credential")   # gewählter Eintrag, Abruf erst hier
+  self.context.get_credential_async("credential", self._start)  # dasselbe, ohne die Oberfläche zu blockieren
   entries = self.context.get_credentials("credential")          # alle Einträge (ohne Passwörter)
   ```
 
@@ -213,6 +220,7 @@ So nutzt du das im Tool:
   layout.addWidget(self.login)
   ...
   creds = self.login.resolve()     # (user, password) oder None - erst jetzt wird abgerufen
+  self.login.resolve_async(self._start)   # empfohlen: Abruf im Hintergrund, danach self._start(creds)
   ```
 
 * **Nur der Suchdialog:** `pick_credential(parent)` → `(user, password)` oder `None`.
@@ -254,6 +262,21 @@ Hintergrund-Thread. Die Callbacks laufen wieder im GUI-Thread.
 
 **Sicherheit:** Passwörter nie in die Kommandozeile oder ins Skript einbauen. Übergib sie über `stdin`, wie es
 [ad_user_lookup/tool.py](../tools/ad_user_lookup/tool.py) vormacht.
+
+## Responsive Oberfläche und Skalierung
+
+OmniWrench läuft von kleinen Fenstern (ca. 1000 px) bis zu maximierten 8k-Monitoren. Zusätzlich zur
+Windows-Anzeigeskalierung kann unter *Einstellungen › Anzeige › Skalierung* vergrößert werden (75–300 %).
+
+- Alle Größen im Code sind logische Pixel bzw. Punkt (pt) – sie wachsen mit der Skalierung automatisch mit.
+  Keine Größen selbst umrechnen.
+- Layouts statt fester Breiten verwenden; Mindestbreiten einer Zeile sollten zusammen unter ca. 700 px bleiben.
+  Was breiter wird (viele Buttons, Seite-an-Seite-Bereiche), bei schmalem Fenster umbrechen oder untereinander
+  anordnen (Beispiel: `_layout_filter` in [subnet_calculator/tool.py](../tools/subnet_calculator/tool.py)).
+- Selbst gezeichnete Bilder (QPixmap/QImage) in `logische Größe × sdk.device_pixel_ratio()` rendern und
+  `pixmap.setDevicePixelRatio(...)` setzen, sonst werden sie bei 200–300 % unscharf.
+- Dialoge mit `sdk.fit_to_screen(dialog, breite, höhe)` statt `resize()` öffnen – so passen sie auch auf
+  kleine Bildschirme mit hoher Skalierung.
 
 ## Mehrsprachigkeit
 

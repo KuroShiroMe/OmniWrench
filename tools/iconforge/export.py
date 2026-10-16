@@ -8,12 +8,26 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QMarginsF, QRectF, QSizeF, Qt
-from PySide6.QtGui import QColor, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter
+from PySide6.QtGui import QColor, QGuiApplication, QImage, QPageLayout, QPageSize, QPainter, QPdfWriter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 
 FORMATS = ["svg", "png", "ico", "pdf", "jpg"]
 SIZES = [16, 24, 32, 48, 64, 128, 256, 512]
 ICO_MAX = 256
+
+
+def screen_ratio() -> float:
+    """Pixeldichte für Vorschaubilder: höchste aller Bildschirme, mindestens 2 (scharf auch bei 300 %)."""
+    screens = QGuiApplication.screens()
+    return max([2.0, *(s.devicePixelRatio() for s in screens)])
+
+
+def render_pixmap(svg: bytes, size: int) -> QPixmap:
+    """Vorschaubild in logischer Größe size, gerendert in Bildschirm-Pixeldichte."""
+    ratio = screen_ratio()
+    pix = QPixmap.fromImage(render(svg, round(size * ratio)))
+    pix.setDevicePixelRatio(ratio)
+    return pix
 
 
 @dataclass

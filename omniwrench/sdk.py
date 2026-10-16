@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -37,7 +38,7 @@ if TYPE_CHECKING:
 __all__ = [
     "APP_VERSION", "ToolBase", "ToolContext", "InstallContext", "PSResult", "ps_quote", "run_async", "LANGUAGE_KEY",
     "pick_credential", "CredentialField", "Credential", "CredentialProvider", "AuthField",
-    "AuthenticationRequired",
+    "AuthenticationRequired", "device_pixel_ratio", "fit_to_screen",
 ]
 
 # Für Tools, die eigene Passwortmanager-Anbieter bereitstellen
@@ -70,6 +71,7 @@ def CredentialField(value: dict | None = None, parent=None, settings=None, key: 
         self.login = CredentialField(settings=self.context.settings, key="credential")
         ...
         user, password = self.login.resolve()     # Abruf erst hier (einmal pro Sitzung)
+        self.login.resolve_async(self._start)     # dasselbe ohne die Oberfläche zu blockieren
     """
     from omniwrench.ui.credentials import CredentialField as _Field
     return _Field(value, parent, settings=settings, key=key)
@@ -82,6 +84,22 @@ def run_async(fn, on_done=None, on_error=None, on_progress=None) -> None:
     """
     from omniwrench.ui.workers import run_async as _run_async
     _run_async(fn, on_done, on_error, on_progress)
+
+
+def device_pixel_ratio() -> float:
+    """Pixelverhältnis des schärfsten Bildschirms (Windows-Skalierung x OmniWrench-Skalierung).
+
+    Selbst gezeichnete Bilder in logische Größe x diesem Wert rendern und
+    pixmap.setDevicePixelRatio(...) setzen - dann bleiben sie von 1k bis 8k scharf.
+    """
+    from omniwrench.ui.scaling import device_pixel_ratio as _ratio
+    return _ratio()
+
+
+def fit_to_screen(widget, width: int, height: int) -> None:
+    """Wie widget.resize(width, height), aber höchstens so groß wie der freie Bildschirmbereich."""
+    from omniwrench.ui.scaling import fit_to_screen as _fit
+    _fit(widget, width, height)
 
 
 class SecretStore:
@@ -155,6 +173,14 @@ class _ContextBase:
             return None
         return credentials.resolve_item(value["items"][value["selected"]])
 
+    def get_credential_async(self, key: str, on_done, on_error=None) -> None:
+        """Wie get_credential(), blockiert aber die Oberfläche nicht: externe Manager werden im
+        Hintergrund abgefragt, danach läuft on_done((benutzer, passwort) | None) im GUI-Thread.
+        """
+        from omniwrench.ui.credentials import resolve_async
+        value = credentials.normalize_value(self.settings.get(key))
+        resolve_async(value["items"][value["selected"]] if value["items"] else None, on_done, on_error)
+
     def get_credentials(self, key: str) -> list[dict]:
         """Alle in einer "credential"-Einstellung hinterlegten Einträge (ohne Passwörter abzurufen)."""
         return credentials.normalize_value(self.settings.get(key))["items"]
@@ -199,14 +225,23 @@ class InstallContext(_ContextBase):
             return
         target = self.tool_dir / "_lib"
         self.report(tr("prog.pip_install", packages=", ".join(packages)))
-        proc = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--upgrade",
-             "--target", str(target), *packages],
-            capture_output=True, text=True,
-            creationflags=0x08000000 if sys.platform == "win32" else 0,
-        )
+        args = ["install", "--disable-pip-version-check", "--upgrade", "--target", str(target), *packages]
+        log_file = None
+        if getattr(sys, "frozen", False):
+            # EXE-Build: pip ist eingebaut (main.py --pip); Fensterprogramm hat evtl. keine Ausgabe -> Logdatei
+            log_file = Path(tempfile.mkstemp(prefix="omniwrench_pip_", suffix=".log")[1])
+            cmd = [sys.executable, "--pip", *args, "--prefer-binary", "--log", str(log_file)]
+        else:
+            cmd = [sys.executable, "-m", "pip", *args]
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              creationflags=0x08000000 if sys.platform == "win32" else 0)
+        details = proc.stderr or ""
+        if log_file:
+            if not details.strip() and log_file.exists():
+                details = log_file.read_text(encoding="utf-8", errors="replace")
+            log_file.unlink(missing_ok=True)
         if proc.returncode != 0:
-            raise RuntimeError(tr("err.pip") + "\n" + proc.stderr[-2000:])
+            raise RuntimeError(tr("err.pip") + "\n" + details[-2000:])
 
 
 class ToolBase:

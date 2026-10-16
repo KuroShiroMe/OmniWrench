@@ -52,6 +52,11 @@
   session; connector dialog offers Install-Module for missing PS modules; IconForge export formats SVG/PNG/ICO/PDF/JPG
   (EMF not supported by Qt); "copy image" for pasting into Visio.
 
+## EXE build (2026-10-16, my choices)
+- PyInstaller **onedir** (not onefile): faster start, fewer AV false positives, self-updater can overwrite files.
+- Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
+- Local dev store not shipped with the EXE. No code signing / installer yet.
+
 ## Round 8 decisions (2026-10-16)
 - Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
 - UI text style: neutral program language — no "du", no chatty explanations; imperative/impersonal like normal software.
@@ -61,3 +66,17 @@
 - IconForge libraries: only Lucide bundled offline; all others downloaded on demand when selected.
 - Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
 - Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).
+
+## Round 9 decisions (2026-10-16)
+- IconForge: library dropdown shows ONLY downloaded libraries; a download button next to it opens a wizard
+  (dropdown with name, size, publisher; preview = generated hero banner, title, meta info, source link).
+- IconForge right panel: export controls (sizes, format, save/copy) at the top, everything else below.
+- (mine) Wizard also offers "Download again" and "Remove" for downloaded libraries; publisher stored statically
+  in icon_packs.json (npm author fields are inconsistent).
+
+- Display settings live in their own tab "Anzeige" (theme, scaling, restore layout); language/auto-lock stay in "Allgemein".
+- Scaling (my choice): uniform QT_SCALE_FACTOR on top of Windows scaling, choices 75-300 %, effective after restart
+  (Qt can't change it at runtime); restart offered immediately. Chosen over manual font/px scaling because it also
+  scales tools, QtAds and Qt-internal metrics consistently.
+- Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
+  ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().

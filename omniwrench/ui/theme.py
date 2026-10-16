@@ -135,6 +135,7 @@ def stylesheet(c: dict[str, str]) -> str:
     QPushButton#FlatButton:hover {{ color: {c['text']}; background: {c['surface2']}; }}
 
     #CardTitle {{ font-size: 11pt; font-weight: 600; }}
+    #StoreCardTitle {{ font-size: 14pt; font-weight: 600; }}
     #CardMeta {{ color: {c['muted']}; font-size: 8.5pt; }}
     #CardDesc {{ color: {c['text']}; }}
     QLabel#Badge {{ background: {c['warning']}; color: #111; border-radius: 8px; padding: 1px 8px; font-size: 8pt; font-weight: 600; }}

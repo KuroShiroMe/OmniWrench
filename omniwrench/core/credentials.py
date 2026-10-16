@@ -11,6 +11,8 @@ Regeln:
   (Sitzungs-Cache). Beim Sperren/Beenden sind sie weg.
 * Schlägt die Anmeldung an einem Anbieter fehl, wirft er AuthenticationRequired. Das UI
   (auth_handler) fragt dann nach den Zugangsdaten und versucht es erneut - keine Fehlermeldung.
+* resolve() darf auch in Hintergrund-Threads laufen (externe Anbieter brauchen oft Sekunden);
+  der auth_handler des UI holt die Rückfrage dann selbst in den GUI-Thread.
 """
 
 from __future__ import annotations
@@ -160,6 +162,7 @@ class CredentialManager:
         self.providers: list[CredentialProvider] = [self.local]
         self._owners: dict[str, str] = {}             # provider-id -> tool-id
         self._cache: dict[str, Credential] = {}       # nur im Speicher!
+        self._session = 0                             # zählt clear_session() - verwirft laufende Abrufe
         # Vom UI gesetzt: fragt nach Zugangsdaten, liefert True wenn neu eingegeben
         self.auth_handler: Callable[[CredentialProvider], bool] | None = None
 
@@ -208,6 +211,10 @@ class CredentialManager:
         return result
 
     # ------------------------------------------------------------ Auflösen
+    def is_instant(self, ref: str) -> bool:
+        """True, wenn resolve(ref) ohne Wartezeit antwortet (Sitzungs-Cache oder eingebauter Manager)."""
+        return not ref or ref in self._cache or self.provider(ref.partition(":")[0]) in (None, self.local)
+
     def resolve(self, ref: str, interactive: bool = True) -> Credential | None:
         """Liefert den Eintrag inkl. Passwort. Externe Anbieter werden einmal pro Sitzung abgefragt."""
         if not ref:
@@ -218,6 +225,7 @@ class CredentialManager:
         provider = self.provider(provider_id)
         if provider is None:
             return None
+        session = self._session
         for _ in range(self.MAX_AUTH_ATTEMPTS):
             try:
                 cred = provider.get_secret(cred_id)
@@ -228,7 +236,7 @@ class CredentialManager:
             if cred is None:
                 return None
             cred.provider, cred.source = provider.id, cred.source or provider.name
-            if provider is not self.local:
+            if provider is not self.local and session == self._session:
                 self._cache[ref] = cred
             return cred
         return None
@@ -238,6 +246,7 @@ class CredentialManager:
 
     def clear_session(self) -> None:
         """Beim Sperren: alle abgerufenen Geheimnisse aus dem Speicher entfernen."""
+        self._session += 1
         self._cache.clear()
 
 
@@ -277,7 +286,7 @@ def normalize_value(value: dict | None) -> dict:
 
 
 def resolve_item(item: dict, interactive: bool = True) -> tuple[str, str] | None:
-    """(Benutzer, Passwort) eines Eintrags aus einem credential-Feld."""
+    """(Benutzer, Passwort) eines Eintrags aus einem credential-Feld. Darf im Hintergrund laufen."""
     if item.get("ref"):
         cred = manager().resolve(item["ref"], interactive=interactive)
         return (cred.username, cred.password) if cred else None

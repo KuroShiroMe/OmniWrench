@@ -7,6 +7,7 @@
                            Wird in Tool-Einstellungen vom Typ "credential" verwendet und steht
                            Tool-Entwicklern über omniwrench.sdk.CredentialField zur Verfügung.
 * ProviderLoginDialog    - Rückfrage, wenn ein Manager (neue) Zugangsdaten braucht
+* resolve_async()        - Passwort im Hintergrund abrufen, damit die Oberfläche nicht einfriert
 """
 
 from __future__ import annotations
@@ -21,8 +22,9 @@ from omniwrench.core import credentials
 from omniwrench.core.credentials import Credential, CredentialProvider
 from omniwrench.core.i18n import tr
 
-from .widgets import label, library_icon, make_button
-from .workers import run_async
+from .scaling import fit_min_width, fit_to_screen
+from .widgets import ResponsiveRow, label, library_icon, make_button
+from .workers import call_in_gui, run_async
 
 CLIPBOARD_CLEAR_SECONDS = 30
 SEARCH_DELAY_MS = 300
@@ -101,7 +103,7 @@ class CredentialEditDialog(QDialog):
         self.cred = cred
         self.store = store
         self.setWindowTitle(tr("pwm.edit_title") if cred else tr("pwm.new_title"))
-        self.setMinimumWidth(440)
+        fit_min_width(self, 440)
         lay = QVBoxLayout(self)
         form = QFormLayout()
         self.name = QLineEdit(cred.name if cred else "")
@@ -154,14 +156,14 @@ class PasswordManagerWidget(QWidget):
         self.table = _table([tr("pwm.name"), tr("pwm.username")])
         self.table.doubleClicked.connect(lambda *_: self._edit())
         lay.addWidget(self.table, 1)
-        row = QHBoxLayout()
-        row.addWidget(make_button(tr("common.add"), primary=True, on_click=self._add))
-        row.addWidget(make_button(tr("pwm.edit"), on_click=self._edit))
-        row.addWidget(make_button(tr("common.remove"), danger=True, on_click=self._delete))
-        row.addStretch()
-        row.addWidget(make_button(tr("pwm.copy_user"), on_click=lambda: self._copy("username")))
-        row.addWidget(make_button(tr("pwm.copy_password"), on_click=lambda: self._copy("password")))
-        lay.addLayout(row)
+        edit, copy = QHBoxLayout(), QHBoxLayout()
+        edit.addWidget(make_button(tr("common.add"), primary=True, on_click=self._add))
+        edit.addWidget(make_button(tr("pwm.edit"), on_click=self._edit))
+        edit.addWidget(make_button(tr("common.remove"), danger=True, on_click=self._delete))
+        edit.addStretch()
+        copy.addWidget(make_button(tr("pwm.copy_user"), on_click=lambda: self._copy("username")))
+        copy.addWidget(make_button(tr("pwm.copy_password"), on_click=lambda: self._copy("password")))
+        lay.addWidget(ResponsiveRow(edit, copy))  # schmal: Kopier-Buttons in eigener Zeile
         self.refresh()
 
     def refresh(self) -> None:
@@ -206,7 +208,7 @@ class PasswordManagerDialog(QDialog):
     def __init__(self, parent=None, notify=None):
         super().__init__(parent)
         self.setWindowTitle(tr("pwm.title"))
-        self.resize(640, 460)
+        fit_to_screen(self, 640, 460)
         lay = QVBoxLayout(self)
         lay.addWidget(PasswordManagerWidget(self, notify), 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
@@ -222,7 +224,7 @@ class ProviderLoginDialog(QDialog):
         super().__init__(parent)
         self.provider = provider
         self.setWindowTitle(tr("pwm.login_title", name=provider.name))
-        self.setMinimumWidth(420)
+        fit_min_width(self, 420)
         lay = QVBoxLayout(self)
         lay.addWidget(label(tr("pwm.login_text", name=provider.name), wrap=True))
         form = QFormLayout()
@@ -253,7 +255,26 @@ def ask_provider_login(provider: CredentialProvider) -> bool:
 
 
 def install_auth_handler() -> None:
-    credentials.manager().auth_handler = ask_provider_login
+    # resolve() läuft oft im Hintergrund - die Rückfrage muss aber im GUI-Thread erscheinen
+    credentials.manager().auth_handler = lambda provider: call_in_gui(lambda: ask_provider_login(provider))
+
+
+def resolve_async(item: dict | str | None, on_done, on_error=None) -> None:
+    """Ruft (Benutzer, Passwort) im Hintergrund ab und ruft on_done(ergebnis | None) im GUI-Thread auf.
+
+    item ist ein Eintrag eines credential-Felds oder ein Verweis ("<anbieter>:<id>"). Bereits
+    abgerufene Einträge und der eingebaute Manager antworten sofort (on_done direkt).
+    """
+    if isinstance(item, str):
+        item = {"ref": item}
+    if not item:
+        on_done(None)
+        return
+    if credentials.manager().is_instant(item.get("ref", "")):
+        on_done(credentials.resolve_item(item))
+        return
+    item = dict(item)
+    run_async(lambda: credentials.resolve_item(item), on_done, on_error or (lambda _err: on_done(None)))
 
 
 # ============================================================ Auswahl
@@ -264,7 +285,7 @@ class CredentialPickerDialog(QDialog):
         super().__init__(parent)
         self.selected: Credential | None = None
         self.setWindowTitle(tr("pwm.pick_title"))
-        self.resize(640, 420)
+        fit_to_screen(self, 640, 420)
         lay = QVBoxLayout(self)
         self.search = QLineEdit(placeholderText="🔍  " + tr("pwm.search_all"))
         self.search.setClearButtonEnabled(True)
@@ -407,6 +428,10 @@ class CredentialField(QWidget):
         """(Benutzer, Passwort) des gewählten Eintrags - externe Manager werden erst hier abgefragt."""
         item = self.selected_item()
         return credentials.resolve_item(item) if item else None
+
+    def resolve_async(self, on_done, on_error=None) -> None:
+        """Wie resolve(), aber ohne die Oberfläche zu blockieren: on_done((benutzer, passwort) | None)."""
+        resolve_async(self.selected_item(), on_done, on_error)
 
     # ------------------------------------------------------------- intern
     def _fill(self, selected: int) -> None:

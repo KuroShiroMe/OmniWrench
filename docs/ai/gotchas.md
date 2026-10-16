@@ -35,3 +35,32 @@
 - Lineicons: root fill="none" + hard-coded path color -> recolor by replacing the single used color.
 - Narrow QPushButton with "…" text shows "." -> use an icon (folder-open).
 - Netwrix PsrApi: async methods return Task -> in PowerShell `.GetAwaiter().GetResult()`.
+
+## Store build
+- `build_store.py` rebuilds ALL packages; zips of unchanged tools get new hashes on another OS/checkout
+  (line endings/mtimes). Keep only the bumped tool's zip + index entry; restore the others from git.
+
+## Async credentials (2026-10-16)
+- Dialogs only in GUI thread: provider auth prompt from a worker goes through workers.call_in_gui (blocking).
+  Never hold a lock around get_secret() - GUI-thread resolve + worker waiting on GUI would deadlock.
+- build_store.py on Linux (LF checkout) rebuilds UNCHANGED tool zips with different sha256 -> restore those zips
+  + their index entries, commit only bumped tools.
+## EXE build (PyInstaller)
+- Frozen app has no `python -m pip` -> `OmniWrench.exe --pip …` (main.py). Windowed exe: sys.stdout is None -> devnull,
+  errors via pip `--log` file. Packages without wheels can't build (no compiler/`-c` support) -> `--prefer-binary`.
+- Tools are imported at runtime from %LOCALAPPDATA% -> PyInstaller can't see their imports; build_exe.py bundles whole
+  stdlib (find_spec filter) + extra Qt modules. A new tool needing another PySide6 module -> add to QT_MODULES.
+- Old clients (<= 0.5.0) take the FIRST zip asset starting with "omniwrench" -> upload source zip before -win64.zip.
+- `.gitignore` ignores `*.spec`: build_exe.py passes all options on the command line (spec generated into build/exe).
+- Linux test build needs libegl1/libgl1/libxkbcommon0/libfontconfig1 (Qt import) - only for smoke tests.
+## Round 9
+- QT_SCALE_FACTOR is read only when QApplication is created -> scaling needs a new process; child inherits env,
+  so scaling.py marks its own value (OMNIWRENCH_SCALE_FACTOR) and drops it on the next start.
+- Wrapped QLabel's minimum width = longest unbreakable word -> long ids (Rsat...~~~~0.0.1.0) widen side panels;
+  breakable() inserts U+200B after . ~ / \ _ : @ (only for display text, not for copyable ids).
+- A QScrollArea with horizontal scrollbar off clips content whose minimum width is too large (no shrink) -
+  check minimumSizeHint of rows of buttons.
+- QtAds wraps tool widgets in a scroll area: tools wider than their minimum get a horizontal scrollbar instead of shrinking.
+- Linux renders: offscreen platform works with fontconfig fonts; screen size via
+  QT_QPA_PLATFORM="offscreen:configfile=screen.json" ({"screens":[{"width":7680,"height":4320,"dpr":1,...}]}).
+- build_store.py on Linux changes every zip (LF vs CRLF checkout) -> only commit zips of bumped tools.

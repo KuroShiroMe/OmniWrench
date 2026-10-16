@@ -21,6 +21,7 @@ from omniwrench.sdk import LANGUAGE_KEY
 
 from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
+from .scaling import SCALE_CHOICES, fit_min_width, fit_to_screen, normalize
 from .widgets import label, library_icon, make_button, tool_icon
 from .workers import run_async
 
@@ -191,7 +192,7 @@ class ToolSettingsDialog(QDialog):
         self.language_changed = False
         m = tool.manifest
         self.setWindowTitle(tr("settings.tool_title", name=m.display_name))
-        self.setMinimumWidth(560)
+        fit_min_width(self, 560)
         lay = QVBoxLayout(self)
 
         head = QHBoxLayout()
@@ -257,11 +258,13 @@ class AppSettingsDialog(QDialog):
         self.settings = settings
         self.vault = vault
         self.language_changed = False
+        self.scale_changed = False
         self.setWindowTitle(tr("appsettings.title"))
-        self.resize(720, 520)
+        fit_to_screen(self, 760, 540)
         lay = QVBoxLayout(self)
         tabs = QTabWidget()
         tabs.addTab(self._general_tab(), tr("appsettings.tab_general"))
+        tabs.addTab(self._display_tab(), tr("appsettings.tab_display"))
         tabs.addTab(self._repo_tab(), tr("appsettings.tab_repos"))
         tabs.addTab(self._update_tab(), tr("appsettings.tab_updates"))
         tabs.addTab(self._security_tab(), tr("appsettings.tab_security"))
@@ -287,20 +290,39 @@ class AppSettingsDialog(QDialog):
         self.language.setCurrentIndex(max(self.language.findData(i18n.current_language()), 0))
         form.addRow(tr("appsettings.language"), self.language)
         form.addRow("", label(tr("appsettings.language_hint"), "Muted", wrap=True))
-        self.theme = QComboBox()
-        self.theme.addItem(tr("appsettings.theme_dark"), "dark")
-        self.theme.addItem(tr("appsettings.theme_light"), "light")
-        self.theme.setCurrentIndex(max(self.theme.findData(self.settings.get("theme")), 0))
-        form.addRow(tr("appsettings.theme"), self.theme)
-        self.restore_layout = QCheckBox(tr("appsettings.restore_layout"))
-        self.restore_layout.setChecked(self.settings.get("restore_layout", True))
-        form.addRow("", self.restore_layout)
         self.auto_lock = QSpinBox()
         self.auto_lock.setRange(0, 600)
         self.auto_lock.setSuffix(" " + tr("appsettings.minutes"))
         self.auto_lock.setSpecialValueText(tr("appsettings.disabled"))
         self.auto_lock.setValue(int(self.settings.get("auto_lock_minutes", 0)))
         form.addRow(tr("appsettings.auto_lock"), self.auto_lock)
+        return page
+
+    # ----- Anzeige
+    def _display_tab(self) -> QWidget:
+        page = QWidget()
+        form = QFormLayout(page)
+        self.theme = QComboBox()
+        self.theme.addItem(tr("appsettings.theme_dark"), "dark")
+        self.theme.addItem(tr("appsettings.theme_light"), "light")
+        self.theme.setCurrentIndex(max(self.theme.findData(self.settings.get("theme")), 0))
+        form.addRow(tr("appsettings.theme"), self.theme)
+
+        self.scale = QComboBox()
+        current = normalize(self.settings.get("ui_scale", 1.0))
+        choices = sorted(set(SCALE_CHOICES) | {current})
+        for factor in choices:
+            text = f"{round(factor * 100)} %"
+            if abs(factor - 1.0) < 0.001:
+                text = tr("appsettings.scale_default", percent=text)
+            self.scale.addItem(text, factor)
+        self.scale.setCurrentIndex(choices.index(current))
+        form.addRow(tr("appsettings.scale"), self.scale)
+        form.addRow("", label(tr("appsettings.scale_hint"), "Muted", wrap=True))
+
+        self.restore_layout = QCheckBox(tr("appsettings.restore_layout"))
+        self.restore_layout.setChecked(self.settings.get("restore_layout", True))
+        form.addRow("", self.restore_layout)
         return page
 
     # ----- Repositories
@@ -456,6 +478,9 @@ class AppSettingsDialog(QDialog):
         s.set("repositories", repos, save=False)
         s.set("theme", self.theme.currentData(), save=False)
         s.set("restore_layout", self.restore_layout.isChecked(), save=False)
+        new_scale = float(self.scale.currentData())
+        self.scale_changed = abs(new_scale - normalize(s.get("ui_scale", 1.0))) > 0.001
+        s.set("ui_scale", new_scale, save=False)
         s.set("auto_lock_minutes", self.auto_lock.value(), save=False)
         s.set("app_update_repo", self.update_repo.text().strip(), save=False)
         s.set("check_updates_on_start", self.check_start.isChecked(), save=False)

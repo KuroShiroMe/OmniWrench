@@ -44,5 +44,9 @@
   "dlg.installed": "Installiert: {modules}",
   "dlg.type": "Passwortmanager",
   "dlg.name_placeholder": "Standard: Name des Passwortmanagers",
-  "dlg.docs": "API-Dokumentation"
+  "dlg.docs": "API-Dokumentation",
+  "stage.alpha": "Alpha",
+  "stage.alpha_hint": "Alpha: Dieser Konnektor wurde noch nicht mit einer echten Installation getestet.",
+  "stage.beta": "Beta",
+  "stage.beta_hint": "Beta: Dieser Konnektor befindet sich noch in der Erprobung."
 }

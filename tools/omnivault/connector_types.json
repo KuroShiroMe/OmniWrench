@@ -5,6 +5,7 @@
     "        auth=true   -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
     "        type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
     "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert hat.",
+    "stage: optional 'alpha' oder 'beta' -> Hinweis im Konnektor-Dialog (z. B. noch nicht mit echter Installation getestet).",
     "implementation: 'powershell' (Skripte unten) oder 'keepass' (Python, pykeepass).",
     "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
     "            search -> JSON-Liste [{id, name, username, detail}], get -> {username, password}.",
@@ -139,6 +140,7 @@
     "netwrix": {
       "name": "Netwrix Password Secure",
       "icon": "shield-check",
+      "stage": "alpha",
       "description": {
         "en": "Netwrix Password Secure 9 via the official SDK (PsrApi.dll from the Netwrix customer portal). Login with user name and password or with an API key.",
         "de": "Netwrix Password Secure 9 über das offizielle SDK (PsrApi.dll aus dem Netwrix-Kundenportal). Anmeldung mit Benutzername und Passwort oder mit API-Schlüssel."

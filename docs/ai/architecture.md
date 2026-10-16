@@ -39,25 +39,37 @@ omniwrench/ui/
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
   credentials.py              PasswordEdit, CredentialEditDialog, PasswordManagerWidget/Dialog, ProviderLoginDialog,
                               install_auth_handler, CredentialPickerDialog (async multi-provider), pick_credential,
-                              CredentialField (multi-entry dropdown, settings binding, resolve())
+                              CredentialField (multi-entry dropdown, settings binding, resolve(),
+                              resolve_async()), resolve_async(item|ref, on_done) - background fetch
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
-  widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog
+  widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog,
+                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable
+  scaling.py                  ui_scale -> QT_SCALE_FACTOR (before QApplication), device_pixel_ratio, fit_to_screen,
+                              fit_min_width, window_size, restart_application
   theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly
-  workers.py                  run_async (QThreadPool, signals)
+  workers.py                  run_async (QThreadPool, signals), call_in_gui (BlockingQueuedConnection invoker)
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
                               omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
-scripts/                      build_store, build_release, check_locales, update_icons
+scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, update_icons
+.github/workflows/build-exe.yml  Windows CI: builds OmniWrench-X.Y.Z-win64.zip artifact (manual / tags v*)
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 
 ## Key mechanisms
+- EXE build: PyInstaller onedir; data in _internal/omniwrench/{resources,locales} (found via __file__), APP_DIR = exe
+  folder (docs/ copied there). Whole stdlib + omniwrench + extra Qt modules bundled for runtime-loaded tools.
+  Frozen pip: main.py handles `OmniWrench.exe --pip …` before importing Qt; sdk.pip_install uses it (+ --log file).
+  Updater picks `-win64.zip` when frozen, the other zip when run from source (app_updater._pick_asset).
 - Tool loading: package `omniwrench_tool_<id>` via importlib with submodule_search_locations; `_lib` added to sys.path.
 - Settings value of type credential: `{"items": [...], "selected": i}`; items hold `ref` ("<provider>:<id>") or manual
   username/password. get_credential resolves the selected item (session cache for external providers).
+  get_credential_async / CredentialField.resolve_async: instant for cache/local, else run_async. resolve() is
+  thread-safe: auth_handler = call_in_gui(ask_provider_login); clear_session bumps _session so in-flight fetches
+  are not cached.
 - Tool hooks: manifest.hooks {"startup": "module:func"} -> ToolManager.run_hooks("startup") (app.py after login) and
   run_hook after install; providers registered via ctx.register_credential_provider are released on update/uninstall.
 - PMM connector config: tool setting "connectors" (non-secret), vault ctx.secrets "conn:<id>" (secret fields, only if
@@ -68,3 +80,6 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 - powershell.run_ps(..., shell="powershell"|"pwsh"); ToolContext.run_powershell(..., shell=...).
 - IconForge pack cache: <tool_data>/gfx.iconforge/packs/<pack>/<variant>/<name>.svg + index.json
   {version, license, variants{v:[names]}, meta{name:{tags,categories}}, categories{id:title}}.
+- IconForge npm catalog: packs/catalog.json {pack: {version, size, files, published, exact, fetched}} (24 h TTL);
+  PackStore.fetch_summary (/latest, for the wizard dropdown) / fetch_release (full doc, mature version).
+  wizard.py: HeroBanner (painted, font-relative height) + PackWizard (signals packDownloaded/packRemoved).

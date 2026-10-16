@@ -1,12 +1,17 @@
-"""Hintergrundausführung, damit die Oberfläche bei Downloads/Installationen nicht einfriert."""
+"""Hintergrundausführung, damit die Oberfläche bei Downloads/Installationen nicht einfriert.
+
+* run_async()   - fn in einem Thread, Callbacks wieder im GUI-Thread
+* call_in_gui() - aus einem Thread heraus etwas im GUI-Thread ausführen (z. B. Rückfrage-Dialog) und warten
+"""
 
 from __future__ import annotations
 
 import logging
+import threading
 import traceback
 from typing import Any, Callable
 
-from PySide6.QtCore import QObject, QRunnable, QThreadPool, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QRunnable, Qt, QThread, QThreadPool, Signal
 
 log = logging.getLogger(__name__)
 _active: set["_Task"] = set()
@@ -55,3 +60,49 @@ def run_async(fn: Callable[..., Any], on_done: Callable[[Any], None] | None = No
     task.signals.done.connect(finish)
     task.signals.failed.connect(finish)
     QThreadPool.globalInstance().start(task)
+
+
+class _GuiInvoker(QObject):
+    call = Signal(object)
+
+    def __init__(self):
+        super().__init__()
+        self.call.connect(self._run, Qt.ConnectionType.BlockingQueuedConnection)
+
+    def _run(self, job: Callable[[], None]) -> None:
+        job()
+
+
+_invoker: _GuiInvoker | None = None
+_invoker_lock = threading.Lock()
+
+
+def _get_invoker(app: QCoreApplication) -> _GuiInvoker:
+    global _invoker
+    with _invoker_lock:
+        if _invoker is None:
+            _invoker = _GuiInvoker()
+            _invoker.moveToThread(app.thread())
+        return _invoker
+
+
+def call_in_gui(fn: Callable[[], Any]) -> Any:
+    """Führt fn im GUI-Thread aus und liefert das Ergebnis; im GUI-Thread selbst direkt.
+
+    Gedacht für Hintergrundaufgaben, die kurz etwas fragen müssen (Dialoge gehen nur im GUI-Thread).
+    """
+    app = QCoreApplication.instance()
+    if app is None or QThread.currentThread() is app.thread():
+        return fn()
+    box: dict[str, Any] = {}
+
+    def job() -> None:
+        try:
+            box["result"] = fn()
+        except BaseException as exc:  # noqa: BLE001 - im aufrufenden Thread erneut auslösen
+            box["error"] = exc
+
+    _get_invoker(app).call.emit(job)
+    if "error" in box:
+        raise box["error"]
+    return box.get("result")

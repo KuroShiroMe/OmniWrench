@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
 from omniwrench.core import credentials as core_credentials
 from omniwrench.sdk import ToolBase, run_async
 # Erstanbieter-Tool: nutzt Bausteine des Hauptprogramms direkt
-from omniwrench.ui.credentials import PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret
+from omniwrench.ui.credentials import (
+    PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret, resolve_async,
+)
 from omniwrench.ui.widgets import clear_layout, library_icon
 
 from .connectors import ConnectorConfig, ConnectorStore, defaults, is_secret, is_visible, make_provider, register_all, text
@@ -90,7 +92,10 @@ class ConnectorDialog(QDialog):
         top = QFormLayout()
         self.type_combo = QComboBox()
         for type_id, spec in types.items():
-            self.type_combo.addItem(library_icon(spec.get("icon", "plug"), 16), spec["name"], type_id)
+            caption = spec["name"]
+            if spec.get("stage"):
+                caption += f" ({tr('stage.' + spec['stage'])})"
+            self.type_combo.addItem(library_icon(spec.get("icon", "plug"), 16), caption, type_id)
         self.type_combo.setCurrentIndex(max(self.type_combo.findData(self.conn.type), 0))
         self.type_combo.setEnabled(self.is_new)  # Art eines bestehenden Konnektors bleibt fest
         self.type_combo.currentIndexChanged.connect(self._type_changed)
@@ -151,6 +156,8 @@ class ConnectorDialog(QDialog):
         lang = self.ctx.language
         spec = self.spec
         desc = text(spec.get("description"), lang)
+        if spec.get("stage"):
+            desc = f"<b>{self.ctx.tr('stage.' + spec['stage'] + '_hint')}</b><br>{desc}"
         if spec.get("docs"):
             desc += f" <a href='{spec['docs']}'>{self.ctx.tr('dlg.docs')}</a>"
         self.desc.setText(desc)
@@ -458,9 +465,9 @@ class OmniVault(ToolBase):
         if attr == "username":
             copy_secret(item.username, self.context.notify)
             return
-        cred = core_credentials.manager().resolve(item.ref)  # fragt bei Bedarf nach Anmeldedaten
-        if cred:
-            copy_secret(cred.password, self.context.notify)
+        # im Hintergrund abrufen (externe Manager brauchen oft Sekunden), fragt bei Bedarf nach Anmeldedaten
+        resolve_async(item.ref, lambda cred: cred and copy_secret(cred[1], self.context.notify),
+                      lambda err: self.status.setText("❌ " + err))
 
     def on_settings_changed(self, changed_keys: set[str]) -> None:
         if "max_results" in changed_keys:
