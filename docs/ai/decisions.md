@@ -80,3 +80,8 @@
   scales tools, QtAds and Qt-internal metrics consistently.
 - Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
   ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().
+
+## UAC prerequisites (2026-10-16, my choices)
+- Elevation via ShellExecuteExW (not Start-Process -Verb RunAs); already-elevated app runs without prompt.
+- WSUS/Features-on-Demand errors: only a hint text; OmniWrench never changes policies/registry on its own.
+- Restart needed: notice in the install log only, no automatic restart.

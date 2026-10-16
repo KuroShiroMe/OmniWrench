@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Solo se admiten certificados RSA para el cifrado.",
   "err.cert_decrypt": "El descifrado con el certificado falló.",
   "err.elevated_timeout": "Tiempo de espera agotado al ejecutar con derechos de administrador.",
-  "err.elevated_cancelled": "Ejecución cancelada (¿UAC rechazado?).",
+  "err.elevated_cancelled": "No se concedieron derechos de administrador (aviso UAC rechazado).",
   "err.windows_features": "La instalación de las características de Windows falló.",
   "err.ps_module": "No se pudo instalar el módulo de PowerShell {name}:",
   "err.winget": "No se pudo instalar el paquete winget {name}:",
@@ -303,5 +303,16 @@
   "pwm.remove_entry": "Quitar de la lista",
   "pwm.search_all": "Buscar en todos los gestores …",
   "pwm.searching": "Buscando en los gestores conectados …",
-  "pwm.source": "Origen"
+  "pwm.source": "Origen",
+  "prog.uac_prompt": "Solicitando derechos de administrador. Confirmar el aviso de Windows (Control de cuentas de usuario) …",
+  "prog.already_admin": "El programa ya se ejecuta con derechos de administrador, no se necesita aviso UAC.",
+  "prog.elev_cap_install": "Instalando la funcionalidad de Windows {name} (puede tardar varios minutos) …",
+  "prog.elev_cap_present": "La funcionalidad de Windows {name} ya está instalada.",
+  "prog.elev_feat_install": "Activando la característica {name} …",
+  "prog.elev_feat_present": "La característica {name} ya está activada.",
+  "prog.elev_done": "{name}: completado.",
+  "prog.restart_required": "Nota: es necesario reiniciar Windows para que todos los cambios surtan efecto.",
+  "err.elevated_start": "No se pudo iniciar la sesión de administrador: {error}",
+  "err.elevated_failed": "La ejecución con derechos de administrador falló (código de salida {code}).",
+  "err.feature_source_hint": "Windows no pudo descargar la funcionalidad. En entornos administrados por WSUS, la directiva de grupo «Especificar la configuración para la instalación de componentes opcionales y la reparación de componentes» debe permitir la descarga directa desde Windows Update, o la funcionalidad debe instalarse desde un origen de Características a petición."
 }

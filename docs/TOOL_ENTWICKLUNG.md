@@ -86,6 +86,8 @@ immer installiert.
   PySide6-Module sind eingebaut (Liste: `QT_MODULES` in `scripts/build_exe.py`).
 * `windows_capabilities` / `windows_features`: werden gemeinsam in **einer** Administrator-Sitzung installiert (eine UAC-Abfrage).
   Unter Windows Server läuft das über `Install-WindowsFeature`, auf Clients über `Enable-WindowsOptionalFeature`.
+  Der Fortschritt erscheint live im Installationsdialog; meldet Windows einen nötigen Neustart, steht ein Hinweis im
+  Protokoll. Läuft OmniWrench bereits als Administrator, entfällt die UAC-Abfrage.
 * `powershell_modules`: `Install-Module -Scope CurrentUser`
 * `winget`: `winget install --id … -e --silent`
 
@@ -179,7 +181,7 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\DarkMatter\OmniWrench\tool_data\<id>`) |
 | `tool_dir` | Installationsordner (für mitgelieferte Dateien) |
 | `run_powershell(script, stdin=…)` / `run_powershell_json(…)` | PowerShell ausführen (UTF-8, ohne Fenster) |
-| `run_powershell_elevated(script)` | mit Adminrechten (UAC) |
+| `run_powershell_elevated(script, on_output=None)` | mit Adminrechten (UAC); `on_output(zeile)` erhält die Ausgabe live, `returncode` 1223 = UAC-Abfrage abgelehnt |
 | `notify(msg)` | Meldung in der Statusleiste |
 | `open_settings()` | Einstellungsdialog des Tools öffnen |
 | `log` | Logger (`%LOCALAPPDATA%\DarkMatter\OmniWrench\logs`) |

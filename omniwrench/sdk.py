@@ -159,8 +159,11 @@ class _ContextBase:
     def run_powershell_json(self, script: str, stdin: str | None = None, timeout: float | None = 300):
         return run_ps_json(script, stdin=stdin, timeout=timeout)
 
-    def run_powershell_elevated(self, script: str, timeout: float | None = 3600) -> PSResult:
-        return run_ps_elevated(script, timeout=timeout)
+    def run_powershell_elevated(self, script: str, timeout: float | None = 3600,
+                                on_output: Callable[[str], None] | None = None) -> PSResult:
+        """Mit Administratorrechten (UAC-Abfrage, entfällt bei bereits erhöhtem Programm).
+        on_output erhält jede Ausgabezeile sofort; returncode 1223 = UAC-Abfrage abgelehnt."""
+        return run_ps_elevated(script, timeout=timeout, on_output=on_output)
 
     def get_credential(self, key: str) -> tuple[str, str] | None:
         """(Benutzer, Passwort) des in einer "credential"-Einstellung ausgewählten Eintrags.

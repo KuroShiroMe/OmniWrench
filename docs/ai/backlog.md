@@ -9,7 +9,9 @@
       display name, whether SDK DLL loads in PowerShell 5.1 (default: pwsh 7).
 - [ ] SecretManagement connector: live test (module not installed on dev machine).
 - [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
-- [ ] Real UAC run of elevated prerequisite install (only simulated so far).
+- [ ] UAC prerequisites rebuilt on ShellExecuteExW (branch claude/real-uac-install-axo2h0); tested on Linux with pwsh +
+      mocked cmdlets only. User to test on Windows (source + EXE): RSAT install via AD User Lookup, UAC "No",
+      already-admin start, WSUS hint. Windows Server: RSAT capabilities don't exist there (would need features) - open.
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge: toolbar min widths (search 240 + pack 230 + variant 110 + category 180) force a horizontal
       scrollbar below ~1100 px dock width; preview/grid render at fixed 2x -> use sdk.device_pixel_ratio().
