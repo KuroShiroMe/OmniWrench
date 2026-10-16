@@ -177,3 +177,7 @@
   de_bad/en_sco spelling aligned). Added Hessian `de_hes` (all keys, fallback de). Language dropdowns in app and tool
   settings now indent dialects under the main language (i18n.language_tree, LANGUAGE_INDENT = 2 em spaces).
   Gave Stef a list of further sensible languages (backlog).
+- Follow-up 2 (Stef: "Nehmen wir alle sinnvollen und die Dialekte"): added 8 languages (it, nl, pl, pt-BR as `pt`, cs, sv,
+  tr, uk) and 6 German dialects (de_swg, de_sxu, de_nds, de_gsw, de_ksh, de_wien), all 312 keys, AI-written.
+  system_language() maps Windows names (italian, dutch, …). Language list sorts accent-insensitive (Čeština at C).
+  Smoke test: 23 languages OK. Tool locales unchanged (fallback).

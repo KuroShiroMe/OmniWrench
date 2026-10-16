@@ -33,6 +33,9 @@
 
 ## i18n
 - Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), de_hes (Hessisch, added 2026-10-16 on Stef's request), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
+- 2026-10-16 Stef: "alle sinnvollen und die Dialekte" -> added it, nl, pl, pt (Brazilian, code `pt`), cs, sv, tr, uk
+  (fallback en) and de_swg, de_sxu, de_nds, de_gsw, de_ksh, de_wien (fallback de). 23 app locales. Not chosen: ja, zh, RTL.
+  Tool locales are NOT required for every language (fallback). Language lists sort accent-insensitive (_sort_name).
 - Language dropdowns (app + tool settings) list dialects indented under their main language (Stef 2026-10-16).
   Dialect code convention `<base>_<suffix>`; i18n.language_tree() groups by the part before "_".
 - App language in settings; change rebuilds UI without re-login.

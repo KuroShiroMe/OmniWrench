@@ -327,8 +327,11 @@ Hauptsprache; ein Tool ohne eigene Dialektdatei nutzt automatisch die Basissprac
 
 Mit `self.context.language` fragst du die aktive Sprache ab, z. B. für Zahlenformate.
 
-Verfügbare Sprachcodes des Hauptprogramms: `en`, `de`, `fr`, `es`, `de_bad` (Badisch), `de_by` (Bayrisch),
-`de_hes` (Hessisch), `en_sco` (Scots), `en_posh` (Posh English).
+Verfügbare Sprachcodes des Hauptprogramms: `en`, `de`, `fr`, `es`, `it`, `nl`, `pl`, `pt` (Brasilien), `cs`, `sv`,
+`tr`, `uk` sowie die Dialekte `de_bad` (Badisch), `de_by` (Bayrisch), `de_hes` (Hessisch), `de_ksh` (Kölsch),
+`de_nds` (Plattdeutsch), `de_sxu` (Sächsisch), `de_swg` (Schwäbisch), `de_gsw` (Schwiizerdütsch), `de_wien`
+(Wienerisch), `en_sco` (Scots), `en_posh` (Posh English). Ein Tool muss nicht alle Sprachen mitbringen: fehlt eine,
+greift die Fallback-Kette.
 
 Prüfen, welche Übersetzungen noch fehlen:
 
