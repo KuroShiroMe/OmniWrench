@@ -80,3 +80,6 @@
   scales tools, QtAds and Qt-internal metrics consistently.
 - Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
   ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().
+- Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
+  requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
+  file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.

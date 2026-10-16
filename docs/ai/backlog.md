@@ -25,7 +25,10 @@
 - Optional later: code signing of OmniWrench.exe (SmartScreen), installer (Inno Setup/MSIX), auto-upload of the
   CI zip to the GitHub release.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
-- Native-speaker review of fr/es/dialect translations.
+- [ ] Native-speaker review of fr/es/dialect translations STILL OPEN. 2026-10-16: AI review done (main app locales
+      only, see history); a real native speaker has NOT checked them. Open points: French typography (narrow
+      no-break space before : ? ! and inside « », currently normal spaces), tool locales only exist in de/en
+      (+ Subnet de_bad), new keys from connector/CI PRs need the same review.
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0
   (wizard: download, download again, remove). Idea: real sample icons in the banner before download (needs a CDN
   like jsDelivr; blocked in some networks, so not used yet).

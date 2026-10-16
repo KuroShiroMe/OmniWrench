@@ -281,7 +281,7 @@
   "pwm.name_placeholder": "like Domain admin Contoso",
   "pwm.name_required": "Gie it a name.",
   "pwm.delete_confirm": "Ye sure ye want tae bin '{name}'?",
-  "pwm.copy_user": "Copy user",
+  "pwm.copy_user": "Copy user name",
   "pwm.copy_password": "Copy passwird",
   "pwm.copied": "Copied - the clipboard gets cleared in {seconds} s.",
   "pwm.generate": "Mak up a passwird",

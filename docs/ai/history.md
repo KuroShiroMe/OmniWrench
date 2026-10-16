@@ -112,3 +112,14 @@
 - App 0.6.0 (0.5.1 from #2 never released). Tools: AD User Lookup 1.3.1, IconForge 1.1.0, OmniVault 1.0.1,
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
+
+## 2026-10-16 — AI translation review fr/es/dialects (thread "Übersetzungen prüfen", suggestion 7)
+- Reviewed all 300 keys of fr, es, de_bad, de_by, en_sco, en_posh against de/en. Only existing keys changed
+  (open PRs #7-#10 + connector PR also touch locales). No native-speaker check - stays open in backlog.
+- fr: log FILE not folder (app.unexpected_error), "Prérequis manquants", "est absent de" instead of "manque dans",
+  full terms (nom d'utilisateur, gestionnaire de mots de passe d'OmniWrench), pick_button wording.
+- es: archivo de registro, "Faltan requisitos", copia de seguridad, nombre de usuario, Obtener del gestor.
+  Formal "usted" imperatives confirmed consistent (Seleccione, Introduzca, Consulte).
+- de_bad: scale keys used a different spelling (ë, nooch, vun, het, selber) -> aligned with rest of file;
+  "gönn" -> "gehn". de_by: typo "Ofmeidn", "söiba"/"no amoi" aligned to "sejba"/"nomoi", "Grichtt", "auswürfln".
+- en_posh "programme" consistently; en_sco "Copy user name". check_locales OK.
