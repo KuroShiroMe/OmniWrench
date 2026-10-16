@@ -81,7 +81,9 @@ immer installiert.
 }
 ```
 
-* `python`: wird per pip in `<tool>/_lib` installiert und beim Laden in `sys.path` eingetragen
+* `python`: wird per pip in `<tool>/_lib` installiert und beim Laden in `sys.path` eingetragen.
+  In der EXE-Version nur Pakete mit fertigem Wheel (kein Kompilieren); Standardbibliothek und die gängigen
+  PySide6-Module sind eingebaut (Liste: `QT_MODULES` in `scripts/build_exe.py`).
 * `windows_capabilities` / `windows_features`: werden gemeinsam in **einer** Administrator-Sitzung installiert (eine UAC-Abfrage).
   Unter Windows Server läuft das über `Install-WindowsFeature`, auf Clients über `Enable-WindowsOptionalFeature`.
 * `powershell_modules`: `Install-Module -Scope CurrentUser`

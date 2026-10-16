@@ -35,3 +35,12 @@
 - Lineicons: root fill="none" + hard-coded path color -> recolor by replacing the single used color.
 - Narrow QPushButton with "…" text shows "." -> use an icon (folder-open).
 - Netwrix PsrApi: async methods return Task -> in PowerShell `.GetAwaiter().GetResult()`.
+
+## EXE build (PyInstaller)
+- Frozen app has no `python -m pip` -> `OmniWrench.exe --pip …` (main.py). Windowed exe: sys.stdout is None -> devnull,
+  errors via pip `--log` file. Packages without wheels can't build (no compiler/`-c` support) -> `--prefer-binary`.
+- Tools are imported at runtime from %LOCALAPPDATA% -> PyInstaller can't see their imports; build_exe.py bundles whole
+  stdlib (find_spec filter) + extra Qt modules. A new tool needing another PySide6 module -> add to QT_MODULES.
+- Old clients (<= 0.5.0) take the FIRST zip asset starting with "omniwrench" -> upload source zip before -win64.zip.
+- `.gitignore` ignores `*.spec`: build_exe.py passes all options on the command line (spec generated into build/exe).
+- Linux test build needs libegl1/libgl1/libxkbcommon0/libfontconfig1 (Qt import) - only for smoke tests.

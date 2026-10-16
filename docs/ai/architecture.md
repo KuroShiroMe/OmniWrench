@@ -50,11 +50,16 @@ omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
                               omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
-scripts/                      build_store, build_release, check_locales, update_icons
+scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, update_icons
+.github/workflows/build-exe.yml  Windows CI: builds OmniWrench-X.Y.Z-win64.zip artifact (manual / tags v*)
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 
 ## Key mechanisms
+- EXE build: PyInstaller onedir; data in _internal/omniwrench/{resources,locales} (found via __file__), APP_DIR = exe
+  folder (docs/ copied there). Whole stdlib + omniwrench + extra Qt modules bundled for runtime-loaded tools.
+  Frozen pip: main.py handles `OmniWrench.exe --pip …` before importing Qt; sdk.pip_install uses it (+ --log file).
+  Updater picks `-win64.zip` when frozen, the other zip when run from source (app_updater._pick_asset).
 - Tool loading: package `omniwrench_tool_<id>` via importlib with submodule_search_locations; `_lib` added to sys.path.
 - Settings value of type credential: `{"items": [...], "selected": i}`; items hold `ref` ("<provider>:<id>") or manual
   username/password. get_credential resolves the selected item (session cache for external providers).
