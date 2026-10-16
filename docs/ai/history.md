@@ -61,3 +61,11 @@
 - Store: tool names on store cards bigger (new object name `StoreCardTitle`, 14pt; shared `CardTitle` unchanged).
 - Verified both with offscreen render (Linux, real fonts).
 
+## 2026-10-16 — async credential resolve (v0.5.1, backlog item)
+- Core: CredentialManager.is_instant(ref); resolve() safe in worker threads; clear_session() discards in-flight results.
+- UI: workers.call_in_gui; install_auth_handler marshals ProviderLoginDialog to GUI thread; resolve_async();
+  CredentialField.resolve_async(). SDK: ToolContext.get_credential_async(). Dev doc updated.
+- Tools: AD User Lookup 1.3.1 (search resolves credential in background), OmniVault 1.0.1 (copy password in
+  background); both min_app_version 0.5.1. App version 0.5.1. No new UI strings.
+- Tested offscreen with fake slow provider: event loop keeps ticking, auth prompt runs in GUI thread, cache/local
+  instant, clear_session during fetch not cached, provider error -> on_error.

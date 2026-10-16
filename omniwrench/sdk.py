@@ -70,6 +70,7 @@ def CredentialField(value: dict | None = None, parent=None, settings=None, key: 
         self.login = CredentialField(settings=self.context.settings, key="credential")
         ...
         user, password = self.login.resolve()     # Abruf erst hier (einmal pro Sitzung)
+        self.login.resolve_async(self._start)     # dasselbe ohne die Oberfläche zu blockieren
     """
     from omniwrench.ui.credentials import CredentialField as _Field
     return _Field(value, parent, settings=settings, key=key)
@@ -154,6 +155,14 @@ class _ContextBase:
         if not value["items"]:
             return None
         return credentials.resolve_item(value["items"][value["selected"]])
+
+    def get_credential_async(self, key: str, on_done, on_error=None) -> None:
+        """Wie get_credential(), blockiert aber die Oberfläche nicht: externe Manager werden im
+        Hintergrund abgefragt, danach läuft on_done((benutzer, passwort) | None) im GUI-Thread.
+        """
+        from omniwrench.ui.credentials import resolve_async
+        value = credentials.normalize_value(self.settings.get(key))
+        resolve_async(value["items"][value["selected"]] if value["items"] else None, on_done, on_error)
 
     def get_credentials(self, key: str) -> list[dict]:
         """Alle in einer "credential"-Einstellung hinterlegten Einträge (ohne Passwörter abzurufen)."""

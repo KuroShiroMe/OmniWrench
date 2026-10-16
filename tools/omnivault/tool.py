@@ -12,7 +12,9 @@ from PySide6.QtWidgets import (
 from omniwrench.core import credentials as core_credentials
 from omniwrench.sdk import ToolBase, run_async
 # Erstanbieter-Tool: nutzt Bausteine des Hauptprogramms direkt
-from omniwrench.ui.credentials import PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret
+from omniwrench.ui.credentials import (
+    PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret, resolve_async,
+)
 from omniwrench.ui.widgets import clear_layout, library_icon
 
 from .connectors import ConnectorConfig, ConnectorStore, defaults, is_secret, is_visible, make_provider, register_all, text
@@ -463,9 +465,9 @@ class OmniVault(ToolBase):
         if attr == "username":
             copy_secret(item.username, self.context.notify)
             return
-        cred = core_credentials.manager().resolve(item.ref)  # fragt bei Bedarf nach Anmeldedaten
-        if cred:
-            copy_secret(cred.password, self.context.notify)
+        # im Hintergrund abrufen (externe Manager brauchen oft Sekunden), fragt bei Bedarf nach Anmeldedaten
+        resolve_async(item.ref, lambda cred: cred and copy_secret(cred[1], self.context.notify),
+                      lambda err: self.status.setText("❌ " + err))
 
     def on_settings_changed(self, changed_keys: set[str]) -> None:
         if "max_results" in changed_keys:
