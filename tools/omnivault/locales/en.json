@@ -44,5 +44,9 @@
   "dlg.installed": "Installed: {modules}",
   "dlg.type": "Password manager",
   "dlg.name_placeholder": "Default: name of the password manager",
-  "dlg.docs": "API documentation"
+  "dlg.docs": "API documentation",
+  "stage.alpha": "Alpha",
+  "stage.alpha_hint": "Alpha: This connector has not yet been tested against a real installation.",
+  "stage.beta": "Beta",
+  "stage.beta_hint": "Beta: This connector is still being tested."
 }

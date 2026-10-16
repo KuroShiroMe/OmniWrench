@@ -35,3 +35,8 @@
 - Lineicons: root fill="none" + hard-coded path color -> recolor by replacing the single used color.
 - Narrow QPushButton with "…" text shows "." -> use an icon (folder-open).
 - Netwrix PsrApi: async methods return Task -> in PowerShell `.GetAwaiter().GetResult()`.
+
+## Store build
+- `build_store.py` rebuilds ALL packages; zips of unchanged tools get new hashes on another OS/checkout
+  (line endings/mtimes). Keep only the bumped tool's zip + index entry; restore the others from git.
+

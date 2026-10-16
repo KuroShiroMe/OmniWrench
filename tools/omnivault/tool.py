@@ -90,7 +90,10 @@ class ConnectorDialog(QDialog):
         top = QFormLayout()
         self.type_combo = QComboBox()
         for type_id, spec in types.items():
-            self.type_combo.addItem(library_icon(spec.get("icon", "plug"), 16), spec["name"], type_id)
+            caption = spec["name"]
+            if spec.get("stage"):
+                caption += f" ({tr('stage.' + spec['stage'])})"
+            self.type_combo.addItem(library_icon(spec.get("icon", "plug"), 16), caption, type_id)
         self.type_combo.setCurrentIndex(max(self.type_combo.findData(self.conn.type), 0))
         self.type_combo.setEnabled(self.is_new)  # Art eines bestehenden Konnektors bleibt fest
         self.type_combo.currentIndexChanged.connect(self._type_changed)
@@ -151,6 +154,8 @@ class ConnectorDialog(QDialog):
         lang = self.ctx.language
         spec = self.spec
         desc = text(spec.get("description"), lang)
+        if spec.get("stage"):
+            desc = f"<b>{self.ctx.tr('stage.' + spec['stage'] + '_hint')}</b><br>{desc}"
         if spec.get("docs"):
             desc += f" <a href='{spec['docs']}'>{self.ctx.tr('dlg.docs')}</a>"
         self.desc.setText(desc)

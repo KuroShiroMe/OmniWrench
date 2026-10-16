@@ -2,6 +2,8 @@
 
 ## Open / to verify with user
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
+      Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
+      someone with Netwrix Enterprise Pro confirms it works.
       Open questions: password-auth field keys in DynamicFillableAuthentication.Fields, PsrContainer.Name vs. Info for
       display name, whether SDK DLL loads in PowerShell 5.1 (default: pwsh 7).
 - [ ] SecretManagement connector: live test (module not installed on dev machine).
