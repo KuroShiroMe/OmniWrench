@@ -112,3 +112,13 @@
 - App 0.6.0 (0.5.1 from #2 never released). Tools: AD User Lookup 1.3.1, IconForge 1.1.0, OmniVault 1.0.1,
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
+
+## 2026-10-16 — IconForge 1.1.1: narrow windows (thread "IconForge bei schmalem Fenster")
+- Header row was one fixed row (min ~970 px) -> horizontal scrollbar below ~1100 px dock width.
+- New HeaderBar (tools/iconforge/tool.py): 1 row when wide, title+search / filters on 2 rows when medium,
+  filters split on 3 rows when narrow; minimumSizeHint = narrowest arrangement. Grid keeps at least one full column
+  (min width = cell + scrollbar), so the splitter shrinks the details panel instead. Tool min width 972 -> 494 px.
+- Preview sharpness at high scaling re-checked: render_pixmap uses max(2, screen DPR) (fixed before #4 merge); 200 %
+  render sharp. No change needed.
+- Tested by offscreen renders 1400/1100/900/700/560 px (de, en, 200 %): no horizontal scrollbar. Store: only IconForge zip.
+
