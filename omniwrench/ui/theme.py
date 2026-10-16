@@ -110,6 +110,8 @@ def stylesheet(c: dict[str, str]) -> str:
     #PageTitle {{ font-size: 18pt; font-weight: 600; }}
     #PageSubtitle {{ color: {c['muted']}; }}
     #Muted {{ color: {c['muted']}; }}
+    QLabel#Notice {{ background: {c['surface']}; border: 1px solid {c['border']}; border-left: 4px solid {c['warning']};
+                     border-radius: 6px; padding: 8px 12px; }}
 
     #ToolCard {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 10px; }}
     #ToolCard:hover {{ border-color: {c['accent']}; background: {c['surface2']}; }}

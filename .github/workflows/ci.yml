@@ -1,0 +1,55 @@
+# Prüfungen für jeden Pull Request und jeden Push auf main.
+# Den EXE-Build (inkl. Starttest der EXE) übernimmt build-exe.yml.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Sprachdateien und Store
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Abhängigkeiten installieren
+        run: python -m pip install -r requirements.txt
+      - name: Python-Dateien kompilieren
+        run: python -m compileall -q main.py omniwrench scripts tools
+      - name: Sprachdateien Hauptprogramm
+        run: python scripts/check_locales.py
+      - name: Sprachdateien der Tools
+        run: |
+          rc=0
+          for tool in tools/*/; do
+            echo "::group::$tool"
+            python scripts/check_locales.py "$tool" || rc=1
+            echo "::endgroup::"
+          done
+          exit $rc
+      - name: Store passt zu tools/ (Version erhöht, Store neu gebaut?)
+        run: python scripts/check_store.py
+
+  smoke:
+    name: Starttest Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Abhängigkeiten installieren
+        run: python -m pip install -r requirements.txt
+      - name: Starttest (Tresor, Tool-Installation, alle Sprachen, alle Tools öffnen)
+        run: python scripts/smoke_test.py

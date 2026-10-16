@@ -55,7 +55,9 @@
 ## EXE build (2026-10-16, my choices)
 - PyInstaller **onedir** (not onefile): faster start, fewer AV false positives, self-updater can overwrite files.
 - Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
-- Local dev store not shipped with the EXE. No code signing / installer yet.
+  (2026-10-16) GitHub sorts assets by name, so -win64 is listed first anyway; user chose to keep the names and
+  update 0.5.x installs manually once instead of renaming the source zip.
+- Local dev store not shipped with the EXE. No installer yet. Code signing: see "EXE signing" below.
 
 ## Round 8 decisions (2026-10-16)
 - Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
@@ -66,6 +68,12 @@
 - IconForge libraries: only Lucide bundled offline; all others downloaded on demand when selected.
 - Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
 - Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).
+
+## Password connectors 2 (2026-10-16, my choices)
+- Bitwarden/1Password via their official CLIs (bw, op) - no own crypto/API re-implementation; HashiCorp Vault via
+  plain HTTP API (no extra Python package). All three stage alpha until tested live.
+- Bitwarden: per-connector CLI data dir so it never touches the user's own bw login; session key only in memory.
+- Vault search = path names only (no reading every secret); user name shown after selection.
 
 ## Round 9 decisions (2026-10-16)
 - IconForge: library dropdown shows ONLY downloaded libraries; a download button next to it opens a wizard
@@ -80,6 +88,28 @@
   scales tools, QtAds and Qt-internal metrics consistently.
 - Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
   ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().
+
+## CI (2026-10-16, my choices)
+- Checks run on every PR and push to main; EXE build too (no paths filter) because tools/app changes can break it.
+- Smoke test never installs system prerequisites (RSAT, features, PS modules, winget) on runners - only validates.
+- Store consistency is enforced: a changed tool without version bump + rebuilt store fails CI.
+
+## EXE signing (2026-10-16, my choices; certificate choice is Stef's, open)
+- Only OmniWrench.exe is signed (bundled DLLs keep their own signatures). SHA-256 + RFC 3161 timestamp.
+- Secrets never in repo/chat: local signing via env (SIGN_CERT_SHA1 or SIGN_PFX_*), CI via GitHub secrets/variables.
+- CI signs only on tags v* and manual runs; method chosen by repo variable SIGN_METHOD (azure|signpath|certificate);
+  empty -> unsigned build, no failure. PR/main builds stay unsigned.
+- Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "Steffi-Tech").
+  README has the required "Code signing policy" section (roles: Steffi-Tech = author/reviewer/approver,
+  privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
+  Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).
+
+## UAC prerequisites (2026-10-16, my choices)
+- Elevation via ShellExecuteExW (not Start-Process -Verb RunAs); already-elevated app runs without prompt.
+- WSUS/Features-on-Demand errors: only a hint text; OmniWrench never changes policies/registry on its own.
+- Restart needed: notice in the install log only, no automatic restart.
+- Stef (2026-10-16): OmniWrench targets Windows clients, **not Windows Server**. On Server only a notice on Home
+  ("functions limited"); no Server-specific prerequisite handling.
 - Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
   file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.

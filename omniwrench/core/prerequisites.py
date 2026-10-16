@@ -9,11 +9,33 @@ from __future__ import annotations
 
 from typing import Callable
 
+from . import elevation
 from .i18n import tr
 from .manifest import Requirements
-from .powershell import ps_quote, run_ps, run_ps_elevated
+from .powershell import MARKER_PREFIX, ps_quote, run_ps, run_ps_elevated
 
 Progress = Callable[[str], None]
+
+
+# Fortschrittsmeldungen der Admin-Sitzung: "##OW <art>|<name>" -> übersetzter Text
+_MARKERS: dict[str, Callable[[str], str]] = {
+    "cap_install": lambda name: tr("prog.elev_cap_install", name=name),
+    "cap_present": lambda name: tr("prog.elev_cap_present", name=name),
+    "feat_install": lambda name: tr("prog.elev_feat_install", name=name),
+    "feat_present": lambda name: tr("prog.elev_feat_present", name=name),
+    "done": lambda name: tr("prog.elev_done", name=name),
+}
+
+# Typische Fehler, wenn Windows-Funktionen nicht aus Windows Update geladen werden dürfen (WSUS)
+_SOURCE_ERRORS = ("0x800f0954", "0x800f081f", "0x8024402c", "0x80240438")
+
+
+def _marker(kind: str, q: str) -> str:
+    return f"Write-Output ('{MARKER_PREFIX}{kind}|' + {q})"
+
+
+def _restart_check() -> str:
+    return f"if ([string]$r.RestartNeeded -in 'True','Yes') {{ Write-Output '{MARKER_PREFIX}restart|' }}"
 
 
 def _elevated_script(req: Requirements) -> str:
@@ -22,9 +44,12 @@ def _elevated_script(req: Requirements) -> str:
         q = ps_quote(cap)
         lines.append(
             f"$c = Get-WindowsCapability -Online -Name {q}\n"
-            f"if ($c.State -ne 'Installed') {{ Write-Output ('Installing capability ' + {q}); "
-            f"Add-WindowsCapability -Online -Name {q} | Out-Null }} "
-            f"else {{ Write-Output ('Already installed: ' + {q}) }}"
+            f"if ($c.State -ne 'Installed') {{\n"
+            f"  {_marker('cap_install', q)}\n"
+            f"  $r = Add-WindowsCapability -Online -Name {q}\n"
+            f"  {_restart_check()}\n"
+            f"  {_marker('done', q)}\n"
+            f"}} else {{ {_marker('cap_present', q)} }}"
         )
     for feat in req.windows_features:
         q = ps_quote(feat)
@@ -32,15 +57,53 @@ def _elevated_script(req: Requirements) -> str:
         lines.append(
             "if (Get-Command Install-WindowsFeature -ErrorAction SilentlyContinue) {\n"
             f"  $f = Get-WindowsFeature -Name {q}\n"
-            f"  if (-not $f.Installed) {{ Write-Output ('Installing feature ' + {q}); "
-            f"Install-WindowsFeature -Name {q} -IncludeManagementTools | Out-Null }}\n"
+            f"  if (-not $f.Installed) {{\n"
+            f"    {_marker('feat_install', q)}\n"
+            f"    $r = Install-WindowsFeature -Name {q} -IncludeManagementTools\n"
+            f"    {_restart_check()}\n"
+            f"    {_marker('done', q)}\n"
+            f"  }} else {{ {_marker('feat_present', q)} }}\n"
             "} else {\n"
             f"  $f = Get-WindowsOptionalFeature -Online -FeatureName {q}\n"
-            f"  if ($f.State -ne 'Enabled') {{ Write-Output ('Enabling feature ' + {q}); "
-            f"Enable-WindowsOptionalFeature -Online -FeatureName {q} -All -NoRestart | Out-Null }}\n"
+            f"  if ($f.State -ne 'Enabled') {{\n"
+            f"    {_marker('feat_install', q)}\n"
+            f"    $r = Enable-WindowsOptionalFeature -Online -FeatureName {q} -All -NoRestart\n"
+            f"    {_restart_check()}\n"
+            f"    {_marker('done', q)}\n"
+            f"  }} else {{ {_marker('feat_present', q)} }}\n"
             "}"
         )
     return "\n".join(lines)
+
+
+def _install_elevated(req: Requirements, progress: Progress) -> None:
+    """Windows-Funktionen und Features in einer Admin-Sitzung (eine UAC-Abfrage)."""
+    progress(tr("prog.windows_features"))
+    progress(tr("prog.uac_prompt") if elevation.needs_uac() else tr("prog.already_admin"))
+    restart = False
+
+    def on_output(line: str) -> None:
+        nonlocal restart
+        if not line.startswith(MARKER_PREFIX):
+            progress("  " + line)
+            return
+        kind, _, name = line[len(MARKER_PREFIX):].partition("|")
+        if kind == "restart":
+            restart = True
+        elif kind in _MARKERS:
+            progress("  " + _MARKERS[kind](name))
+
+    res = run_ps_elevated(_elevated_script(req), on_output=on_output)
+    if res.returncode == elevation.ERROR_CANCELLED:
+        raise RuntimeError(tr("err.elevated_cancelled"))
+    if not res.ok:
+        detail = (res.stderr or res.stdout)[-2000:]
+        message = tr("err.windows_features") + "\n" + detail
+        if any(code in detail.lower() for code in _SOURCE_ERRORS):
+            message += "\n\n" + tr("err.feature_source_hint")
+        raise RuntimeError(message)
+    if restart:
+        progress(tr("prog.restart_required"))
 
 
 def install_requirements(req: Requirements, pip_install: Callable[..., None], progress: Progress,
@@ -57,13 +120,7 @@ def install_requirements(req: Requirements, pip_install: Callable[..., None], pr
         return
 
     if req.windows_capabilities or req.windows_features:
-        progress(tr("prog.windows_features"))
-        res = run_ps_elevated(_elevated_script(req))
-        for line in res.stdout.splitlines():
-            if line.strip() and not line.startswith("*"):
-                progress("  " + line.strip())
-        if not res.ok:
-            raise RuntimeError(tr("err.windows_features") + "\n" + (res.stderr or res.stdout)[-2000:])
+        _install_elevated(req, progress)
 
     for module in req.powershell_modules:
         q = ps_quote(module)

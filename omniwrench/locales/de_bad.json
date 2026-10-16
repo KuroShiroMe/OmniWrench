@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Zum Verschlüssle gehn nur RSA-Zertifikat.",
   "err.cert_decrypt": "Entschlüssle mit em Zertifikat hät nit klappt.",
   "err.elevated_timeout": "Hät z lang dauert mit de Admin-Rechte.",
-  "err.elevated_cancelled": "Abbroche (UAC nit wolle?).",
+  "err.elevated_cancelled": "Kei Admin-Rechte kriegt (UAC-Abfrog abglehnt).",
   "err.windows_features": "Windows-Funktione druffmache hät nit klappt.",
   "err.ps_module": "PowerShell-Modul {name} will nit druff:",
   "err.winget": "winget-Paket {name} will nit druff:",
@@ -303,5 +303,17 @@
   "pwm.remove_entry": "Us de Lischt nemme",
   "pwm.search_all": "Alli Passwort-Kischtle durchsueche …",
   "pwm.searching": "Durchsuech d verbundene Kischtle …",
-  "pwm.source": "Kummt vu"
+  "pwm.source": "Kummt vu",
+  "prog.uac_prompt": "Admin-Rechte werre aagfrogt. D Windows-Abfrog (UAC) bschtätige …",
+  "prog.already_admin": "S Programm hät schu Admin-Rechte, kei UAC-Abfrog nötig.",
+  "prog.elev_cap_install": "Windows-Funktion {name} wird druffgmacht (cha e Wiili dure) …",
+  "prog.elev_cap_present": "Windows-Funktion {name} isch schu druff.",
+  "prog.elev_feat_install": "Feature {name} wird iigschalte …",
+  "prog.elev_feat_present": "Feature {name} isch schu aa.",
+  "prog.elev_done": "{name}: fertig.",
+  "prog.restart_required": "Obacht: Windows muss nei gschtartet werre, dass alles griift.",
+  "err.elevated_start": "D Admin-Sitzung hät nit gschtartet werre könne: {error}",
+  "err.elevated_failed": "Mit Admin-Rechte hät s nit klappt (Exitcode {code}).",
+  "err.feature_source_hint": "Windows hät d Funktion nit ra lade könne. Bi WSUS muss d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Lade direkt vu Windows Update erlaube, oder d Funktion kummt us ere Features-on-Demand-Quell.",
+  "home.server_notice": "Windows Server wird nit unterstützt. E paar Funktione gehn nur eigschränkt, z. B. s automatische Druffmache vu Sache wie RSAT."
 }

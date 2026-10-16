@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Seuls les certificats RSA sont pris en charge pour le chiffrement.",
   "err.cert_decrypt": "Le déchiffrement avec le certificat a échoué.",
   "err.elevated_timeout": "Délai dépassé lors de l'exécution avec des droits d'administrateur.",
-  "err.elevated_cancelled": "Exécution annulée (UAC refusé ?).",
+  "err.elevated_cancelled": "Les droits d'administrateur n'ont pas été accordés (invite UAC refusée).",
   "err.windows_features": "L'installation des fonctionnalités Windows a échoué.",
   "err.ps_module": "Impossible d'installer le module PowerShell {name} :",
   "err.winget": "Impossible d'installer le paquet winget {name} :",
@@ -303,5 +303,17 @@
   "pwm.remove_entry": "Retirer de la liste",
   "pwm.search_all": "Rechercher dans tous les gestionnaires …",
   "pwm.searching": "Recherche dans les gestionnaires connectés …",
-  "pwm.source": "Source"
+  "pwm.source": "Source",
+  "prog.uac_prompt": "Demande des droits d'administrateur. Confirmer l'invite Windows (Contrôle de compte d'utilisateur) …",
+  "prog.already_admin": "Le programme s'exécute déjà avec des droits d'administrateur, aucune invite UAC nécessaire.",
+  "prog.elev_cap_install": "Installation de la fonctionnalité Windows {name} (cela peut prendre plusieurs minutes) …",
+  "prog.elev_cap_present": "La fonctionnalité Windows {name} est déjà installée.",
+  "prog.elev_feat_install": "Activation de la fonctionnalité {name} …",
+  "prog.elev_feat_present": "La fonctionnalité {name} est déjà activée.",
+  "prog.elev_done": "{name} : terminé.",
+  "prog.restart_required": "Remarque : un redémarrage de Windows est nécessaire pour que toutes les modifications prennent effet.",
+  "err.elevated_start": "Impossible de démarrer la session administrateur : {error}",
+  "err.elevated_failed": "L'exécution avec des droits d'administrateur a échoué (code de sortie {code}).",
+  "err.feature_source_hint": "Windows n'a pas pu télécharger la fonctionnalité. Dans les environnements gérés par WSUS, la stratégie de groupe « Spécifier les paramètres d'installation des composants facultatifs et de réparation des composants » doit autoriser le téléchargement directement depuis Windows Update, ou la fonctionnalité doit être installée depuis une source Fonctionnalités à la demande.",
+  "home.server_notice": "Windows Server n'est pas pris en charge. Certaines fonctions sont limitées, par ex. l'installation automatique des prérequis comme RSAT."
 }

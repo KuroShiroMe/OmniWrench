@@ -11,13 +11,17 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
   paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
   vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>"
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
-  powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC, log file + icacls)
+  powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
+                              wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
+  system.py                   is_windows_server() (registry InstallationType, cached)
+  elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
   manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path
   tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners
   tool_manager.py             ToolManager(QObject): refresh, create_instance, install_zip/dir (backup+rollback),
                               _install_prerequisites (check() first), uninstall, repair; module prefix omniwrench_tool_<id>
-  prerequisites.py            pip (_lib), elevated capabilities/features, PS modules, winget
+  prerequisites.py            pip (_lib), elevated capabilities/features (##OW markers -> localized progress,
+                              restart notice, WSUS/FoD hint on 0x800f0954 etc.), PS modules, winget
   repository.py               load_catalog(repos), available_updates, install_from_catalog
   app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
   net.py                      urllib + truststore SSL, github_token header
@@ -54,8 +58,14 @@ omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
                               omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
-scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, update_icons
-.github/workflows/build-exe.yml  Windows CI: builds OmniWrench-X.Y.Z-win64.zip artifact (manual / tags v*)
+scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
+                              smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
+.github/workflows/ci.yml      every PR + push main: compileall, check_locales (app + each tool), check_store (Linux);
+                              smoke_test.py on windows-latest (offscreen)
+.github/workflows/build-exe.yml  every PR + push main + tags v*: PyInstaller build, `--pip --version`, EXE start test
+                              (process must survive 20 s, no ERROR in log), optional signing on tags/manual runs
+                              (vars.SIGN_METHOD: azure|signpath|certificate, docs/EXE_SIGNIEREN.md), signature check,
+                              zip, artifact OmniWrench-X.Y.Z-win64.zip
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 
@@ -74,6 +84,14 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   run_hook after install; providers registered via ctx.register_credential_provider are released on update/uninstall.
 - PMM connector config: tool setting "connectors" (non-secret), vault ctx.secrets "conn:<id>" (secret fields, only if
   save_auth), otherwise module-level _session_auth (memory).
+- PMM runtime state (Bitwarden BW_SESSION, Vault login token) in module-level _session_state[conn_id] via
+  ConnectorProvider.state; cleared by on_auth_changed/close/delete; connection test uses an instance-local dict.
+- PMM implementations (connector_types.json "implementation"): powershell, keepass, bitwarden (bw CLI, own
+  BITWARDENCLI_APPDATA_DIR = <tool_data>/bitwarden/<conn_id>), onepassword (op CLI, OP_SERVICE_ACCOUNT_TOKEN or
+  desktop app --account; ids "vaultId|itemId"), hashicorp_vault (urllib + net._SSL, KV v1/v2, BFS LIST below base
+  path, max 300 LIST calls; ids = secret path). CliConnector base: find_program (cli_path, PATH, winget Links/Packages),
+  NODE_EXTRA_CA_CERTS from optional ca_file. requirements.program {name, command, winget, url} -> dialog
+  _ensure_program offers `winget install --id … --exact`. show_if accepts a list of values.
 - Tool language: reserved setting key `_language`; change -> MainWindow.reload_tool_tabs (new instance).
 - Layout persistence: layout.json (geometry, QtAds state, open tool dock names `tool:<id>:<n>`).
 - Store index entries = tool.json + download_url + sha256 + translations (+ icon_data for custom image icons).

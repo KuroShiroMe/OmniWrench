@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Only RSA certificates are supported for encryption.",
   "err.cert_decrypt": "Decryption with the certificate failed.",
   "err.elevated_timeout": "Timeout while running with administrator rights.",
-  "err.elevated_cancelled": "Execution cancelled (UAC declined?).",
+  "err.elevated_cancelled": "Administrator rights were not granted (UAC prompt declined).",
   "err.windows_features": "Installation of the Windows features failed.",
   "err.ps_module": "PowerShell module {name} could not be installed:",
   "err.winget": "winget package {name} could not be installed:",
@@ -303,5 +303,17 @@
   "pwm.remove_entry": "Remove from list",
   "pwm.search_all": "Search all password managers …",
   "pwm.searching": "Searching connected password managers …",
-  "pwm.source": "Source"
+  "pwm.source": "Source",
+  "prog.uac_prompt": "Requesting administrator rights. Confirm the Windows prompt (User Account Control) …",
+  "prog.already_admin": "The program is already running with administrator rights, no UAC prompt needed.",
+  "prog.elev_cap_install": "Installing Windows capability {name} (this may take several minutes) …",
+  "prog.elev_cap_present": "Windows capability {name} is already installed.",
+  "prog.elev_feat_install": "Enabling feature {name} …",
+  "prog.elev_feat_present": "Feature {name} is already enabled.",
+  "prog.elev_done": "{name}: done.",
+  "prog.restart_required": "Note: Windows must be restarted for all changes to take effect.",
+  "err.elevated_start": "The administrator session could not be started: {error}",
+  "err.elevated_failed": "Running with administrator rights failed (exit code {code}).",
+  "err.feature_source_hint": "Windows could not download the feature. In WSUS-managed environments the group policy \"Specify settings for optional component installation and component repair\" must allow downloading directly from Windows Update, or the feature must be installed from a Features on Demand source.",
+  "home.server_notice": "Windows Server is not supported. Some functions are limited, e.g. the automatic installation of prerequisites such as RSAT."
 }

@@ -25,9 +25,12 @@ Rules for yourself:
 .\.venv\Scripts\python main.py                      # run app
 .\.venv\Scripts\python scripts\check_locales.py     # all 8 languages complete?
 .\.venv\Scripts\python scripts\build_store.py       # rebuild store/ after tool changes (bump tool version!)
+.\.venv\Scripts\python scripts\check_store.py       # store/ matches tools/? (CI checks this)
+.\.venv\Scripts\python scripts\smoke_test.py        # start test as in CI (temp home, all languages/tools)
 .\.venv\Scripts\python scripts\build_release.py     # dist\OmniWrench-X.Y.Z.zip from HEAD
 .\.venv\Scripts\python scripts\build_exe.py --zip   # dist\OmniWrench\OmniWrench.exe + -win64.zip (docs/EXE_BUILD.md)
-gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip --title "OmniWrench X.Y.Z" --notes "…"
+.\.venv\Scripts\python scripts\build_exe.py --sign --zip  # same, signed if SIGN_CERT_SHA1/SIGN_PFX_* set (docs/EXE_SIGNIEREN.md)
+git tag vX.Y.Z; git push origin vX.Y.Z               # CI (EXE-Build) creates the GitHub release with both zips
 ```
 `gh` needs PATH refresh in PowerShell: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`
 

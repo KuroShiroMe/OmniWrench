@@ -113,6 +113,56 @@
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
 
+## 2026-10-16 — GitHub Actions CI for every PR (thread "GitHub-Prüfungen für PRs", proposal 3)
+- New `.github/workflows/ci.yml`: Linux job (compileall, check_locales app + all tools, check_store) and Windows job
+  (`scripts/smoke_test.py`). `build-exe.yml` now runs on every PR/push main (no paths filter) + starts the EXE.
+- `scripts/check_store.py`: store/index.json matches tools/ (version, zip exists, sha256/size, zip content == tool dir,
+  CRLF/LF ignored) -> catches "tool changed but version not bumped / store not rebuilt".
+- `scripts/smoke_test.py`: temp OMNIWRENCH_HOME, creates vault, installs store tools without system requirements
+  (AD User Lookup only validated: RSAT), opens main window in all 8 languages, store tab, all tools, 3 widths;
+  any QMessageBox / ERROR log / uncaught exception fails. Runs locally too (`--visible` for real windows).
+
+## 2026-10-16 — EXE signing prepared (thread "EXE signieren", Claude Code cloud session)
+- Branch claude/exe-signing-0i9n5y stacked on PR #8 (CI) because both change build-exe.yml.
+- scripts/sign_exe.py: signtool (Windows SDK, auto-found) or osslsigncode (non-Windows, PFX only); cert from env
+  (SIGN_CERT_SHA1 / SIGN_PFX_BASE64 / SIGN_PFX_PATH + SIGN_PFX_PASSWORD, SIGN_TIMESTAMP_URL); retries 3x; masks password.
+- build_exe.py: --sign (signs if configured, else notice) and --no-build (sign/zip existing folder, used by CI).
+- build-exe.yml: build -> tests -> optional signing (Azure artifact-signing-action@v2 / SignPath submit action@v2 /
+  PFX via sign_exe.py) -> Get-AuthenticodeSignature check -> zip -> upload.
+- docs/EXE_SIGNIEREN.md: options table + recommendation + setup per method. Tested on Linux with a self-signed PFX
+  (osslsigncode verify ok); Windows/CI signing paths untested without credentials.
+- Stef picked "SignPath + MIT" on the decision card -> LICENSE (MIT), README "Lizenz" + "Code signing policy"
+  (SignPath credit line, roles, privacy statement incl. GitHub store/update check), LICENSE shipped next to the EXE,
+  EXE_SIGNIEREN.md with SignPath application steps.
+- Stef asked for copy-paste values: EXE_SIGNIEREN.md now has every SignPath form answer (English) in code blocks,
+  SignPath/GitHub settings after approval (slugs omniwrench / release-signing / omniwrench-exe); README privacy
+  statement got its own heading (#datenschutz) for the privacy URL.
+- v0.6.0 released by CI (tag pushed by user). Assets came out win64-first -> workflow now uploads source zip first,
+  win64 separately; user asked to re-upload the win64 asset of v0.6.0 so the source zip is first.
+- Re-upload didn't help: assets are sorted by name. User chose: keep names, update 0.5.x installs manually once.
+
+## 2026-10-16 — more password connectors (thread "Passwort-Konnektoren", suggestion 5)
+- OmniVault 1.1.0: connectors Bitwarden/Vaultwarden (bw CLI; API key or e-mail + master password), 1Password
+  (op CLI; service account token or desktop app), HashiCorp Vault/OpenBao (HTTP API, KV v1/v2; token, userpass,
+  LDAP, AppRole). All stage alpha. Python implementations in connectors.py (no PowerShell).
+- Dialog: missing CLI -> winget install offer (Bitwarden.CLI, AgileBits.1Password.CLI).
+- Tests: fake bw/op scripts + local fake Vault server (search, get, wrong credentials -> AuthenticationRequired,
+  expired session/token -> re-login); dialog renders for all three types. Store: only omnivault zip rebuilt.
+- Same PR, on request: OmniVault locales for fr, es, de_bad, de_by, en_sco, en_posh (all 51 keys) + fr/es for every
+  label/description in connector_types.json (dialects fall back to de/en there via text()). Checked fr/es dialog renders.
+
+## 2026-10-16 — real UAC install of prerequisites (thread "Echte UAC-Installation")
+- New core/elevation.py: ShellExecuteExW "runas" (owner = main window via MainWindow.showEvent), detects UAC "No"
+  (1223), is_admin() skips the prompt when already elevated. Same code path in source and EXE.
+- run_ps_elevated rewritten: -EncodedCommand wrapper, user script base64-embedded (syntax errors land in the log),
+  log file pre-created by the user, output streamed live (on_output), errors as stderr, full powershell.exe path.
+- prerequisites: localized live progress per capability/feature, restart-needed notice, WSUS/FoD hint, clean
+  "UAC declined" error. SDK run_powershell_elevated(on_output=). 12 new/changed keys in all 8 locales.
+- Tested on Linux with pwsh 7.4 + mocked DISM cmdlets (install, present, restart, 0x800f0954, syntax error, exit code,
+  umlauts, >30k script via -File, cancel). Windows API part untested here -> user test.
+- Stef tested UAC install on Windows: OK. Follow-up: Windows Server is not a target -> core/system.is_windows_server()
+  (registry InstallationType) + notice label on Home (QLabel#Notice, key home.server_notice, 8 locales).
+
 ## 2026-10-16 — AI translation review fr/es/dialects (thread "Übersetzungen prüfen", suggestion 7)
 - Reviewed all 300 keys of fr, es, de_bad, de_by, en_sco, en_posh against de/en. Only existing keys changed
   (open PRs #7-#10 + connector PR also touch locales). No native-speaker check - stays open in backlog.

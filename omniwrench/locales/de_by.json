@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Zum Verschlüssln gengan bloß RSA-Zertifikate.",
   "err.cert_decrypt": "Entschlüssln mitm Zertifikat hod ned highaut.",
   "err.elevated_timeout": "Hod z lang dauert mit de Admin-Rechte.",
-  "err.elevated_cancelled": "Obrochn (UAC ned woin?).",
+  "err.elevated_cancelled": "Koane Admin-Rechte kriagt (UAC-Abfrog obglehnt).",
   "err.windows_features": "Windows-Funktionen draufspuin hod ned highaut.",
   "err.ps_module": "PowerShell-Modul {name} mog ned drauf:",
   "err.winget": "winget-Packerl {name} mog ned drauf:",
@@ -303,5 +303,17 @@
   "pwm.remove_entry": "Aus da Listn nehma",
   "pwm.search_all": "Olle Passwort-Truhn durchsuacha …",
   "pwm.searching": "Durchsuach de verbundnen Truhn …",
-  "pwm.source": "Kimmt vo"
+  "pwm.source": "Kimmt vo",
+  "prog.uac_prompt": "Admin-Rechte wern ogfragt. De Windows-Abfrog (UAC) bschtätign …",
+  "prog.already_admin": "Des Programm hod scho Admin-Rechte, koa UAC-Abfrog nötig.",
+  "prog.elev_cap_install": "Windows-Funktion {name} werd draufgspuit (ko a Weil dauern) …",
+  "prog.elev_cap_present": "Windows-Funktion {name} is scho drauf.",
+  "prog.elev_feat_install": "Feature {name} werd eigschalt …",
+  "prog.elev_feat_present": "Feature {name} is scho o.",
+  "prog.elev_done": "{name}: fertig.",
+  "prog.restart_required": "Obacht: Windows muass nei gstart wern, damit ois greift.",
+  "err.elevated_start": "De Admin-Sitzung hod ned gstart wern kenna: {error}",
+  "err.elevated_failed": "Mit Admin-Rechte hod's ned highaut (Exitcode {code}).",
+  "err.feature_source_hint": "Windows hod de Funktion ned owalon kenna. Bei WSUS muass de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ des Owalon direkt vo Windows Update erlaum, oder de Funktion kimmt aus a Features-on-Demand-Quelle.",
+  "home.server_notice": "Windows Server werd ned unterstützt. A boar Funktionen gehn bloß eigschränkt, z. B. des automatische Draufspuin vo Sachan wia RSAT."
 }

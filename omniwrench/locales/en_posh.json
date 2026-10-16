@@ -226,7 +226,7 @@
   "err.cert_rsa_only": "Only RSA certificates are deemed suitable for encryption.",
   "err.cert_decrypt": "Decryption by certificate failed.",
   "err.elevated_timeout": "Administrator privileges took an unconscionably long time.",
-  "err.elevated_cancelled": "Called off (was UAC declined?).",
+  "err.elevated_cancelled": "Administrator privileges were not granted (the UAC prompt was declined).",
   "err.windows_features": "The Windows features could not be installed.",
   "err.ps_module": "PowerShell module {name} refused to be installed:",
   "err.winget": "winget package {name} refused to be installed:",
@@ -303,5 +303,17 @@
   "pwm.remove_entry": "Strike from the list",
   "pwm.search_all": "Peruse every password manager …",
   "pwm.searching": "Consulting the connected password managers …",
-  "pwm.source": "Provenance"
+  "pwm.source": "Provenance",
+  "prog.uac_prompt": "Requesting administrator privileges. Kindly confirm the Windows prompt (User Account Control) …",
+  "prog.already_admin": "The programme already enjoys administrator privileges; no UAC prompt is required.",
+  "prog.elev_cap_install": "Installing the Windows capability {name} (this may take several minutes) …",
+  "prog.elev_cap_present": "The Windows capability {name} is already installed.",
+  "prog.elev_feat_install": "Enabling the feature {name} …",
+  "prog.elev_feat_present": "The feature {name} is already enabled.",
+  "prog.elev_done": "{name}: quite finished.",
+  "prog.restart_required": "Do note: Windows requires a restart for all changes to take effect.",
+  "err.elevated_start": "The administrator session could not be started: {error}",
+  "err.elevated_failed": "Running with administrator privileges failed (exit code {code}).",
+  "err.feature_source_hint": "Windows was unable to download the feature. Where WSUS is in charge, the group policy \"Specify settings for optional component installation and component repair\" must permit downloading directly from Windows Update, or the feature must be installed from a Features on Demand source.",
+  "home.server_notice": "Windows Server is, regrettably, not supported. Certain functions are limited, such as the automatic installation of prerequisites like RSAT."
 }

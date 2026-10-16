@@ -5,7 +5,7 @@
   },
   "tool.name": "OmniVault",
   "tool.description": "Built-in password manager with connectors to external password managers.",
-  "tool.long_description": "Stores credentials in the built-in OmniWrench password manager and connects external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Credential pickers in OmniWrench then search all connected managers. Passwords from external managers are retrieved on demand and kept in memory for the current session only.",
+  "tool.long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
   "tool.category": "Security/Passwords",
   "settings.max_results.label": "Max. results per manager",
   "ui.sources": "Sources",
@@ -48,5 +48,10 @@
   "stage.alpha": "Alpha",
   "stage.alpha_hint": "Alpha: This connector has not yet been tested against a real installation.",
   "stage.beta": "Beta",
-  "stage.beta_hint": "Beta: This connector is still being tested."
+  "stage.beta_hint": "Beta: This connector is still being tested.",
+  "err.cli_missing": "{program} not found. Set the program path in the connector or install the program: {url}",
+  "dlg.install_cli": "This connector requires {program}. Install it now via winget?",
+  "dlg.installing_cli": "Installing {program} …",
+  "err.op_desktop": "Login via the 1Password app failed. Unlock the app and enable the CLI integration under Settings > Developer. ({message})",
+  "err.vault_http": "Vault error {status}: {message}"
 }
