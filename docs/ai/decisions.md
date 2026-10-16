@@ -52,6 +52,11 @@
   session; connector dialog offers Install-Module for missing PS modules; IconForge export formats SVG/PNG/ICO/PDF/JPG
   (EMF not supported by Qt); "copy image" for pasting into Visio.
 
+## EXE build (2026-10-16, my choices)
+- PyInstaller **onedir** (not onefile): faster start, fewer AV false positives, self-updater can overwrite files.
+- Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
+- Local dev store not shipped with the EXE. No code signing / installer yet.
+
 ## Round 8 decisions (2026-10-16)
 - Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
 - UI text style: neutral program language — no "du", no chatty explanations; imperative/impersonal like normal software.

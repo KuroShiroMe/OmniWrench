@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable
 
@@ -208,14 +209,23 @@ class InstallContext(_ContextBase):
             return
         target = self.tool_dir / "_lib"
         self.report(tr("prog.pip_install", packages=", ".join(packages)))
-        proc = subprocess.run(
-            [sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--upgrade",
-             "--target", str(target), *packages],
-            capture_output=True, text=True,
-            creationflags=0x08000000 if sys.platform == "win32" else 0,
-        )
+        args = ["install", "--disable-pip-version-check", "--upgrade", "--target", str(target), *packages]
+        log_file = None
+        if getattr(sys, "frozen", False):
+            # EXE-Build: pip ist eingebaut (main.py --pip); Fensterprogramm hat evtl. keine Ausgabe -> Logdatei
+            log_file = Path(tempfile.mkstemp(prefix="omniwrench_pip_", suffix=".log")[1])
+            cmd = [sys.executable, "--pip", *args, "--prefer-binary", "--log", str(log_file)]
+        else:
+            cmd = [sys.executable, "-m", "pip", *args]
+        proc = subprocess.run(cmd, capture_output=True, text=True,
+                              creationflags=0x08000000 if sys.platform == "win32" else 0)
+        details = proc.stderr or ""
+        if log_file:
+            if not details.strip() and log_file.exists():
+                details = log_file.read_text(encoding="utf-8", errors="replace")
+            log_file.unlink(missing_ok=True)
         if proc.returncode != 0:
-            raise RuntimeError(tr("err.pip") + "\n" + proc.stderr[-2000:])
+            raise RuntimeError(tr("err.pip") + "\n" + details[-2000:])
 
 
 class ToolBase:

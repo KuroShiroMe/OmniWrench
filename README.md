@@ -104,4 +104,6 @@ standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
   ```
 
   Installierte Programme finden das Release über *Extras › Nach Updates suchen* bzw. beim Start.
+* **EXE bauen:** `python scripts/build_exe.py --zip` erzeugt `dist\OmniWrench\OmniWrench.exe` und
+  `dist\OmniWrench-X.Y.Z-win64.zip` (Anleitung: [docs/EXE_BUILD.md](docs/EXE_BUILD.md)).
 * **Private Repositories** brauchen ein GitHub-Token (*Einstellungen › Updates*). Es wird im Tresor gespeichert.

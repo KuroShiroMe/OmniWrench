@@ -69,3 +69,10 @@
   background); both min_app_version 0.5.1. App version 0.5.1. No new UI strings.
 - Tested offscreen with fake slow provider: event loop keeps ticking, auth prompt runs in GUI thread, cache/local
   instant, clear_session during fetch not cached, provider error -> on_error.
+## 2026-10-16 — EXE build (thread "EXE-Build mit PyInstaller")
+- Asked (via project chat, "die ersten beiden" from backlog): EXE build with PyInstaller incl. tools/store/locales.
+- Done: scripts/build_exe.py (onedir, icon from app.svg, Windows version info, docs next to exe, --zip, --console);
+  main.py `--pip` mode + sdk.pip_install frozen path; app_updater picks -win64 asset when frozen;
+  .github/workflows/build-exe.yml (windows-latest, Python 3.14, artifact); docs/EXE_BUILD.md; README/CLAUDE.md.
+- Tested (Linux build, Python 3.13): app starts offscreen; frozen pip installed pykeepass; smoke exe installed and
+  opened IconForge, OmniVault, Subnet calculator (AD lookup needs RSAT/pwsh -> Windows only).

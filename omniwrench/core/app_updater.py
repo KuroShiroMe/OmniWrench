@@ -1,9 +1,10 @@
 """Update-Prüfung für das Hauptprogramm über GitHub Releases.
 
 Erwartet im konfigurierten Repository ("owner/repo") Releases mit Tag "vX.Y.Z"
-und einem ZIP-Asset, dessen Name mit "OmniWrench" beginnt. Das ZIP enthält den
-kompletten Programmordner und wird nach dem Beenden über den bestehenden
-Ordner entpackt (siehe apply_update).
+und ZIP-Assets, deren Name mit "OmniWrench" beginnt: "OmniWrench-X.Y.Z.zip"
+(Quellcode, scripts/build_release.py) und "OmniWrench-X.Y.Z-win64.zip"
+(EXE-Build, scripts/build_exe.py --zip). Das ZIP enthält den kompletten
+Programmordner und wird nach dem Beenden über den bestehenden Ordner entpackt (siehe apply_update).
 """
 
 from __future__ import annotations
@@ -46,11 +47,7 @@ def check_for_update(repo: str, include_prereleases: bool = False) -> AppRelease
         version = rel.get("tag_name", "").lstrip("vV")
         if not is_newer(version, __version__):
             return None  # Releases sind neueste zuerst sortiert
-        asset = next(
-            (a for a in rel.get("assets", [])
-             if a["name"].lower().endswith(".zip") and a["name"].lower().startswith("omniwrench")),
-            None,
-        )
+        asset = _pick_asset(rel.get("assets", []))
         return AppRelease(
             version=version,
             name=rel.get("name") or rel.get("tag_name", ""),
@@ -59,6 +56,14 @@ def check_for_update(repo: str, include_prereleases: bool = False) -> AppRelease
             asset_url=asset["browser_download_url"] if asset else "",
         )
     return None
+
+
+def _pick_asset(assets: list[dict]) -> dict | None:
+    """EXE-Build nimmt das Programmpaket (…-win64.zip), Start aus dem Quellcode das Quellpaket."""
+    zips = [a for a in assets
+            if a["name"].lower().endswith(".zip") and a["name"].lower().startswith("omniwrench")]
+    frozen = getattr(sys, "frozen", False)
+    return next((a for a in zips if a["name"].lower().endswith("-win64.zip") == frozen), None)
 
 
 def download_update(release: AppRelease) -> Path:
