@@ -39,12 +39,13 @@ omniwrench/ui/
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
   credentials.py              PasswordEdit, CredentialEditDialog, PasswordManagerWidget/Dialog, ProviderLoginDialog,
                               install_auth_handler, CredentialPickerDialog (async multi-provider), pick_credential,
-                              CredentialField (multi-entry dropdown, settings binding, resolve())
+                              CredentialField (multi-entry dropdown, settings binding, resolve(),
+                              resolve_async()), resolve_async(item|ref, on_done) - background fetch
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
   widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog
   theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly
-  workers.py                  run_async (QThreadPool, signals)
+  workers.py                  run_async (QThreadPool, signals), call_in_gui (BlockingQueuedConnection invoker)
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
@@ -58,6 +59,9 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 - Tool loading: package `omniwrench_tool_<id>` via importlib with submodule_search_locations; `_lib` added to sys.path.
 - Settings value of type credential: `{"items": [...], "selected": i}`; items hold `ref` ("<provider>:<id>") or manual
   username/password. get_credential resolves the selected item (session cache for external providers).
+  get_credential_async / CredentialField.resolve_async: instant for cache/local, else run_async. resolve() is
+  thread-safe: auth_handler = call_in_gui(ask_provider_login); clear_session bumps _session so in-flight fetches
+  are not cached.
 - Tool hooks: manifest.hooks {"startup": "module:func"} -> ToolManager.run_hooks("startup") (app.py after login) and
   run_hook after install; providers registered via ctx.register_credential_provider are released on update/uninstall.
 - PMM connector config: tool setting "connectors" (non-secret), vault ctx.secrets "conn:<id>" (secret fields, only if

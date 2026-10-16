@@ -170,7 +170,8 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | | |
 |---|---|
 | `settings.get(key)` / `settings.set(key, value)` | Einstellungen laut config.json (Secrets automatisch aus dem Tresor) |
-| `get_credential(key)` | `(benutzer, passwort)` einer `credential`-Einstellung |
+| `get_credential(key)` | `(benutzer, passwort)` einer `credential`-Einstellung (blockiert, solange ein externer Manager antwortet) |
+| `get_credential_async(key, on_done)` | dasselbe im Hintergrund, `on_done((benutzer, passwort) \| None)` läuft im GUI-Thread |
 | `secrets.get/set/delete(key)` | freier, verschlüsselter Speicher des Tools |
 | `tr(key, default=None, **platzhalter)` / `language` | Übersetzung aus `locales/` bzw. aktive Sprache |
 | `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\DarkMatter\OmniWrench\tool_data\<id>`) |
@@ -193,6 +194,9 @@ Grundregeln:
   (beim Sperren gelöscht).
 * Braucht ein Manager neue Anmeldedaten (z. B. geändertes Passwort), fragt OmniWrench selbst nach – ohne Fehlermeldung.
 * Ein Feld kann **mehrere** Zugangsdaten enthalten; der Benutzer wählt per Auswahlliste.
+* Externe Manager brauchen oft 1–3 s. Im GUI-Thread daher die `…_async`-Varianten nehmen, sonst friert
+  die Oberfläche so lange ein. In eigenen Hintergrund-Threads (`run_async`) geht auch der direkte Abruf;
+  eine nötige Anmelde-Rückfrage erscheint trotzdem korrekt im GUI-Thread.
 
 So nutzt du das im Tool:
 
@@ -201,6 +205,7 @@ So nutzt du das im Tool:
 
   ```python
   user, password = self.context.get_credential("credential")   # gewählter Eintrag, Abruf erst hier
+  self.context.get_credential_async("credential", self._start)  # dasselbe, ohne die Oberfläche zu blockieren
   entries = self.context.get_credentials("credential")          # alle Einträge (ohne Passwörter)
   ```
 
@@ -213,6 +218,7 @@ So nutzt du das im Tool:
   layout.addWidget(self.login)
   ...
   creds = self.login.resolve()     # (user, password) oder None - erst jetzt wird abgerufen
+  self.login.resolve_async(self._start)   # empfohlen: Abruf im Hintergrund, danach self._start(creds)
   ```
 
 * **Nur der Suchdialog:** `pick_credential(parent)` → `(user, password)` oder `None`.

@@ -1,7 +1,7 @@
 {
   "id": "sec.omnivault",
   "name": "OmniVault",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Built-in password manager plus connectors to external password managers.",
   "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
   "author": "DarkMatter",
@@ -9,7 +9,7 @@
   "icon": "vault",
   "color": "#f59e0b",
   "entry": "tool:OmniVault",
-  "min_app_version": "0.5.0",
+  "min_app_version": "0.5.1",
   "platforms": [
     "windows"
   ],

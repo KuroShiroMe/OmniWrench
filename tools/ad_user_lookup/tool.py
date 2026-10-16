@@ -113,14 +113,21 @@ class AdUserLookup(ToolBase):
             return
         s = self.context.settings
         params = {"q": q, "max": s.get("max_results", 200), "server": s.get("server"), "base": s.get("search_base")}
+        self.btn.setEnabled(False)
+        self.status.setText(self.context.tr("ui.searching"))
         if s.get("use_credential"):
-            cred = self.cred_field.resolve()
+            # Passwortmanager können Sekunden brauchen -> Abruf im Hintergrund
+            self.cred_field.resolve_async(lambda cred: self._run_search(params, cred))
+        else:
+            self._run_search(params)
+
+    def _run_search(self, params: dict, cred: tuple[str, str] | None = None) -> None:
+        if self.context.settings.get("use_credential"):
             if not cred:
+                self.btn.setEnabled(True)
                 self.status.setText(self.context.tr("ui.no_credential"))
                 return
             params["user"], params["password"] = cred
-        self.btn.setEnabled(False)
-        self.status.setText(self.context.tr("ui.searching"))
         run_async(lambda: self.context.run_powershell_json(SEARCH_SCRIPT, stdin=json.dumps(params), timeout=120),
                   self._show_results, self._failed)
 

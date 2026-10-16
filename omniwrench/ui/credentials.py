@@ -7,6 +7,7 @@
                            Wird in Tool-Einstellungen vom Typ "credential" verwendet und steht
                            Tool-Entwicklern über omniwrench.sdk.CredentialField zur Verfügung.
 * ProviderLoginDialog    - Rückfrage, wenn ein Manager (neue) Zugangsdaten braucht
+* resolve_async()        - Passwort im Hintergrund abrufen, damit die Oberfläche nicht einfriert
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from omniwrench.core.credentials import Credential, CredentialProvider
 from omniwrench.core.i18n import tr
 
 from .widgets import label, library_icon, make_button
-from .workers import run_async
+from .workers import call_in_gui, run_async
 
 CLIPBOARD_CLEAR_SECONDS = 30
 SEARCH_DELAY_MS = 300
@@ -253,7 +254,26 @@ def ask_provider_login(provider: CredentialProvider) -> bool:
 
 
 def install_auth_handler() -> None:
-    credentials.manager().auth_handler = ask_provider_login
+    # resolve() läuft oft im Hintergrund - die Rückfrage muss aber im GUI-Thread erscheinen
+    credentials.manager().auth_handler = lambda provider: call_in_gui(lambda: ask_provider_login(provider))
+
+
+def resolve_async(item: dict | str | None, on_done, on_error=None) -> None:
+    """Ruft (Benutzer, Passwort) im Hintergrund ab und ruft on_done(ergebnis | None) im GUI-Thread auf.
+
+    item ist ein Eintrag eines credential-Felds oder ein Verweis ("<anbieter>:<id>"). Bereits
+    abgerufene Einträge und der eingebaute Manager antworten sofort (on_done direkt).
+    """
+    if isinstance(item, str):
+        item = {"ref": item}
+    if not item:
+        on_done(None)
+        return
+    if credentials.manager().is_instant(item.get("ref", "")):
+        on_done(credentials.resolve_item(item))
+        return
+    item = dict(item)
+    run_async(lambda: credentials.resolve_item(item), on_done, on_error or (lambda _err: on_done(None)))
 
 
 # ============================================================ Auswahl
@@ -407,6 +427,10 @@ class CredentialField(QWidget):
         """(Benutzer, Passwort) des gewählten Eintrags - externe Manager werden erst hier abgefragt."""
         item = self.selected_item()
         return credentials.resolve_item(item) if item else None
+
+    def resolve_async(self, on_done, on_error=None) -> None:
+        """Wie resolve(), aber ohne die Oberfläche zu blockieren: on_done((benutzer, passwort) | None)."""
+        resolve_async(self.selected_item(), on_done, on_error)
 
     # ------------------------------------------------------------- intern
     def _fill(self, selected: int) -> None:

@@ -35,3 +35,9 @@
 - Lineicons: root fill="none" + hard-coded path color -> recolor by replacing the single used color.
 - Narrow QPushButton with "…" text shows "." -> use an icon (folder-open).
 - Netwrix PsrApi: async methods return Task -> in PowerShell `.GetAwaiter().GetResult()`.
+
+## Async credentials (2026-10-16)
+- Dialogs only in GUI thread: provider auth prompt from a worker goes through workers.call_in_gui (blocking).
+  Never hold a lock around get_secret() - GUI-thread resolve + worker waiting on GUI would deadlock.
+- build_store.py on Linux (LF checkout) rebuilds UNCHANGED tool zips with different sha256 -> restore those zips
+  + their index entries, commit only bumped tools.

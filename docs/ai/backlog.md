@@ -13,7 +13,6 @@
   Devolutions, Delinea, CyberArk, Pleasant, HashiCorp Vault, Azure Key Vault, Keeper.
 - Connector folder structures (explicitly NOT now - search only).
 - IconForge: more icon sources (combo "source" prepared), e.g. custom user folders, other free libraries.
-- Remote credential resolve runs in UI thread (PowerShell can take 1-3 s) -> could be made async.
 - EXE build (PyInstaller) - self-updater assumes a packed program folder.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Native-speaker review of fr/es/dialect translations.

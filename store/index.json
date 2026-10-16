@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-16T07:47:31+00:00",
+  "generated": "2026-10-16T08:54:44+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.0",
+      "version": "1.3.1",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "DarkMatter",
@@ -14,7 +14,7 @@
       "icon": "user-search",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
-      "min_app_version": "0.4.0",
+      "min_app_version": "0.5.1",
       "platforms": [
         "windows"
       ],
@@ -44,9 +44,9 @@
           "category": "MS Server Tools/Active Directory"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.0.zip",
-      "sha256": "c28294a49df0982f7ce9b0698f52743d31d2b48bf5ba1af3bbdc8520fcbaf231",
-      "size": 5942
+      "download_url": "packages/ms.ad-user-lookup-1.3.1.zip",
+      "sha256": "40fc89b1ac2e3a4330032251d04d3f0f85af36a654e98f4120c4700fdbc169c6",
+      "size": 6009
     },
     {
       "id": "gfx.iconforge",
@@ -100,7 +100,7 @@
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "DarkMatter",
@@ -108,7 +108,7 @@
       "icon": "vault",
       "color": "#f59e0b",
       "entry": "tool:OmniVault",
-      "min_app_version": "0.5.0",
+      "min_app_version": "0.5.1",
       "platforms": [
         "windows"
       ],
@@ -144,9 +144,9 @@
           "category": "Security/Passwords"
         }
       },
-      "download_url": "packages/sec.omnivault-1.0.0.zip",
-      "sha256": "063e8797e4477a9a12857c6992b007702ca5c0edf7ba3856b74ae5a47dc7d699",
-      "size": 16728
+      "download_url": "packages/sec.omnivault-1.0.1.zip",
+      "sha256": "7e40b4625865ebe02cc5aafca21e5010d5afe352b85d3ee0d5c8a2980270b7db",
+      "size": 16688
     },
     {
       "id": "net.subnet-calculator",
