@@ -72,3 +72,7 @@
   test/company-PKI certs. Certum SimplySign needs a phone code per session -> local signing, not CI.
 - Cloud sandbox: plain-HTTP timestamp servers unreachable and osslsigncode segfaults on that ->
   SIGN_TIMESTAMP_URL=none for local tests only.
+
+## Release assets
+- `gh release create tag a.zip b.zip` uploads in parallel -> asset order random (v0.6.0: -win64 came first).
+  App <=0.5.x takes the FIRST omniwrench*.zip -> create release with source zip, then `gh release upload` the -win64.
