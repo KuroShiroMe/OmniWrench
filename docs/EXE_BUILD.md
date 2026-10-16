@@ -12,7 +12,10 @@ Selbst-Updater nicht ersetzen.
 .\.venv\Scripts\python scripts\build_exe.py           # dist\OmniWrench\OmniWrench.exe
 .\.venv\Scripts\python scripts\build_exe.py --zip     # zusätzlich dist\OmniWrench-X.Y.Z-win64.zip
 .\.venv\Scripts\python scripts\build_exe.py --console # mit Konsolenfenster (Fehlersuche)
+.\.venv\Scripts\python scripts\build_exe.py --sign --zip # EXE vor dem Packen signieren
 ```
+
+Signieren (Zertifikatsoptionen, lokal und in GitHub): siehe [EXE_SIGNIEREN.md](EXE_SIGNIEREN.md).
 
 Der Ordner `dist\OmniWrench` kann so wie er ist kopiert oder verteilt werden (z. B. nach
 `C:\Program Files\DarkMatter\OmniWrench`). Einstellungen, Tresor und installierte Tools liegen
@@ -38,6 +41,19 @@ Das ZIP liegt danach als Artefakt am Workflow-Lauf.
 Der lokale Entwicklungs-Store (`store\`) wird nicht mitgeliefert; die EXE nutzt nur den offiziellen Store.
 
 ## Veröffentlichen
+
+**Automatisch (empfohlen):** Version in `omniwrench/__init__.py` erhöhen, Release-Notizen in
+`.github/release-notes/vX.Y.Z.md` ablegen (optional, sonst erzeugt GitHub sie), committen und den Tag pushen:
+
+```powershell
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Der Workflow **EXE-Build** prüft, ob Tag und Programmversion zusammenpassen, baut beide Pakete und
+legt das GitHub-Release mit Quellpaket und EXE-Paket an.
+
+**Manuell:**
 
 Version in `omniwrench/__init__.py` erhöhen, committen, dann beide Pakete bauen und **zuerst das
 Quellpaket** hochladen (ältere Programmversionen nehmen das erste passende ZIP):

@@ -73,3 +73,17 @@
 - Linux renders: offscreen platform works with fontconfig fonts; screen size via
   QT_QPA_PLATFORM="offscreen:configfile=screen.json" ({"screens":[{"width":7680,"height":4320,"dpr":1,...}]}).
 - build_store.py on Linux changes every zip (LF vs CRLF checkout) -> only commit zips of bumped tools.
+- QSplitter shrinks the stretch child first: give a QListView grid a minimum width of one cell (+ scrollbar + frame),
+  otherwise it collapses below one column while the side panel keeps its width.
+## EXE signing
+- `secrets.*` can't be used in step `if:` -> build-exe.yml decides via repo variable SIGN_METHOD (vars.* works).
+- Since 06/2023 OV/EV private keys live on HSM/token/cloud only -> no PFX secret for bought certs; PFX path is for
+  test/company-PKI certs. Certum SimplySign needs a phone code per session -> local signing, not CI.
+- Cloud sandbox: plain-HTTP timestamp servers unreachable and osslsigncode segfaults on that ->
+  SIGN_TIMESTAMP_URL=none for local tests only.
+
+## Release assets
+- GitHub lists release assets sorted by NAME: `OmniWrench-X.Y.Z-win64.zip` comes before `OmniWrench-X.Y.Z.zip`
+  ("-" < "."), upload order/re-upload doesn't change it. App <=0.5.x takes the first omniwrench*.zip -> would get
+  the EXE package. 0.6.0+ uses _pick_asset (by suffix), so only the 0.5.x -> 0.6.0 jump is affected.
+  User decision: no rename; 0.5.x installs are updated manually once.

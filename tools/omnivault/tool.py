@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import shutil
+import subprocess
+
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout,
@@ -17,7 +20,9 @@ from omniwrench.ui.credentials import (
 )
 from omniwrench.ui.widgets import clear_layout, library_icon
 
-from .connectors import ConnectorConfig, ConnectorStore, defaults, is_secret, is_visible, make_provider, register_all, text
+from .connectors import (
+    CREATE_NO_WINDOW, ConnectorConfig, ConnectorStore, defaults, find_program, is_secret, is_visible, make_provider, register_all, text,
+)
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
@@ -229,12 +234,43 @@ class ConnectorDialog(QDialog):
         self.status.setText("✅ " + self.ctx.tr("dlg.installed", modules=", ".join(missing)))
         return True
 
+    def _ensure_program(self) -> bool:
+        """Fehlendes Kommandozeilenprogramm (z. B. Bitwarden-CLI) zur Installation per winget anbieten."""
+        program = self.spec.get("requirements", {}).get("program")
+        if not program:
+            return True
+        configured = self.inputs["cli_path"].get().strip() if "cli_path" in self.inputs else ""
+        if find_program(self.spec, configured):
+            return True
+        tr = self.ctx.tr
+        if configured:
+            self.status.setText("⚠ " + tr("err.cli_missing", program=program["name"], url=program.get("url", "")))
+            return False
+        if not program.get("winget") or not shutil.which("winget"):
+            self.status.setText("⚠ " + tr("err.cli_missing", program=program["name"], url=program.get("url", "")))
+            return False
+        if QMessageBox.question(self, self.windowTitle(), tr("dlg.install_cli", program=program["name"])) \
+                != QMessageBox.StandardButton.Yes:
+            return False
+        self.status.setText(tr("dlg.installing_cli", program=program["name"]))
+        QApplication.processEvents()
+        proc = subprocess.run(
+            ["winget", "install", "--id", program["winget"], "--exact", "--silent",
+             "--accept-package-agreements", "--accept-source-agreements"],
+            capture_output=True, timeout=900, creationflags=CREATE_NO_WINDOW)
+        if not find_program(self.spec):
+            output = proc.stdout.decode("utf-8", errors="replace").strip() or proc.stderr.decode("utf-8", errors="replace")
+            self.status.setText("❌ " + (output.splitlines()[-1] if output.strip() else str(proc.returncode))[:300])
+            return False
+        self.status.setText("✅ " + tr("dlg.installed", modules=program["name"]))
+        return True
+
     def _test(self) -> None:
         missing = self._missing_required()
         if missing:
             self.status.setText("⚠ " + self.ctx.tr("dlg.missing", fields=", ".join(missing)))
             return
-        if not self._ensure_modules():
+        if not (self._ensure_modules() and self._ensure_program()):
             return
         conn, secrets = self._collect()
         provider = make_provider(conn, self.tool.store)
@@ -256,7 +292,7 @@ class ConnectorDialog(QDialog):
         if missing:
             QMessageBox.warning(self, self.windowTitle(), self.ctx.tr("dlg.missing", fields=", ".join(missing)))
             return
-        if not self._ensure_modules():
+        if not (self._ensure_modules() and self._ensure_program()):
             return
         self.conn = self._apply()
         self.accept()

@@ -5,7 +5,7 @@
   },
   "tool.name": "OmniVault",
   "tool.description": "Eingebauter Passwortmanager mit Konnektoren zu externen Passwortmanagern.",
-  "tool.long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
+  "tool.long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
   "tool.category": "Sicherheit/Passwörter",
   "settings.max_results.label": "Max. Ergebnisse je Manager",
   "ui.sources": "Quellen",
@@ -48,5 +48,10 @@
   "stage.alpha": "Alpha",
   "stage.alpha_hint": "Alpha: Dieser Konnektor wurde noch nicht mit einer echten Installation getestet.",
   "stage.beta": "Beta",
-  "stage.beta_hint": "Beta: Dieser Konnektor befindet sich noch in der Erprobung."
+  "stage.beta_hint": "Beta: Dieser Konnektor befindet sich noch in der Erprobung.",
+  "err.cli_missing": "{program} nicht gefunden. Programmpfad im Konnektor angeben oder das Programm installieren: {url}",
+  "dlg.install_cli": "Dieser Konnektor benötigt {program}. Jetzt per winget installieren?",
+  "dlg.installing_cli": "Installiere {program} …",
+  "err.op_desktop": "Anmeldung über die 1Password-App fehlgeschlagen. App entsperren und unter Einstellungen > Entwickler die CLI-Integration aktivieren. ({message})",
+  "err.vault_http": "Vault-Fehler {status}: {message}"
 }
