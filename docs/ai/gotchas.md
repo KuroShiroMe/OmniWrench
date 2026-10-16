@@ -66,3 +66,9 @@
 - build_store.py on Linux changes every zip (LF vs CRLF checkout) -> only commit zips of bumped tools.
 - QSplitter shrinks the stretch child first: give a QListView grid a minimum width of one cell (+ scrollbar + frame),
   otherwise it collapses below one column while the side panel keeps its width.
+## EXE signing
+- `secrets.*` can't be used in step `if:` -> build-exe.yml decides via repo variable SIGN_METHOD (vars.* works).
+- Since 06/2023 OV/EV private keys live on HSM/token/cloud only -> no PFX secret for bought certs; PFX path is for
+  test/company-PKI certs. Certum SimplySign needs a phone code per session -> local signing, not CI.
+- Cloud sandbox: plain-HTTP timestamp servers unreachable and osslsigncode segfaults on that ->
+  SIGN_TIMESTAMP_URL=none for local tests only.

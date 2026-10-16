@@ -122,3 +122,18 @@
   (AD User Lookup only validated: RSAT), opens main window in all 8 languages, store tab, all tools, 3 widths;
   any QMessageBox / ERROR log / uncaught exception fails. Runs locally too (`--visible` for real windows).
 
+## 2026-10-16 — EXE signing prepared (thread "EXE signieren", Claude Code cloud session)
+- Branch claude/exe-signing-0i9n5y stacked on PR #8 (CI) because both change build-exe.yml.
+- scripts/sign_exe.py: signtool (Windows SDK, auto-found) or osslsigncode (non-Windows, PFX only); cert from env
+  (SIGN_CERT_SHA1 / SIGN_PFX_BASE64 / SIGN_PFX_PATH + SIGN_PFX_PASSWORD, SIGN_TIMESTAMP_URL); retries 3x; masks password.
+- build_exe.py: --sign (signs if configured, else notice) and --no-build (sign/zip existing folder, used by CI).
+- build-exe.yml: build -> tests -> optional signing (Azure artifact-signing-action@v2 / SignPath submit action@v2 /
+  PFX via sign_exe.py) -> Get-AuthenticodeSignature check -> zip -> upload.
+- docs/EXE_SIGNIEREN.md: options table + recommendation + setup per method. Tested on Linux with a self-signed PFX
+  (osslsigncode verify ok); Windows/CI signing paths untested without credentials.
+- Stef picked "SignPath + MIT" on the decision card -> LICENSE (MIT), README "Lizenz" + "Code signing policy"
+  (SignPath credit line, roles, privacy statement incl. GitHub store/update check), LICENSE shipped next to the EXE,
+  EXE_SIGNIEREN.md with SignPath application steps.
+- Stef asked for copy-paste values: EXE_SIGNIEREN.md now has every SignPath form answer (English) in code blocks,
+  SignPath/GitHub settings after approval (slugs omniwrench / release-signing / omniwrench-exe); README privacy
+  statement got its own heading (#datenschutz) for the privacy URL.

@@ -55,7 +55,7 @@
 ## EXE build (2026-10-16, my choices)
 - PyInstaller **onedir** (not onefile): faster start, fewer AV false positives, self-updater can overwrite files.
 - Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
-- Local dev store not shipped with the EXE. No code signing / installer yet.
+- Local dev store not shipped with the EXE. No installer yet. Code signing: see "EXE signing" below.
 
 ## Round 8 decisions (2026-10-16)
 - Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
@@ -86,3 +86,12 @@
 - Smoke test never installs system prerequisites (RSAT, features, PS modules, winget) on runners - only validates.
 - Store consistency is enforced: a changed tool without version bump + rebuilt store fails CI.
 
+## EXE signing (2026-10-16, my choices; certificate choice is Stef's, open)
+- Only OmniWrench.exe is signed (bundled DLLs keep their own signatures). SHA-256 + RFC 3161 timestamp.
+- Secrets never in repo/chat: local signing via env (SIGN_CERT_SHA1 or SIGN_PFX_*), CI via GitHub secrets/variables.
+- CI signs only on tags v* and manual runs; method chosen by repo variable SIGN_METHOD (azure|signpath|certificate);
+  empty -> unsigned build, no failure. PR/main builds stay unsigned.
+- Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "Steffi-Tech").
+  README has the required "Code signing policy" section (roles: Steffi-Tech = author/reviewer/approver,
+  privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
+  Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).

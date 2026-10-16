@@ -55,11 +55,13 @@ tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user
                               omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
-                              smoke_test, update_icons
+                              smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
 .github/workflows/ci.yml      every PR + push main: compileall, check_locales (app + each tool), check_store (Linux);
                               smoke_test.py on windows-latest (offscreen)
 .github/workflows/build-exe.yml  every PR + push main + tags v*: PyInstaller build, `--pip --version`, EXE start test
-                              (process must survive 20 s, no ERROR in log), artifact OmniWrench-X.Y.Z-win64.zip
+                              (process must survive 20 s, no ERROR in log), optional signing on tags/manual runs
+                              (vars.SIGN_METHOD: azure|signpath|certificate, docs/EXE_SIGNIEREN.md), signature check,
+                              zip, artifact OmniWrench-X.Y.Z-win64.zip
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 

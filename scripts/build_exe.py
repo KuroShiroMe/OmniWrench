@@ -3,6 +3,7 @@
     .\\.venv\\Scripts\\python -m pip install pyinstaller
     .\\.venv\\Scripts\\python scripts\\build_exe.py            # dist\\OmniWrench\\OmniWrench.exe
     .\\.venv\\Scripts\\python scripts\\build_exe.py --zip      # zusätzlich dist\\OmniWrench-<version>-win64.zip
+    .\\.venv\\Scripts\\python scripts\\build_exe.py --sign --zip   # EXE vor dem Packen signieren (sign_exe.py)
 
 Ergebnis ist ein Programmordner (keine Einzel-EXE): startet schneller, wird nicht so
 oft von Virenscannern beanstandet und lässt sich vom Selbst-Updater überschreiben.
@@ -164,6 +165,7 @@ def copy_extras(app_dir: Path) -> None:
     docs.mkdir(exist_ok=True)
     shutil.copy2(ROOT / "docs" / "TOOL_ENTWICKLUNG.md", docs / "TOOL_ENTWICKLUNG.md")
     shutil.copy2(ROOT / "README.md", app_dir / "README.md")
+    shutil.copy2(ROOT / "LICENSE", app_dir / "LICENSE")
 
 
 def make_zip(app_dir: Path) -> Path:
@@ -181,17 +183,35 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--zip", action="store_true", help="Programmordner zusätzlich als ZIP (Release-Asset) packen")
     parser.add_argument("--console", action="store_true", help="mit Konsolenfenster bauen (Fehlersuche)")
+    parser.add_argument("--sign", action="store_true",
+                        help="EXE signieren, falls ein Zertifikat angegeben ist (scripts/sign_exe.py)")
+    parser.add_argument("--no-build", action="store_true",
+                        help="nicht neu bauen, nur vorhandenen Programmordner signieren/packen (CI)")
     opts = parser.parse_args()
 
-    try:
-        import PyInstaller.__main__ as pyinstaller
-    except ImportError:
-        sys.exit("PyInstaller fehlt: python -m pip install pyinstaller")
-
-    pyinstaller.run(pyinstaller_args(opts.console))
     app_dir = DIST / APP_NAME
-    copy_extras(app_dir)
     exe = app_dir / (APP_NAME + (".exe" if sys.platform == "win32" else ""))
+    if opts.no_build:
+        if not exe.is_file():
+            sys.exit(f"{exe.relative_to(ROOT)} fehlt - zuerst ohne --no-build bauen")
+    else:
+        try:
+            import PyInstaller.__main__ as pyinstaller
+        except ImportError:
+            sys.exit("PyInstaller fehlt: python -m pip install pyinstaller")
+        pyinstaller.run(pyinstaller_args(opts.console))
+        copy_extras(app_dir)
+    if opts.sign:
+        import sign_exe
+
+        if sign_exe.configured():
+            try:
+                sign_exe.sign_files([exe])
+            except sign_exe.SignError as exc:
+                sys.exit(str(exc))
+            print(f"Signiert: {exe.relative_to(ROOT)}")
+        else:
+            print("Kein Zertifikat angegeben (SIGN_CERT_SHA1/SIGN_PFX_*), EXE bleibt unsigniert.")
     size = sum(f.stat().st_size for f in app_dir.rglob("*") if f.is_file()) // (1024 * 1024)
     print(f"\n{exe.relative_to(ROOT)} ({size} MB Programmordner)")
     if opts.zip:

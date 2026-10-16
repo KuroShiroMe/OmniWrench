@@ -23,7 +23,10 @@
 - IconForge: more icon sources (combo "source" prepared), e.g. custom user folders, other free libraries.
 - [ ] EXE build (scripts/build_exe.py) done, tested on Linux + CI; still to test on user's machine: start, login with
       smart card, tool install incl. pip (OmniVault/pykeepass), self-update from -win64.zip, UAC prerequisites.
-- Optional later: code signing of OmniWrench.exe (SmartScreen), installer (Inno Setup/MSIX).
+- [ ] Code signing via SignPath Foundation (docs/EXE_SIGNIEREN.md): Stef applies at signpath.org (needs GitHub
+      2FA, a released version), then sets SIGN_METHOD=signpath + SIGNPATH_* vars/secret. SignPath path untested
+      until approval.
+- Optional later: installer (Inno Setup/MSIX, sign it too), self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Native-speaker review of fr/es/dialect translations.
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0

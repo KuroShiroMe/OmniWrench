@@ -12,7 +12,10 @@ Selbst-Updater nicht ersetzen.
 .\.venv\Scripts\python scripts\build_exe.py           # dist\OmniWrench\OmniWrench.exe
 .\.venv\Scripts\python scripts\build_exe.py --zip     # zusätzlich dist\OmniWrench-X.Y.Z-win64.zip
 .\.venv\Scripts\python scripts\build_exe.py --console # mit Konsolenfenster (Fehlersuche)
+.\.venv\Scripts\python scripts\build_exe.py --sign --zip # EXE vor dem Packen signieren
 ```
+
+Signieren (Zertifikatsoptionen, lokal und in GitHub): siehe [EXE_SIGNIEREN.md](EXE_SIGNIEREN.md).
 
 Der Ordner `dist\OmniWrench` kann so wie er ist kopiert oder verteilt werden (z. B. nach
 `C:\Program Files\DarkMatter\OmniWrench`). Einstellungen, Tresor und installierte Tools liegen
