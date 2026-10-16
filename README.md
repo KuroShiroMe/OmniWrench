@@ -22,7 +22,7 @@ installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, win
 |---|---|
 | Subnetzrechner | IPv4/IPv6 berechnen, Subnetze aufteilen, CSV-Export |
 | AD Benutzerabfrage | AD-Benutzer suchen (RSAT), mit Zugangsdaten-Auswahl |
-| OmniVault | Eingebauter Passwortmanager + Konnektoren: Microsoft SecretManagement, KeePass (.kdbx), Netwrix Password Secure (SDK `PsrApi.dll` nötig) |
+| OmniVault | Eingebauter Passwortmanager + Konnektoren: Microsoft SecretManagement, KeePass (.kdbx), Netwrix Password Secure (SDK `PsrApi.dll` nötig), Bitwarden/Vaultwarden (Bitwarden-CLI), 1Password (1Password-CLI), HashiCorp Vault/OpenBao (KV) – die letzten vier als Alpha |
 | IconForge | Über 100.000 Symbole aus 26 freien Bibliotheken (Lucide eingebaut, weitere werden bei Bedarf geladen), Lizenz-Checkliste je Symbol, Export als SVG/PNG/ICO/PDF/JPG oder direkt in Visio einfügen |
 * **Store-Tab**: Tools aus einem oder mehreren Repositories, Kategoriebaum, Installieren und Aktualisieren
 * **Tool-Tabs**: Jedes Tool öffnet sich in einem eigenen Tab. Tabs lassen sich per Drag & Drop nebeneinander

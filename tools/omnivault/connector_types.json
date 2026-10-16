@@ -4,13 +4,14 @@
     "fields: Eingaben je Konnektor. type: string | path_file | path_dir | secret | bool | choice (options: [{value, label}]).",
     "        auth=true   -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
     "        type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
-    "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert hat.",
+    "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert (oder einen Wert aus einer Liste) hat.",
     "stage: optional 'alpha' oder 'beta' -> Hinweis im Konnektor-Dialog (z. B. noch nicht mit echter Installation getestet).",
-    "implementation: 'powershell' (Skripte unten) oder 'keepass' (Python, pykeepass).",
+    "implementation: 'powershell' (Skripte unten), 'keepass' (Python, pykeepass), 'bitwarden' (bw-CLI), 'onepassword' (op-CLI), 'hashicorp_vault' (HTTP-API).",
     "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
     "            search -> JSON-Liste [{id, name, username, detail}], get -> {username, password}.",
     "            Feld 'shell' (powershell | pwsh) wählt Windows PowerShell 5.1 oder PowerShell 7.",
-    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmeldedialog statt Fehlermeldung."
+    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmeldedialog statt Fehlermeldung.",
+    "requirements.program: {name, command, winget, url} -> Kommandozeilenprogramm; fehlt es, bietet der Dialog die Installation per winget an."
   ],
   "types": {
     "secretmanagement": {
@@ -18,7 +19,9 @@
       "icon": "terminal-square",
       "description": {
         "en": "PowerShell SecretManagement vaults (SecretStore, KeePass, Bitwarden, Azure Key Vault … extensions).",
-        "de": "PowerShell-SecretManagement-Tresore (SecretStore, KeePass, Bitwarden, Azure Key Vault … Erweiterungen)."
+        "de": "PowerShell-SecretManagement-Tresore (SecretStore, KeePass, Bitwarden, Azure Key Vault … Erweiterungen).",
+        "fr": "Coffres PowerShell SecretManagement (extensions SecretStore, KeePass, Bitwarden, Azure Key Vault …).",
+        "es": "Almacenes de PowerShell SecretManagement (extensiones SecretStore, KeePass, Bitwarden, Azure Key Vault …)."
       },
       "implementation": "powershell",
       "requirements": {
@@ -32,11 +35,15 @@
           "type": "string",
           "label": {
             "en": "Vault name",
-            "de": "Tresor-Name"
+            "de": "Tresor-Name",
+            "fr": "Nom du coffre",
+            "es": "Nombre del almacén"
           },
           "placeholder": {
             "en": "empty = all registered vaults",
-            "de": "leer = alle registrierten Tresore"
+            "de": "leer = alle registrierten Tresore",
+            "fr": "vide = tous les coffres enregistrés",
+            "es": "vacío = todos los almacenes registrados"
           }
         },
         {
@@ -45,11 +52,15 @@
           "auth": true,
           "label": {
             "en": "Vault password (SecretStore)",
-            "de": "Tresor-Passwort (SecretStore)"
+            "de": "Tresor-Passwort (SecretStore)",
+            "fr": "Mot de passe du coffre (SecretStore)",
+            "es": "Contraseña del almacén (SecretStore)"
           },
           "placeholder": {
             "en": "only if the vault is password protected",
-            "de": "nur falls der Tresor ein Passwort hat"
+            "de": "nur falls der Tresor ein Passwort hat",
+            "fr": "uniquement si le coffre est protégé par mot de passe",
+            "es": "solo si el almacén está protegido con contraseña"
           }
         }
       ],
@@ -100,7 +111,9 @@
       "icon": "key-square",
       "description": {
         "en": "KeePass / KeePassXC database (.kdbx) - read directly, KeePass itself is not required.",
-        "de": "KeePass-/KeePassXC-Datenbank (.kdbx) - wird direkt gelesen, KeePass selbst ist nicht nötig."
+        "de": "KeePass-/KeePassXC-Datenbank (.kdbx) - wird direkt gelesen, KeePass selbst ist nicht nötig.",
+        "fr": "Base de données KeePass / KeePassXC (.kdbx) - lue directement, KeePass n'est pas nécessaire.",
+        "es": "Base de datos KeePass / KeePassXC (.kdbx): se lee directamente, no se necesita KeePass."
       },
       "implementation": "keepass",
       "requirements": {
@@ -115,7 +128,9 @@
           "required": true,
           "label": {
             "en": "Database (.kdbx)",
-            "de": "Datenbank (.kdbx)"
+            "de": "Datenbank (.kdbx)",
+            "fr": "Base de données (.kdbx)",
+            "es": "Base de datos (.kdbx)"
           }
         },
         {
@@ -123,7 +138,9 @@
           "type": "path_file",
           "label": {
             "en": "Key file (optional)",
-            "de": "Schlüsseldatei (optional)"
+            "de": "Schlüsseldatei (optional)",
+            "fr": "Fichier clé (facultatif)",
+            "es": "Archivo de clave (opcional)"
           }
         },
         {
@@ -132,7 +149,9 @@
           "auth": true,
           "label": {
             "en": "Master password",
-            "de": "Master-Passwort"
+            "de": "Master-Passwort",
+            "fr": "Mot de passe maître",
+            "es": "Contraseña maestra"
           }
         }
       ]
@@ -143,7 +162,9 @@
       "stage": "alpha",
       "description": {
         "en": "Netwrix Password Secure 9 via the official SDK (PsrApi.dll from the Netwrix customer portal). Login with user name and password or with an API key.",
-        "de": "Netwrix Password Secure 9 über das offizielle SDK (PsrApi.dll aus dem Netwrix-Kundenportal). Anmeldung mit Benutzername und Passwort oder mit API-Schlüssel."
+        "de": "Netwrix Password Secure 9 über das offizielle SDK (PsrApi.dll aus dem Netwrix-Kundenportal). Anmeldung mit Benutzername und Passwort oder mit API-Schlüssel.",
+        "fr": "Netwrix Password Secure 9 via le SDK officiel (PsrApi.dll du portail client Netwrix). Connexion par nom d'utilisateur et mot de passe ou par clé API.",
+        "es": "Netwrix Password Secure 9 mediante el SDK oficial (PsrApi.dll del portal de clientes de Netwrix). Inicio de sesión con usuario y contraseña o con clave de API."
       },
       "implementation": "powershell",
       "docs": "https://help.passwordsafe.de/api/v9/html/e113b193-3482-8477-c479-6cf97ecbf796.htm",
@@ -154,11 +175,15 @@
           "required": true,
           "label": {
             "en": "Endpoint",
-            "de": "Endpunkt"
+            "de": "Endpunkt",
+            "fr": "Point de terminaison",
+            "es": "Punto de conexión"
           },
           "placeholder": {
             "en": "https://webapp/api  or  server:11016",
-            "de": "https://webapp/api  oder  server:11016"
+            "de": "https://webapp/api  oder  server:11016",
+            "fr": "https://webapp/api  ou  serveur:11016",
+            "es": "https://webapp/api  o  servidor:11016"
           }
         },
         {
@@ -167,7 +192,9 @@
           "required": true,
           "label": {
             "en": "Database",
-            "de": "Datenbank"
+            "de": "Datenbank",
+            "fr": "Base de données",
+            "es": "Base de datos"
           }
         },
         {
@@ -176,7 +203,9 @@
           "required": true,
           "label": {
             "en": "SDK folder (PsrApi.dll)",
-            "de": "SDK-Ordner (PsrApi.dll)"
+            "de": "SDK-Ordner (PsrApi.dll)",
+            "fr": "Dossier du SDK (PsrApi.dll)",
+            "es": "Carpeta del SDK (PsrApi.dll)"
           }
         },
         {
@@ -185,21 +214,27 @@
           "default": "pwsh",
           "label": {
             "en": "PowerShell",
-            "de": "PowerShell"
+            "de": "PowerShell",
+            "fr": "PowerShell",
+            "es": "PowerShell"
           },
           "options": [
             {
               "value": "pwsh",
               "label": {
                 "en": "PowerShell 7 (recommended for current SDKs)",
-                "de": "PowerShell 7 (empfohlen für aktuelle SDKs)"
+                "de": "PowerShell 7 (empfohlen für aktuelle SDKs)",
+                "fr": "PowerShell 7 (recommandé pour les SDK actuels)",
+                "es": "PowerShell 7 (recomendado para los SDK actuales)"
               }
             },
             {
               "value": "powershell",
               "label": {
                 "en": "Windows PowerShell 5.1",
-                "de": "Windows PowerShell 5.1"
+                "de": "Windows PowerShell 5.1",
+                "fr": "Windows PowerShell 5.1",
+                "es": "Windows PowerShell 5.1"
               }
             }
           ]
@@ -210,21 +245,27 @@
           "default": "password",
           "label": {
             "en": "Login method",
-            "de": "Anmeldung"
+            "de": "Anmeldung",
+            "fr": "Méthode de connexion",
+            "es": "Método de inicio de sesión"
           },
           "options": [
             {
               "value": "password",
               "label": {
                 "en": "User name and password",
-                "de": "Benutzername und Passwort"
+                "de": "Benutzername und Passwort",
+                "fr": "Nom d'utilisateur et mot de passe",
+                "es": "Usuario y contraseña"
               }
             },
             {
               "value": "api_key",
               "label": {
                 "en": "API key",
-                "de": "API-Schlüssel"
+                "de": "API-Schlüssel",
+                "fr": "Clé API",
+                "es": "Clave de API"
               }
             }
           ]
@@ -239,7 +280,9 @@
           },
           "label": {
             "en": "User name",
-            "de": "Benutzername"
+            "de": "Benutzername",
+            "fr": "Nom d'utilisateur",
+            "es": "Usuario"
           }
         },
         {
@@ -252,7 +295,9 @@
           },
           "label": {
             "en": "Password",
-            "de": "Passwort"
+            "de": "Passwort",
+            "fr": "Mot de passe",
+            "es": "Contraseña"
           }
         },
         {
@@ -265,7 +310,9 @@
           },
           "label": {
             "en": "API key",
-            "de": "API-Schlüssel"
+            "de": "API-Schlüssel",
+            "fr": "Clé API",
+            "es": "Clave de API"
           }
         }
       ],
@@ -343,6 +390,572 @@
           "ConvertTo-Json -InputObject ([pscustomobject]@{ username = [string]$user; password = [string]$pw }) -Compress"
         ]
       }
+    },
+    "bitwarden": {
+      "name": "Bitwarden",
+      "icon": "shield",
+      "stage": "alpha",
+      "description": {
+        "en": "Bitwarden or Vaultwarden via the official Bitwarden CLI (bw). Login with API key (recommended, works with two-step login) or e-mail and master password. The master password unlocks the vault.",
+        "de": "Bitwarden oder Vaultwarden über die offizielle Bitwarden-CLI (bw). Anmeldung mit API-Schlüssel (empfohlen, funktioniert auch mit Zweistufen-Anmeldung) oder mit E-Mail und Master-Passwort. Das Master-Passwort entsperrt den Tresor.",
+        "fr": "Bitwarden ou Vaultwarden via la CLI officielle de Bitwarden (bw). Connexion par clé API (recommandé, fonctionne aussi avec l'authentification en deux étapes) ou par e-mail et mot de passe maître. Le mot de passe maître déverrouille le coffre.",
+        "es": "Bitwarden o Vaultwarden mediante la CLI oficial de Bitwarden (bw). Inicio de sesión con clave de API (recomendado, funciona también con el inicio de sesión en dos pasos) o con correo electrónico y contraseña maestra. La contraseña maestra desbloquea la caja fuerte."
+      },
+      "implementation": "bitwarden",
+      "docs": "https://bitwarden.com/help/cli/",
+      "requirements": {
+        "program": {
+          "name": "Bitwarden CLI",
+          "command": "bw",
+          "winget": "Bitwarden.CLI",
+          "url": "https://bitwarden.com/help/cli/"
+        }
+      },
+      "fields": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Server",
+            "de": "Server",
+            "fr": "Serveur",
+            "es": "Servidor"
+          },
+          "placeholder": {
+            "en": "empty = bitwarden.com, e.g. https://vault.bitwarden.eu",
+            "de": "leer = bitwarden.com, z. B. https://vault.bitwarden.eu",
+            "fr": "vide = bitwarden.com, p. ex. https://vault.bitwarden.eu",
+            "es": "vacío = bitwarden.com, p. ej. https://vault.bitwarden.eu"
+          }
+        },
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "api_key",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung",
+            "fr": "Méthode de connexion",
+            "es": "Método de inicio de sesión"
+          },
+          "options": [
+            {
+              "value": "api_key",
+              "label": {
+                "en": "API key (client ID and secret)",
+                "de": "API-Schlüssel (Client-ID und Secret)",
+                "fr": "Clé API (ID client et secret)",
+                "es": "Clave de API (ID de cliente y secreto)"
+              }
+            },
+            {
+              "value": "password",
+              "label": {
+                "en": "E-mail and master password",
+                "de": "E-Mail und Master-Passwort",
+                "fr": "E-mail et mot de passe maître",
+                "es": "Correo electrónico y contraseña maestra"
+              }
+            }
+          ]
+        },
+        {
+          "key": "client_id",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "api_key"
+          },
+          "label": {
+            "en": "client_id",
+            "de": "client_id",
+            "fr": "client_id",
+            "es": "client_id"
+          },
+          "placeholder": {
+            "en": "user.xxxxxxxx-…",
+            "de": "user.xxxxxxxx-…",
+            "fr": "user.xxxxxxxx-…",
+            "es": "user.xxxxxxxx-…"
+          }
+        },
+        {
+          "key": "client_secret",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "api_key"
+          },
+          "label": {
+            "en": "client_secret",
+            "de": "client_secret",
+            "fr": "client_secret",
+            "es": "client_secret"
+          }
+        },
+        {
+          "key": "email",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "password"
+          },
+          "label": {
+            "en": "E-mail",
+            "de": "E-Mail",
+            "fr": "E-mail",
+            "es": "Correo electrónico"
+          }
+        },
+        {
+          "key": "master_password",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "label": {
+            "en": "Master password",
+            "de": "Master-Passwort",
+            "fr": "Mot de passe maître",
+            "es": "Contraseña maestra"
+          }
+        },
+        {
+          "key": "cli_path",
+          "type": "path_file",
+          "label": {
+            "en": "Program path (optional)",
+            "de": "Programmpfad (optional)",
+            "fr": "Chemin du programme (facultatif)",
+            "es": "Ruta del programa (opcional)"
+          },
+          "placeholder": {
+            "en": "empty = search PATH and winget",
+            "de": "leer = in PATH und winget suchen",
+            "fr": "vide = rechercher dans PATH et winget",
+            "es": "vacío = buscar en PATH y winget"
+          }
+        },
+        {
+          "key": "ca_file",
+          "type": "path_file",
+          "label": {
+            "en": "CA certificate (optional)",
+            "de": "CA-Zertifikat (optional)",
+            "fr": "Certificat d'autorité (facultatif)",
+            "es": "Certificado de CA (opcional)"
+          },
+          "placeholder": {
+            "en": "PEM file, only needed with TLS inspection",
+            "de": "PEM-Datei, nur bei TLS-Inspection nötig",
+            "fr": "fichier PEM, nécessaire uniquement avec l'inspection TLS",
+            "es": "archivo PEM, solo necesario con inspección TLS"
+          }
+        }
+      ]
+    },
+    "onepassword": {
+      "name": "1Password",
+      "icon": "key-round",
+      "stage": "alpha",
+      "description": {
+        "en": "1Password via the official 1Password CLI (op). Login with a service account token or through the 1Password desktop app (CLI integration must be enabled in the app settings under Developer).",
+        "de": "1Password über die offizielle 1Password-CLI (op). Anmeldung mit einem Dienstkonto-Token oder über die 1Password-Desktop-App (dort unter Entwickler die CLI-Integration aktivieren).",
+        "fr": "1Password via la CLI officielle de 1Password (op). Connexion par jeton de compte de service ou via l'application de bureau 1Password (activer l'intégration CLI dans les paramètres de l'application, sous Développeur).",
+        "es": "1Password mediante la CLI oficial de 1Password (op). Inicio de sesión con un token de cuenta de servicio o a través de la aplicación de escritorio de 1Password (activar la integración con la CLI en los ajustes de la aplicación, en Desarrollador)."
+      },
+      "implementation": "onepassword",
+      "docs": "https://developer.1password.com/docs/cli/",
+      "requirements": {
+        "program": {
+          "name": "1Password CLI",
+          "command": "op",
+          "winget": "AgileBits.1Password.CLI",
+          "url": "https://developer.1password.com/docs/cli/get-started/"
+        }
+      },
+      "fields": [
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "service_account",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung",
+            "fr": "Méthode de connexion",
+            "es": "Método de inicio de sesión"
+          },
+          "options": [
+            {
+              "value": "service_account",
+              "label": {
+                "en": "Service account token",
+                "de": "Dienstkonto-Token",
+                "fr": "Jeton de compte de service",
+                "es": "Token de cuenta de servicio"
+              }
+            },
+            {
+              "value": "desktop",
+              "label": {
+                "en": "1Password desktop app",
+                "de": "1Password-Desktop-App",
+                "fr": "Application de bureau 1Password",
+                "es": "Aplicación de escritorio de 1Password"
+              }
+            }
+          ]
+        },
+        {
+          "key": "token",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "service_account"
+          },
+          "label": {
+            "en": "Service account token",
+            "de": "Dienstkonto-Token",
+            "fr": "Jeton de compte de service",
+            "es": "Token de cuenta de servicio"
+          },
+          "placeholder": {
+            "en": "ops_…",
+            "de": "ops_…",
+            "fr": "ops_…",
+            "es": "ops_…"
+          }
+        },
+        {
+          "key": "account",
+          "type": "string",
+          "show_if": {
+            "auth_mode": "desktop"
+          },
+          "label": {
+            "en": "Account",
+            "de": "Konto",
+            "fr": "Compte",
+            "es": "Cuenta"
+          },
+          "placeholder": {
+            "en": "sign-in address, e.g. company.1password.com (optional)",
+            "de": "Anmeldeadresse, z. B. firma.1password.com (optional)",
+            "fr": "adresse de connexion, p. ex. entreprise.1password.com (facultatif)",
+            "es": "dirección de inicio de sesión, p. ej. empresa.1password.com (opcional)"
+          }
+        },
+        {
+          "key": "vault",
+          "type": "string",
+          "label": {
+            "en": "Vault",
+            "de": "Tresor",
+            "fr": "Coffre",
+            "es": "Bóveda"
+          },
+          "placeholder": {
+            "en": "name or ID, empty = all accessible vaults",
+            "de": "Name oder ID, leer = alle zugänglichen Tresore",
+            "fr": "nom ou ID, vide = tous les coffres accessibles",
+            "es": "nombre o ID, vacío = todas las bóvedas accesibles"
+          }
+        },
+        {
+          "key": "cli_path",
+          "type": "path_file",
+          "label": {
+            "en": "Program path (optional)",
+            "de": "Programmpfad (optional)",
+            "fr": "Chemin du programme (facultatif)",
+            "es": "Ruta del programa (opcional)"
+          },
+          "placeholder": {
+            "en": "empty = search PATH and winget",
+            "de": "leer = in PATH und winget suchen",
+            "fr": "vide = rechercher dans PATH et winget",
+            "es": "vacío = buscar en PATH y winget"
+          }
+        }
+      ]
+    },
+    "hashicorp_vault": {
+      "name": "HashiCorp Vault",
+      "icon": "server-cog",
+      "stage": "alpha",
+      "description": {
+        "en": "HashiCorp Vault or OpenBao, KV secrets engine (version 1 or 2) via the HTTP API. Search matches secret paths below the base path. Login with token, userpass, LDAP or AppRole.",
+        "de": "HashiCorp Vault oder OpenBao, KV-Secrets-Engine (Version 1 oder 2) über die HTTP-API. Gesucht wird in den Secret-Pfaden unterhalb des Basispfads. Anmeldung mit Token, userpass, LDAP oder AppRole.",
+        "fr": "HashiCorp Vault ou OpenBao, moteur de secrets KV (version 1 ou 2) via l'API HTTP. La recherche porte sur les chemins des secrets sous le chemin de base. Connexion par jeton, userpass, LDAP ou AppRole.",
+        "es": "HashiCorp Vault u OpenBao, motor de secretos KV (versión 1 o 2) mediante la API HTTP. La búsqueda abarca las rutas de los secretos bajo la ruta base. Inicio de sesión con token, userpass, LDAP o AppRole."
+      },
+      "implementation": "hashicorp_vault",
+      "docs": "https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2",
+      "fields": [
+        {
+          "key": "address",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Address",
+            "de": "Adresse",
+            "fr": "Adresse",
+            "es": "Dirección"
+          },
+          "placeholder": {
+            "en": "https://vault.example.com:8200",
+            "de": "https://vault.firma.de:8200",
+            "fr": "https://vault.example.com:8200",
+            "es": "https://vault.example.com:8200"
+          }
+        },
+        {
+          "key": "namespace",
+          "type": "string",
+          "label": {
+            "en": "Namespace (Enterprise)",
+            "de": "Namespace (Enterprise)",
+            "fr": "Espace de noms (Enterprise)",
+            "es": "Espacio de nombres (Enterprise)"
+          },
+          "placeholder": {
+            "en": "empty = root namespace",
+            "de": "leer = Root-Namespace",
+            "fr": "vide = espace de noms racine",
+            "es": "vacío = espacio de nombres raíz"
+          }
+        },
+        {
+          "key": "mount",
+          "type": "string",
+          "default": "secret",
+          "required": true,
+          "label": {
+            "en": "KV mount path",
+            "de": "KV-Mount-Pfad",
+            "fr": "Chemin de montage KV",
+            "es": "Ruta de montaje KV"
+          }
+        },
+        {
+          "key": "kv_version",
+          "type": "choice",
+          "default": "2",
+          "label": {
+            "en": "KV version",
+            "de": "KV-Version",
+            "fr": "Version KV",
+            "es": "Versión KV"
+          },
+          "options": [
+            {
+              "value": "2",
+              "label": {
+                "en": "Version 2 (versioned)",
+                "de": "Version 2 (versioniert)",
+                "fr": "Version 2 (versionnée)",
+                "es": "Versión 2 (con versiones)"
+              }
+            },
+            {
+              "value": "1",
+              "label": {
+                "en": "Version 1",
+                "de": "Version 1",
+                "fr": "Version 1",
+                "es": "Versión 1"
+              }
+            }
+          ]
+        },
+        {
+          "key": "path",
+          "type": "string",
+          "label": {
+            "en": "Base path",
+            "de": "Basispfad",
+            "fr": "Chemin de base",
+            "es": "Ruta base"
+          },
+          "placeholder": {
+            "en": "e.g. team/servers, empty = whole mount",
+            "de": "z. B. team/server, leer = gesamter Mount",
+            "fr": "p. ex. equipe/serveurs, vide = tout le montage",
+            "es": "p. ej. equipo/servidores, vacío = todo el montaje"
+          }
+        },
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "token",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung",
+            "fr": "Méthode de connexion",
+            "es": "Método de inicio de sesión"
+          },
+          "options": [
+            {
+              "value": "token",
+              "label": {
+                "en": "Token",
+                "de": "Token",
+                "fr": "Token",
+                "es": "Token"
+              }
+            },
+            {
+              "value": "userpass",
+              "label": {
+                "en": "User name and password (userpass)",
+                "de": "Benutzername und Passwort (userpass)",
+                "fr": "Nom d'utilisateur et mot de passe (userpass)",
+                "es": "Usuario y contraseña (userpass)"
+              }
+            },
+            {
+              "value": "ldap",
+              "label": {
+                "en": "LDAP / Active Directory",
+                "de": "LDAP / Active Directory",
+                "fr": "LDAP / Active Directory",
+                "es": "LDAP / Active Directory"
+              }
+            },
+            {
+              "value": "approle",
+              "label": {
+                "en": "AppRole",
+                "de": "AppRole",
+                "fr": "AppRole",
+                "es": "AppRole"
+              }
+            }
+          ]
+        },
+        {
+          "key": "token",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "token"
+          },
+          "label": {
+            "en": "Token",
+            "de": "Token",
+            "fr": "Token",
+            "es": "Token"
+          }
+        },
+        {
+          "key": "username",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": [
+              "userpass",
+              "ldap"
+            ]
+          },
+          "label": {
+            "en": "User name",
+            "de": "Benutzername",
+            "fr": "Nom d'utilisateur",
+            "es": "Usuario"
+          }
+        },
+        {
+          "key": "password",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": [
+              "userpass",
+              "ldap"
+            ]
+          },
+          "label": {
+            "en": "Password",
+            "de": "Passwort",
+            "fr": "Mot de passe",
+            "es": "Contraseña"
+          }
+        },
+        {
+          "key": "role_id",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "approle"
+          },
+          "label": {
+            "en": "Role ID",
+            "de": "Role-ID",
+            "fr": "ID de rôle",
+            "es": "ID de rol"
+          }
+        },
+        {
+          "key": "secret_id",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "approle"
+          },
+          "label": {
+            "en": "Secret ID",
+            "de": "Secret-ID",
+            "fr": "ID secret",
+            "es": "ID de secreto"
+          }
+        },
+        {
+          "key": "auth_mount",
+          "type": "string",
+          "label": {
+            "en": "Auth mount path (optional)",
+            "de": "Auth-Mount-Pfad (optional)",
+            "fr": "Montage d'authentification (facultatif)",
+            "es": "Montaje de autenticación (opcional)"
+          },
+          "placeholder": {
+            "en": "empty = name of the login method",
+            "de": "leer = Name der Anmeldemethode",
+            "fr": "vide = nom de la méthode de connexion",
+            "es": "vacío = nombre del método de inicio de sesión"
+          }
+        },
+        {
+          "key": "username_key",
+          "type": "string",
+          "default": "username",
+          "label": {
+            "en": "Key for user name",
+            "de": "Schlüssel für Benutzername",
+            "fr": "Clé du nom d'utilisateur",
+            "es": "Clave del usuario"
+          }
+        },
+        {
+          "key": "password_key",
+          "type": "string",
+          "default": "password",
+          "label": {
+            "en": "Key for password",
+            "de": "Schlüssel für Passwort",
+            "fr": "Clé du mot de passe",
+            "es": "Clave de la contraseña"
+          }
+        }
+      ]
     }
   }
 }

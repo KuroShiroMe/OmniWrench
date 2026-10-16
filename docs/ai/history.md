@@ -140,3 +140,13 @@
 - v0.6.0 released by CI (tag pushed by user). Assets came out win64-first -> workflow now uploads source zip first,
   win64 separately; user asked to re-upload the win64 asset of v0.6.0 so the source zip is first.
 - Re-upload didn't help: assets are sorted by name. User chose: keep names, update 0.5.x installs manually once.
+
+## 2026-10-16 — more password connectors (thread "Passwort-Konnektoren", suggestion 5)
+- OmniVault 1.1.0: connectors Bitwarden/Vaultwarden (bw CLI; API key or e-mail + master password), 1Password
+  (op CLI; service account token or desktop app), HashiCorp Vault/OpenBao (HTTP API, KV v1/v2; token, userpass,
+  LDAP, AppRole). All stage alpha. Python implementations in connectors.py (no PowerShell).
+- Dialog: missing CLI -> winget install offer (Bitwarden.CLI, AgileBits.1Password.CLI).
+- Tests: fake bw/op scripts + local fake Vault server (search, get, wrong credentials -> AuthenticationRequired,
+  expired session/token -> re-login); dialog renders for all three types. Store: only omnivault zip rebuilt.
+- Same PR, on request: OmniVault locales for fr, es, de_bad, de_by, en_sco, en_posh (all 51 keys) + fr/es for every
+  label/description in connector_types.json (dialects fall back to de/en there via text()). Checked fr/es dialog renders.
