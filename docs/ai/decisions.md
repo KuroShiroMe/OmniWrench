@@ -108,3 +108,5 @@
 - Elevation via ShellExecuteExW (not Start-Process -Verb RunAs); already-elevated app runs without prompt.
 - WSUS/Features-on-Demand errors: only a hint text; OmniWrench never changes policies/registry on its own.
 - Restart needed: notice in the install log only, no automatic restart.
+- Stef (2026-10-16): OmniWrench targets Windows clients, **not Windows Server**. On Server only a notice on Home
+  ("functions limited"); no Server-specific prerequisite handling.

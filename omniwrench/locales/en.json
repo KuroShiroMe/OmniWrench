@@ -314,5 +314,6 @@
   "prog.restart_required": "Note: Windows must be restarted for all changes to take effect.",
   "err.elevated_start": "The administrator session could not be started: {error}",
   "err.elevated_failed": "Running with administrator rights failed (exit code {code}).",
-  "err.feature_source_hint": "Windows could not download the feature. In WSUS-managed environments the group policy \"Specify settings for optional component installation and component repair\" must allow downloading directly from Windows Update, or the feature must be installed from a Features on Demand source."
+  "err.feature_source_hint": "Windows could not download the feature. In WSUS-managed environments the group policy \"Specify settings for optional component installation and component repair\" must allow downloading directly from Windows Update, or the feature must be installed from a Features on Demand source.",
+  "home.server_notice": "Windows Server is not supported. Some functions are limited, e.g. the automatic installation of prerequisites such as RSAT."
 }

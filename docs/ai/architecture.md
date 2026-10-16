@@ -13,6 +13,7 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
   powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
+  system.py                   is_windows_server() (registry InstallationType, cached)
   elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
   manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path

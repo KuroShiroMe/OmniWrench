@@ -314,5 +314,6 @@
   "prog.restart_required": "Obacht: Windows muass nei gstart wern, damit ois greift.",
   "err.elevated_start": "De Admin-Sitzung hod ned gstart wern kenna: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hod's ned highaut (Exitcode {code}).",
-  "err.feature_source_hint": "Windows hod de Funktion ned owalon kenna. Bei WSUS muass de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ des Owalon direkt vo Windows Update erlaum, oder de Funktion kimmt aus a Features-on-Demand-Quelle."
+  "err.feature_source_hint": "Windows hod de Funktion ned owalon kenna. Bei WSUS muass de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ des Owalon direkt vo Windows Update erlaum, oder de Funktion kimmt aus a Features-on-Demand-Quelle.",
+  "home.server_notice": "Windows Server werd ned unterstützt. A boar Funktionen gehn bloß eigschränkt, z. B. des automatische Draufspuin vo Sachan wia RSAT."
 }

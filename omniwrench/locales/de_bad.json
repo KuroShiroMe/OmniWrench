@@ -314,5 +314,6 @@
   "prog.restart_required": "Obacht: Windows muss nei gschtartet werre, dass alles griift.",
   "err.elevated_start": "D Admin-Sitzung hät nit gschtartet werre könne: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hät s nit klappt (Exitcode {code}).",
-  "err.feature_source_hint": "Windows hät d Funktion nit ra lade könne. Bi WSUS muss d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Lade direkt vu Windows Update erlaube, oder d Funktion kummt us ere Features-on-Demand-Quell."
+  "err.feature_source_hint": "Windows hät d Funktion nit ra lade könne. Bi WSUS muss d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Lade direkt vu Windows Update erlaube, oder d Funktion kummt us ere Features-on-Demand-Quell.",
+  "home.server_notice": "Windows Server wird nit unterstützt. E paar Funktione gehn nur eigschränkt, z. B. s automatische Druffmache vu Sache wie RSAT."
 }

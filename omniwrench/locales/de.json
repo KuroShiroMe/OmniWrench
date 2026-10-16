@@ -314,5 +314,6 @@
   "prog.restart_required": "Hinweis: Ein Neustart von Windows ist erforderlich, damit alle Änderungen wirksam werden.",
   "err.elevated_start": "Die Administrator-Sitzung konnte nicht gestartet werden: {error}",
   "err.elevated_failed": "Die Ausführung mit Administratorrechten ist fehlgeschlagen (Exitcode {code}).",
-  "err.feature_source_hint": "Windows konnte die Funktion nicht herunterladen. In WSUS-verwalteten Umgebungen muss die Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ den Download direkt von Windows Update erlauben, oder die Funktion wird aus einer Features-on-Demand-Quelle installiert."
+  "err.feature_source_hint": "Windows konnte die Funktion nicht herunterladen. In WSUS-verwalteten Umgebungen muss die Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ den Download direkt von Windows Update erlauben, oder die Funktion wird aus einer Features-on-Demand-Quelle installiert.",
+  "home.server_notice": "Windows Server wird nicht unterstützt. Einige Funktionen sind eingeschränkt, z. B. die automatische Installation von Voraussetzungen wie RSAT."
 }

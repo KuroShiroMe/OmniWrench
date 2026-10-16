@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from omniwrench.core.i18n import tr
+from omniwrench.core.system import is_windows_server
 from omniwrench.core.tool_manager import InstalledTool
 
 from .scaling import clamp
@@ -210,6 +211,10 @@ class HomePage(QWidget):
         controls.addWidget(ResponsiveRow(search_row, buttons))
         # Kopfzeile: bei wenig Platz rutschen Suche und Buttons unter den Titel (und notfalls untereinander)
         self.body.addWidget(ResponsiveRow(titles, controls))
+
+        # OmniWrench ist für Windows-Clients gedacht; auf Servern fehlen z. B. RSAT-Capabilities
+        if is_windows_server():
+            self.body.addWidget(label(tr("home.server_notice"), "Notice", wrap=True))
 
         # Aktiver Kategorie-Filter als "Chip" mit Entfernen-Knopf
         self.category_filter: tuple[str, ...] = ()
