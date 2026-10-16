@@ -43,7 +43,7 @@ class StoreCard(QFrame):
 
         info = QVBoxLayout()
         info.setSpacing(4)
-        info.addWidget(label(m.display_name, "CardTitle"))
+        info.addWidget(label(m.display_name, "StoreCardTitle"))
         meta = f"v{m.version} · {' › '.join(m.category_path)}"
         if m.author:
             meta += f" · {m.author}"

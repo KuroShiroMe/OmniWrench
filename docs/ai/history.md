@@ -53,3 +53,11 @@
      chat starter prompts for main app + each tool).
    - Tested: all 26 packs downloaded (~118k icons, ~4.5 min), 1217-icon render sample OK; UI screenshots;
      KeePass flow + regressions OK.
+
+## 2026-10-16 — project thread: Netwrix alpha + store titles
+- Netwrix connector tagged alpha (user can't test, no Enterprise Pro): `connector_types.json` gets optional
+  `stage` (alpha|beta) -> dialog type list shows "Name (Alpha)", description gets bold hint line
+  (keys `stage.*` in omnivault de/en). OmniVault 1.0.0 -> 1.0.1, store rebuilt (only omnivault package changed).
+- Store: tool names on store cards bigger (new object name `StoreCardTitle`, 14pt; shared `CardTitle` unchanged).
+- Verified both with offscreen render (Linux, real fonts).
+
