@@ -164,6 +164,69 @@ class ColorButton(QPushButton):
             self.on_change()
 
 
+class HeaderBar(QWidget):
+    """Kopfzeile, die bei wenig Platz umbricht, statt das Tool breiter zu machen.
+
+    Breit: alles in einer Zeile. Mittel: Titel und Suche, darunter die Filter. Schmal: die Filter
+    zusätzlich auf zwei Zeilen verteilt (filters, dann more).
+    """
+
+    SPACING = 8
+
+    def __init__(self, title: QWidget, search: tuple[QWidget, int], filters: list[tuple[QWidget, int]],
+                 more: list[tuple[QWidget, int]]):
+        super().__init__()
+        self._title, self._search, self._filters, self._more = title, search, filters, more
+        box = QVBoxLayout(self)
+        box.setContentsMargins(0, 0, 0, 0)
+        box.setSpacing(6)
+        self._rows = [QHBoxLayout() for _ in range(3)]
+        for row in self._rows:
+            row.setSpacing(self.SPACING)
+            box.addLayout(row)
+        self._mode = -1
+        self._arrange(0)
+
+    def _layouts(self, mode: int) -> list[list[tuple[QWidget, int]]]:
+        head = [(self._title, 0), self._search]
+        if mode == 0:
+            return [head + self._filters + self._more]
+        if mode == 1:
+            return [head, self._filters + self._more]
+        return [head, self._filters, self._more]
+
+    @staticmethod
+    def _width(w: QWidget) -> int:
+        """Platzbedarf: dehnbare Felder (Suche) mit Mindestbreite, alle anderen mit Wunschbreite."""
+        expanding = w.sizePolicy().horizontalPolicy() == QSizePolicy.Policy.Expanding
+        return max(w.minimumWidth(), (w.minimumSizeHint() if expanding else w.sizeHint()).width())
+
+    def _needed(self, mode: int) -> int:
+        return max(sum(self._width(w) for w, _ in row) + self.SPACING * (len(row) - 1) for row in self._layouts(mode))
+
+    def _arrange(self, mode: int) -> None:
+        self._mode = mode
+        for row in self._rows:
+            while row.count():
+                row.takeAt(0)
+        for row, items in zip(self._rows, self._layouts(mode)):
+            for i, (w, stretch) in enumerate(items):
+                row.addWidget(w, stretch)
+                if mode == 0 and i == 0:
+                    row.addStretch()
+        self.updateGeometry()
+
+    def minimumSizeHint(self):  # noqa: N802 - schmalste Anordnung bestimmt die Mindestbreite des Tools
+        return QSize(self._needed(2), super().minimumSizeHint().height())
+
+    def resizeEvent(self, event):  # noqa: N802
+        width = event.size().width()
+        mode = next((m for m in (0, 1) if self._needed(m) <= width), 2)
+        if mode != self._mode:
+            self._arrange(mode)
+        super().resizeEvent(event)
+
+
 def _section(text: str) -> QLabel:
     lbl = QLabel(text.upper())
     lbl.setObjectName("SectionTitle")
@@ -182,21 +245,16 @@ class IconForge(ToolBase):
         # ---- Kopfzeile
         # Breiten in Zeichen statt Pixeln, damit die Leiste mit Schrift und Skalierung mitwächst
         char = self.root.fontMetrics().averageCharWidth()
-        top = QHBoxLayout()
         title = QLabel(tr("tool.name"))
         title.setObjectName("PageTitle")
-        top.addWidget(title)
-        top.addStretch()
         self.search = QLineEdit(placeholderText="🔍  " + tr("ui.search"))
         self.search.setClearButtonEnabled(True)
         self.search.setMinimumWidth(char * 26)
         self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        top.addWidget(self.search, 2)
         self.pack = QComboBox()
         self.pack.setMinimumContentsLength(18)
         self.pack.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.pack.setToolTip(tr("ui.pack_hint"))
-        top.addWidget(self.pack, 1)
         self.get_packs = QToolButton()
         self.get_packs.setIcon(library_icon("download", 18))
         self.get_packs.setToolTip(tr("ui.pack_get"))
@@ -204,16 +262,14 @@ class IconForge(ToolBase):
         self.get_packs.setFixedSize(side, side)
         self.get_packs.setIconSize(QSize(side * 3 // 5, side * 3 // 5))
         self.get_packs.clicked.connect(self._open_wizard)
-        top.addWidget(self.get_packs)
         self.variant = QComboBox()
         self.variant.setMinimumContentsLength(9)
         self.variant.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        top.addWidget(self.variant)
         self.category = QComboBox()
         self.category.setMinimumContentsLength(16)
         self.category.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
-        top.addWidget(self.category, 1)
-        outer.addLayout(top)
+        outer.addWidget(HeaderBar(title, (self.search, 2), [(self.pack, 1), (self.get_packs, 0), (self.variant, 0)],
+                                  [(self.category, 1)]))
         self.count = QLabel()
         self.count.setObjectName("Muted")
         outer.addWidget(self.count)
@@ -236,6 +292,9 @@ class IconForge(ToolBase):
         self.view.setMovement(QListView.Movement.Static)
         self.view.setUniformItemSizes(True)
         self.view.setObjectName("IconGrid")
+        # mindestens eine ganze Spalte, sonst schrumpft bei schmalem Fenster das Raster statt der Detailleiste
+        scrollbar = self.view.style().pixelMetric(QStyle.PixelMetric.PM_ScrollBarExtent)
+        self.view.setMinimumWidth(IconDelegate.CELL.width() + scrollbar + 2 * self.view.frameWidth() + 4)
         self.view.selectionModel().currentChanged.connect(lambda cur, _prev: self._select(cur))
         self.view.doubleClicked.connect(lambda *_: self._save())
         splitter.addWidget(self.view)
