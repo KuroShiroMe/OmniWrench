@@ -1,6 +1,7 @@
 # Backlog / next steps
 
 ## Open / to verify with user
+- [ ] 0.6.0 on main (PRs #1-#5 merged); user tests on Windows (source + EXE). Release tag/GitHub release only after OK.
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
       Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
       someone with Netwrix Enterprise Pro confirms it works.

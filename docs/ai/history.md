@@ -76,6 +76,7 @@
   .github/workflows/build-exe.yml (windows-latest, Python 3.14, artifact); docs/EXE_BUILD.md; README/CLAUDE.md.
 - Tested (Linux build, Python 3.13): app starts offscreen; frozen pip installed pykeepass; smoke exe installed and
   opened IconForge, OmniVault, Subnet calculator (AD lookup needs RSAT/pwsh -> Windows only).
+
 ## 2026-10-16 — round 9 (claude.ai project thread, IconForge 1.1.0)
 9. User: IconForge library dropdown showed undownloaded packs; selecting one did nothing until the download finished.
    - Pack dropdown now lists only available packs (Lucide + downloaded). Download button (Lucide "download") next to
@@ -102,3 +103,12 @@
    - Subnet calculator 1.2.1: splitter switches to vertical below 900 px, table columns size to contents.
    - SDK: device_pixel_ratio(), fit_to_screen() for tools.
    - Tested by offscreen renders: 760x560, 1000x640, 1280x720 (100 %) and 2560x1400 logical at 200/300 % (= 8k px).
+
+## 2026-10-16 — merge of PRs #1-#5 + version 0.6.0 (thread "PRs zusammenführen und 0.6.0")
+- Integration branch claude/merge-0-6-0-i4gq40, merged in order: #1 Netwrix alpha/store titles, #2 async credentials,
+  #3 PyInstaller EXE, #4 IconForge wizard, #5 responsive/scaling. PR branches not rewritten.
+- Conflicts: docs/ai/* (kept both sides), ui/credentials.py imports (scaling + call_in_gui), store/index.json +
+  omnivault zip (both PRs bumped OmniVault to 1.0.1 -> one combined 1.0.1, never released before).
+- App 0.6.0 (0.5.1 from #2 never released). Tools: AD User Lookup 1.3.1, IconForge 1.1.0, OmniVault 1.0.1,
+  Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
+- Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
