@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-15T11:44:14+00:00",
+  "generated": "2026-10-16T06:47:58+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "DarkMatter",
@@ -14,7 +14,7 @@
       "icon": "user-search",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
-      "min_app_version": "0.3.0",
+      "min_app_version": "0.4.0",
       "platforms": [
         "windows"
       ],
@@ -44,9 +44,104 @@
           "category": "MS Server Tools/Active Directory"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.2.0.zip",
-      "sha256": "84cf56e20ed5b21245fd3e38b0fb7433a05ffd66ea561b41392db62b51ce2123",
-      "size": 5573
+      "download_url": "packages/ms.ad-user-lookup-1.3.0.zip",
+      "sha256": "c28294a49df0982f7ce9b0698f52743d31d2b48bf5ba1af3bbdc8520fcbaf231",
+      "size": 5942
+    },
+    {
+      "id": "gfx.icon-store",
+      "name": "Icon Store",
+      "version": "1.0.0",
+      "description": "Browse icons and pictograms and save them in many formats and sizes - e.g. for Visio diagrams.",
+      "long_description": "Searchable grid of all icons available in OmniWrench (Lucide, ISC licence - free for commercial use). Filter by category, see tags and the name to use in tool.json, adjust colour, stroke width and background, and save as SVG, PNG, ICO, PDF or JPG in several sizes at once - or copy the image straight into Visio, Word or PowerPoint.",
+      "author": "DarkMatter",
+      "category": "Design/Icons",
+      "icon": "images",
+      "color": "#ec4899",
+      "entry": "tool:IconStore",
+      "min_app_version": "0.4.0",
+      "platforms": [
+        "windows"
+      ],
+      "tags": [
+        "icons",
+        "symbole",
+        "visio",
+        "svg",
+        "png",
+        "pictogram",
+        "piktogramm"
+      ],
+      "single_instance": false,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Icon Store",
+          "description": "Symbole und Piktogramme durchsuchen und in vielen Formaten und Größen speichern - z. B. für Visio-Zeichnungen.",
+          "long_description": "Durchsuchbares Raster aller in OmniWrench verfügbaren Symbole (Lucide, ISC-Lizenz - frei auch für kommerzielle Nutzung). Nach Kategorie filtern, Schlagwörter und den Namen für die tool.json sehen, Farbe, Strichstärke und Hintergrund anpassen und als SVG, PNG, ICO, PDF oder JPG in mehreren Größen gleichzeitig speichern - oder direkt in Visio, Word oder PowerPoint einfügen.",
+          "category": "Design/Symbole"
+        },
+        "en": {
+          "name": "Icon Store",
+          "description": "Browse icons and pictograms and save them in many formats and sizes - e.g. for Visio diagrams.",
+          "long_description": "Searchable grid of all icons available in OmniWrench (Lucide, ISC licence - free for commercial use). Filter by category, see tags and the name to use in tool.json, adjust colour, stroke width and background, and save as SVG, PNG, ICO, PDF or JPG in several sizes at once - or copy the image straight into Visio, Word or PowerPoint.",
+          "category": "Design/Icons"
+        }
+      },
+      "download_url": "packages/gfx.icon-store-1.0.0.zip",
+      "sha256": "10c8ce9c99e68d7e5b0a660670274f9fc99247fdd1c71251e26ca4bee7d473d8",
+      "size": 11597
+    },
+    {
+      "id": "sec.password-manager-manager",
+      "name": "Password Manager Manager",
+      "version": "1.0.0",
+      "description": "Built-in password manager plus connectors to external password managers.",
+      "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
+      "author": "DarkMatter",
+      "category": "Security/Passwords",
+      "icon": "vault",
+      "color": "#f59e0b",
+      "entry": "tool:PasswordManagerManager",
+      "min_app_version": "0.4.0",
+      "platforms": [
+        "windows"
+      ],
+      "tags": [
+        "password",
+        "passwort",
+        "keepass",
+        "secretmanagement",
+        "netwrix",
+        "credentials",
+        "vault"
+      ],
+      "single_instance": true,
+      "hooks": {
+        "startup": "connectors:register_all"
+      },
+      "requirements": {
+        "python": [
+          "pykeepass>=4.1"
+        ]
+      },
+      "translations": {
+        "de": {
+          "name": "Password Manager Manager",
+          "description": "Eingebauter Passwortmanager plus Konnektoren zu externen Passwortmanagern.",
+          "long_description": "Verwaltet Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Danach durchsucht jede Zugangsdaten-Auswahl in OmniWrench alle Manager gleichzeitig. Passwörter externer Manager werden erst bei Bedarf abgerufen und nur für die laufende Sitzung im Speicher gehalten.",
+          "category": "Sicherheit/Passwörter"
+        },
+        "en": {
+          "name": "Password Manager Manager",
+          "description": "Built-in password manager plus connectors to external password managers.",
+          "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
+          "category": "Security/Passwords"
+        }
+      },
+      "download_url": "packages/sec.password-manager-manager-1.0.0.zip",
+      "sha256": "e5f73aae76936ccbe479dab1373466e2a12f87a8e613eff62c1938b531f1687e",
+      "size": 15288
     },
     {
       "id": "net.subnet-calculator",

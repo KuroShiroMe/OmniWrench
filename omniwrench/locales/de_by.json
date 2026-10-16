@@ -283,5 +283,18 @@
   "pwm.use": "Hernehma",
   "pwm.cancel": "Lass as",
   "pwm.empty": "No koane Zugangsdatn do. Mit 'Nei …' olegn.",
-  "pwm.linked": "Verbandlt mit: {name}"
+  "pwm.linked": "Verbandlt mit: {name}",
+  "pwm.add_manual": "Zugangsdatn händisch eitrogn",
+  "pwm.also_store": "A in da OmniWrench-Passwort-Truhn aufhebn",
+  "pwm.from_source": "Vo: {source}",
+  "pwm.login_link": "Bei {name} omeidn",
+  "pwm.login_save": "Omeidedatn aufhebn (verschlüsselt)",
+  "pwm.login_text": "{name} mog deine Omeidedatn (vielleicht hast as Passwort gändert).",
+  "pwm.login_title": "Omeidn: {name}",
+  "pwm.manual_entry": "Händisch eitrogn",
+  "pwm.none_selected": "– no koane Zugangsdatn –",
+  "pwm.remove_entry": "Aus da Listn nehma",
+  "pwm.search_all": "Olle Passwort-Truhn durchsuacha …",
+  "pwm.searching": "Durchsuach de verbundnen Truhn …",
+  "pwm.source": "Kimmt vo"
 }

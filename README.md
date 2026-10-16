@@ -13,7 +13,17 @@ installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, win
 * **Symbol-Bibliothek**: rund 2.100 Symbole von [Lucide](https://lucide.dev) (ISC-Lizenz) für Tool-Kacheln,
   alternativ eigene Bilddatei oder Kürzel
 * **Passwortmanager**: Zugangsdaten verschlüsselt im Tresor; überall, wo Tools Anmeldedaten brauchen,
-  per Schlüssel-Button übernehmbar (bleiben verknüpft)
+  per Schlüssel-Button übernehmbar. Mehrere Zugangsdaten je Feld (Auswahlliste); gespeichert werden nur Verweise,
+  Passwörter werden erst beim Gebrauch abgerufen und nur für die Sitzung im Speicher gehalten.
+
+## Mitgelieferte Tools (Store)
+
+| Tool | Zweck |
+|---|---|
+| Subnetzrechner | IPv4/IPv6 berechnen, Subnetze aufteilen, CSV-Export |
+| AD Benutzerabfrage | AD-Benutzer suchen (RSAT), mit Zugangsdaten-Auswahl |
+| Password Manager Manager | Eingebauter Manager + Konnektoren: Microsoft SecretManagement, KeePass (.kdbx), Netwrix Password Secure (Vorlage, SDK nötig) |
+| Icon Store | Symbole suchen/filtern, als SVG/PNG/ICO/PDF/JPG in mehreren Größen speichern oder in Visio einfügen |
 * **Store-Tab**: Tools aus einem oder mehreren Repositories, Kategoriebaum, Installieren und Aktualisieren
 * **Tool-Tabs**: Jedes Tool öffnet sich in einem eigenen Tab. Tabs lassen sich per Drag & Drop nebeneinander
   oder übereinander anordnen und als eigenes Fenster ausklinken (Qt Advanced Docking System).

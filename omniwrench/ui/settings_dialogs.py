@@ -146,7 +146,7 @@ class _Field:
     def is_empty(self) -> bool:
         v = self.value()
         if self.sdef.type == "credential":
-            return not v["username"]
+            return not v["items"]
         return v in ("", None)
 
 

@@ -1,0 +1,12 @@
+{
+  "settings": [
+    {
+      "key": "max_results",
+      "type": "int",
+      "label": "Max. results per manager",
+      "default": 100,
+      "min": 10,
+      "max": 5000
+    }
+  ]
+}

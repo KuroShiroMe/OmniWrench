@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 )
 
 from omniwrench import APP_NAME, GITHUB_REPO, VENDOR, __version__
-from omniwrench.core import app_updater, repository
+from omniwrench.core import app_updater, credentials, repository
 from omniwrench.core.i18n import tr
 from omniwrench.core.jsonio import read_json, write_json
 from omniwrench.core.paths import APP_DIR, LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
@@ -555,6 +555,7 @@ class MainWindow(QMainWindow):
             return
         self._locked = True
         self.lock_timer.stop()
+        credentials.manager().clear_session()   # abgerufene Passwörter aus dem Speicher entfernen
         self.vault.lock()
         floating = list(self.dm.floatingWidgets())
         for w in floating:

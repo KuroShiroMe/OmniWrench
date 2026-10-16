@@ -76,6 +76,9 @@ class ToolManifest:
     tags: list[str] = field(default_factory=list)
     homepage: str = ""
     single_instance: bool = False        # nur ein Tab gleichzeitig erlaubt
+    # Einstiegspunkte, die das Hauptprogramm unabhängig von geöffneten Tabs aufruft:
+    # {"startup": "modul:funktion"} -> funktion(ToolContext) nach dem Anmelden bzw. nach der Installation
+    hooks: dict = field(default_factory=dict)
     requirements: Requirements = field(default_factory=Requirements)
     # Übersetzungen der Anzeigetexte: {"de": {"name": …, "description": …, "category": …}, …}
     # Installiert: aus locales/*.json ("tool.name", …), im Store: aus index.json

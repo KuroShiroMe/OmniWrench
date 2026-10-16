@@ -283,5 +283,18 @@
   "pwm.use": "Utiliser",
   "pwm.cancel": "Annuler",
   "pwm.empty": "Aucun identifiant enregistré. Créez-en un avec « Nouveau … ».",
-  "pwm.linked": "Lié à : {name}"
+  "pwm.linked": "Lié à : {name}",
+  "pwm.add_manual": "Saisir les identifiants manuellement",
+  "pwm.also_store": "Enregistrer aussi dans le gestionnaire OmniWrench",
+  "pwm.from_source": "Depuis : {source}",
+  "pwm.login_link": "Se connecter à {name}",
+  "pwm.login_save": "Enregistrer les identifiants (chiffrés)",
+  "pwm.login_text": "{name} a besoin de vos identifiants (p. ex. parce que le mot de passe a changé).",
+  "pwm.login_title": "Connexion : {name}",
+  "pwm.manual_entry": "Saisi manuellement",
+  "pwm.none_selected": "– aucun identifiant enregistré –",
+  "pwm.remove_entry": "Retirer de la liste",
+  "pwm.search_all": "Rechercher dans tous les gestionnaires …",
+  "pwm.searching": "Recherche dans les gestionnaires connectés …",
+  "pwm.source": "Source"
 }

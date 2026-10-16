@@ -6,11 +6,11 @@ import json
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPlainTextEdit, QPushButton, QSplitter, QTableWidget,
+    QCheckBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPlainTextEdit, QPushButton, QSplitter, QTableWidget,
     QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
-from omniwrench.sdk import ToolBase, run_async
+from omniwrench.sdk import CredentialField, ToolBase, run_async
 
 COLUMNS = ["SamAccountName", "Name", "Enabled", "LockedOut", "LastLogonDate", "mail"]
 
@@ -64,6 +64,18 @@ class AdUserLookup(ToolBase):
         row.addWidget(settings_btn)
         lay.addLayout(row)
 
+        # Anmeldedaten: Auswahlliste aus dem Passwortmanager (gespeichert werden nur Verweise,
+        # das Passwort wird erst beim Suchen abgerufen - einmal pro Sitzung)
+        cred_row = QHBoxLayout()
+        self.use_cred = QCheckBox(tr("ui.use_credential"))
+        self.use_cred.setChecked(bool(self.context.settings.get("use_credential")))
+        self.use_cred.toggled.connect(self._toggle_credential)
+        cred_row.addWidget(self.use_cred)
+        self.cred_field = CredentialField(settings=self.context.settings, key="credential")
+        self.cred_field.setEnabled(self.use_cred.isChecked())
+        cred_row.addWidget(self.cred_field, 1)
+        lay.addLayout(cred_row)
+
         self.status = QLabel()
         lay.addWidget(self.status)
 
@@ -85,6 +97,16 @@ class AdUserLookup(ToolBase):
         self._users: list[dict] = []
         return root
 
+    def _toggle_credential(self, on: bool) -> None:
+        self.context.settings.set("use_credential", on)
+        self.cred_field.setEnabled(on)
+
+    def on_settings_changed(self, changed_keys: set[str]) -> None:
+        if "credential" in changed_keys:
+            self.cred_field.set_value(self.context.settings.get("credential"))
+        if "use_credential" in changed_keys:
+            self.use_cred.setChecked(bool(self.context.settings.get("use_credential")))
+
     def _search(self) -> None:
         q = self.query.text().strip().replace("'", "''")
         if not q:
@@ -92,7 +114,7 @@ class AdUserLookup(ToolBase):
         s = self.context.settings
         params = {"q": q, "max": s.get("max_results", 200), "server": s.get("server"), "base": s.get("search_base")}
         if s.get("use_credential"):
-            cred = self.context.get_credential("credential")
+            cred = self.cred_field.resolve()
             if not cred:
                 self.status.setText(self.context.tr("ui.no_credential"))
                 return

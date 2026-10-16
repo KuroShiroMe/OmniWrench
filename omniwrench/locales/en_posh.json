@@ -283,5 +283,18 @@
   "pwm.use": "Very well",
   "pwm.cancel": "Never mind",
   "pwm.empty": "No credentials as yet. Do create one via 'New …'.",
-  "pwm.linked": "Linked to: {name}"
+  "pwm.linked": "Linked to: {name}",
+  "pwm.add_manual": "Enter credentials by hand",
+  "pwm.also_store": "Also lodge them in the OmniWrench Strongbox",
+  "pwm.from_source": "Courtesy of: {source}",
+  "pwm.login_link": "Present oneself to {name}",
+  "pwm.login_save": "Retain the credentials (under lock and key)",
+  "pwm.login_text": "{name} requests your credentials once more (the password has perhaps been changed).",
+  "pwm.login_title": "Admittance: {name}",
+  "pwm.manual_entry": "Entered by hand",
+  "pwm.none_selected": "– no credentials on file –",
+  "pwm.remove_entry": "Strike from the list",
+  "pwm.search_all": "Peruse every password manager …",
+  "pwm.searching": "Consulting the connected password managers …",
+  "pwm.source": "Provenance"
 }

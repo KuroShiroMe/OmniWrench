@@ -283,5 +283,18 @@
   "pwm.use": "Use it",
   "pwm.cancel": "Naw",
   "pwm.empty": "Nae logins yet. Mak yin wi 'New …'.",
-  "pwm.linked": "Linked tae: {name}"
+  "pwm.linked": "Linked tae: {name}",
+  "pwm.add_manual": "Pit in a login by haun",
+  "pwm.also_store": "Keep it in the OmniWrench passwird kist an a'",
+  "pwm.from_source": "Fae: {source}",
+  "pwm.login_link": "Log in tae {name}",
+  "pwm.login_save": "Keep the login (scrambled)",
+  "pwm.login_text": "{name} needs yer login (maybe ye chynged the passwird).",
+  "pwm.login_title": "Log in: {name}",
+  "pwm.manual_entry": "Pit in by haun",
+  "pwm.none_selected": "– nae logins yet –",
+  "pwm.remove_entry": "Tak it aff the list",
+  "pwm.search_all": "Hunt through a' the passwird kists …",
+  "pwm.searching": "Huntin through the linked kists …",
+  "pwm.source": "Comes fae"
 }

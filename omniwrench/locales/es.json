@@ -283,5 +283,18 @@
   "pwm.use": "Usar",
   "pwm.cancel": "Cancelar",
   "pwm.empty": "Todavía no hay credenciales. Cree una con «Nuevo …».",
-  "pwm.linked": "Vinculado a: {name}"
+  "pwm.linked": "Vinculado a: {name}",
+  "pwm.add_manual": "Introducir credenciales manualmente",
+  "pwm.also_store": "Guardar también en el gestor de OmniWrench",
+  "pwm.from_source": "Desde: {source}",
+  "pwm.login_link": "Iniciar sesión en {name}",
+  "pwm.login_save": "Guardar credenciales (cifradas)",
+  "pwm.login_text": "{name} necesita sus credenciales (p. ej. porque la contraseña ha cambiado).",
+  "pwm.login_title": "Iniciar sesión: {name}",
+  "pwm.manual_entry": "Introducido manualmente",
+  "pwm.none_selected": "– sin credenciales guardadas –",
+  "pwm.remove_entry": "Quitar de la lista",
+  "pwm.search_all": "Buscar en todos los gestores …",
+  "pwm.searching": "Buscando en los gestores conectados …",
+  "pwm.source": "Origen"
 }

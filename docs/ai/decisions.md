@@ -36,7 +36,7 @@
 - App language in settings; change rebuilds UI without re-login.
 - Tools: own `locales/`; per-tool language setting ("auto" or fixed). Auto = app language if tool has it, else dialect base language (my addition, user informed), else English.
 
-## Password Manager Manager (decided 2026-10-15, in progress)
+## Password Manager Manager (decided 2026-10-15, built 2026-10-16 v1.0.0)
 - Separate tool "Password Manager Manager": contains own manager + connectors to external managers.
 - First connectors: Microsoft SecretManagement, KeePass, Netwrix Password Secure (user has Netwrix to test).
 - Connector type definitions in a JSON (fields needed for API). Only simple search for now (no folder trees).
@@ -46,5 +46,8 @@
 - Credential field supports MULTIPLE saved credentials → name dropdown; list persisted (refs only), secrets fetched at login time.
 - If manager auth fails (changed password): NO error message — show popup asking for connector credentials, with "save" option, then retry.
 
-## Icon Store (decided 2026-10-15, in progress)
+## Icon Store (decided 2026-10-15, built 2026-10-16 v1.0.0)
 - Tool "Icon Store": browse icons (start with bundled Lucide), search + filter, cool grid, click → right metadata panel, show name usable in tool.json, "Save as" with scaling options and multiple file types (for Visio etc.).
+- Implementation choices (mine): connector secrets saved only if "save login data" is checked, else asked once per
+  session; connector dialog offers Install-Module for missing PS modules; Icon Store export formats SVG/PNG/ICO/PDF/JPG
+  (EMF not supported by Qt); "copy image" for pasting into Visio.

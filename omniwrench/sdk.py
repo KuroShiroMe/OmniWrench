@@ -36,29 +36,43 @@ if TYPE_CHECKING:
 
 __all__ = [
     "APP_VERSION", "ToolBase", "ToolContext", "InstallContext", "PSResult", "ps_quote", "run_async", "LANGUAGE_KEY",
-    "pick_credential", "CredentialField",
+    "pick_credential", "CredentialField", "Credential", "CredentialProvider", "AuthField",
+    "AuthenticationRequired",
 ]
+
+# Für Tools, die eigene Passwortmanager-Anbieter bereitstellen
+Credential = credentials.Credential
+CredentialProvider = credentials.CredentialProvider
+AuthField = credentials.AuthField
+AuthenticationRequired = credentials.AuthenticationRequired
 
 
 def pick_credential(parent=None) -> tuple[str, str] | None:
     """Öffnet den Auswahldialog des Passwortmanagers und liefert (Benutzer, Passwort) oder None.
 
-    Für eigene Anmeldemasken im Tool, z. B. ein "🔑"-Button neben Benutzer/Passwort-Feldern.
+    Durchsucht alle verbundenen Manager. Das Passwort wird erst nach der Auswahl abgerufen.
     """
     from omniwrench.ui.credentials import pick_credential as _pick
     cred = _pick(parent)
-    return (cred.username, cred.password) if cred else None
+    if cred is None:
+        return None
+    full = credentials.manager().resolve(cred.ref)
+    return (full.username, full.password) if full else None
 
 
-def CredentialField(value: dict | None = None, parent=None):  # noqa: N802 - verhält sich wie eine Klasse
-    """Fertiges Eingabefeld Benutzer + Passwort mit Button "Aus Passwortmanager".
+def CredentialField(value: dict | None = None, parent=None, settings=None, key: str = ""):  # noqa: N802
+    """Fertiges Feld für Zugangsdaten: Auswahlliste gespeicherter Einträge + Buttons
+    "Aus Passwortmanager" / "Manuell" / "Entfernen".
 
-    field = CredentialField()
-    layout.addWidget(field)
-    user, password = field.value()["username"], field.value()["password"]
+    Mit settings + key bindet sich das Feld an eine Tool-Einstellung (Typ "credential") und
+    speichert Änderungen selbst:
+
+        self.login = CredentialField(settings=self.context.settings, key="credential")
+        ...
+        user, password = self.login.resolve()     # Abruf erst hier (einmal pro Sitzung)
     """
     from omniwrench.ui.credentials import CredentialField as _Field
-    return _Field(value, parent)
+    return _Field(value, parent, settings=settings, key=key)
 
 
 def run_async(fn, on_done=None, on_error=None, on_progress=None) -> None:
@@ -109,6 +123,15 @@ class _ContextBase:
         """Übersetzt einen Text aus <tool>/locales/<sprache>.json (Fallback: en.json, dann default/key)."""
         return self.translator.tr(key, default, **kwargs)
 
+    # Passwortmanager-Anbieter
+    def register_credential_provider(self, provider: "credentials.CredentialProvider") -> None:
+        """Stellt einen weiteren Passwortmanager im Auswahldialog bereit (wird beim
+        Deinstallieren des Tools automatisch entfernt)."""
+        credentials.manager().register(provider, owner=self.tool_id)
+
+    def unregister_credential_provider(self, provider_id: str) -> None:
+        credentials.manager().unregister(provider_id)
+
     # PowerShell-Helfer
     def run_powershell(self, script: str, stdin: str | None = None, timeout: float | None = 300) -> PSResult:
         return run_ps(script, stdin=stdin, timeout=timeout)
@@ -120,21 +143,19 @@ class _ContextBase:
         return run_ps_elevated(script, timeout=timeout)
 
     def get_credential(self, key: str) -> tuple[str, str] | None:
-        """Liefert (Benutzer, Passwort) einer Einstellung vom Typ "credential".
+        """(Benutzer, Passwort) des in einer "credential"-Einstellung ausgewählten Eintrags.
 
-        Ist die Einstellung mit einem Eintrag im Passwortmanager verknüpft, wird immer
-        dessen aktueller Stand geliefert.
+        Verweise auf Passwortmanager werden erst hier abgerufen (einmal pro Sitzung, nur im
+        Speicher). Braucht ein Manager neue Zugangsdaten, fragt das Programm selbst nach.
         """
-        value = self.settings.get(key)
-        if not value:
+        value = credentials.normalize_value(self.settings.get(key))
+        if not value["items"]:
             return None
-        if value.get("ref"):
-            cred = credentials.manager().resolve(value["ref"])
-            if cred:
-                return cred.username, cred.password
-        if not value.get("username"):
-            return None
-        return value.get("username", ""), value.get("password", "")
+        return credentials.resolve_item(value["items"][value["selected"]])
+
+    def get_credentials(self, key: str) -> list[dict]:
+        """Alle in einer "credential"-Einstellung hinterlegten Einträge (ohne Passwörter abzurufen)."""
+        return credentials.normalize_value(self.settings.get(key))["items"]
 
 
 class ToolContext(_ContextBase):

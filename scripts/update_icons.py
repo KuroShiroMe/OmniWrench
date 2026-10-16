@@ -57,6 +57,33 @@ def main() -> None:
                 (TARGET / "LICENSE").write_bytes(tar.extractfile(member).read())
     (TARGET / "VERSION").write_text(version + "\n", encoding="utf-8")
     print(f"{count} Icons nach {TARGET.relative_to(ROOT)} geschrieben.")
+    write_meta(version)
+
+
+def write_meta(version: str) -> None:
+    """meta.json: Schlagwörter und Kategorien je Symbol (aus dem Lucide-Quell-Repository)."""
+    url = f"https://codeload.github.com/lucide-icons/lucide/tar.gz/refs/tags/{version}"
+    print("Lade Kategorien/Schlagwörter …")
+    data = net.get_bytes(url, timeout=300)
+    icons, categories = {}, {}
+    with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as tar:
+        for member in tar.getmembers():
+            parts = Path(member.name).parts
+            if len(parts) != 3 or parts[1] not in ("icons", "categories") or not member.name.endswith(".json"):
+                continue
+            info = json.loads(tar.extractfile(member).read())
+            name = Path(member.name).stem
+            if parts[1] == "icons":
+                icons[name] = {"tags": info.get("tags", []), "categories": info.get("categories", [])}
+                for alias in info.get("aliases", []):
+                    alias_name = alias["name"] if isinstance(alias, dict) else alias
+                    icons.setdefault(alias_name, icons[name])
+            elif parts[1] == "categories":
+                categories[name] = {"title": info.get("title", name), "icon": info.get("icon", "")}
+    meta = {"version": version, "license": "ISC", "source": "https://lucide.dev",
+            "categories": categories, "icons": icons}
+    (TARGET / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    print(f"meta.json: {len(icons)} Symbole, {len(categories)} Kategorien")
 
 
 if __name__ == "__main__":

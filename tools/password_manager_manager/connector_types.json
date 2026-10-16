@@ -1,0 +1,140 @@
+{
+  "_doc": [
+    "Konnektor-Typen des Password Manager Manager.",
+    "fields: Eingaben je Konnektor. type: string | path_file | path_dir | secret | int | bool.",
+    "        auth=true  -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
+    "        secret=true / type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
+    "implementation: 'powershell' (Skripte unten) oder 'keepass' (Python, pykeepass).",
+    "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
+    "            search -> JSON-Liste [{id, name, username, detail}], get -> {username, password}.",
+    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmelde-Dialog statt Fehler."
+  ],
+  "types": {
+    "secretmanagement": {
+      "name": "Microsoft SecretManagement",
+      "icon": "terminal-square",
+      "description": {
+        "en": "PowerShell SecretManagement vaults (SecretStore, KeePass, Bitwarden, Azure Key Vault … extensions).",
+        "de": "PowerShell-SecretManagement-Tresore (SecretStore, KeePass, Bitwarden, Azure Key Vault … Erweiterungen)."
+      },
+      "implementation": "powershell",
+      "requirements": {"powershell_modules": ["Microsoft.PowerShell.SecretManagement"]},
+      "fields": [
+        {"key": "vault", "type": "string", "label": {"en": "Vault name", "de": "Tresor-Name"},
+         "placeholder": {"en": "empty = all registered vaults", "de": "leer = alle registrierten Tresore"}},
+        {"key": "vault_password", "type": "secret", "auth": true,
+         "label": {"en": "Vault password (SecretStore)", "de": "Tresor-Passwort (SecretStore)"},
+         "placeholder": {"en": "only if the vault is password protected", "de": "nur falls der Tresor ein Passwort hat"}}
+      ],
+      "auth_error_patterns": ["(?i)password", "(?i)Unlock-SecretStore", "(?i)locked", "(?i)Kennwort"],
+      "scripts": {
+        "prologue": [
+          "$ErrorActionPreference = 'Stop'",
+          "$p = [Console]::In.ReadToEnd() | ConvertFrom-Json",
+          "Import-Module Microsoft.PowerShell.SecretManagement",
+          "if ($p.vault_password -and (Get-Command Unlock-SecretStore -ErrorAction SilentlyContinue)) {",
+          "  Unlock-SecretStore -Password (ConvertTo-SecureString $p.vault_password -AsPlainText -Force)",
+          "}"
+        ],
+        "search": [
+          "$q = @{ Name = '*' + $p.query + '*' }",
+          "if ($p.vault) { $q.Vault = $p.vault }",
+          "$r = Get-SecretInfo @q | Select-Object -First ([int]$p.max) | ForEach-Object {",
+          "  $user = ''",
+          "  if ($_.Metadata -and $_.Metadata.ContainsKey('UserName')) { $user = [string]$_.Metadata['UserName'] }",
+          "  [pscustomobject]@{ id = $_.VaultName + '|' + $_.Name; name = $_.Name; username = $user;",
+          "                     detail = $_.VaultName + ' · ' + $_.Type }",
+          "}",
+          "ConvertTo-Json -InputObject @($r) -Compress"
+        ],
+        "get": [
+          "$vault, $name = $p.id -split '\\|', 2",
+          "$s = Get-Secret -Vault $vault -Name $name",
+          "$user = ''; $pw = ''",
+          "function Plain($sec) { [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)) }",
+          "if ($s -is [pscredential]) { $user = $s.UserName; $pw = $s.GetNetworkCredential().Password }",
+          "elseif ($s -is [securestring]) { $pw = Plain $s }",
+          "elseif ($s -is [hashtable]) {",
+          "  foreach ($k in 'UserName','Username','User') { if ($s.ContainsKey($k)) { $user = [string]$s[$k] } }",
+          "  foreach ($k in 'Password','Secret') { if ($s.ContainsKey($k)) { $v = $s[$k]; $pw = if ($v -is [securestring]) { Plain $v } else { [string]$v } } }",
+          "}",
+          "else { $pw = [string]$s }",
+          "ConvertTo-Json -InputObject ([pscustomobject]@{ username = $user; password = $pw }) -Compress"
+        ]
+      }
+    },
+
+    "keepass": {
+      "name": "KeePass",
+      "icon": "key-square",
+      "description": {
+        "en": "KeePass / KeePassXC database (.kdbx) - read directly, KeePass itself is not required.",
+        "de": "KeePass-/KeePassXC-Datenbank (.kdbx) - wird direkt gelesen, KeePass selbst ist nicht nötig."
+      },
+      "implementation": "keepass",
+      "requirements": {"python": ["pykeepass>=4.1"]},
+      "fields": [
+        {"key": "database", "type": "path_file", "required": true,
+         "label": {"en": "Database (.kdbx)", "de": "Datenbank (.kdbx)"}},
+        {"key": "key_file", "type": "path_file",
+         "label": {"en": "Key file (optional)", "de": "Schlüsseldatei (optional)"}},
+        {"key": "password", "type": "secret", "auth": true,
+         "label": {"en": "Master password", "de": "Master-Passwort"}}
+      ]
+    },
+
+    "netwrix": {
+      "name": "Netwrix Password Secure",
+      "icon": "shield-check",
+      "description": {
+        "en": "Netwrix Password Secure 9 via the official SDK (PsrApi.dll from the Netwrix customer portal). The scripts below are a template - adjust them to your SDK version if needed.",
+        "de": "Netwrix Password Secure 9 über das offizielle SDK (PsrApi.dll aus dem Netwrix-Kundenportal). Die Skripte unten sind eine Vorlage - bei Bedarf an die SDK-Version anpassen."
+      },
+      "implementation": "powershell",
+      "verified": false,
+      "fields": [
+        {"key": "endpoint", "type": "string", "required": true,
+         "label": {"en": "Endpoint", "de": "Endpunkt"},
+         "placeholder": {"en": "https://webapp/api  or  server:11016", "de": "https://webapp/api  oder  server:11016"}},
+        {"key": "database", "type": "string", "required": true, "label": {"en": "Database", "de": "Datenbank"}},
+        {"key": "sdk_path", "type": "path_dir", "required": true,
+         "label": {"en": "SDK folder (PsrApi.dll)", "de": "SDK-Ordner (PsrApi.dll)"}},
+        {"key": "username", "type": "string", "auth": true, "label": {"en": "User name", "de": "Benutzername"}},
+        {"key": "password", "type": "secret", "auth": true, "label": {"en": "Password", "de": "Passwort"}}
+      ],
+      "auth_error_patterns": ["(?i)password", "(?i)login", "(?i)authenticat", "(?i)credential", "(?i)Anmeld", "(?i)Kennwort"],
+      "scripts": {
+        "prologue": [
+          "$ErrorActionPreference = 'Stop'",
+          "$p = [Console]::In.ReadToEnd() | ConvertFrom-Json",
+          "Get-ChildItem -Path $p.sdk_path -Filter *.dll | ForEach-Object { try { Add-Type -Path $_.FullName } catch { } }",
+          "function Await($task) { $task.GetAwaiter().GetResult() }",
+          "$api = New-Object PsrApi.PsrApi($p.endpoint)",
+          "# TODO (unverifiziert): Login-Methode je nach SDK-Version",
+          "Await ($api.AuthenticationManagerV2.Login($p.database, $p.username, $p.password)) | Out-Null"
+        ],
+        "search": [
+          "# TODO (unverifiziert): Container-Suche über Listenfilter",
+          "$type = [PsrApi.Data.Enums.PsrContainerType]::Password",
+          "$filter = Await ($api.ContainerManager.GetContainerListFilter($type, $true))",
+          "$content = $filter.FilterGroups | Where-Object { $_ -is [PsrApi.Data.PsrListFilterGroupContent] } | Select-Object -First 1",
+          "if ($content) { $o = New-Object PsrApi.Data.PsrListFilterObjectContent; $o.Search = $p.query; $content.SearchList.Add($o) }",
+          "$list = Await ($api.ContainerManager.GetContainerList($type, $filter))",
+          "$r = $list | Select-Object -First ([int]$p.max) | ForEach-Object {",
+          "  $user = ($_.Items | Where-Object { $_.ContainerItemType -eq 'ContainerItemUserName' } | Select-Object -First 1).Value",
+          "  [pscustomobject]@{ id = [string]$_.Id; name = $_.Info.ContainerInfo; username = [string]$user; detail = 'Netwrix' }",
+          "}",
+          "ConvertTo-Json -InputObject @($r) -Compress"
+        ],
+        "get": [
+          "# TODO (unverifiziert): Passwortfeld entschlüsseln",
+          "$c = Await ($api.ContainerManager.GetContainer([guid]$p.id))",
+          "$user = ($c.Items | Where-Object { $_.ContainerItemType -eq 'ContainerItemUserName' } | Select-Object -First 1).Value",
+          "$pwItem = $c.Items | Where-Object { $_.ContainerItemType -eq 'ContainerItemPassword' } | Select-Object -First 1",
+          "$pw = Await ($api.ContainerManager.DecryptContainerItem($pwItem, 'OmniWrench'))",
+          "ConvertTo-Json -InputObject ([pscustomobject]@{ username = [string]$user; password = [string]$pw }) -Compress"
+        ]
+      }
+    }
+  }
+}

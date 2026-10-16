@@ -122,6 +122,12 @@ def stylesheet(c: dict[str, str]) -> str:
     QLabel#UpdateDot {{ background: {c['warning']}; border-radius: 5px; }}
     #DetailsPanel {{ background: {c['surface']}; border-left: 1px solid {c['border']}; }}
     #DetailsPanel QScrollArea, #DetailsContent {{ background: {c['surface']}; }}
+    #IconGrid {{ background: {c['bg']}; border: none; }}
+    #IconGrid::item {{ border-radius: 10px; padding: 6px; color: {c['muted']}; }}
+    #IconGrid::item:hover {{ background: {c['surface']}; color: {c['text']}; }}
+    #IconGrid::item:selected {{ background: {c['selection']}; color: {c['text']}; }}
+    /* Vorschau auf hellem Grund: so sehen exportierte Symbole in Visio/Word aus */
+    QLabel#IconPreview {{ background: #f4f5f7; border: 1px solid {c['border']}; border-radius: 14px; }}
     QPushButton#FilterChip {{ background: {c['selection']}; border: 1px solid {c['accent']}; border-radius: 13px;
                               padding: 3px 12px; }}
     QPushButton[active="true"] {{ border-color: {c['accent']}; color: {c['accent']}; }}

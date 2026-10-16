@@ -23,8 +23,11 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
   net.py                      urllib + truststore SSL, github_token header
   i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language
   icons.py                    Lucide library (names, svg), resolve(icon, icon_text, name, dir, data) -> IconSpec
-  credentials.py              Credential, CredentialProvider, LocalProvider (vault "app:credentials"),
-                              CredentialManager (providers list, all(), resolve(ref)), generate_password; init()/manager()
+  credentials.py              Credential, AuthField, AuthenticationRequired, CredentialProvider (search/get_secret/
+                              auth_fields/set_auth/close), LocalProvider (vault "app:credentials"), CredentialManager
+                              (register/unregister[_owner], search -> SearchResult(items, errors, auth_needed),
+                              resolve(ref) w/ auth_handler retry + session cache, clear_session), normalize_value,
+                              resolve_item, generate_password; init()/manager()
   settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes)
 omniwrench/ui/
   main_window.py              QtAds dock manager; home/store docks; open_tool/close_tool/reload_tool_tabs;
@@ -34,8 +37,9 @@ omniwrench/ui/
   sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
   settings_dialogs.py         _Field/build_settings_form (schema -> widgets, translated via tool locale),
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
-  credentials.py              PasswordEdit, CredentialEditDialog, PasswordManagerWidget/Dialog,
-                              CredentialPickerDialog, pick_credential, CredentialField (ref linking)
+  credentials.py              PasswordEdit, CredentialEditDialog, PasswordManagerWidget/Dialog, ProviderLoginDialog,
+                              install_auth_handler, CredentialPickerDialog (async multi-provider), pick_credential,
+                              CredentialField (multi-entry dropdown, settings binding, resolve())
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
   widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog
@@ -43,7 +47,9 @@ omniwrench/ui/
   workers.py                  run_async (QThreadPool, signals)
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
-tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup)
+tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
+                              password_manager_manager (sec.password-manager-manager: connector_types.json,
+                              connectors.py, tool.py), icon_store (gfx.icon-store: export.py, tool.py)
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, check_locales, update_icons
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
@@ -51,7 +57,12 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 
 ## Key mechanisms
 - Tool loading: package `omniwrench_tool_<id>` via importlib with submodule_search_locations; `_lib` added to sys.path.
-- Settings value of type credential: `{"username","password"}` or with `"ref": "local:<id>"` (linked). get_credential resolves ref.
+- Settings value of type credential: `{"items": [...], "selected": i}`; items hold `ref` ("<provider>:<id>") or manual
+  username/password. get_credential resolves the selected item (session cache for external providers).
+- Tool hooks: manifest.hooks {"startup": "module:func"} -> ToolManager.run_hooks("startup") (app.py after login) and
+  run_hook after install; providers registered via ctx.register_credential_provider are released on update/uninstall.
+- PMM connector config: tool setting "connectors" (non-secret), vault ctx.secrets "conn:<id>" (secret fields, only if
+  save_auth), otherwise module-level _session_auth (memory).
 - Tool language: reserved setting key `_language`; change -> MainWindow.reload_tool_tabs (new instance).
 - Layout persistence: layout.json (geometry, QtAds state, open tool dock names `tool:<id>:<n>`).
 - Store index entries = tool.json + download_url + sha256 + translations (+ icon_data for custom image icons).

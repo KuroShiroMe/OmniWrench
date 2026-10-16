@@ -1,11 +1,12 @@
 {
-  "_meta": {"name": "German", "native": "Deutsch"},
-
+  "_meta": {
+    "name": "German",
+    "native": "Deutsch"
+  },
   "tool.name": "AD Benutzerabfrage",
   "tool.description": "Benutzer im Active Directory suchen und Details anzeigen.",
   "tool.long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
   "tool.category": "MS Server Tools/Active Directory",
-
   "settings.group.Connection": "Verbindung",
   "settings.group.Login": "Anmeldung",
   "settings.server.label": "Domänencontroller / Domäne",
@@ -15,13 +16,12 @@
   "settings.credential.label": "Anmeldedaten",
   "settings.credential.description": "Wird verschlüsselt im Tresor gespeichert.",
   "settings.max_results.label": "Max. Ergebnisse",
-
   "ui.search_placeholder": "Name, Anmeldename oder E-Mail …",
   "ui.search": "Suchen",
   "ui.settings": "Einstellungen",
   "ui.searching": "Suche läuft …",
   "ui.found": "{count} Benutzer gefunden",
-  "ui.no_credential": "Abweichende Anmeldedaten aktiviert, aber nicht hinterlegt (⚙).",
+  "ui.no_credential": "Abweichende Anmeldedaten aktiviert, aber keine ausgewählt oder Abruf nicht möglich.",
   "ui.error": "Fehler: {error}",
   "ui.yes": "Ja",
   "ui.no": "Nein",
@@ -32,10 +32,10 @@
   "col.LockedOut": "Gesperrt",
   "col.LastLogonDate": "Letzte Anmeldung",
   "col.mail": "E-Mail",
-
   "install.checking": "Prüfe ActiveDirectory-Modul …",
   "install.found": "ActiveDirectory-Modul gefunden.",
   "install.not_found": "ActiveDirectory-Modul noch nicht verfügbar.",
   "install.missing": "PowerShell-Modul 'ActiveDirectory' (RSAT: Active Directory-Tools)",
-  "install.keep_rsat": "RSAT-Tools bleiben installiert."
+  "install.keep_rsat": "RSAT-Tools bleiben installiert.",
+  "ui.use_credential": "Abweichende Anmeldedaten:"
 }

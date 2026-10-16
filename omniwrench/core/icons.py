@@ -49,6 +49,31 @@ def library_svg(name: str) -> bytes | None:
     return path.read_bytes() if path else None
 
 
+@lru_cache(maxsize=1)
+def library_meta() -> dict:
+    """Schlagwörter/Kategorien der Bibliothek (meta.json, erzeugt von scripts/update_icons.py)."""
+    path = LIBRARY_DIR / "meta.json"
+    if not path.exists():
+        return {"categories": {}, "icons": {}, "version": "", "license": "ISC", "source": "https://lucide.dev"}
+    import json
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def library_info(name: str) -> dict:
+    """{"tags": [...], "categories": [...]} eines Bibliotheks-Symbols."""
+    return library_meta()["icons"].get(name, {"tags": [], "categories": []})
+
+
+def library_categories() -> dict[str, str]:
+    """Kategorie-ID -> Anzeigename."""
+    return {k: v.get("title", k) for k, v in library_meta()["categories"].items()}
+
+
+def library_version() -> str:
+    path = LIBRARY_DIR / "VERSION"
+    return path.read_text(encoding="utf-8").strip() if path.exists() else library_meta().get("version", "")
+
+
 def initials(name: str) -> str:
     words = [w for w in name.replace("-", " ").replace("_", " ").split() if w]
     if len(words) >= 2:

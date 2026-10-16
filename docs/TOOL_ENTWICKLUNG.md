@@ -39,6 +39,7 @@ falls eine Übersetzung fehlt.
 | `platforms` | | Standard `["windows"]` |
 | `tags` | | Suchbegriffe |
 | `single_instance` | | `true` = nur ein Tab gleichzeitig |
+| `hooks` | | Einstiegspunkte ohne geöffneten Tab, z. B. `{"startup": "modul:funktion"}` (siehe [Eigene Passwortmanager-Anbieter](#eigene-passwortmanager-anbieter)) |
 | `requirements` | | Voraussetzungen, siehe unten |
 
 ### Symbole
@@ -181,22 +182,71 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 
 ### Zugangsdaten und Passwortmanager
 
-OmniWrench hat einen eingebauten Passwortmanager (*Extras › Passwortmanager*). Tools greifen so darauf zu:
+OmniWrench hat einen eingebauten Passwortmanager (*Extras › Passwortmanager*). Mit dem Tool
+**Password Manager Manager** kommen externe Manager dazu (SecretManagement, KeePass, Netwrix …).
+Die Auswahl „Aus Passwortmanager“ durchsucht dann alle Manager gleichzeitig.
 
-* **Einstellung vom Typ `credential`:** Der Einstellungsdialog zeigt automatisch Benutzer, Passwort und einen
-  Schlüssel-Button. Wird ein Eintrag übernommen, bleibt er **verknüpft**: Ändert sich das Passwort im Manager,
-  liefert `self.context.get_credential("key")` automatisch das neue.
-* **Eigene Anmeldemaske im Tool:** fertiges Feld mit Schlüssel-Button.
+Grundregeln:
+* In Einstellungen werden **nur Verweise** gespeichert (`{"name", "username", "ref"}`), nie Passwörter externer Manager.
+* Das Passwort wird erst beim Gebrauch abgerufen, **einmal pro Sitzung**, und nur im Speicher gehalten
+  (beim Sperren gelöscht).
+* Braucht ein Manager neue Anmeldedaten (z. B. geändertes Passwort), fragt OmniWrench selbst nach – ohne Fehlermeldung.
+* Ein Feld kann **mehrere** Zugangsdaten enthalten; der Benutzer wählt per Auswahlliste.
+
+So nutzt du das im Tool:
+
+* **Einstellung vom Typ `credential`** – der Einstellungsdialog zeigt automatisch die Auswahlliste mit
+  Buttons 🔑 (aus Manager), + (manuell), 🗑 (entfernen). Im Code:
 
   ```python
-  from omniwrench.sdk import CredentialField, pick_credential
-
-  self.login = CredentialField()                 # Benutzer + Passwort + 🔑
-  layout.addWidget(self.login)
-  user = self.login.value()["username"]
-
-  creds = pick_credential(parent_widget)         # nur der Auswahldialog -> (user, pw) oder None
+  user, password = self.context.get_credential("credential")   # gewählter Eintrag, Abruf erst hier
+  entries = self.context.get_credentials("credential")          # alle Einträge (ohne Passwörter)
   ```
+
+* **Auswahlliste direkt in der Tool-Oberfläche** (gebunden an dieselbe Einstellung, speichert selbst):
+
+  ```python
+  from omniwrench.sdk import CredentialField
+
+  self.login = CredentialField(settings=self.context.settings, key="credential")
+  layout.addWidget(self.login)
+  ...
+  creds = self.login.resolve()     # (user, password) oder None - erst jetzt wird abgerufen
+  ```
+
+* **Nur der Suchdialog:** `pick_credential(parent)` → `(user, password)` oder `None`.
+
+Beispiel: [ad_user_lookup/tool.py](../tools/ad_user_lookup/tool.py).
+
+### Eigene Passwortmanager-Anbieter
+
+Ein Tool kann weitere Quellen bereitstellen. Dazu implementiert es `CredentialProvider` und registriert ihn
+in einem **Startup-Hook** (läuft nach dem Anmelden und nach der Installation, auch ohne geöffneten Tab):
+
+```json
+"hooks": {"startup": "connectors:register_all"}
+```
+
+```python
+from omniwrench.sdk import AuthenticationRequired, AuthField, Credential, CredentialProvider
+
+class MyProvider(CredentialProvider):
+    id, name = "my-provider", "Mein Manager"
+    def search(self, query):            # -> [Credential(id, name, username)]  (ohne Passwort)
+        ...
+    def get_secret(self, cred_id):      # -> Credential(..., password=...)
+        ...                             # bei falschen Anmeldedaten: raise AuthenticationRequired(self)
+    def auth_fields(self):              # wonach bei AuthenticationRequired gefragt wird
+        return [AuthField("password", "Passwort", secret=True)]
+    def set_auth(self, values, save):   # neue Anmeldedaten übernehmen, save=True -> dauerhaft speichern
+        ...
+
+def register_all(ctx):
+    ctx.register_credential_provider(MyProvider())   # wird bei Deinstallation automatisch entfernt
+```
+
+Vollständiges Beispiel: [password_manager_manager/connectors.py](../tools/password_manager_manager/connectors.py)
+mit den JSON-Definitionen in `connector_types.json`.
 
 Lang laufende Aufgaben (AD-Abfragen, Netzwerk-Scans) gehören mit `run_async(fn, on_done, on_error)` in einen
 Hintergrund-Thread. Die Callbacks laufen wieder im GUI-Thread.

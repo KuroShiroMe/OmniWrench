@@ -89,6 +89,9 @@ def main() -> int:
     from omniwrench.ui.main_window import MainWindow
 
     manager = ToolManager(vault)
+    from omniwrench.ui.credentials import install_auth_handler
+    install_auth_handler()            # Rückfrage, wenn ein Passwortmanager neue Zugangsdaten braucht
+    manager.run_hooks("startup")      # z. B. Konnektoren des Password Manager Manager registrieren
     windows: list[MainWindow] = []
 
     def open_window(restart: bool = False) -> None:

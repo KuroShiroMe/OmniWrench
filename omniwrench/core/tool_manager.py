@@ -105,8 +105,8 @@ class ToolManager(QObject):
         return self.tools.get(tool_id)
 
     # --------------------------------------------------------------- Laden
-    def _import_entry(self, tool: InstalledTool) -> type[ToolBase]:
-        module_name, _, class_name = tool.manifest.entry.partition(":")
+    def _import_module(self, tool: InstalledTool, module_name: str) -> ModuleType:
+        """Importiert ein Modul aus dem Tool-Paket (Paketname omniwrench_tool_<id>)."""
         pkg = _module_prefix(tool.id)
 
         lib = tool.path / "_lib"
@@ -123,11 +123,42 @@ class ToolManager(QObject):
             if (tool.path / "__init__.py").exists() and spec and spec.loader:
                 spec.loader.exec_module(package)
 
-        module = importlib.import_module(f"{pkg}.{module_name}")
+        return importlib.import_module(f"{pkg}.{module_name}")
+
+    def _import_entry(self, tool: InstalledTool) -> type[ToolBase]:
+        module_name, _, class_name = tool.manifest.entry.partition(":")
+        module = self._import_module(tool, module_name)
         cls = getattr(module, class_name or "Tool", None)
         if not (isinstance(cls, type) and issubclass(cls, ToolBase)):
             raise ManifestError(tr("err.entry_not_toolbase", entry=tool.manifest.entry))
         return cls
+
+    # -------------------------------------------------------------- Hooks
+    def run_hooks(self, name: str) -> None:
+        """Ruft den Hook <name> (z. B. "startup") aller installierten Tools auf."""
+        for tool_id in list(self.tools):
+            self.run_hook(tool_id, name)
+
+    def run_hook(self, tool_id: str, name: str) -> None:
+        tool = self.tools.get(tool_id)
+        target = tool.manifest.hooks.get(name) if tool else None
+        if not target:
+            return
+        module_name, _, func_name = target.partition(":")
+        try:
+            func = getattr(self._import_module(tool, module_name), func_name)
+            tool.data_dir.mkdir(parents=True, exist_ok=True)
+            func(ToolContext(tool.manifest, tool.path, tool.data_dir, tool.settings, self.vault))
+        except Exception:  # noqa: BLE001 - ein defektes Tool darf den Start nicht verhindern
+            log.exception("Hook %s von %s fehlgeschlagen", name, tool_id)
+
+    def _release_tool(self, tool_id: str) -> None:
+        """Vom Tool registrierte Passwortmanager-Anbieter abmelden (vor Update/Deinstallation)."""
+        try:
+            from . import credentials
+            credentials.manager().unregister_owner(tool_id)
+        except RuntimeError:
+            pass  # Passwortmanager noch nicht initialisiert (z. B. in Skripten)
 
     def create_instance(self, tool_id: str, notify: Callable[[str], None] | None = None,
                         open_settings: Callable[[], None] | None = None) -> ToolBase:
@@ -185,6 +216,7 @@ class ToolManager(QObject):
             target.rename(backup)
             progress(tr("prog.backup", version=old_version))
 
+        self._release_tool(manifest.id)
         self._unload_modules(manifest.id)
         try:
             shutil.copytree(src, target, ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "_lib"))
@@ -215,6 +247,7 @@ class ToolManager(QObject):
         _rmtree(backup)
         progress(tr("prog.installed", name=manifest.display_name, version=manifest.version))
         self.refresh()
+        self.run_hook(manifest.id, "startup")
         return manifest
 
     def _install_context(self, manifest: ToolManifest, tool_dir: Path, settings: ToolSettingsStore,
@@ -276,6 +309,7 @@ class ToolManager(QObject):
         tool = self.tools.get(tool_id)
         if not tool:
             return
+        self._release_tool(tool_id)
         try:
             installer = self._load_installer(tool_id, tool.path)
             if hasattr(installer, "uninstall"):

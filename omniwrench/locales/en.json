@@ -283,5 +283,18 @@
   "pwm.use": "Use",
   "pwm.cancel": "Cancel",
   "pwm.empty": "No credentials stored yet. Create one with 'New …'.",
-  "pwm.linked": "Linked to: {name}"
+  "pwm.linked": "Linked to: {name}",
+  "pwm.add_manual": "Enter credentials manually",
+  "pwm.also_store": "Also save in the OmniWrench password manager",
+  "pwm.from_source": "From: {source}",
+  "pwm.login_link": "Log in to {name}",
+  "pwm.login_save": "Save login data (encrypted)",
+  "pwm.login_text": "{name} needs your login data (e.g. because the password has changed).",
+  "pwm.login_title": "Log in: {name}",
+  "pwm.manual_entry": "Entered manually",
+  "pwm.none_selected": "– no credentials stored –",
+  "pwm.remove_entry": "Remove from list",
+  "pwm.search_all": "Search all password managers …",
+  "pwm.searching": "Searching connected password managers …",
+  "pwm.source": "Source"
 }

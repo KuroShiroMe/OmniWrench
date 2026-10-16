@@ -1,0 +1,17 @@
+{
+  "id": "gfx.icon-store",
+  "name": "Icon Store",
+  "version": "1.0.0",
+  "description": "Browse icons and pictograms and save them in many formats and sizes - e.g. for Visio diagrams.",
+  "long_description": "Searchable grid of all icons available in OmniWrench (Lucide, ISC licence - free for commercial use). Filter by category, see tags and the name to use in tool.json, adjust colour, stroke width and background, and save as SVG, PNG, ICO, PDF or JPG in several sizes at once - or copy the image straight into Visio, Word or PowerPoint.",
+  "author": "DarkMatter",
+  "category": "Design/Icons",
+  "icon": "images",
+  "color": "#ec4899",
+  "entry": "tool:IconStore",
+  "min_app_version": "0.4.0",
+  "platforms": ["windows"],
+  "tags": ["icons", "symbole", "visio", "svg", "png", "pictogram", "piktogramm"],
+  "single_instance": false,
+  "requirements": {}
+}

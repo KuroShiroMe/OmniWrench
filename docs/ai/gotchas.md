@@ -19,7 +19,13 @@
 - QMenu.addAction(icon, text, shortcut, slot) overload unreliable → addAction(text, shortcut, slot) then setIcon.
 - make_button(on_click=method) passes `checked` bool → methods with optional params must type-check (show_home uses isinstance tuple).
 - ToolTile/FitLabel: FitLabel paints itself (custom widget), not QLabel.
+- QListView IconMode shows only ONE text line (wordWrap ignored) -> Icon Store uses a custom QStyledItemDelegate.
+- ToolSettingsStore.update compares get(key) == value: mutating the SAME dict object and setting again is a no-op
+  (always pass fresh dicts).
+- Tool `check()` runs before `_lib` is on sys.path -> add ctx.tool_dir/"_lib" to sys.path inside check (PMM install.py).
+- Bash heredocs containing many quotes break the Bash tool -> write a script file to the scratchpad and run it.
 
 ## Python
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.
+- Netwrix Password Secure: no public REST API; only C#/JS SDK (PsrApi) from customer portal.
 - `i18n.load_locales` is lru_cached per directory → `i18n.clear_cache()` after installs (tool_manager does).

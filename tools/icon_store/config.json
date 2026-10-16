@@ -1,0 +1,10 @@
+{
+  "settings": [
+    {"key": "default_color", "type": "string", "label": "Default icon colour", "default": "#1f2937",
+     "placeholder": "#1f2937"},
+    {"key": "default_format", "type": "choice", "label": "Default format", "default": "png",
+     "options": [{"value": "png", "label": "PNG"}, {"value": "svg", "label": "SVG"}, {"value": "ico", "label": "ICO"},
+                 {"value": "pdf", "label": "PDF"}, {"value": "jpg", "label": "JPG"}]},
+    {"key": "export_dir", "type": "path_dir", "label": "Export folder", "default": ""}
+  ]
+}

@@ -283,5 +283,18 @@
   "pwm.use": "Übernehmen",
   "pwm.cancel": "Abbrechen",
   "pwm.empty": "Noch keine Zugangsdaten gespeichert. Mit 'Neu …' anlegen.",
-  "pwm.linked": "Verknüpft mit: {name}"
+  "pwm.linked": "Verknüpft mit: {name}",
+  "pwm.add_manual": "Zugangsdaten manuell eingeben",
+  "pwm.also_store": "Auch im OmniWrench-Passwortmanager speichern",
+  "pwm.from_source": "Aus: {source}",
+  "pwm.login_link": "Bei {name} anmelden",
+  "pwm.login_save": "Anmeldedaten speichern (verschlüsselt)",
+  "pwm.login_text": "{name} braucht deine Anmeldedaten (z. B. weil sich das Passwort geändert hat).",
+  "pwm.login_title": "Anmelden: {name}",
+  "pwm.manual_entry": "Manuell hinterlegt",
+  "pwm.none_selected": "– keine Zugangsdaten hinterlegt –",
+  "pwm.remove_entry": "Aus der Liste entfernen",
+  "pwm.search_all": "Alle Passwortmanager durchsuchen …",
+  "pwm.searching": "Durchsuche verbundene Passwortmanager …",
+  "pwm.source": "Quelle"
 }

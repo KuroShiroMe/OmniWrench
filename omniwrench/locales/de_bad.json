@@ -283,5 +283,18 @@
   "pwm.use": "Nemme",
   "pwm.cancel": "Loss es",
   "pwm.empty": "No kei Zugangsdate do. Mit 'Nei …' aalege.",
-  "pwm.linked": "Verbandlet mit: {name}"
+  "pwm.linked": "Verbandlet mit: {name}",
+  "pwm.add_manual": "Zugangsdate vu Hand iitrage",
+  "pwm.also_store": "Au im OmniWrench-Passwort-Kischtle uffhebe",
+  "pwm.from_source": "Vu: {source}",
+  "pwm.login_link": "Bi {name} aamelde",
+  "pwm.login_save": "Aameldedate uffhebe (verschlüsselt)",
+  "pwm.login_text": "{name} will dini Aameldedate (villicht hesch s Passwort gändert).",
+  "pwm.login_title": "Aamelde: {name}",
+  "pwm.manual_entry": "Vu Hand iitrage",
+  "pwm.none_selected": "– no kei Zugangsdate –",
+  "pwm.remove_entry": "Us de Lischt nemme",
+  "pwm.search_all": "Alli Passwort-Kischtle durchsueche …",
+  "pwm.searching": "Durchsuech d verbundene Kischtle …",
+  "pwm.source": "Kummt vu"
 }
