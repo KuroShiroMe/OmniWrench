@@ -1,5 +1,8 @@
 # Baut OmniWrench.exe (PyInstaller) unter Windows bei jedem PR, startet sie testweise und stellt
 # den Programmordner als Artefakt bereit.
+# Signiert wird nur bei Tags v* und manuellen Läufen, und nur wenn die Repository-Variable
+# SIGN_METHOD gesetzt ist (azure | signpath | certificate, siehe docs/EXE_SIGNIEREN.md).
+# Ohne SIGN_METHOD bleibt die EXE unsigniert, der Build läuft trotzdem durch.
 name: EXE-Build
 
 on:
@@ -27,7 +30,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt pyinstaller
       - name: EXE bauen
-        run: python scripts/build_exe.py --zip
+        run: python scripts/build_exe.py
       - name: EXE prüfen (eingebautes pip)
         shell: pwsh
         run: |
@@ -44,6 +47,81 @@ jobs:
           if ($p.HasExited) { throw "OmniWrench.exe hat sich nach dem Start beendet (Exitcode $($p.ExitCode))" }
           Stop-Process -Id $p.Id -Force
           if ((Test-Path $log) -and (Select-String -Path $log -Pattern ' ERROR ' -Quiet)) { throw "Fehler im Log" }
+      - name: Signierung festlegen
+        id: sign
+        shell: pwsh
+        env:
+          METHOD: ${{ vars.SIGN_METHOD }}
+          RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+        run: |
+          $m = if ($env:RELEASE -eq 'true') { "$env:METHOD".Trim().ToLower() } else { '' }
+          if ($m -and $m -notin 'azure', 'signpath', 'certificate') { throw "SIGN_METHOD '$m' unbekannt (azure, signpath, certificate)" }
+          if ($m) { "EXE wird signiert: $m" } else { 'EXE bleibt unsigniert (kein Tag/manueller Lauf oder SIGN_METHOD nicht gesetzt)' }
+          "method=$m" >> $env:GITHUB_OUTPUT
+
+      # Azure Artifact Signing (früher Trusted Signing)
+      - name: Signieren (Azure Artifact Signing)
+        if: steps.sign.outputs.method == 'azure'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
+          files: ${{ github.workspace }}\dist\OmniWrench\OmniWrench.exe
+          description: OmniWrench
+          description-url: https://github.com/Steffi-Tech/OmniWrench
+
+      # SignPath (für Open-Source-Projekte kostenlos über die SignPath Foundation)
+      - name: Unsignierten Programmordner für SignPath hochladen
+        id: unsigned
+        if: steps.sign.outputs.method == 'signpath'
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniWrench-unsigned
+          path: dist/OmniWrench
+          if-no-files-found: error
+      - name: Signieren (SignPath)
+        if: steps.sign.outputs.method == 'signpath'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          output-artifact-directory: dist/OmniWrench-signed
+      - name: Signierten Programmordner übernehmen
+        if: steps.sign.outputs.method == 'signpath'
+        shell: pwsh
+        run: |
+          Remove-Item dist\OmniWrench -Recurse -Force
+          Move-Item dist\OmniWrench-signed dist\OmniWrench
+
+      # Eigenes Zertifikat als PFX (z. B. Testzertifikat oder exportierbares Zertifikat)
+      - name: Signieren (PFX-Zertifikat)
+        if: steps.sign.outputs.method == 'certificate'
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+          SIGN_TIMESTAMP_URL: ${{ vars.SIGN_TIMESTAMP_URL }}
+        run: python scripts/sign_exe.py
+
+      - name: Signatur prüfen
+        shell: pwsh
+        env:
+          METHOD: ${{ steps.sign.outputs.method }}
+        run: |
+          $sig = Get-AuthenticodeSignature dist\OmniWrench\OmniWrench.exe
+          "Signatur: $($sig.Status) $($sig.SignerCertificate.Subject)"
+          if ($sig.TimeStamperCertificate) { "Zeitstempel: $($sig.TimeStamperCertificate.Subject)" }
+          if ($env:METHOD -and $sig.Status -eq 'NotSigned') { throw 'OmniWrench.exe ist nicht signiert' }
+          if ($env:METHOD -and $sig.Status -ne 'Valid') { "::warning::Signatur nicht gültig: $($sig.StatusMessage)" }
+      - name: ZIP packen
+        run: python scripts/build_exe.py --no-build --zip
       - uses: actions/upload-artifact@v4
         with:
           name: OmniWrench-win64
