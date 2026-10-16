@@ -137,3 +137,5 @@
 - Stef asked for copy-paste values: EXE_SIGNIEREN.md now has every SignPath form answer (English) in code blocks,
   SignPath/GitHub settings after approval (slugs omniwrench / release-signing / omniwrench-exe); README privacy
   statement got its own heading (#datenschutz) for the privacy URL.
+- v0.6.0 released by CI (tag pushed by user). Assets came out win64-first -> workflow now uploads source zip first,
+  win64 separately; user asked to re-upload the win64 asset of v0.6.0 so the source zip is first.

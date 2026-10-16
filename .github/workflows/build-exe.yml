@@ -142,6 +142,9 @@ jobs:
           python scripts/build_release.py
           $notes = ".github/release-notes/$tag.md"
           $noteArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
-          # Quellpaket zuerst: ältere Programmversionen nehmen das erste passende ZIP
-          gh release create $tag "dist/OmniWrench-$version.zip" "dist/OmniWrench-$version-win64.zip" `
-            --title "OmniWrench $version" @noteArgs
+          # Quellpaket zuerst: ältere Programmversionen nehmen das erste passende ZIP.
+          # gh lädt mehrere Dateien parallel hoch (Reihenfolge zufällig), daher getrennt.
+          gh release create $tag "dist/OmniWrench-$version.zip" --title "OmniWrench $version" @noteArgs
+          if ($LASTEXITCODE -ne 0) { throw "gh release create fehlgeschlagen" }
+          gh release upload $tag "dist/OmniWrench-$version-win64.zip"
+          if ($LASTEXITCODE -ne 0) { throw "gh release upload fehlgeschlagen" }
