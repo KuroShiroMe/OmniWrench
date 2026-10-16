@@ -21,7 +21,8 @@ from omniwrench.core import credentials
 from omniwrench.core.credentials import Credential, CredentialProvider
 from omniwrench.core.i18n import tr
 
-from .widgets import label, library_icon, make_button
+from .scaling import fit_min_width, fit_to_screen
+from .widgets import ResponsiveRow, label, library_icon, make_button
 from .workers import run_async
 
 CLIPBOARD_CLEAR_SECONDS = 30
@@ -101,7 +102,7 @@ class CredentialEditDialog(QDialog):
         self.cred = cred
         self.store = store
         self.setWindowTitle(tr("pwm.edit_title") if cred else tr("pwm.new_title"))
-        self.setMinimumWidth(440)
+        fit_min_width(self, 440)
         lay = QVBoxLayout(self)
         form = QFormLayout()
         self.name = QLineEdit(cred.name if cred else "")
@@ -154,14 +155,14 @@ class PasswordManagerWidget(QWidget):
         self.table = _table([tr("pwm.name"), tr("pwm.username")])
         self.table.doubleClicked.connect(lambda *_: self._edit())
         lay.addWidget(self.table, 1)
-        row = QHBoxLayout()
-        row.addWidget(make_button(tr("common.add"), primary=True, on_click=self._add))
-        row.addWidget(make_button(tr("pwm.edit"), on_click=self._edit))
-        row.addWidget(make_button(tr("common.remove"), danger=True, on_click=self._delete))
-        row.addStretch()
-        row.addWidget(make_button(tr("pwm.copy_user"), on_click=lambda: self._copy("username")))
-        row.addWidget(make_button(tr("pwm.copy_password"), on_click=lambda: self._copy("password")))
-        lay.addLayout(row)
+        edit, copy = QHBoxLayout(), QHBoxLayout()
+        edit.addWidget(make_button(tr("common.add"), primary=True, on_click=self._add))
+        edit.addWidget(make_button(tr("pwm.edit"), on_click=self._edit))
+        edit.addWidget(make_button(tr("common.remove"), danger=True, on_click=self._delete))
+        edit.addStretch()
+        copy.addWidget(make_button(tr("pwm.copy_user"), on_click=lambda: self._copy("username")))
+        copy.addWidget(make_button(tr("pwm.copy_password"), on_click=lambda: self._copy("password")))
+        lay.addWidget(ResponsiveRow(edit, copy))  # schmal: Kopier-Buttons in eigener Zeile
         self.refresh()
 
     def refresh(self) -> None:
@@ -206,7 +207,7 @@ class PasswordManagerDialog(QDialog):
     def __init__(self, parent=None, notify=None):
         super().__init__(parent)
         self.setWindowTitle(tr("pwm.title"))
-        self.resize(640, 460)
+        fit_to_screen(self, 640, 460)
         lay = QVBoxLayout(self)
         lay.addWidget(PasswordManagerWidget(self, notify), 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
@@ -222,7 +223,7 @@ class ProviderLoginDialog(QDialog):
         super().__init__(parent)
         self.provider = provider
         self.setWindowTitle(tr("pwm.login_title", name=provider.name))
-        self.setMinimumWidth(420)
+        fit_min_width(self, 420)
         lay = QVBoxLayout(self)
         lay.addWidget(label(tr("pwm.login_text", name=provider.name), wrap=True))
         form = QFormLayout()
@@ -264,7 +265,7 @@ class CredentialPickerDialog(QDialog):
         super().__init__(parent)
         self.selected: Credential | None = None
         self.setWindowTitle(tr("pwm.pick_title"))
-        self.resize(640, 420)
+        fit_to_screen(self, 640, 420)
         lay = QVBoxLayout(self)
         self.search = QLineEdit(placeholderText="🔍  " + tr("pwm.search_all"))
         self.search.setClearButtonEnabled(True)

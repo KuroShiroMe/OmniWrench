@@ -7,7 +7,7 @@ import ipaddress
 from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, QObject, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFileDialog, QFormLayout, QGroupBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit, QPushButton,
@@ -109,17 +109,34 @@ class SubnetCalculator(ToolBase):
         self.table = QTableWidget(0, 5)
         self.table.setHorizontalHeaderLabels(
             ["#", tr("col.network"), tr("col.first"), tr("col.last"), tr("col.broadcast")])
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)  # Adressen nie abschneiden
+        header.setStretchLastSection(True)
         self.table.verticalHeader().hide()
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         sl.addWidget(self.table)
         splitter.addWidget(split_box)
         splitter.setSizes([380, 620])
         lay.addWidget(splitter, 1)
+        # Schmales Fenster: Netzdetails über der Subnetz-Liste statt daneben
+        self._splitter = splitter
+        root.installEventFilter(self._layout_filter(splitter))
 
         self._net = None
         self._calculate()
         return root
+
+    @staticmethod
+    def _layout_filter(splitter: QSplitter) -> QObject:
+        class _Filter(QObject):
+            def eventFilter(self, obj, event):  # noqa: N802
+                if event.type() == QEvent.Type.Resize:
+                    wide = event.size().width() >= 900
+                    orientation = Qt.Orientation.Horizontal if wide else Qt.Orientation.Vertical
+                    if splitter.orientation() != orientation:
+                        splitter.setOrientation(orientation)
+                return False
+        return _Filter(splitter)
 
     def _calculate(self) -> None:
         while self.details.rowCount():

@@ -42,7 +42,10 @@ omniwrench/ui/
                               CredentialField (multi-entry dropdown, settings binding, resolve())
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
-  widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog
+  widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog,
+                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable
+  scaling.py                  ui_scale -> QT_SCALE_FACTOR (before QApplication), device_pixel_ratio, fit_to_screen,
+                              fit_min_width, window_size, restart_application
   theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly
   workers.py                  run_async (QThreadPool, signals)
 omniwrench/locales/*.json     8 languages, ~280 keys

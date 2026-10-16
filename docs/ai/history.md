@@ -53,3 +53,17 @@
      chat starter prompts for main app + each tool).
    - Tested: all 26 packs downloaded (~118k icons, ~4.5 min), 1217-icon render sample OK; UI screenshots;
      KeePass flow + regressions OK.
+
+## 2026-10-16 — round 9: responsive UI + scaling (thread "Responsive+Skalierung", Claude Code cloud session)
+9. User: whole UI must look as good maximized on 8k as small on 1k; add "Skalierung" option to display settings.
+   - New settings tab "Anzeige" (theme moved there from "Allgemein", + scaling combo 75-300 %, restore layout).
+   - Scaling = `ui_scale` setting -> QT_SCALE_FACTOR set before QApplication (ui/scaling.py); multiplies with
+     Windows scaling. Needs a new process -> dialog offers immediate restart (re-login), else applies next start.
+   - Icons (tool_icon/library_icon) rendered at real device pixel ratio instead of fixed 2x -> sharp at 300 %+.
+   - Responsive: ResponsiveRow (header/buttons wrap below when narrow) for Home/Store headers, details-panel
+     buttons, store cards, password manager buttons; Store cards in ColumnFlowLayout (1-6 columns by width);
+     details panel width 28 % (300-560); main window start size relative to screen; dialogs fit_to_screen /
+     fit_min_width; long requirement ids get zero-width break points (breakable()).
+   - Subnet calculator 1.2.1: splitter switches to vertical below 900 px, table columns size to contents.
+   - SDK: device_pixel_ratio(), fit_to_screen() for tools.
+   - Tested by offscreen renders: 760x560, 1000x640, 1280x720 (100 %) and 2560x1400 logical at 200/300 % (= 8k px).

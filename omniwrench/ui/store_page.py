@@ -13,7 +13,7 @@ from omniwrench.core.i18n import tr
 from omniwrench.core.repository import CatalogEntry
 from omniwrench.core.versioning import is_newer
 
-from .widgets import clear_layout, label, make_button, tool_icon
+from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -33,8 +33,9 @@ class StoreCard(QFrame):
         super().__init__()
         self.setObjectName("ToolCard")
         m = entry.manifest
-        lay = QHBoxLayout(self)
-        lay.setContentsMargins(16, 14, 16, 14)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(16, 14, 16, 14)
+        lay = QHBoxLayout()
         lay.setSpacing(14)
 
         icon = label("")
@@ -52,7 +53,7 @@ class StoreCard(QFrame):
         info.addWidget(label(m.display_long_description, "CardDesc", wrap=True))
         reqs = m.requirements.summary()
         if reqs:
-            info.addWidget(label(tr("store.requirements", items=", ".join(reqs)), "CardMeta", wrap=True))
+            info.addWidget(label(breakable(tr("store.requirements", items=", ".join(reqs))), "CardMeta", wrap=True))
         lay.addLayout(info, 1)
 
         installed = host.manager.get(m.id)
@@ -70,7 +71,9 @@ class StoreCard(QFrame):
         btn.setMinimumWidth(130)
         col.addWidget(btn)
         col.addStretch()
-        lay.addLayout(col)
+        # Schmale Karte: Status und Button rutschen unter die Beschreibung
+        outer.addWidget(ResponsiveRow(lay, col, left_width=300, align=Qt.AlignmentFlag.AlignTop))
+        outer.addStretch()  # Karten einer Zeile sind gleich hoch - Inhalt bleibt oben
 
 
 class StorePage(QWidget):
@@ -81,21 +84,20 @@ class StorePage(QWidget):
         root.setContentsMargins(24, 20, 24, 12)
         root.setSpacing(12)
 
-        header = QHBoxLayout()
         titles = QVBoxLayout()
         titles.addWidget(label(tr("nav.store"), "PageTitle"))
         self.status = label(tr("store.loading"), "PageSubtitle", wrap=True)
         titles.addWidget(self.status)
-        header.addLayout(titles, 1)
+        controls = QHBoxLayout()
         self.search = QLineEdit(placeholderText="🔍  " + tr("store.search"))
         self.search.setClearButtonEnabled(True)
-        self.search.setMinimumWidth(200)
-        self.search.setMaximumWidth(280)
+        self.search.setMinimumWidth(150)
+        self.search.setMaximumWidth(320)
         self.search.textChanged.connect(self._render)
-        header.addWidget(self.search, alignment=Qt.AlignmentFlag.AlignVCenter)
+        controls.addWidget(self.search, 1)
         self.refresh_btn = make_button(tr("store.refresh"), on_click=host.reload_catalog)
-        header.addWidget(self.refresh_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
-        root.addLayout(header)
+        controls.addWidget(self.refresh_btn)
+        root.addWidget(ResponsiveRow(titles, controls))
 
         splitter = QSplitter()
         self.tree = QTreeWidget()
@@ -109,9 +111,16 @@ class StorePage(QWidget):
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         content = QWidget()
         scroll.setWidget(content)
-        self.list = QVBoxLayout(content)
-        self.list.setContentsMargins(12, 0, 4, 0)
-        self.list.setSpacing(10)
+        outer = QVBoxLayout(content)
+        outer.setContentsMargins(12, 0, 4, 0)
+        # Karten in Spalten: schmale Fenster untereinander, große Monitore mehrere nebeneinander
+        holder = QWidget()
+        self.list = ColumnFlowLayout(holder, min_width=520, spacing=10)
+        outer.addWidget(holder)
+        self.empty = label(tr("store.empty"), "Muted")
+        self.empty.hide()
+        outer.addWidget(self.empty)
+        outer.addStretch()
         splitter.addWidget(scroll)
         splitter.setStretchFactor(1, 1)
         splitter.setSizes([220, 800])
@@ -191,6 +200,4 @@ class StorePage(QWidget):
             entries = [e for e in entries if query in _search_text(e)]
         for e in entries:
             self.list.addWidget(StoreCard(e, self.host))
-        if not entries:
-            self.list.addWidget(label(tr("store.empty"), "Muted"))
-        self.list.addStretch()
+        self.empty.setVisible(not entries)

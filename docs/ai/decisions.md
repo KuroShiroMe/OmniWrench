@@ -61,3 +61,11 @@
 - IconForge libraries: only Lucide bundled offline; all others downloaded on demand when selected.
 - Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
 - Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).
+
+## Round 9 decisions (2026-10-16)
+- Display settings live in their own tab "Anzeige" (theme, scaling, restore layout); language/auto-lock stay in "Allgemein".
+- Scaling (my choice): uniform QT_SCALE_FACTOR on top of Windows scaling, choices 75-300 %, effective after restart
+  (Qt can't change it at runtime); restart offered immediately. Chosen over manual font/px scaling because it also
+  scales tools, QtAds and Qt-internal metrics consistently.
+- Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
+  ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().

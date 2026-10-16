@@ -65,6 +65,10 @@ def main() -> int:
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)  # eigenes Taskleisten-Icon
 
+    settings = AppSettings()
+    from omniwrench.ui import scaling  # importiert nur Qt-Module, erzeugt noch keine QApplication
+    scaling.apply_scale_factor(settings.get("ui_scale", 1.0))  # muss vor QApplication(...) passieren
+
     QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
@@ -76,7 +80,6 @@ def main() -> int:
     from omniwrench.ui import theme  # nach QApplication importieren
     from omniwrench.ui.login_dialog import LoginDialog
 
-    settings = AppSettings()
     apply_language(app, settings.get("language", ""))
     theme.apply_theme(app, settings.get("theme", "dark"))
 

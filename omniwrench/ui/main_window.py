@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable
 
 import PySide6QtAds as ads
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QFont, QIcon, QKeySequence
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QFileDialog, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter, QVBoxLayout,
@@ -29,7 +29,7 @@ from omniwrench.core.tool_manager import ToolManager
 from omniwrench.core.vault import Vault
 from omniwrench.sdk import ToolBase
 
-from . import theme
+from . import scaling, theme
 from .home_page import HomePage
 from .login_dialog import LoginDialog
 from .settings_dialogs import AppSettingsDialog, ToolSettingsDialog
@@ -87,7 +87,7 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(f"{APP_NAME} {__version__}")
         self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app.svg")))
-        self.resize(1400, 860)
+        self.resize(scaling.window_size(self))  # Startgröße relativ zum Bildschirm (1k bis 8k)
 
         self._build_dock_manager()
         self._build_menus()
@@ -142,7 +142,9 @@ class MainWindow(QMainWindow):
         splitter.addWidget(self.sidebar)
         splitter.addWidget(dock_host)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([250, 1150])
+        width = scaling.window_size(self).width()
+        side = scaling.clamp(width * 0.17, 210, 360)
+        splitter.setSizes([side, width - side])
 
     def _build_menus(self) -> None:
         mb = self.menuBar()
@@ -582,6 +584,8 @@ class MainWindow(QMainWindow):
         theme.apply_theme(QApplication.instance(), self.settings.get("theme", "dark"))
         self.dm.setStyleSheet(self._ads_base_style + theme.ads_stylesheet())
         self._apply_auto_lock()
+        if dlg.scale_changed and self._ask_restart_for_scale():
+            return
         if dlg.language_changed:
             # Oberfläche in der neuen Sprache neu aufbauen (Layout und offene Tabs bleiben erhalten)
             self.restart_ui()
@@ -589,6 +593,22 @@ class MainWindow(QMainWindow):
         self.catalogChanged.emit()
         if self.settings.get("repositories") != old_repos:
             self.reload_catalog()
+
+    def _ask_restart_for_scale(self) -> bool:
+        """Die Skalierung wirkt erst in einem neuen Prozess - auf Wunsch sofort neu starten."""
+        answer = QMessageBox.question(self, tr("appsettings.scale"), tr("appsettings.scale_restart"),
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if answer != QMessageBox.StandardButton.Yes:
+            self.notify(tr("appsettings.scale_later"))
+            return False
+        self._restarting = True  # Layout speichern, Programm aber noch nicht beenden
+        if not self.close():
+            self._restarting = False
+            return False
+        if not scaling.restart_application():
+            QMessageBox.warning(None, APP_NAME, tr("appsettings.scale_restart_failed"))
+        QApplication.instance().quit()
+        return True
 
     def restart_ui(self) -> None:
         self._restarting = True
@@ -668,4 +688,4 @@ class MainWindow(QMainWindow):
             QApplication.instance().quit()
 
     def sizeHint(self):  # noqa: N802
-        return QSize(1400, 860)
+        return scaling.window_size(self)

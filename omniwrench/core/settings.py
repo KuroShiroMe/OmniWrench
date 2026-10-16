@@ -28,6 +28,8 @@ DEFAULTS: dict[str, Any] = {
     # Tool-Repositories: Liste von index.json-URLs (https://, file:// oder lokaler Pfad)
     "repositories": _default_repositories(),
     "theme": "dark",
+    # Zusätzliche Skalierung der Oberfläche (1.0 = Windows-Anzeigeskalierung); wirkt nach Neustart
+    "ui_scale": 1.0,
     # Sprache des Hauptprogramms (leer = Windows-Anzeigesprache, sonst Englisch)
     "language": "",
     "auto_lock_minutes": 0,

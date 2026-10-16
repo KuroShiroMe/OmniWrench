@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-16T07:47:31+00:00",
+  "generated": "2026-10-16T09:21:07+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -151,7 +151,7 @@
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "DarkMatter",
@@ -193,9 +193,9 @@
           "category": "Network/IP Tools"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.2.0.zip",
-      "sha256": "76863357ea15291bdc9e6fe9081a796666c001ba9147cabdaf7eb061f2e91628",
-      "size": 7226
+      "download_url": "packages/net.subnet-calculator-1.2.1.zip",
+      "sha256": "d0ddd5d24bed866ea168717f6476577164306810e2ceac8900d5f658e01dd505",
+      "size": 7511
     }
   ]
 }
