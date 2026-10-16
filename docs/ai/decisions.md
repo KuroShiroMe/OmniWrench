@@ -80,3 +80,9 @@
   scales tools, QtAds and Qt-internal metrics consistently.
 - Responsive rule for all UI: no fixed widths that sum above ~700 px in one row; rows that may overflow use
   ResponsiveRow; card lists use ColumnFlowLayout; self-drawn pixmaps use device_pixel_ratio().
+
+## CI (2026-10-16, my choices)
+- Checks run on every PR and push to main; EXE build too (no paths filter) because tools/app changes can break it.
+- Smoke test never installs system prerequisites (RSAT, features, PS modules, winget) on runners - only validates.
+- Store consistency is enforced: a changed tool without version bump + rebuilt store fails CI.
+

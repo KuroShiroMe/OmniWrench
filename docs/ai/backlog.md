@@ -15,6 +15,9 @@
       scrollbar below ~1100 px dock width; preview/grid render at fixed 2x -> use sdk.device_pixel_ratio().
       Left to the IconForge rework thread.
 
+- [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
+      (Settings > Branches) - only the user can do that.
+
 ## Later (mentioned by user or proposed)
 - More password-manager connectors: Bitwarden/Vaultwarden, KeePassXC (browser protocol), 1Password, Passbolt, Psono,
   Devolutions, Delinea, CyberArk, Pleasant, HashiCorp Vault, Azure Key Vault, Keeper.

@@ -1,16 +1,17 @@
-# Baut OmniWrench.exe (PyInstaller) unter Windows und stellt den Programmordner als Artefakt bereit.
+# Baut OmniWrench.exe (PyInstaller) unter Windows bei jedem PR, startet sie testweise und stellt
+# den Programmordner als Artefakt bereit.
 name: EXE-Build
 
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ["v*"]
   pull_request:
-    paths:
-      - "scripts/build_exe.py"
-      - "main.py"
-      - "requirements.txt"
-      - ".github/workflows/build-exe.yml"
+
+concurrency:
+  group: exe-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -20,6 +21,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.14"
+          cache: pip
       - name: Abhängigkeiten installieren
         run: |
           python -m pip install --upgrade pip
@@ -31,6 +33,17 @@ jobs:
         run: |
           $p = Start-Process dist\OmniWrench\OmniWrench.exe -ArgumentList '--pip','--version' -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "OmniWrench.exe --pip --version: Exitcode $($p.ExitCode)" }
+      - name: EXE starten (Anmeldefenster muss offen bleiben)
+        shell: pwsh
+        run: |
+          $env:OMNIWRENCH_HOME = Join-Path $env:RUNNER_TEMP 'omniwrench-exe'
+          $p = Start-Process dist\OmniWrench\OmniWrench.exe -PassThru
+          Start-Sleep -Seconds 20
+          $log = Join-Path $env:OMNIWRENCH_HOME 'local\logs\omniwrench.log'
+          if (Test-Path $log) { Get-Content $log }
+          if ($p.HasExited) { throw "OmniWrench.exe hat sich nach dem Start beendet (Exitcode $($p.ExitCode))" }
+          Stop-Process -Id $p.Id -Force
+          if ((Test-Path $log) -and (Select-String -Path $log -Pattern ' ERROR ' -Quiet)) { throw "Fehler im Log" }
       - uses: actions/upload-artifact@v4
         with:
           name: OmniWrench-win64

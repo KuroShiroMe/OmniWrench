@@ -112,3 +112,13 @@
 - App 0.6.0 (0.5.1 from #2 never released). Tools: AD User Lookup 1.3.1, IconForge 1.1.0, OmniVault 1.0.1,
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
+
+## 2026-10-16 — GitHub Actions CI for every PR (thread "GitHub-Prüfungen für PRs", proposal 3)
+- New `.github/workflows/ci.yml`: Linux job (compileall, check_locales app + all tools, check_store) and Windows job
+  (`scripts/smoke_test.py`). `build-exe.yml` now runs on every PR/push main (no paths filter) + starts the EXE.
+- `scripts/check_store.py`: store/index.json matches tools/ (version, zip exists, sha256/size, zip content == tool dir,
+  CRLF/LF ignored) -> catches "tool changed but version not bumped / store not rebuilt".
+- `scripts/smoke_test.py`: temp OMNIWRENCH_HOME, creates vault, installs store tools without system requirements
+  (AD User Lookup only validated: RSAT), opens main window in all 8 languages, store tab, all tools, 3 widths;
+  any QMessageBox / ERROR log / uncaught exception fails. Runs locally too (`--visible` for real windows).
+
