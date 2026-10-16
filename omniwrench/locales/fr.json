@@ -314,5 +314,6 @@
   "prog.restart_required": "Remarque : un redémarrage de Windows est nécessaire pour que toutes les modifications prennent effet.",
   "err.elevated_start": "Impossible de démarrer la session administrateur : {error}",
   "err.elevated_failed": "L'exécution avec des droits d'administrateur a échoué (code de sortie {code}).",
-  "err.feature_source_hint": "Windows n'a pas pu télécharger la fonctionnalité. Dans les environnements gérés par WSUS, la stratégie de groupe « Spécifier les paramètres d'installation des composants facultatifs et de réparation des composants » doit autoriser le téléchargement directement depuis Windows Update, ou la fonctionnalité doit être installée depuis une source Fonctionnalités à la demande."
+  "err.feature_source_hint": "Windows n'a pas pu télécharger la fonctionnalité. Dans les environnements gérés par WSUS, la stratégie de groupe « Spécifier les paramètres d'installation des composants facultatifs et de réparation des composants » doit autoriser le téléchargement directement depuis Windows Update, ou la fonctionnalité doit être installée depuis une source Fonctionnalités à la demande.",
+  "home.server_notice": "Windows Server n'est pas pris en charge. Certaines fonctions sont limitées, par ex. l'installation automatique des prérequis comme RSAT."
 }

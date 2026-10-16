@@ -16,7 +16,7 @@
 - [ ] SecretManagement connector: live test (module not installed on dev machine).
 - [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
 - [x] UAC prerequisites (ShellExecuteExW, PR #10) merged; Stef tested on Windows 2026-10-16: OK.
-      Still open: Windows Server (RSAT capabilities don't exist there, would need features).
+      Windows Server: not a target (Stef 2026-10-16); Home shows a notice that functions are limited.
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 

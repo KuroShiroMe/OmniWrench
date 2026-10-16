@@ -314,5 +314,6 @@
   "prog.restart_required": "Mind: Windaes needs a restart fur aw the chynges tae tak.",
   "err.elevated_start": "Couldnae stert the admin session: {error}",
   "err.elevated_failed": "Rinnin wi admin richts didnae work (exit code {code}).",
-  "err.feature_source_hint": "Windaes couldnae fetch the feature. Wi WSUS, the group policy \"Specify settings for optional component installation and component repair\" has tae let it come straucht frae Windaes Update, or pit the feature on frae a Features on Demand source."
+  "err.feature_source_hint": "Windaes couldnae fetch the feature. Wi WSUS, the group policy \"Specify settings for optional component installation and component repair\" has tae let it come straucht frae Windaes Update, or pit the feature on frae a Features on Demand source.",
+  "home.server_notice": "Windaes Server isnae supportit. Some things are cut back, like pittin on stuff such as RSAT automatic."
 }

@@ -160,3 +160,5 @@
   "UAC declined" error. SDK run_powershell_elevated(on_output=). 12 new/changed keys in all 8 locales.
 - Tested on Linux with pwsh 7.4 + mocked DISM cmdlets (install, present, restart, 0x800f0954, syntax error, exit code,
   umlauts, >30k script via -File, cancel). Windows API part untested here -> user test.
+- Stef tested UAC install on Windows: OK. Follow-up: Windows Server is not a target -> core/system.is_windows_server()
+  (registry InstallationType) + notice label on Home (QLabel#Notice, key home.server_notice, 8 locales).
