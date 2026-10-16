@@ -74,6 +74,14 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   run_hook after install; providers registered via ctx.register_credential_provider are released on update/uninstall.
 - PMM connector config: tool setting "connectors" (non-secret), vault ctx.secrets "conn:<id>" (secret fields, only if
   save_auth), otherwise module-level _session_auth (memory).
+- PMM runtime state (Bitwarden BW_SESSION, Vault login token) in module-level _session_state[conn_id] via
+  ConnectorProvider.state; cleared by on_auth_changed/close/delete; connection test uses an instance-local dict.
+- PMM implementations (connector_types.json "implementation"): powershell, keepass, bitwarden (bw CLI, own
+  BITWARDENCLI_APPDATA_DIR = <tool_data>/bitwarden/<conn_id>), onepassword (op CLI, OP_SERVICE_ACCOUNT_TOKEN or
+  desktop app --account; ids "vaultId|itemId"), hashicorp_vault (urllib + net._SSL, KV v1/v2, BFS LIST below base
+  path, max 300 LIST calls; ids = secret path). CliConnector base: find_program (cli_path, PATH, winget Links/Packages),
+  NODE_EXTRA_CA_CERTS from optional ca_file. requirements.program {name, command, winget, url} -> dialog
+  _ensure_program offers `winget install --id … --exact`. show_if accepts a list of values.
 - Tool language: reserved setting key `_language`; change -> MainWindow.reload_tool_tabs (new instance).
 - Layout persistence: layout.json (geometry, QtAds state, open tool dock names `tool:<id>:<n>`).
 - Store index entries = tool.json + download_url + sha256 + translations (+ icon_data for custom image icons).

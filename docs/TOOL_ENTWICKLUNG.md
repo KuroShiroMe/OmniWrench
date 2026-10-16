@@ -187,7 +187,7 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 ### Zugangsdaten und Passwortmanager
 
 OmniWrench hat einen eingebauten Passwortmanager (*Extras › Passwortmanager*). Mit dem Tool
-**OmniVault** kommen externe Manager dazu (SecretManagement, KeePass, Netwrix …).
+**OmniVault** kommen externe Manager dazu (SecretManagement, KeePass, Netwrix, Bitwarden, 1Password, HashiCorp Vault …).
 Die Auswahl „Aus Passwortmanager“ durchsucht dann alle Manager gleichzeitig.
 
 Grundregeln:

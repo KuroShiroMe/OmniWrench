@@ -112,3 +112,11 @@
 - App 0.6.0 (0.5.1 from #2 never released). Tools: AD User Lookup 1.3.1, IconForge 1.1.0, OmniVault 1.0.1,
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
+
+## 2026-10-16 — more password connectors (thread "Passwort-Konnektoren", suggestion 5)
+- OmniVault 1.1.0: connectors Bitwarden/Vaultwarden (bw CLI; API key or e-mail + master password), 1Password
+  (op CLI; service account token or desktop app), HashiCorp Vault/OpenBao (HTTP API, KV v1/v2; token, userpass,
+  LDAP, AppRole). All stage alpha. Python implementations in connectors.py (no PowerShell).
+- Dialog: missing CLI -> winget install offer (Bitwarden.CLI, AgileBits.1Password.CLI).
+- Tests: fake bw/op scripts + local fake Vault server (search, get, wrong credentials -> AuthenticationRequired,
+  expired session/token -> re-login); dialog renders for all three types. Store: only omnivault zip rebuilt.

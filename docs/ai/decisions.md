@@ -67,6 +67,12 @@
 - Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
 - Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).
 
+## Password connectors 2 (2026-10-16, my choices)
+- Bitwarden/1Password via their official CLIs (bw, op) - no own crypto/API re-implementation; HashiCorp Vault via
+  plain HTTP API (no extra Python package). All three stage alpha until tested live.
+- Bitwarden: per-connector CLI data dir so it never touches the user's own bw login; session key only in memory.
+- Vault search = path names only (no reading every secret); user name shown after selection.
+
 ## Round 9 decisions (2026-10-16)
 - IconForge: library dropdown shows ONLY downloaded libraries; a download button next to it opens a wizard
   (dropdown with name, size, publisher; preview = generated hero banner, title, meta info, source link).

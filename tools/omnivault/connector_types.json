@@ -4,13 +4,14 @@
     "fields: Eingaben je Konnektor. type: string | path_file | path_dir | secret | bool | choice (options: [{value, label}]).",
     "        auth=true   -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
     "        type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
-    "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert hat.",
+    "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert (oder einen Wert aus einer Liste) hat.",
     "stage: optional 'alpha' oder 'beta' -> Hinweis im Konnektor-Dialog (z. B. noch nicht mit echter Installation getestet).",
-    "implementation: 'powershell' (Skripte unten) oder 'keepass' (Python, pykeepass).",
+    "implementation: 'powershell' (Skripte unten), 'keepass' (Python, pykeepass), 'bitwarden' (bw-CLI), 'onepassword' (op-CLI), 'hashicorp_vault' (HTTP-API).",
     "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
     "            search -> JSON-Liste [{id, name, username, detail}], get -> {username, password}.",
     "            Feld 'shell' (powershell | pwsh) wählt Windows PowerShell 5.1 oder PowerShell 7.",
-    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmeldedialog statt Fehlermeldung."
+    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmeldedialog statt Fehlermeldung.",
+    "requirements.program: {name, command, winget, url} -> Kommandozeilenprogramm; fehlt es, bietet der Dialog die Installation per winget an."
   ],
   "types": {
     "secretmanagement": {
@@ -343,6 +344,468 @@
           "ConvertTo-Json -InputObject ([pscustomobject]@{ username = [string]$user; password = [string]$pw }) -Compress"
         ]
       }
+    },
+    "bitwarden": {
+      "name": "Bitwarden",
+      "icon": "shield",
+      "stage": "alpha",
+      "description": {
+        "en": "Bitwarden or Vaultwarden via the official Bitwarden CLI (bw). Login with API key (recommended, works with two-step login) or e-mail and master password. The master password unlocks the vault.",
+        "de": "Bitwarden oder Vaultwarden über die offizielle Bitwarden-CLI (bw). Anmeldung mit API-Schlüssel (empfohlen, funktioniert auch mit Zweistufen-Anmeldung) oder mit E-Mail und Master-Passwort. Das Master-Passwort entsperrt den Tresor."
+      },
+      "implementation": "bitwarden",
+      "docs": "https://bitwarden.com/help/cli/",
+      "requirements": {
+        "program": {
+          "name": "Bitwarden CLI",
+          "command": "bw",
+          "winget": "Bitwarden.CLI",
+          "url": "https://bitwarden.com/help/cli/"
+        }
+      },
+      "fields": [
+        {
+          "key": "server",
+          "type": "string",
+          "label": {
+            "en": "Server",
+            "de": "Server"
+          },
+          "placeholder": {
+            "en": "empty = bitwarden.com, e.g. https://vault.bitwarden.eu",
+            "de": "leer = bitwarden.com, z. B. https://vault.bitwarden.eu"
+          }
+        },
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "api_key",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung"
+          },
+          "options": [
+            {
+              "value": "api_key",
+              "label": {
+                "en": "API key (client ID and secret)",
+                "de": "API-Schlüssel (Client-ID und Secret)"
+              }
+            },
+            {
+              "value": "password",
+              "label": {
+                "en": "E-mail and master password",
+                "de": "E-Mail und Master-Passwort"
+              }
+            }
+          ]
+        },
+        {
+          "key": "client_id",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "api_key"
+          },
+          "label": {
+            "en": "client_id",
+            "de": "client_id"
+          },
+          "placeholder": {
+            "en": "user.xxxxxxxx-…",
+            "de": "user.xxxxxxxx-…"
+          }
+        },
+        {
+          "key": "client_secret",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "api_key"
+          },
+          "label": {
+            "en": "client_secret",
+            "de": "client_secret"
+          }
+        },
+        {
+          "key": "email",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "password"
+          },
+          "label": {
+            "en": "E-mail",
+            "de": "E-Mail"
+          }
+        },
+        {
+          "key": "master_password",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "label": {
+            "en": "Master password",
+            "de": "Master-Passwort"
+          }
+        },
+        {
+          "key": "cli_path",
+          "type": "path_file",
+          "label": {
+            "en": "Program path (optional)",
+            "de": "Programmpfad (optional)"
+          },
+          "placeholder": {
+            "en": "empty = search PATH and winget",
+            "de": "leer = in PATH und winget suchen"
+          }
+        },
+        {
+          "key": "ca_file",
+          "type": "path_file",
+          "label": {
+            "en": "CA certificate (optional)",
+            "de": "CA-Zertifikat (optional)"
+          },
+          "placeholder": {
+            "en": "PEM file, only needed with TLS inspection",
+            "de": "PEM-Datei, nur bei TLS-Inspection nötig"
+          }
+        }
+      ]
+    },
+    "onepassword": {
+      "name": "1Password",
+      "icon": "key-round",
+      "stage": "alpha",
+      "description": {
+        "en": "1Password via the official 1Password CLI (op). Login with a service account token or through the 1Password desktop app (CLI integration must be enabled in the app settings under Developer).",
+        "de": "1Password über die offizielle 1Password-CLI (op). Anmeldung mit einem Dienstkonto-Token oder über die 1Password-Desktop-App (dort unter Entwickler die CLI-Integration aktivieren)."
+      },
+      "implementation": "onepassword",
+      "docs": "https://developer.1password.com/docs/cli/",
+      "requirements": {
+        "program": {
+          "name": "1Password CLI",
+          "command": "op",
+          "winget": "AgileBits.1Password.CLI",
+          "url": "https://developer.1password.com/docs/cli/get-started/"
+        }
+      },
+      "fields": [
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "service_account",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung"
+          },
+          "options": [
+            {
+              "value": "service_account",
+              "label": {
+                "en": "Service account token",
+                "de": "Dienstkonto-Token"
+              }
+            },
+            {
+              "value": "desktop",
+              "label": {
+                "en": "1Password desktop app",
+                "de": "1Password-Desktop-App"
+              }
+            }
+          ]
+        },
+        {
+          "key": "token",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "service_account"
+          },
+          "label": {
+            "en": "Service account token",
+            "de": "Dienstkonto-Token"
+          },
+          "placeholder": {
+            "en": "ops_…",
+            "de": "ops_…"
+          }
+        },
+        {
+          "key": "account",
+          "type": "string",
+          "show_if": {
+            "auth_mode": "desktop"
+          },
+          "label": {
+            "en": "Account",
+            "de": "Konto"
+          },
+          "placeholder": {
+            "en": "sign-in address, e.g. company.1password.com (optional)",
+            "de": "Anmeldeadresse, z. B. firma.1password.com (optional)"
+          }
+        },
+        {
+          "key": "vault",
+          "type": "string",
+          "label": {
+            "en": "Vault",
+            "de": "Tresor"
+          },
+          "placeholder": {
+            "en": "name or ID, empty = all accessible vaults",
+            "de": "Name oder ID, leer = alle zugänglichen Tresore"
+          }
+        },
+        {
+          "key": "cli_path",
+          "type": "path_file",
+          "label": {
+            "en": "Program path (optional)",
+            "de": "Programmpfad (optional)"
+          },
+          "placeholder": {
+            "en": "empty = search PATH and winget",
+            "de": "leer = in PATH und winget suchen"
+          }
+        }
+      ]
+    },
+    "hashicorp_vault": {
+      "name": "HashiCorp Vault",
+      "icon": "server-cog",
+      "stage": "alpha",
+      "description": {
+        "en": "HashiCorp Vault or OpenBao, KV secrets engine (version 1 or 2) via the HTTP API. Search matches secret paths below the base path. Login with token, userpass, LDAP or AppRole.",
+        "de": "HashiCorp Vault oder OpenBao, KV-Secrets-Engine (Version 1 oder 2) über die HTTP-API. Gesucht wird in den Secret-Pfaden unterhalb des Basispfads. Anmeldung mit Token, userpass, LDAP oder AppRole."
+      },
+      "implementation": "hashicorp_vault",
+      "docs": "https://developer.hashicorp.com/vault/api-docs/secret/kv/kv-v2",
+      "fields": [
+        {
+          "key": "address",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Address",
+            "de": "Adresse"
+          },
+          "placeholder": {
+            "en": "https://vault.example.com:8200",
+            "de": "https://vault.firma.de:8200"
+          }
+        },
+        {
+          "key": "namespace",
+          "type": "string",
+          "label": {
+            "en": "Namespace (Enterprise)",
+            "de": "Namespace (Enterprise)"
+          },
+          "placeholder": {
+            "en": "empty = root namespace",
+            "de": "leer = Root-Namespace"
+          }
+        },
+        {
+          "key": "mount",
+          "type": "string",
+          "default": "secret",
+          "required": true,
+          "label": {
+            "en": "KV mount path",
+            "de": "KV-Mount-Pfad"
+          }
+        },
+        {
+          "key": "kv_version",
+          "type": "choice",
+          "default": "2",
+          "label": {
+            "en": "KV version",
+            "de": "KV-Version"
+          },
+          "options": [
+            {
+              "value": "2",
+              "label": {
+                "en": "Version 2 (versioned)",
+                "de": "Version 2 (versioniert)"
+              }
+            },
+            {
+              "value": "1",
+              "label": {
+                "en": "Version 1",
+                "de": "Version 1"
+              }
+            }
+          ]
+        },
+        {
+          "key": "path",
+          "type": "string",
+          "label": {
+            "en": "Base path",
+            "de": "Basispfad"
+          },
+          "placeholder": {
+            "en": "e.g. team/servers, empty = whole mount",
+            "de": "z. B. team/server, leer = gesamter Mount"
+          }
+        },
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "token",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung"
+          },
+          "options": [
+            {
+              "value": "token",
+              "label": {
+                "en": "Token",
+                "de": "Token"
+              }
+            },
+            {
+              "value": "userpass",
+              "label": {
+                "en": "User name and password (userpass)",
+                "de": "Benutzername und Passwort (userpass)"
+              }
+            },
+            {
+              "value": "ldap",
+              "label": {
+                "en": "LDAP / Active Directory",
+                "de": "LDAP / Active Directory"
+              }
+            },
+            {
+              "value": "approle",
+              "label": {
+                "en": "AppRole",
+                "de": "AppRole"
+              }
+            }
+          ]
+        },
+        {
+          "key": "token",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "token"
+          },
+          "label": {
+            "en": "Token",
+            "de": "Token"
+          }
+        },
+        {
+          "key": "username",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": [
+              "userpass",
+              "ldap"
+            ]
+          },
+          "label": {
+            "en": "User name",
+            "de": "Benutzername"
+          }
+        },
+        {
+          "key": "password",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": [
+              "userpass",
+              "ldap"
+            ]
+          },
+          "label": {
+            "en": "Password",
+            "de": "Passwort"
+          }
+        },
+        {
+          "key": "role_id",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "approle"
+          },
+          "label": {
+            "en": "Role ID",
+            "de": "Role-ID"
+          }
+        },
+        {
+          "key": "secret_id",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "approle"
+          },
+          "label": {
+            "en": "Secret ID",
+            "de": "Secret-ID"
+          }
+        },
+        {
+          "key": "auth_mount",
+          "type": "string",
+          "label": {
+            "en": "Auth mount path (optional)",
+            "de": "Auth-Mount-Pfad (optional)"
+          },
+          "placeholder": {
+            "en": "empty = name of the login method",
+            "de": "leer = Name der Anmeldemethode"
+          }
+        },
+        {
+          "key": "username_key",
+          "type": "string",
+          "default": "username",
+          "label": {
+            "en": "Key for user name",
+            "de": "Schlüssel für Benutzername"
+          }
+        },
+        {
+          "key": "password_key",
+          "type": "string",
+          "default": "password",
+          "label": {
+            "en": "Key for password",
+            "de": "Schlüssel für Passwort"
+          }
+        }
+      ]
     }
   }
 }

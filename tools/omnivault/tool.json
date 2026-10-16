@@ -1,9 +1,9 @@
 {
   "id": "sec.omnivault",
   "name": "OmniVault",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Built-in password manager plus connectors to external password managers.",
-  "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
+  "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
   "author": "DarkMatter",
   "category": "Security/Passwords",
   "icon": "vault",
@@ -20,7 +20,12 @@
     "secretmanagement",
     "netwrix",
     "credentials",
-    "vault"
+    "vault",
+    "bitwarden",
+    "vaultwarden",
+    "1password",
+    "hashicorp",
+    "openbao"
   ],
   "single_instance": true,
   "hooks": {
