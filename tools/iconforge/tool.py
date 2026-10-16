@@ -8,15 +8,17 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, QSortF
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QGridLayout,
-    QHBoxLayout, QLabel, QLineEdit, QListView, QPushButton, QScrollArea, QSplitter, QStyle, QStyledItemDelegate,
-    QVBoxLayout, QWidget,
+    QHBoxLayout, QLabel, QLineEdit, QListView, QPushButton, QScrollArea, QSizePolicy, QSplitter, QStyle,
+    QStyledItemDelegate, QToolButton, QVBoxLayout, QWidget,
 )
 
-from omniwrench.sdk import ToolBase, run_async
+from omniwrench.sdk import ToolBase
+from omniwrench.ui.widgets import library_icon
 
 from . import export
 from .export import Style
 from .packs import IconRef, PackStore, load_licenses
+from .wizard import PackWizard
 
 GRID_ICON = 40
 PREVIEW = 160
@@ -178,6 +180,8 @@ class IconForge(ToolBase):
         outer.setContentsMargins(16, 14, 16, 12)
 
         # ---- Kopfzeile
+        # Breiten in Zeichen statt Pixeln, damit die Leiste mit Schrift und Skalierung mitwächst
+        char = self.root.fontMetrics().averageCharWidth()
         top = QHBoxLayout()
         title = QLabel(tr("tool.name"))
         title.setObjectName("PageTitle")
@@ -185,18 +189,30 @@ class IconForge(ToolBase):
         top.addStretch()
         self.search = QLineEdit(placeholderText="🔍  " + tr("ui.search"))
         self.search.setClearButtonEnabled(True)
-        self.search.setMinimumWidth(240)
-        top.addWidget(self.search)
+        self.search.setMinimumWidth(char * 26)
+        self.search.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        top.addWidget(self.search, 2)
         self.pack = QComboBox()
-        self.pack.setMinimumWidth(230)
+        self.pack.setMinimumContentsLength(18)
+        self.pack.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         self.pack.setToolTip(tr("ui.pack_hint"))
-        top.addWidget(self.pack)
+        top.addWidget(self.pack, 1)
+        self.get_packs = QToolButton()
+        self.get_packs.setIcon(library_icon("download", 18))
+        self.get_packs.setToolTip(tr("ui.pack_get"))
+        side = self.pack.sizeHint().height()
+        self.get_packs.setFixedSize(side, side)
+        self.get_packs.setIconSize(QSize(side * 3 // 5, side * 3 // 5))
+        self.get_packs.clicked.connect(self._open_wizard)
+        top.addWidget(self.get_packs)
         self.variant = QComboBox()
-        self.variant.setMinimumWidth(110)
+        self.variant.setMinimumContentsLength(9)
+        self.variant.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
         top.addWidget(self.variant)
         self.category = QComboBox()
-        self.category.setMinimumWidth(180)
-        top.addWidget(self.category)
+        self.category.setMinimumContentsLength(16)
+        self.category.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon)
+        top.addWidget(self.category, 1)
         outer.addLayout(top)
         self.count = QLabel()
         self.count.setObjectName("Muted")
@@ -225,7 +241,7 @@ class IconForge(ToolBase):
         splitter.addWidget(self.view)
         splitter.addWidget(self._build_details())
         splitter.setStretchFactor(0, 1)
-        splitter.setSizes([760, 400])
+        splitter.setSizes([char * 100, char * 52])
 
         self._timer = QTimer(self.root, singleShot=True, interval=150)
         self._timer.timeout.connect(self._apply_filter)
@@ -239,25 +255,32 @@ class IconForge(ToolBase):
 
     # ------------------------------------------------------------ Pakete
     def _fill_packs(self, select: str) -> None:
+        """Nur verfügbare (eingebaute oder geladene) Bibliotheken; weitere kommen über den Download-Assistenten."""
         tr = self.context.tr
         self.pack.blockSignals(True)
         self.pack.clear()
         self.pack.addItem(tr("ui.pack_all"), ALL_PACKS)
         for pid, spec in sorted(self.store.defs.items(), key=lambda kv: (not kv[1].get("builtin"), kv[1]["name"].lower())):
-            loaded = self.store.is_available(pid)
-            self.pack.addItem(spec["name"] + ("" if loaded else "  ⬇"), pid)
-            if not loaded:
-                self.pack.setItemData(self.pack.count() - 1, tr("ui.pack_download_hint"), Qt.ItemDataRole.ToolTipRole)
-        self.pack.setCurrentIndex(max(self.pack.findData(select), 0))
+            if self.store.is_available(pid):
+                self.pack.addItem(spec["name"], pid)
+        index = self.pack.findData(select)
+        self.pack.setCurrentIndex(index if index >= 0 else max(self.pack.findData("lucide"), 0))
         self.pack.blockSignals(False)
         self._pack_changed()
 
+    def _open_wizard(self) -> None:
+        current = self.pack.currentData()
+        wizard = PackWizard(self.store, self.licenses, self.context, self.root,
+                            select=current if current not in (ALL_PACKS, "lucide") else None)
+        wizard.packDownloaded.connect(lambda pid: self._fill_packs(select=pid))
+        wizard.packRemoved.connect(lambda pid: self._fill_packs(select=self.pack.currentData()
+                                                                if self.pack.currentData() != pid else "lucide"))
+        wizard.exec()
+        wizard.deleteLater()
+
     def _pack_changed(self) -> None:
-        pid = self.pack.currentData()
-        if pid != ALL_PACKS and not self.store.is_available(pid):
-            self._download(pid)
-            return
         tr = self.context.tr
+        pid = self.pack.currentData()
         self.variant.blockSignals(True)
         self.variant.clear()
         if pid == ALL_PACKS:
@@ -272,24 +295,6 @@ class IconForge(ToolBase):
             self.variant.setEnabled(self.variant.count() > 1)
         self.variant.blockSignals(False)
         self._load_items()
-
-    def _download(self, pid: str) -> None:
-        tr = self.context.tr
-        name = self.store.defs[pid]["name"]
-        self.pack.setEnabled(False)
-        self.count.setText(tr("ui.pack_loading", name=name))
-
-        def done(_):
-            self.pack.setEnabled(True)
-            self.context.notify(tr("ui.pack_loaded", name=name))
-            self._fill_packs(select=pid)
-
-        def failed(err):
-            self.pack.setEnabled(True)
-            self.count.setText("❌ " + tr("ui.pack_failed", name=name, error=err))
-
-        run_async(lambda progress: self.store.download(pid, progress), done, failed,
-                  lambda msg: self.count.setText(tr("ui.pack_loading", name=msg)))
 
     def _load_items(self) -> None:
         pid = self.pack.currentData()
@@ -321,10 +326,10 @@ class IconForge(ToolBase):
 
     # ------------------------------------------------------------ Details
     def _build_details(self) -> QWidget:
-        tr = self.context.tr
-        s = self.context.settings
+        """Rechte Leiste: oben Export (Format, Größen, Speichern), darunter Vorschau, Darstellung, Infos, Lizenz."""
         panel = QFrame()
         panel.setObjectName("DetailsPanel")
+        panel.setMinimumWidth(self.root.fontMetrics().averageCharWidth() * 40)
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -337,80 +342,22 @@ class IconForge(ToolBase):
         lay = QVBoxLayout(content)
         lay.setContentsMargins(18, 14, 18, 14)
         lay.setSpacing(8)
+        self._build_export(lay)
+        lay.addSpacing(6)
+        self._build_preview(lay)
+        self._build_style(lay)
+        self._build_info(lay)
+        self._build_license(lay)
+        lay.addStretch()
+        self._fmt_changed()
+        return panel
 
-        self.preview = QLabel()
-        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.preview.setMinimumHeight(PREVIEW + 24)
-        self.preview.setObjectName("IconPreview")
-        lay.addWidget(self.preview)
-        self.name_label = QLabel()
-        self.name_label.setObjectName("PageTitle")
-        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.name_label.setWordWrap(True)
-        lay.addWidget(self.name_label)
-        self.pack_label = QLabel()
-        self.pack_label.setObjectName("Muted")
-        self.pack_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.pack_label.setOpenExternalLinks(True)
-        lay.addWidget(self.pack_label)
-
-        lay.addWidget(_section(tr("ui.info")))
-        form = QFormLayout()
-        form.setVerticalSpacing(4)
-        self.lbl_categories = QLabel(wordWrap=True)
-        self.lbl_tags = QLabel(wordWrap=True)
-        for key, w in (("ui.categories", self.lbl_categories), ("ui.tags", self.lbl_tags)):
-            cap = QLabel(tr(key))
-            cap.setObjectName("Muted")
-            form.addRow(cap, w)
-        lay.addLayout(form)
-
-        # Lizenz + Checkliste
-        lay.addWidget(_section(tr("ui.license")))
-        self.lic_name = QLabel(wordWrap=True)
-        self.lic_name.setOpenExternalLinks(True)
-        lay.addWidget(self.lic_name)
-        self.lic_summary = QLabel(wordWrap=True)
-        self.lic_summary.setObjectName("Muted")
-        lay.addWidget(self.lic_summary)
-        self.perm_box = QWidget()
-        self.perm_layout = QGridLayout(self.perm_box)
-        self.perm_layout.setContentsMargins(0, 2, 0, 2)
-        self.perm_layout.setHorizontalSpacing(8)
-        self.perm_layout.setVerticalSpacing(3)
-        lay.addWidget(self.perm_box)
-        disclaimer = QLabel(tr("ui.license_disclaimer"), wordWrap=True)
-        disclaimer.setObjectName("Muted")
-        lay.addWidget(disclaimer)
-
-        # Darstellung
-        lay.addWidget(_section(tr("ui.style")))
-        sform = QFormLayout()
-        self.color_btn = ColorButton(s.get("default_color") or "#1f2937", self._refresh_preview)
-        sform.addRow(tr("ui.color"), self.color_btn)
-        self.stroke = QDoubleSpinBox()
-        self.stroke.setRange(0.5, 4.0)
-        self.stroke.setSingleStep(0.25)
-        self.stroke.setValue(2.0)
-        self.stroke.setToolTip(tr("ui.stroke_hint"))
-        self.stroke.valueChanged.connect(self._refresh_preview)
-        sform.addRow(tr("ui.stroke"), self.stroke)
-        bg_row = QHBoxLayout()
-        self.bg = QComboBox()
-        for key in ("none", "square", "circle"):
-            self.bg.addItem(tr(f"ui.bg_{key}"), key)
-        self.bg.currentIndexChanged.connect(self._bg_changed)
-        bg_row.addWidget(self.bg, 1)
-        self.bg_color = ColorButton("#3b82f6", self._refresh_preview)
-        self.bg_color.setEnabled(False)
-        bg_row.addWidget(self.bg_color)
-        sform.addRow(tr("ui.background"), bg_row)
-        lay.addLayout(sform)
-
-        # Export
+    def _build_export(self, lay: QVBoxLayout) -> None:
+        tr = self.context.tr
+        s = self.context.settings
         lay.addWidget(_section(tr("ui.export")))
         eform = QFormLayout()
+        eform.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         self.fmt = QComboBox()
         for f in export.FORMATS:
             self.fmt.addItem(tr(f"fmt.{f}"), f)
@@ -436,19 +383,94 @@ class IconForge(ToolBase):
         lay.addWidget(self.fmt_hint)
         btns = QHBoxLayout()
         clip = QPushButton(tr("ui.copy_image"))
+        clip.setIcon(library_icon("clipboard-copy", 16))
         clip.clicked.connect(self._copy_image)
-        btns.addWidget(clip)
+        btns.addWidget(clip, 1)
         save = QPushButton(tr("ui.save_as"))
+        save.setIcon(library_icon("download", 16, "#ffffff"))
         save.setProperty("primary", True)
         save.clicked.connect(self._save)
-        btns.addWidget(save)
+        btns.addWidget(save, 1)
         lay.addLayout(btns)
         self.status = QLabel(wordWrap=True)
         self.status.setObjectName("Muted")
+        self.status.hide()
         lay.addWidget(self.status)
-        lay.addStretch()
-        self._fmt_changed()
-        return panel
+
+    def _build_preview(self, lay: QVBoxLayout) -> None:
+        self.preview = QLabel()
+        self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.preview.setMinimumHeight(PREVIEW + 24)
+        self.preview.setObjectName("IconPreview")
+        lay.addWidget(self.preview)
+        self.name_label = QLabel()
+        self.name_label.setObjectName("PageTitle")
+        self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.name_label.setWordWrap(True)
+        lay.addWidget(self.name_label)
+        self.pack_label = QLabel(wordWrap=True)
+        self.pack_label.setObjectName("Muted")
+        self.pack_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.pack_label.setOpenExternalLinks(True)
+        lay.addWidget(self.pack_label)
+
+    def _build_style(self, lay: QVBoxLayout) -> None:
+        tr = self.context.tr
+        lay.addWidget(_section(tr("ui.style")))
+        sform = QFormLayout()
+        self.color_btn = ColorButton(self.context.settings.get("default_color") or "#1f2937", self._refresh_preview)
+        sform.addRow(tr("ui.color"), self.color_btn)
+        self.stroke = QDoubleSpinBox()
+        self.stroke.setRange(0.5, 4.0)
+        self.stroke.setSingleStep(0.25)
+        self.stroke.setValue(2.0)
+        self.stroke.setToolTip(tr("ui.stroke_hint"))
+        self.stroke.valueChanged.connect(self._refresh_preview)
+        sform.addRow(tr("ui.stroke"), self.stroke)
+        bg_row = QHBoxLayout()
+        self.bg = QComboBox()
+        for key in ("none", "square", "circle"):
+            self.bg.addItem(tr(f"ui.bg_{key}"), key)
+        self.bg.currentIndexChanged.connect(self._bg_changed)
+        bg_row.addWidget(self.bg, 1)
+        self.bg_color = ColorButton("#3b82f6", self._refresh_preview)
+        self.bg_color.setEnabled(False)
+        bg_row.addWidget(self.bg_color)
+        sform.addRow(tr("ui.background"), bg_row)
+        lay.addLayout(sform)
+
+    def _build_info(self, lay: QVBoxLayout) -> None:
+        tr = self.context.tr
+        lay.addWidget(_section(tr("ui.info")))
+        form = QFormLayout()
+        form.setVerticalSpacing(4)
+        self.lbl_categories = QLabel(wordWrap=True)
+        self.lbl_tags = QLabel(wordWrap=True)
+        for key, w in (("ui.categories", self.lbl_categories), ("ui.tags", self.lbl_tags)):
+            cap = QLabel(tr(key))
+            cap.setObjectName("Muted")
+            form.addRow(cap, w)
+        lay.addLayout(form)
+
+    def _build_license(self, lay: QVBoxLayout) -> None:
+        tr = self.context.tr
+        lay.addWidget(_section(tr("ui.license")))
+        self.lic_name = QLabel(wordWrap=True)
+        self.lic_name.setOpenExternalLinks(True)
+        lay.addWidget(self.lic_name)
+        self.lic_summary = QLabel(wordWrap=True)
+        self.lic_summary.setObjectName("Muted")
+        lay.addWidget(self.lic_summary)
+        self.perm_box = QWidget()
+        self.perm_layout = QGridLayout(self.perm_box)
+        self.perm_layout.setContentsMargins(0, 2, 0, 2)
+        self.perm_layout.setHorizontalSpacing(8)
+        self.perm_layout.setVerticalSpacing(3)
+        lay.addWidget(self.perm_box)
+        disclaimer = QLabel(tr("ui.license_disclaimer"), wordWrap=True)
+        disclaimer.setObjectName("Muted")
+        lay.addWidget(disclaimer)
 
     # ------------------------------------------------------------ Logik
     def _apply_filter(self) -> None:
@@ -546,12 +568,16 @@ class IconForge(ToolBase):
                 sizes.append(int(part))
         return sorted(set(sizes)) or [256]
 
+    def _set_status(self, text: str) -> None:
+        self.status.setText(text)
+        self.status.setVisible(bool(text))
+
     def _copy_image(self) -> None:
         ref = self._current()
         if ref:
             size = max(self._sizes())
             QApplication.clipboard().setImage(export.render(self._svg(ref), size))
-            self.status.setText(self.context.tr("ui.image_copied", size=size))
+            self._set_status(self.context.tr("ui.image_copied", size=size))
 
     def _save(self) -> None:
         ref = self._current()
@@ -566,9 +592,9 @@ class IconForge(ToolBase):
         try:
             written = export.export(Path(path), fmt, self._svg(ref), self._sizes())
         except Exception as exc:  # noqa: BLE001
-            self.status.setText("❌ " + str(exc))
+            self._set_status("❌ " + str(exc))
             return
         self.context.settings.set("export_dir", str(Path(path).parent))
         msg = self.context.tr("ui.saved", count=len(written), path=str(written[0].parent))
-        self.status.setText("✅ " + msg)
+        self._set_status("✅ " + msg)
         self.context.notify(msg)

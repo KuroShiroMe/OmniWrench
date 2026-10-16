@@ -68,3 +68,6 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 - powershell.run_ps(..., shell="powershell"|"pwsh"); ToolContext.run_powershell(..., shell=...).
 - IconForge pack cache: <tool_data>/gfx.iconforge/packs/<pack>/<variant>/<name>.svg + index.json
   {version, license, variants{v:[names]}, meta{name:{tags,categories}}, categories{id:title}}.
+- IconForge npm catalog: packs/catalog.json {pack: {version, size, files, published, exact, fetched}} (24 h TTL);
+  PackStore.fetch_summary (/latest, for the wizard dropdown) / fetch_release (full doc, mature version).
+  wizard.py: HeroBanner (painted, font-relative height) + PackWizard (signals packDownloaded/packRemoved).

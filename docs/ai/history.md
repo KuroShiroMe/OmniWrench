@@ -53,3 +53,17 @@
      chat starter prompts for main app + each tool).
    - Tested: all 26 packs downloaded (~118k icons, ~4.5 min), 1217-icon render sample OK; UI screenshots;
      KeePass flow + regressions OK.
+
+## 2026-10-16 — round 9 (claude.ai project thread, IconForge 1.1.0)
+9. User: IconForge library dropdown showed undownloaded packs; selecting one did nothing until the download finished.
+   - Pack dropdown now lists only available packs (Lucide + downloaded). Download button (Lucide "download") next to
+     it opens `PackWizard` (wizard.py): dropdown "Name · Größe · Herausgeber" (✔ = downloaded), generated hero
+     banner (gradient in pack colour + icon pattern; real icons once downloaded, Lucide placeholders before),
+     title, meta (publisher, version, unpacked size, files, published date, styles, licence, status, source link,
+     npm link), buttons Download / Download again / Remove.
+   - npm data: /latest for all packs (dropdown sizes, parallel), full doc for the selected pack (exact version that
+     download() would pick); cached 24 h in packs/catalog.json.
+   - Right panel reordered: Export (format, sizes, copy/save) on top, then preview, appearance, info, licence.
+   - Widths in characters (font metrics) instead of px for top bar/panel (scales with font/scaling setting).
+   - Verified via xvfb screenshots (dark/light, 1400 and 1000 px wide) and real feather download.
+
