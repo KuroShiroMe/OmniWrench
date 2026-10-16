@@ -21,6 +21,7 @@ from __future__ import annotations
 import json
 import locale
 import logging
+import unicodedata
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -66,13 +67,47 @@ def load_locales(directory: Path) -> dict[str, dict]:
     return _load_dir(str(directory))
 
 
+def _sort_name(text: str) -> str:
+    """Sortierschlüssel ohne Akzente ("Čeština" steht bei C, nicht hinter Z)."""
+    return "".join(c for c in unicodedata.normalize("NFKD", text) if not unicodedata.combining(c)).casefold()
+
+
 def language_infos(directory: Path = APP_LOCALES_DIR) -> list[LanguageInfo]:
     result = []
     for code, data in load_locales(directory).items():
         meta = data.get("_meta", {})
         result.append(LanguageInfo(code, meta.get("name", code), meta.get("native", code),
                                    meta.get("fallback", DEFAULT_LANGUAGE)))
-    return sorted(result, key=lambda i: (i.code != DEFAULT_LANGUAGE, i.native.lower()))
+    return sorted(result, key=lambda i: (i.code != DEFAULT_LANGUAGE, _sort_name(i.native)))
+
+
+def base_language(code: str) -> str:
+    """Basissprache eines Dialekts ("de_bad" -> "de"); bei Hauptsprachen der Code selbst."""
+    return code.split("_", 1)[0]
+
+
+def language_tree(codes=None, directory: Path = APP_LOCALES_DIR) -> list[tuple[LanguageInfo, int]]:
+    """Sprachen für Auswahllisten: jede Hauptsprache, darunter ihre Dialekte (Ebene 1).
+
+    codes: nur diese Sprachcodes (z. B. die eines Tools); Namen kommen aus den Sprachdateien
+    des Hauptprogramms. Ein Dialekt ohne vorhandene Basissprache steht auf Ebene 0.
+    """
+    infos = {i.code: i for i in language_infos(directory)}
+    wanted = list(infos) if codes is None else list(dict.fromkeys(codes))
+    items = [infos.get(c) or LanguageInfo(c, c, c, DEFAULT_LANGUAGE) for c in wanted]
+    order = {i.code: n for n, i in enumerate(language_infos(directory))}
+    key = lambda i: (order.get(i.code, len(order)), _sort_name(i.native))
+    present = {i.code for i in items}
+    top = sorted((i for i in items if base_language(i.code) == i.code or base_language(i.code) not in present),
+                 key=key)
+    result: list[tuple[LanguageInfo, int]] = []
+    for parent in top:
+        result.append((parent, 0))
+        if base_language(parent.code) != parent.code:
+            continue
+        children = [i for i in items if i.code != parent.code and base_language(i.code) == parent.code]
+        result.extend((child, 1) for child in sorted(children, key=lambda i: _sort_name(i.native)))
+    return result
 
 
 def fallback_chain(code: str, locales: dict[str, dict]) -> list[str]:
@@ -128,7 +163,11 @@ def system_language() -> str:
     except ValueError:
         sys_code = ""
     # "German_Germany" / "de_DE" -> "de"
-    names = {"german": "de", "english": "en", "french": "fr", "spanish": "es"}
+    names = {
+        "german": "de", "english": "en", "french": "fr", "spanish": "es",
+        "italian": "it", "dutch": "nl", "polish": "pl", "portuguese": "pt",
+        "czech": "cs", "swedish": "sv", "turkish": "tr", "ukrainian": "uk",
+    }
     base = names.get(sys_code.split("_")[0], sys_code.split("_")[0][:2])
     return base if base in available else DEFAULT_LANGUAGE
 

@@ -25,7 +25,8 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
   repository.py               load_catalog(repos), available_updates, install_from_catalog
   app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
   net.py                      urllib + truststore SSL, github_token header
-  i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language
+  i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language,
+                              language_tree (dialects indented under base language in dropdowns)
   icons.py                    Lucide library (names, svg), resolve(icon, icon_text, name, dir, data) -> IconSpec
   credentials.py              Credential, AuthField, AuthenticationRequired, CredentialProvider (search/get_secret/
                               auth_fields/set_auth/close), LocalProvider (vault "app:credentials"), CredentialManager

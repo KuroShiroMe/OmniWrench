@@ -23,7 +23,7 @@ Rules for yourself:
 ## Quick commands
 ```powershell
 .\.venv\Scripts\python main.py                      # run app
-.\.venv\Scripts\python scripts\check_locales.py     # all 8 languages complete?
+.\.venv\Scripts\python scripts\check_locales.py     # all languages complete? (23 app locales)
 .\.venv\Scripts\python scripts\build_store.py       # rebuild store/ after tool changes (bump tool version!)
 .\.venv\Scripts\python scripts\check_store.py       # store/ matches tools/? (CI checks this)
 .\.venv\Scripts\python scripts\smoke_test.py        # start test as in CI (temp home, all languages/tools)
@@ -35,7 +35,7 @@ git tag vX.Y.Z; git push origin vX.Y.Z               # CI (EXE-Build) creates th
 `gh` needs PATH refresh in PowerShell: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`
 
 ## Conventions
-- Every user-visible string via `tr("key")` (app) or `self.context.tr("key")` (tools); add keys to ALL 8 locale files (`omniwrench/locales/*.json`), then run check_locales.
+- Every user-visible string via `tr("key")` (app) or `self.context.tr("key")` (tools); add keys to ALL app locale files (`omniwrench/locales/*.json`, 23 incl. dialects), then run check_locales. Missing keys only fall back (dialect → base → en), they do not fail CI.
 - Tool packages: `tools/<name>/` with tool.json, config.json, install.py, tool.py, locales/. Bump version → rebuild store → commit store/.
 - Commit messages German, end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Bump `omniwrench/__init__.py` version for app releases.
 - Verify UI visually: render with real fonts + `WA_DontShowOnScreen` and `grab()` (see gotchas).

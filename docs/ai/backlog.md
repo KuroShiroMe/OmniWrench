@@ -35,7 +35,14 @@
       until approval.
 - Optional later: installer (Inno Setup/MSIX, sign it too), self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
-- Native-speaker review of fr/es/dialect translations (OmniVault now has all 8 languages too).
+- Languages: it, nl, pl, pt, cs, sv, tr, uk + dialects swg/sxu/nds/gsw/ksh/wien DONE 2026-10-16 (app only).
+  Still open: ja, zh-Hans (font/width tests); RTL (ar, he) needs layout work; tool locales for the new languages
+  (optional, fallback works); German UI texts are long in some languages (pl, nl) -> check widths on Windows.
+- [ ] Native-speaker review of fr/es/dialect translations STILL OPEN (incl. de_hes and ALL languages/dialects added
+      2026-10-16: it nl pl pt cs sv tr uk, de_swg de_sxu de_nds de_gsw de_ksh de_wien - AI-written, unchecked). 2026-10-16: AI review done (main app locales
+      only, see history); a real native speaker has NOT checked them. Open points: French typography (narrow
+      no-break space before : ? ! and inside « », currently normal spaces), tool locales only exist in de/en
+      (+ Subnet de_bad; OmniVault has all 8), new keys from connector/CI PRs need the same review.
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0
   (wizard: download, download again, remove). Idea: real sample icons in the banner before download (needs a CDN
   like jsDelivr; blocked in some networks, so not used yet).

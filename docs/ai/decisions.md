@@ -32,7 +32,12 @@
 - Built-in password manager in main app (local provider in vault). Credential picker = simple full-text search.
 
 ## i18n
-- Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
+- Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), de_hes (Hessisch, added 2026-10-16 on Stef's request), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
+- 2026-10-16 Stef: "alle sinnvollen und die Dialekte" -> added it, nl, pl, pt (Brazilian, code `pt`), cs, sv, tr, uk
+  (fallback en) and de_swg, de_sxu, de_nds, de_gsw, de_ksh, de_wien (fallback de). 23 app locales. Not chosen: ja, zh, RTL.
+  Tool locales are NOT required for every language (fallback). Language lists sort accent-insensitive (_sort_name).
+- Language dropdowns (app + tool settings) list dialects indented under their main language (Stef 2026-10-16).
+  Dialect code convention `<base>_<suffix>`; i18n.language_tree() groups by the part before "_".
 - App language in settings; change rebuilds UI without re-login.
 - Tools: own `locales/`; per-tool language setting ("auto" or fixed). Auto = app language if tool has it, else dialect base language (my addition, user informed), else English.
 
@@ -110,3 +115,6 @@
 - Restart needed: notice in the install log only, no automatic restart.
 - Stef (2026-10-16): OmniWrench targets Windows clients, **not Windows Server**. On Server only a notice on Home
   ("functions limited"); no Server-specific prerequisite handling.
+- Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
+  requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
+  file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.

@@ -37,7 +37,9 @@ installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, win
   Alle Passwörter der Tools werden darin verschlüsselt gespeichert. Sperren mit `Strg+L`, optional automatisch.
 * **Updates**: Das Hauptprogramm prüft GitHub Releases, die Tools werden per Versionsvergleich mit dem Store-Katalog
   aktualisiert.
-* **Mehrsprachig**: Deutsch, Englisch, Französisch, Spanisch sowie Badisch, Bayrisch, Scots und Posh English.
+* **Mehrsprachig**: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Niederländisch, Polnisch, Portugiesisch (Brasilien),
+  Tschechisch, Schwedisch, Türkisch, Ukrainisch sowie die Dialekte Badisch, Bayrisch, Hessisch, Kölsch, Plattdeutsch,
+  Sächsisch, Schwäbisch, Schwiizerdütsch, Wienerisch, Scots und Posh English.
   Die Sprachdateien liegen in `omniwrench/locales/` und in `<tool>/locales/`. Jedes Tool übernimmt automatisch die
   Programmsprache, falls es sie mitbringt, sonst Englisch. In den Tool-Einstellungen lässt sich die Sprache pro Tool
   festlegen. Eine neue Sprache ergänzt man, indem man `en.json` kopiert, übersetzt und `_meta` anpasst;

@@ -162,3 +162,22 @@
   umlauts, >30k script via -File, cancel). Windows API part untested here -> user test.
 - Stef tested UAC install on Windows: OK. Follow-up: Windows Server is not a target -> core/system.is_windows_server()
   (registry InstallationType) + notice label on Home (QLabel#Notice, key home.server_notice, 8 locales).
+
+## 2026-10-16 — AI translation review fr/es/dialects (thread "Übersetzungen prüfen", suggestion 7)
+- Reviewed all 300 keys of fr, es, de_bad, de_by, en_sco, en_posh against de/en. Only existing keys changed
+  (open PRs #7-#10 + connector PR also touch locales). No native-speaker check - stays open in backlog.
+- fr: log FILE not folder (app.unexpected_error), "Prérequis manquants", "est absent de" instead of "manque dans",
+  full terms (nom d'utilisateur, gestionnaire de mots de passe d'OmniWrench), pick_button wording.
+- es: archivo de registro, "Faltan requisitos", copia de seguridad, nombre de usuario, Obtener del gestor.
+  Formal "usted" imperatives confirmed consistent (Seleccione, Introduzca, Consulte).
+- de_bad: scale keys used a different spelling (ë, nooch, vun, het, selber) -> aligned with rest of file;
+  "gönn" -> "gehn". de_by: typo "Ofmeidn", "söiba"/"no amoi" aligned to "sejba"/"nomoi", "Grichtt", "auswürfln".
+- en_posh "programme" consistently; en_sco "Copy user name". check_locales OK.
+- Follow-up (same thread): merged main (UAC, CI, signing). Reviewed the 12 new UAC/server keys too (fr "p. ex.",
+  de_bad/en_sco spelling aligned). Added Hessian `de_hes` (all keys, fallback de). Language dropdowns in app and tool
+  settings now indent dialects under the main language (i18n.language_tree, LANGUAGE_INDENT = 2 em spaces).
+  Gave Stef a list of further sensible languages (backlog).
+- Follow-up 2 (Stef: "Nehmen wir alle sinnvollen und die Dialekte"): added 8 languages (it, nl, pl, pt-BR as `pt`, cs, sv,
+  tr, uk) and 6 German dialects (de_swg, de_sxu, de_nds, de_gsw, de_ksh, de_wien), all 312 keys, AI-written.
+  system_language() maps Windows names (italian, dutch, …). Language list sorts accent-insensitive (Čeština at C).
+  Smoke test: 23 languages OK. Tool locales unchanged (fallback).

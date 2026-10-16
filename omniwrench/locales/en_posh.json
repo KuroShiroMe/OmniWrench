@@ -171,7 +171,7 @@
   "appsettings.scale_hint": "Enlarges or reduces lettering, emblems and spacing, over and above the Windows display scaling. Effective once OmniWrench has been restarted.",
   "appsettings.scale_restart": "The new proportions take effect after a restart. Shall OmniWrench be restarted forthwith? One will need to sign in once more.",
   "appsettings.scale_later": "The new proportions shall be observed at the next start.",
-  "appsettings.scale_restart_failed": "OmniWrench could not restart itself, regrettably. Kindly open the program again.",
+  "appsettings.scale_restart_failed": "OmniWrench could not restart itself, regrettably. Kindly open the programme again.",
   "appsettings.repos_hint": "Repositories furnish the Emporium's catalogue (index.json). Permitted are https:// addresses (e.g. raw.githubusercontent.com/<owner>/<repo>/main/store/index.json) or local paths.",
   "appsettings.repo_active": "Engaged",
   "appsettings.repo_name": "Name",

@@ -322,10 +322,16 @@ Platzhalter stehen in `{geschweiften Klammern}`.
    Standardtext im Code (`tr("key", "Default")`) bzw. der Text aus config.json.
 
 Nach einem Sprachwechsel baut das Hauptprogramm offene Tabs des Tools automatisch mit einer neuen Instanz neu auf.
+Dialekte heißen `<basis>_<kürzel>` (z. B. `de_hes`). Die Sprachauswahl zeigt sie eingerückt unter ihrer
+Hauptsprache; ein Tool ohne eigene Dialektdatei nutzt automatisch die Basissprache.
+
 Mit `self.context.language` fragst du die aktive Sprache ab, z. B. für Zahlenformate.
 
-Verfügbare Sprachcodes des Hauptprogramms: `en`, `de`, `fr`, `es`, `de_bad` (Badisch), `de_by` (Bayrisch),
-`en_sco` (Scots), `en_posh` (Posh English).
+Verfügbare Sprachcodes des Hauptprogramms: `en`, `de`, `fr`, `es`, `it`, `nl`, `pl`, `pt` (Brasilien), `cs`, `sv`,
+`tr`, `uk` sowie die Dialekte `de_bad` (Badisch), `de_by` (Bayrisch), `de_hes` (Hessisch), `de_ksh` (Kölsch),
+`de_nds` (Plattdeutsch), `de_sxu` (Sächsisch), `de_swg` (Schwäbisch), `de_gsw` (Schwiizerdütsch), `de_wien`
+(Wienerisch), `en_sco` (Scots), `en_posh` (Posh English). Ein Tool muss nicht alle Sprachen mitbringen: fehlt eine,
+greift die Fallback-Kette.
 
 Prüfen, welche Übersetzungen noch fehlen:
 
