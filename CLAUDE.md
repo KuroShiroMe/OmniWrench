@@ -30,7 +30,7 @@ Rules for yourself:
 .\.venv\Scripts\python scripts\build_release.py     # dist\OmniWrench-X.Y.Z.zip from HEAD
 .\.venv\Scripts\python scripts\build_exe.py --zip   # dist\OmniWrench\OmniWrench.exe + -win64.zip (docs/EXE_BUILD.md)
 .\.venv\Scripts\python scripts\build_exe.py --sign --zip  # same, signed if SIGN_CERT_SHA1/SIGN_PFX_* set (docs/EXE_SIGNIEREN.md)
-gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip --title "OmniWrench X.Y.Z" --notes "…"
+git tag vX.Y.Z; git push origin vX.Y.Z               # CI (EXE-Build) creates the GitHub release with both zips
 ```
 `gh` needs PATH refresh in PowerShell: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`
 

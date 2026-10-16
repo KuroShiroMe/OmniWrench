@@ -1,7 +1,7 @@
 # Backlog / next steps
 
 ## Open / to verify with user
-- [ ] 0.6.0 on main (PRs #1-#5 merged); user tests on Windows (source + EXE). Release tag/GitHub release only after OK.
+- [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
       Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
       someone with Netwrix Enterprise Pro confirms it works.
@@ -11,9 +11,7 @@
 - [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
 - [ ] Real UAC run of elevated prerequisite install (only simulated so far).
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
-- [ ] IconForge: toolbar min widths (search 240 + pack 230 + variant 110 + category 180) force a horizontal
-      scrollbar below ~1100 px dock width; preview/grid render at fixed 2x -> use sdk.device_pixel_ratio().
-      Left to the IconForge rework thread.
+- [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 
 - [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
       (Settings > Branches) - only the user can do that.
@@ -28,8 +26,7 @@
 - [ ] Code signing via SignPath Foundation (docs/EXE_SIGNIEREN.md): Stef applies at signpath.org (needs GitHub
       2FA, a released version), then sets SIGN_METHOD=signpath + SIGNPATH_* vars/secret. SignPath path untested
       until approval.
-- Optional later: installer (Inno Setup/MSIX, sign it too), auto-upload of the CI zip to the GitHub release,
-  self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
+- Optional later: installer (Inno Setup/MSIX, sign it too), self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Native-speaker review of fr/es/dialect translations.
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0
