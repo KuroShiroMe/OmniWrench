@@ -113,14 +113,12 @@
   Subnet calculator 1.2.1; store fully rebuilt (all 4 tools changed). check_locales OK.
 - Smoke test (Linux offscreen): tools install, main window 900/1400/3840 px, IconForge/OmniVault/Subnet open.
 
-## 2026-10-16 — IconForge 1.1.1: narrow windows (thread "IconForge bei schmalem Fenster")
-- Header row was one fixed row (min ~970 px) -> horizontal scrollbar below ~1100 px dock width.
-- New HeaderBar (tools/iconforge/tool.py): 1 row when wide, title+search / filters on 2 rows when medium,
-  filters split on 3 rows when narrow; minimumSizeHint = narrowest arrangement. Grid keeps at least one full column
-  (min width = cell + scrollbar), so the splitter shrinks the details panel instead. Tool min width 972 -> 494 px.
-- Preview sharpness at high scaling re-checked: render_pixmap uses max(2, screen DPR) (fixed before #4 merge); 200 %
-  render sharp. No change needed.
-- Tested by offscreen renders 1400/1100/900/700/560 px (de, en, 200 %): no horizontal scrollbar. Store: only IconForge zip.
-- Release 0.6.0 (user OK "hau rein"): build-exe.yml now creates the GitHub release on tag v* (checks tag == app
-  version, build_release.py + build_exe.py --zip, source zip uploaded first, notes from
-  .github/release-notes/<tag>.md else --generate-notes; permissions contents: write). Tag v0.6.0 pushed.
+## 2026-10-16 — GitHub Actions CI for every PR (thread "GitHub-Prüfungen für PRs", proposal 3)
+- New `.github/workflows/ci.yml`: Linux job (compileall, check_locales app + all tools, check_store) and Windows job
+  (`scripts/smoke_test.py`). `build-exe.yml` now runs on every PR/push main (no paths filter) + starts the EXE.
+- `scripts/check_store.py`: store/index.json matches tools/ (version, zip exists, sha256/size, zip content == tool dir,
+  CRLF/LF ignored) -> catches "tool changed but version not bumped / store not rebuilt".
+- `scripts/smoke_test.py`: temp OMNIWRENCH_HOME, creates vault, installs store tools without system requirements
+  (AD User Lookup only validated: RSAT), opens main window in all 8 languages, store tab, all tools, 3 widths;
+  any QMessageBox / ERROR log / uncaught exception fails. Runs locally too (`--visible` for real windows).
+

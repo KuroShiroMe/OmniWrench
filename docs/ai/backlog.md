@@ -13,6 +13,9 @@
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 
+- [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
+      (Settings > Branches) - only the user can do that.
+
 ## Later (mentioned by user or proposed)
 - More password-manager connectors: Bitwarden/Vaultwarden, KeePassXC (browser protocol), 1Password, Passbolt, Psono,
   Devolutions, Delinea, CyberArk, Pleasant, HashiCorp Vault, Azure Key Vault, Keeper.

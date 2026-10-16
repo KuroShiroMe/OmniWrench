@@ -54,8 +54,12 @@ omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
                               omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
-scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, update_icons
-.github/workflows/build-exe.yml  Windows CI: builds OmniWrench-X.Y.Z-win64.zip artifact (manual / tags v*)
+scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
+                              smoke_test, update_icons
+.github/workflows/ci.yml      every PR + push main: compileall, check_locales (app + each tool), check_store (Linux);
+                              smoke_test.py on windows-latest (offscreen)
+.github/workflows/build-exe.yml  every PR + push main + tags v*: PyInstaller build, `--pip --version`, EXE start test
+                              (process must survive 20 s, no ERROR in log), artifact OmniWrench-X.Y.Z-win64.zip
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 
