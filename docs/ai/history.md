@@ -131,3 +131,6 @@
   PFX via sign_exe.py) -> Get-AuthenticodeSignature check -> zip -> upload.
 - docs/EXE_SIGNIEREN.md: options table + recommendation + setup per method. Tested on Linux with a self-signed PFX
   (osslsigncode verify ok); Windows/CI signing paths untested without credentials.
+- Stef picked "SignPath + MIT" on the decision card -> LICENSE (MIT), README "Lizenz" + "Code signing policy"
+  (SignPath credit line, roles, privacy statement incl. GitHub store/update check), LICENSE shipped next to the EXE,
+  EXE_SIGNIEREN.md with SignPath application steps.

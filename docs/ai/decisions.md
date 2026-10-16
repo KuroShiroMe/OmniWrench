@@ -91,5 +91,7 @@
 - Secrets never in repo/chat: local signing via env (SIGN_CERT_SHA1 or SIGN_PFX_*), CI via GitHub secrets/variables.
 - CI signs only on tags v* and manual runs; method chosen by repo variable SIGN_METHOD (azure|signpath|certificate);
   empty -> unsigned build, no failure. PR/main builds stay unsigned.
-- Recommendation given: SignPath Foundation (free, CI) if repo gets an OSI licence (currently no LICENSE file!);
-  else Certum Open Source (local) / OV cert; company PKI for internal use. Azure Artifact Signing: EU orgs only.
+- Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "Steffi-Tech").
+  README has the required "Code signing policy" section (roles: Steffi-Tech = author/reviewer/approver,
+  privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
+  Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).

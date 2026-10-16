@@ -18,10 +18,34 @@ bzw. bleiben unsigniert; für SmartScreen zählt die gestartete EXE.
 | **OV-Zertifikat** einer Zertifizierungsstelle | ca. 200–500 €/Jahr | Name/Firma | nur mit Cloud-HSM-Anbindung | Schlüssel liegt seit 2023 immer auf Token oder Cloud-HSM, PFX-Export gibt es nicht mehr |
 | **Firmen-PKI** (AD CS, Vorlage Codesignatur) | vorhanden | Firma | lokal (`SIGN_CERT_SHA1`) | nur für Rechner, denen das Zertifikat per GPO/Intune als vertrauenswürdiger Herausgeber verteilt wird |
 
-**Empfehlung:** Für die öffentliche Verteilung SignPath Foundation, falls das Repository eine
-Open-Source-Lizenz (z. B. MIT) bekommen darf; dann läuft alles automatisch beim Release-Tag. Ohne
-Open-Source-Lizenz ist Certum Open Source nicht möglich; dann bleibt ein OV-Zertifikat. Für den Einsatz
-nur in der eigenen Firma reicht ein Zertifikat aus der Firmen-PKI.
+**Gewählt (16.10.2026): SignPath Foundation.** Das Repository steht dafür unter der MIT-Lizenz, die README
+enthält den Abschnitt „Code signing policy“.
+
+## SignPath Foundation beantragen
+
+Voraussetzungen der [SignPath Foundation](https://signpath.org/terms), die OmniWrench schon erfüllt:
+OSI-Lizenz (MIT), nur eigener Quellcode plus freie Bibliotheken, aktiv gepflegt, automatischer Build aus
+dem Repository (GitHub Actions), Produktname und Version in der EXE (`version_info.txt`), Abschnitt
+„Code signing policy“ mit Rollen und Datenschutzhinweis in der README.
+
+Noch zu tun:
+1. **Zwei-Faktor-Anmeldung** bei GitHub einschalten (Pflicht für alle Beteiligten, auch später bei SignPath).
+2. **Release veröffentlichen**, das signiert werden soll: SignPath signiert nur bereits veröffentlichte
+   Versionen, d. h. erst Tag/Release `vX.Y.Z`, dann signierter Build.
+3. **Antrag stellen** über das Formular auf [signpath.org](https://signpath.org) (Projekt-URL, Lizenz,
+   Download-Seite = GitHub Releases, Link auf die Code signing policy in der README).
+4. Nach der Zusage in SignPath: GitHub-Repository als Quelle verbinden (GitHub-App *SignPath*), Projekt
+   `omniwrench` mit Signierrichtlinie `release-signing` und der Artefakt-Konfiguration unten anlegen,
+   CI-Benutzer mit API-Token (Rolle *Submitter*) erstellen.
+5. In GitHub die Variablen und das Secret aus dem Abschnitt **SignPath** unten eintragen und
+   `SIGN_METHOD` = `signpath` setzen.
+6. Ab dann: Tag `vX.Y.Z` pushen → Workflow **EXE-Build** reicht die EXE bei SignPath ein → die Freigabe
+   erfolgt dort manuell (Approver) → der Workflow lädt die signierte EXE und packt das ZIP.
+
+Jede Signierung muss in SignPath von Hand freigegeben werden. Der Workflow wartet darauf bis zu
+10 Minuten; danach den Lauf nach der Freigabe neu starten.
+
+Bis zur Zusage bleibt `SIGN_METHOD` leer, die EXE wird unsigniert gebaut.
 
 ## Lokal signieren
 

@@ -165,6 +165,7 @@ def copy_extras(app_dir: Path) -> None:
     docs.mkdir(exist_ok=True)
     shutil.copy2(ROOT / "docs" / "TOOL_ENTWICKLUNG.md", docs / "TOOL_ENTWICKLUNG.md")
     shutil.copy2(ROOT / "README.md", app_dir / "README.md")
+    shutil.copy2(ROOT / "LICENSE", app_dir / "LICENSE")
 
 
 def make_zip(app_dir: Path) -> Path:

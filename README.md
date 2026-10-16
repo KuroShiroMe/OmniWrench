@@ -107,3 +107,28 @@ standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
 * **EXE bauen:** `python scripts/build_exe.py --zip` erzeugt `dist\OmniWrench\OmniWrench.exe` und
   `dist\OmniWrench-X.Y.Z-win64.zip` (Anleitung: [docs/EXE_BUILD.md](docs/EXE_BUILD.md)).
 * **Private Repositories** brauchen ein GitHub-Token (*Einstellungen › Updates*). Es wird im Tresor gespeichert.
+
+## Lizenz
+
+OmniWrench steht unter der [MIT-Lizenz](LICENSE). Mitgelieferte Bibliotheken behalten ihre eigenen Lizenzen
+(u. a. Lucide: ISC, PySide6/Qt: LGPL).
+
+## Code signing policy
+
+Die Windows-Programmdateien (`OmniWrench.exe` im Paket `OmniWrench-X.Y.Z-win64.zip`) werden automatisch aus
+diesem Repository mit GitHub Actions gebaut und signiert.
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
+| Rolle | Mitglieder |
+|---|---|
+| Autoren (Committer) und Prüfer (Reviewer) | [Steffi-Tech](https://github.com/Steffi-Tech) |
+| Freigabe jeder Signierung (Approver) | [Steffi-Tech](https://github.com/Steffi-Tech) |
+
+**Datenschutz:** This program will not transfer any information to other networked systems unless
+specifically requested by the user or the person installing or operating it. Abgerufen werden nur der
+Tool-Store und die Release-Liste von GitHub (`raw.githubusercontent.com`, `api.github.com`); die Prüfung beim
+Start lässt sich unter *Einstellungen › Updates* abschalten. Verbindungen zu Active Directory,
+Passwort-Managern oder anderen Systemen stellen nur die Tools her, die der Benutzer installiert und
+einrichtet.
