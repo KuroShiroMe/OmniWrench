@@ -139,3 +139,4 @@
   statement got its own heading (#datenschutz) for the privacy URL.
 - v0.6.0 released by CI (tag pushed by user). Assets came out win64-first -> workflow now uploads source zip first,
   win64 separately; user asked to re-upload the win64 asset of v0.6.0 so the source zip is first.
+- Re-upload didn't help: assets are sorted by name. User chose: keep names, update 0.5.x installs manually once.

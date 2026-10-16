@@ -74,5 +74,7 @@
   SIGN_TIMESTAMP_URL=none for local tests only.
 
 ## Release assets
-- `gh release create tag a.zip b.zip` uploads in parallel -> asset order random (v0.6.0: -win64 came first).
-  App <=0.5.x takes the FIRST omniwrench*.zip -> create release with source zip, then `gh release upload` the -win64.
+- GitHub lists release assets sorted by NAME: `OmniWrench-X.Y.Z-win64.zip` comes before `OmniWrench-X.Y.Z.zip`
+  ("-" < "."), upload order/re-upload doesn't change it. App <=0.5.x takes the first omniwrench*.zip -> would get
+  the EXE package. 0.6.0+ uses _pick_asset (by suffix), so only the 0.5.x -> 0.6.0 jump is affected.
+  User decision: no rename; 0.5.x installs are updated manually once.
