@@ -133,8 +133,10 @@ class _ContextBase:
         credentials.manager().unregister(provider_id)
 
     # PowerShell-Helfer
-    def run_powershell(self, script: str, stdin: str | None = None, timeout: float | None = 300) -> PSResult:
-        return run_ps(script, stdin=stdin, timeout=timeout)
+    def run_powershell(self, script: str, stdin: str | None = None, timeout: float | None = 300,
+                       shell: str = "powershell") -> PSResult:
+        """shell="pwsh" nutzt PowerShell 7 statt Windows PowerShell 5.1."""
+        return run_ps(script, stdin=stdin, timeout=timeout, shell=shell)
 
     def run_powershell_json(self, script: str, stdin: str | None = None, timeout: float | None = 300):
         return run_ps_json(script, stdin=stdin, timeout=timeout)

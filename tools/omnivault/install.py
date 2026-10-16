@@ -1,4 +1,4 @@
-"""Installationsroutine des Password Manager Manager.
+"""Installationsroutine des OmniVault.
 
 pykeepass (für KeePass-Konnektoren) installiert das Hauptprogramm aus tool.json -> requirements.
 Das PowerShell-Modul für SecretManagement wird erst beim Anlegen eines solchen Konnektors benötigt.
@@ -20,7 +20,7 @@ def check(ctx):
 
 
 def install(ctx):
-    ctx.report(ctx.tr("install.ready", "Password Manager Manager is ready."))
+    ctx.report(ctx.tr("install.ready", "OmniVault installed."))
 
 
 def uninstall(ctx):

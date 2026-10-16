@@ -48,8 +48,7 @@ omniwrench/ui/
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
-                              password_manager_manager (sec.password-manager-manager: connector_types.json,
-                              connectors.py, tool.py), icon_store (gfx.icon-store: export.py, tool.py)
+                              omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, check_locales, update_icons
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
@@ -66,3 +65,6 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 - Tool language: reserved setting key `_language`; change -> MainWindow.reload_tool_tabs (new instance).
 - Layout persistence: layout.json (geometry, QtAds state, open tool dock names `tool:<id>:<n>`).
 - Store index entries = tool.json + download_url + sha256 + translations (+ icon_data for custom image icons).
+- powershell.run_ps(..., shell="powershell"|"pwsh"); ToolContext.run_powershell(..., shell=...).
+- IconForge pack cache: <tool_data>/gfx.iconforge/packs/<pack>/<variant>/<name>.svg + index.json
+  {version, license, variants{v:[names]}, meta{name:{tags,categories}}, categories{id:title}}.

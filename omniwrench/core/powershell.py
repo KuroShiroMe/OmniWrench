@@ -29,11 +29,14 @@ class PSResult:
         return self.returncode == 0
 
 
-def _powershell_exe() -> str:
-    return "powershell.exe" if os.name == "nt" else "pwsh"
+def _powershell_exe(shell: str = "powershell") -> str:
+    """shell: "powershell" (Windows PowerShell 5.1) oder "pwsh" (PowerShell 7)."""
+    if shell == "pwsh" or os.name != "nt":
+        return "pwsh.exe" if os.name == "nt" else "pwsh"
+    return "powershell.exe"
 
 
-def run_ps(script: str, stdin: str | None = None, timeout: float | None = 300) -> PSResult:
+def run_ps(script: str, stdin: str | None = None, timeout: float | None = 300, shell: str = "powershell") -> PSResult:
     """Führt ein PowerShell-Skript aus. Ausgabe wird als UTF-8 erzwungen."""
     prologue = (
         "[Console]::OutputEncoding=[System.Text.Encoding]::UTF8;"
@@ -42,7 +45,7 @@ def run_ps(script: str, stdin: str | None = None, timeout: float | None = 300) -
     )
     encoded = base64.b64encode((prologue + script).encode("utf-16-le")).decode("ascii")
     proc = subprocess.run(
-        [_powershell_exe(), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
+        [_powershell_exe(shell), "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass",
          "-EncodedCommand", encoded],
         input=stdin.encode("utf-8") if stdin is not None else None,
         capture_output=True,

@@ -36,8 +36,8 @@
 - App language in settings; change rebuilds UI without re-login.
 - Tools: own `locales/`; per-tool language setting ("auto" or fixed). Auto = app language if tool has it, else dialect base language (my addition, user informed), else English.
 
-## Password Manager Manager (decided 2026-10-15, built 2026-10-16 v1.0.0)
-- Separate tool "Password Manager Manager": contains own manager + connectors to external managers.
+## OmniVault (decided 2026-10-15, built 2026-10-16 v1.0.0)
+- Separate tool "OmniVault": contains own manager + connectors to external managers.
 - First connectors: Microsoft SecretManagement, KeePass, Netwrix Password Secure (user has Netwrix to test).
 - Connector type definitions in a JSON (fields needed for API). Only simple search for now (no folder trees).
 - Access credentials for each connector configured in the connector's settings.
@@ -46,8 +46,18 @@
 - Credential field supports MULTIPLE saved credentials → name dropdown; list persisted (refs only), secrets fetched at login time.
 - If manager auth fails (changed password): NO error message — show popup asking for connector credentials, with "save" option, then retry.
 
-## Icon Store (decided 2026-10-15, built 2026-10-16 v1.0.0)
-- Tool "Icon Store": browse icons (start with bundled Lucide), search + filter, cool grid, click → right metadata panel, show name usable in tool.json, "Save as" with scaling options and multiple file types (for Visio etc.).
+## IconForge (decided 2026-10-15, built 2026-10-16 v1.0.0)
+- Tool "IconForge": browse icons (start with bundled Lucide), search + filter, cool grid, click → right metadata panel, show name usable in tool.json, "Save as" with scaling options and multiple file types (for Visio etc.).
 - Implementation choices (mine): connector secrets saved only if "save login data" is checked, else asked once per
-  session; connector dialog offers Install-Module for missing PS modules; Icon Store export formats SVG/PNG/ICO/PDF/JPG
+  session; connector dialog offers Install-Module for missing PS modules; IconForge export formats SVG/PNG/ICO/PDF/JPG
   (EMF not supported by Qt); "copy image" for pasting into Visio.
+
+## Round 8 decisions (2026-10-16)
+- Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
+- UI text style: neutral program language — no "du", no chatty explanations; imperative/impersonal like normal software.
+  Dialect locales may stay playful. Developer docs (TOOL_ENTWICKLUNG.md) may address the reader informally.
+- Connector dialog: one "Add connector" button; type selection inside the dialog; fields from JSON update live.
+- IconForge: no "tool.json name" field; dev doc says: library icon names = names shown in IconForge (Lucide).
+- IconForge libraries: only Lucide bundled offline; all others downloaded on demand when selected.
+- Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
+- Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).

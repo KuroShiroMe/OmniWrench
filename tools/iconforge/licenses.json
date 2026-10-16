@@ -1,0 +1,46 @@
+{
+  "_doc": [
+    "Lizenzarten der Symbol-Pakete und was sie erlauben (vereinfachte Übersicht, keine Rechtsberatung).",
+    "permissions: Schlüssel -> true (erlaubt) / false (nicht erlaubt bzw. Bedingung nicht erfüllt).",
+    "Die Beschriftungen der Schlüssel stehen in den Sprachdateien des Tools (perm.<schlüssel>).",
+    "brands=true im Paket fügt 'trademark_free' = false hinzu (Markenlogos gehören den jeweiligen Inhabern)."
+  ],
+  "permission_order": ["commercial", "modify", "documents", "software", "no_attribution", "redistribute", "no_notice", "trademark_free"],
+  "licenses": {
+    "ISC": {
+      "name": "ISC License", "url": "https://opensource.org/license/isc-license-txt",
+      "summary": {"en": "Permissive licence similar to MIT. Copyright and licence notice must be kept when the icon files are redistributed.",
+                  "de": "Freizügige Lizenz ähnlich MIT. Bei Weitergabe der Symbol-Dateien müssen Copyright- und Lizenzhinweis erhalten bleiben."},
+      "permissions": {"commercial": true, "modify": true, "documents": true, "software": true, "no_attribution": true,
+                      "redistribute": true, "no_notice": false}
+    },
+    "MIT": {
+      "name": "MIT License", "url": "https://opensource.org/license/mit",
+      "summary": {"en": "Permissive licence. Free use, also commercially. When the icon files themselves are redistributed, the copyright and licence notice must be included.",
+                  "de": "Freizügige Lizenz. Freie Nutzung, auch kommerziell. Werden die Symbol-Dateien selbst weitergegeben, sind Copyright- und Lizenzhinweis beizulegen."},
+      "permissions": {"commercial": true, "modify": true, "documents": true, "software": true, "no_attribution": true,
+                      "redistribute": true, "no_notice": false}
+    },
+    "Apache-2.0": {
+      "name": "Apache License 2.0", "url": "https://www.apache.org/licenses/LICENSE-2.0",
+      "summary": {"en": "Permissive licence. Free use, also commercially. When redistributing the icon files, include the licence and mark modified files.",
+                  "de": "Freizügige Lizenz. Freie Nutzung, auch kommerziell. Bei Weitergabe der Symbol-Dateien Lizenz beilegen und geänderte Dateien kennzeichnen."},
+      "permissions": {"commercial": true, "modify": true, "documents": true, "software": true, "no_attribution": true,
+                      "redistribute": true, "no_notice": false}
+    },
+    "CC0-1.0": {
+      "name": "Creative Commons Zero 1.0 (Public Domain)", "url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "summary": {"en": "Public domain dedication. No conditions.",
+                  "de": "Gemeinfrei. Keine Bedingungen."},
+      "permissions": {"commercial": true, "modify": true, "documents": true, "software": true, "no_attribution": true,
+                      "redistribute": true, "no_notice": true}
+    },
+    "CC-BY-4.0": {
+      "name": "Creative Commons Attribution 4.0", "url": "https://creativecommons.org/licenses/by/4.0/",
+      "summary": {"en": "Free use, also commercially, but the author must be credited (e.g. in the document or imprint).",
+                  "de": "Freie Nutzung, auch kommerziell, aber mit Namensnennung des Urhebers (z. B. im Dokument oder Impressum)."},
+      "permissions": {"commercial": true, "modify": true, "documents": true, "software": true, "no_attribution": false,
+                      "redistribute": true, "no_notice": false}
+    }
+  }
+}

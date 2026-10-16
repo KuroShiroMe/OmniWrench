@@ -44,6 +44,15 @@ def is_secret(f: dict) -> bool:
     return f.get("type") == "secret" or bool(f.get("secret"))
 
 
+def defaults(spec: dict) -> dict:
+    return {f["key"]: f["default"] for f in spec["fields"] if "default" in f}
+
+
+def is_visible(f: dict, values: dict) -> bool:
+    """show_if: {"auth_mode": "api_key"} -> Feld nur bei passendem Wert anzeigen/verwenden."""
+    return all(values.get(k, "") == v for k, v in (f.get("show_if") or {}).items())
+
+
 @dataclass
 class ConnectorConfig:
     id: str
@@ -101,7 +110,7 @@ class ConnectorStore:
             self.ctx.secrets.delete(f"conn:{conn.id}")
 
     def all_values(self, conn: ConnectorConfig) -> dict[str, str]:
-        return {**conn.values, **self.secrets(conn)}
+        return {**defaults(self.types[conn.type]), **conn.values, **self.secrets(conn)}
 
 
 # ===================================================================== Anbieter
@@ -114,14 +123,19 @@ class ConnectorProvider(CredentialProvider):
         self.name = conn.name
         self.max_results = int(store.ctx.settings.get("max_results", 100) or 100)
 
+    values_override: dict | None = None   # Verbindungstest im Dialog: Werte nicht speichern
+
     @property
     def values(self) -> dict[str, str]:
+        if self.values_override is not None:
+            return {**defaults(self.spec), **self.values_override}
         return self.store.all_values(self.conn)
 
     def auth_fields(self) -> list[AuthField]:
         lang = self.store.ctx.language
+        vals = self.values
         return [AuthField(f["key"], text(f["label"], lang), is_secret(f))
-                for f in self.spec["fields"] if f.get("auth")]
+                for f in self.spec["fields"] if f.get("auth") and is_visible(f, vals)]
 
     def set_auth(self, values: dict[str, str], save: bool) -> None:
         secret_keys = {f["key"] for f in self.spec["fields"] if is_secret(f)}
@@ -138,11 +152,6 @@ class ConnectorProvider(CredentialProvider):
     def on_auth_changed(self) -> None:
         """Nach neuen Anmeldedaten (z. B. geöffnete Datenbank verwerfen)."""
 
-    def _missing_auth(self) -> bool:
-        vals = self.values
-        return any(f.get("auth") and is_secret(f) and not vals.get(f["key"]) for f in self.spec["fields"]
-                   if f.get("required", True))
-
     def test(self) -> str:
         """Verbindungstest: liefert eine kurze Erfolgsmeldung oder wirft eine Exception."""
         return str(len(self.search("")))
@@ -155,7 +164,8 @@ class PowerShellConnector(ConnectorProvider):
         scripts = self.spec["scripts"]
         script = "\n".join(scripts.get("prologue", []) + scripts[action])
         payload = json.dumps({**self.values, "max": self.max_results, **extra})
-        result = self.store.ctx.run_powershell(script, stdin=payload, timeout=120)
+        shell = self.values.get("shell") or self.spec.get("shell", "powershell")
+        result = self.store.ctx.run_powershell(script, stdin=payload, timeout=120, shell=shell)
         if not result.ok:
             message = result.stderr or result.stdout or "PowerShell error"
             if any(re.search(p, message) for p in self.spec.get("auth_error_patterns", [])):

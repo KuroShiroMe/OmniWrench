@@ -1,0 +1,346 @@
+{
+  "_doc": [
+    "Konnektor-Typen von OmniVault.",
+    "fields: Eingaben je Konnektor. type: string | path_file | path_dir | secret | bool | choice (options: [{value, label}]).",
+    "        auth=true   -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
+    "        type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
+    "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert hat.",
+    "implementation: 'powershell' (Skripte unten) oder 'keepass' (Python, pykeepass).",
+    "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
+    "            search -> JSON-Liste [{id, name, username, detail}], get -> {username, password}.",
+    "            Feld 'shell' (powershell | pwsh) wählt Windows PowerShell 5.1 oder PowerShell 7.",
+    "            auth_error_patterns: Regex auf die Fehlermeldung -> Anmeldedialog statt Fehlermeldung."
+  ],
+  "types": {
+    "secretmanagement": {
+      "name": "Microsoft SecretManagement",
+      "icon": "terminal-square",
+      "description": {
+        "en": "PowerShell SecretManagement vaults (SecretStore, KeePass, Bitwarden, Azure Key Vault … extensions).",
+        "de": "PowerShell-SecretManagement-Tresore (SecretStore, KeePass, Bitwarden, Azure Key Vault … Erweiterungen)."
+      },
+      "implementation": "powershell",
+      "requirements": {
+        "powershell_modules": [
+          "Microsoft.PowerShell.SecretManagement"
+        ]
+      },
+      "fields": [
+        {
+          "key": "vault",
+          "type": "string",
+          "label": {
+            "en": "Vault name",
+            "de": "Tresor-Name"
+          },
+          "placeholder": {
+            "en": "empty = all registered vaults",
+            "de": "leer = alle registrierten Tresore"
+          }
+        },
+        {
+          "key": "vault_password",
+          "type": "secret",
+          "auth": true,
+          "label": {
+            "en": "Vault password (SecretStore)",
+            "de": "Tresor-Passwort (SecretStore)"
+          },
+          "placeholder": {
+            "en": "only if the vault is password protected",
+            "de": "nur falls der Tresor ein Passwort hat"
+          }
+        }
+      ],
+      "auth_error_patterns": [
+        "(?i)password",
+        "(?i)Unlock-SecretStore",
+        "(?i)locked",
+        "(?i)Kennwort"
+      ],
+      "scripts": {
+        "prologue": [
+          "$ErrorActionPreference = 'Stop'",
+          "$p = [Console]::In.ReadToEnd() | ConvertFrom-Json",
+          "Import-Module Microsoft.PowerShell.SecretManagement",
+          "if ($p.vault_password -and (Get-Command Unlock-SecretStore -ErrorAction SilentlyContinue)) {",
+          "  Unlock-SecretStore -Password (ConvertTo-SecureString $p.vault_password -AsPlainText -Force)",
+          "}"
+        ],
+        "search": [
+          "$q = @{ Name = '*' + $p.query + '*' }",
+          "if ($p.vault) { $q.Vault = $p.vault }",
+          "$r = Get-SecretInfo @q | Select-Object -First ([int]$p.max) | ForEach-Object {",
+          "  $user = ''",
+          "  if ($_.Metadata -and $_.Metadata.ContainsKey('UserName')) { $user = [string]$_.Metadata['UserName'] }",
+          "  [pscustomobject]@{ id = $_.VaultName + '|' + $_.Name; name = $_.Name; username = $user;",
+          "                     detail = $_.VaultName + ' · ' + $_.Type }",
+          "}",
+          "ConvertTo-Json -InputObject @($r) -Compress"
+        ],
+        "get": [
+          "$vault, $name = $p.id -split '\\|', 2",
+          "$s = Get-Secret -Vault $vault -Name $name",
+          "$user = ''; $pw = ''",
+          "function Plain($sec) { [Runtime.InteropServices.Marshal]::PtrToStringBSTR([Runtime.InteropServices.Marshal]::SecureStringToBSTR($sec)) }",
+          "if ($s -is [pscredential]) { $user = $s.UserName; $pw = $s.GetNetworkCredential().Password }",
+          "elseif ($s -is [securestring]) { $pw = Plain $s }",
+          "elseif ($s -is [hashtable]) {",
+          "  foreach ($k in 'UserName','Username','User') { if ($s.ContainsKey($k)) { $user = [string]$s[$k] } }",
+          "  foreach ($k in 'Password','Secret') { if ($s.ContainsKey($k)) { $v = $s[$k]; $pw = if ($v -is [securestring]) { Plain $v } else { [string]$v } } }",
+          "}",
+          "else { $pw = [string]$s }",
+          "ConvertTo-Json -InputObject ([pscustomobject]@{ username = $user; password = $pw }) -Compress"
+        ]
+      }
+    },
+    "keepass": {
+      "name": "KeePass",
+      "icon": "key-square",
+      "description": {
+        "en": "KeePass / KeePassXC database (.kdbx) - read directly, KeePass itself is not required.",
+        "de": "KeePass-/KeePassXC-Datenbank (.kdbx) - wird direkt gelesen, KeePass selbst ist nicht nötig."
+      },
+      "implementation": "keepass",
+      "requirements": {
+        "python": [
+          "pykeepass>=4.1"
+        ]
+      },
+      "fields": [
+        {
+          "key": "database",
+          "type": "path_file",
+          "required": true,
+          "label": {
+            "en": "Database (.kdbx)",
+            "de": "Datenbank (.kdbx)"
+          }
+        },
+        {
+          "key": "key_file",
+          "type": "path_file",
+          "label": {
+            "en": "Key file (optional)",
+            "de": "Schlüsseldatei (optional)"
+          }
+        },
+        {
+          "key": "password",
+          "type": "secret",
+          "auth": true,
+          "label": {
+            "en": "Master password",
+            "de": "Master-Passwort"
+          }
+        }
+      ]
+    },
+    "netwrix": {
+      "name": "Netwrix Password Secure",
+      "icon": "shield-check",
+      "description": {
+        "en": "Netwrix Password Secure 9 via the official SDK (PsrApi.dll from the Netwrix customer portal). Login with user name and password or with an API key.",
+        "de": "Netwrix Password Secure 9 über das offizielle SDK (PsrApi.dll aus dem Netwrix-Kundenportal). Anmeldung mit Benutzername und Passwort oder mit API-Schlüssel."
+      },
+      "implementation": "powershell",
+      "docs": "https://help.passwordsafe.de/api/v9/html/e113b193-3482-8477-c479-6cf97ecbf796.htm",
+      "fields": [
+        {
+          "key": "endpoint",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Endpoint",
+            "de": "Endpunkt"
+          },
+          "placeholder": {
+            "en": "https://webapp/api  or  server:11016",
+            "de": "https://webapp/api  oder  server:11016"
+          }
+        },
+        {
+          "key": "database",
+          "type": "string",
+          "required": true,
+          "label": {
+            "en": "Database",
+            "de": "Datenbank"
+          }
+        },
+        {
+          "key": "sdk_path",
+          "type": "path_dir",
+          "required": true,
+          "label": {
+            "en": "SDK folder (PsrApi.dll)",
+            "de": "SDK-Ordner (PsrApi.dll)"
+          }
+        },
+        {
+          "key": "shell",
+          "type": "choice",
+          "default": "pwsh",
+          "label": {
+            "en": "PowerShell",
+            "de": "PowerShell"
+          },
+          "options": [
+            {
+              "value": "pwsh",
+              "label": {
+                "en": "PowerShell 7 (recommended for current SDKs)",
+                "de": "PowerShell 7 (empfohlen für aktuelle SDKs)"
+              }
+            },
+            {
+              "value": "powershell",
+              "label": {
+                "en": "Windows PowerShell 5.1",
+                "de": "Windows PowerShell 5.1"
+              }
+            }
+          ]
+        },
+        {
+          "key": "auth_mode",
+          "type": "choice",
+          "default": "password",
+          "label": {
+            "en": "Login method",
+            "de": "Anmeldung"
+          },
+          "options": [
+            {
+              "value": "password",
+              "label": {
+                "en": "User name and password",
+                "de": "Benutzername und Passwort"
+              }
+            },
+            {
+              "value": "api_key",
+              "label": {
+                "en": "API key",
+                "de": "API-Schlüssel"
+              }
+            }
+          ]
+        },
+        {
+          "key": "username",
+          "type": "string",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "password"
+          },
+          "label": {
+            "en": "User name",
+            "de": "Benutzername"
+          }
+        },
+        {
+          "key": "password",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "password"
+          },
+          "label": {
+            "en": "Password",
+            "de": "Passwort"
+          }
+        },
+        {
+          "key": "api_key",
+          "type": "secret",
+          "auth": true,
+          "required": true,
+          "show_if": {
+            "auth_mode": "api_key"
+          },
+          "label": {
+            "en": "API key",
+            "de": "API-Schlüssel"
+          }
+        }
+      ],
+      "auth_error_patterns": [
+        "(?i)password",
+        "(?i)passwort",
+        "(?i)credential",
+        "(?i)authenticat",
+        "(?i)login",
+        "(?i)anmeld",
+        "(?i)api ?key",
+        "(?i)unauthori"
+      ],
+      "scripts": {
+        "prologue": [
+          "$ErrorActionPreference = 'Stop'",
+          "$p = [Console]::In.ReadToEnd() | ConvertFrom-Json",
+          "$dll = Join-Path $p.sdk_path 'PsrApi.dll'",
+          "if (-not (Test-Path $dll)) { throw \"PsrApi.dll not found in $($p.sdk_path)\" }",
+          "Add-Type -Path $dll",
+          "function Await($task) { $task.GetAwaiter().GetResult() }",
+          "$api = New-Object PsrApi.PsrApi($p.endpoint)",
+          "if ($p.auth_mode -eq 'api_key') {",
+          "  Await ($api.AuthenticationManagerV2.LoginWithApiKey($p.api_key))",
+          "} else {",
+          "  $flow = $api.AuthenticationManagerV2.StartNewAuthentication($p.database, $p.username)",
+          "  Await ($flow.StartLogin())",
+          "  for ($i = 0; -not $flow.IsAuthenticated -and $i -lt 5; $i++) {",
+          "    $req = $flow.GetNextRequirement()",
+          "    $auth = $req.PossibleRequirements | Where-Object { $_.IsPasswordAuthentication() } | Select-Object -First 1",
+          "    if (-not $auth) { throw 'The account requires a login method other than password (e.g. MFA). Use an API key instead.' }",
+          "    if ($auth.PSObject.Properties['Fields']) {",
+          "      foreach ($f in $auth.Fields) {",
+          "        if ($f.Key -match 'user') { $f.Value = $p.username } else { $f.Value = $p.password }",
+          "      }",
+          "    }",
+          "    Await ($flow.Authenticate($auth))",
+          "  }",
+          "  if (-not $flow.IsAuthenticated) { throw 'Login failed.' }",
+          "}",
+          "function ItemValue($container, $type) {",
+          "  ($container.Items | Where-Object { [string]$_.ContainerItemType -eq $type } | Select-Object -First 1).Value",
+          "}"
+        ],
+        "search": [
+          "$type = [PsrApi.Data.Enums.PsrContainerType]::Password",
+          "$filter = Await ($api.ContainerManager.GetContainerListFilter($type, $true))",
+          "if ($p.query) {",
+          "  $group = $filter.FilterGroups | Where-Object { $_ -is [PsrApi.Data.PsrListFilterGroupContent] } | Select-Object -First 1",
+          "  if (-not $group) { $group = New-Object PsrApi.Data.PsrListFilterGroupContent; $filter.FilterGroups.Add($group) }",
+          "  if (-not $group.SearchList) { $group.SearchList = New-Object 'System.Collections.Generic.List[PsrApi.Data.PsrListFilterObjectContent]' }",
+          "  $o = New-Object PsrApi.Data.PsrListFilterObjectContent",
+          "  $o.Search = [string]$p.query",
+          "  $o.FilterActive = $true",
+          "  $group.SearchList.Add($o)",
+          "}",
+          "try { $filter.First = [int]$p.max } catch { }",
+          "$list = Await ($api.ContainerManager.GetContainerList($type, $filter, $null))",
+          "$r = $list | Select-Object -First ([int]$p.max) | ForEach-Object {",
+          "  $name = $_.Name",
+          "  if (-not $name) { $name = ItemValue $_ 'ContainerItemText' }",
+          "  [pscustomobject]@{ id = [string]$_.Id; name = [string]$name; username = [string](ItemValue $_ 'ContainerItemUserName');",
+          "                     detail = [string](ItemValue $_ 'ContainerItemHostName') }",
+          "}",
+          "try { $api.AuthenticationManagerV2.Logout() | Out-Null } catch { }",
+          "ConvertTo-Json -InputObject @($r) -Compress"
+        ],
+        "get": [
+          "$c = Await ($api.ContainerManager.GetContainer([guid]$p.id))",
+          "$pwItem = $c.Items | Where-Object { [string]$_.ContainerItemType -eq 'ContainerItemPassword' } | Select-Object -First 1",
+          "$pw = ''",
+          "if ($pwItem) { $pw = Await ($api.ContainerManager.DecryptContainerItem($pwItem, 'OmniWrench')) }",
+          "$user = ItemValue $c 'ContainerItemUserName'",
+          "try { $api.AuthenticationManagerV2.Logout() | Out-Null } catch { }",
+          "ConvertTo-Json -InputObject ([pscustomobject]@{ username = [string]$user; password = [string]$pw }) -Compress"
+        ]
+      }
+    }
+  }
+}

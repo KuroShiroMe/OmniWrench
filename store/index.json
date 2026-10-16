@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-16T06:47:58+00:00",
+  "generated": "2026-10-16T07:47:31+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -49,17 +49,17 @@
       "size": 5942
     },
     {
-      "id": "gfx.icon-store",
-      "name": "Icon Store",
+      "id": "gfx.iconforge",
+      "name": "IconForge",
       "version": "1.0.0",
-      "description": "Browse icons and pictograms and save them in many formats and sizes - e.g. for Visio diagrams.",
-      "long_description": "Searchable grid of all icons available in OmniWrench (Lucide, ISC licence - free for commercial use). Filter by category, see tags and the name to use in tool.json, adjust colour, stroke width and background, and save as SVG, PNG, ICO, PDF or JPG in several sizes at once - or copy the image straight into Visio, Word or PowerPoint.",
+      "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
+      "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "DarkMatter",
       "category": "Design/Icons",
-      "icon": "images",
+      "icon": "pen-tool",
       "color": "#ec4899",
-      "entry": "tool:IconStore",
-      "min_app_version": "0.4.0",
+      "entry": "tool:IconForge",
+      "min_app_version": "0.5.0",
       "platforms": [
         "windows"
       ],
@@ -70,31 +70,36 @@
         "svg",
         "png",
         "pictogram",
-        "piktogramm"
+        "piktogramm",
+        "lucide",
+        "tabler",
+        "material",
+        "fluent",
+        "font awesome"
       ],
       "single_instance": false,
       "requirements": {},
       "translations": {
         "de": {
-          "name": "Icon Store",
-          "description": "Symbole und Piktogramme durchsuchen und in vielen Formaten und Größen speichern - z. B. für Visio-Zeichnungen.",
-          "long_description": "Durchsuchbares Raster aller in OmniWrench verfügbaren Symbole (Lucide, ISC-Lizenz - frei auch für kommerzielle Nutzung). Nach Kategorie filtern, Schlagwörter und den Namen für die tool.json sehen, Farbe, Strichstärke und Hintergrund anpassen und als SVG, PNG, ICO, PDF oder JPG in mehreren Größen gleichzeitig speichern - oder direkt in Visio, Word oder PowerPoint einfügen.",
+          "name": "IconForge",
+          "description": "Symbole und Piktogramme aus vielen freien Bibliotheken - suchen, anpassen und exportieren, z. B. für Visio.",
+          "long_description": "Durchsuchbares Raster mit über 100.000 Symbolen aus mehr als 25 freien Bibliotheken (Lucide eingebaut, Tabler, Phosphor, Material, Fluent, Font Awesome u. a. werden bei Bedarf geladen). Zeigt Lizenz und erlaubte Nutzung je Symbol, passt Farbe, Strichstärke und Hintergrund an und exportiert als SVG, PNG, ICO, PDF oder JPG in mehreren Größen.",
           "category": "Design/Symbole"
         },
         "en": {
-          "name": "Icon Store",
-          "description": "Browse icons and pictograms and save them in many formats and sizes - e.g. for Visio diagrams.",
-          "long_description": "Searchable grid of all icons available in OmniWrench (Lucide, ISC licence - free for commercial use). Filter by category, see tags and the name to use in tool.json, adjust colour, stroke width and background, and save as SVG, PNG, ICO, PDF or JPG in several sizes at once - or copy the image straight into Visio, Word or PowerPoint.",
+          "name": "IconForge",
+          "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
+          "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
           "category": "Design/Icons"
         }
       },
-      "download_url": "packages/gfx.icon-store-1.0.0.zip",
-      "sha256": "10c8ce9c99e68d7e5b0a660670274f9fc99247fdd1c71251e26ca4bee7d473d8",
-      "size": 11597
+      "download_url": "packages/gfx.iconforge-1.0.0.zip",
+      "sha256": "0bed61bc3699e8938b640e0cb75cc4a43ca1e708822ab3a1ba12340bb26559ff",
+      "size": 20763
     },
     {
-      "id": "sec.password-manager-manager",
-      "name": "Password Manager Manager",
+      "id": "sec.omnivault",
+      "name": "OmniVault",
       "version": "1.0.0",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
@@ -102,8 +107,8 @@
       "category": "Security/Passwords",
       "icon": "vault",
       "color": "#f59e0b",
-      "entry": "tool:PasswordManagerManager",
-      "min_app_version": "0.4.0",
+      "entry": "tool:OmniVault",
+      "min_app_version": "0.5.0",
       "platforms": [
         "windows"
       ],
@@ -127,21 +132,21 @@
       },
       "translations": {
         "de": {
-          "name": "Password Manager Manager",
-          "description": "Eingebauter Passwortmanager plus Konnektoren zu externen Passwortmanagern.",
-          "long_description": "Verwaltet Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Danach durchsucht jede Zugangsdaten-Auswahl in OmniWrench alle Manager gleichzeitig. Passwörter externer Manager werden erst bei Bedarf abgerufen und nur für die laufende Sitzung im Speicher gehalten.",
+          "name": "OmniVault",
+          "description": "Eingebauter Passwortmanager mit Konnektoren zu externen Passwortmanagern.",
+          "long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
           "category": "Sicherheit/Passwörter"
         },
         "en": {
-          "name": "Password Manager Manager",
-          "description": "Built-in password manager plus connectors to external password managers.",
-          "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
+          "name": "OmniVault",
+          "description": "Built-in password manager with connectors to external password managers.",
+          "long_description": "Stores credentials in the built-in OmniWrench password manager and connects external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Credential pickers in OmniWrench then search all connected managers. Passwords from external managers are retrieved on demand and kept in memory for the current session only.",
           "category": "Security/Passwords"
         }
       },
-      "download_url": "packages/sec.password-manager-manager-1.0.0.zip",
-      "sha256": "e5f73aae76936ccbe479dab1373466e2a12f87a8e613eff62c1938b531f1687e",
-      "size": 15288
+      "download_url": "packages/sec.omnivault-1.0.0.zip",
+      "sha256": "063e8797e4477a9a12857c6992b007702ca5c0edf7ba3856b74ae5a47dc7d699",
+      "size": 16728
     },
     {
       "id": "net.subnet-calculator",

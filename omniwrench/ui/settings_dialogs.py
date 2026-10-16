@@ -21,7 +21,7 @@ from omniwrench.sdk import LANGUAGE_KEY
 
 from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
-from .widgets import label, make_button, tool_icon
+from .widgets import label, library_icon, make_button, tool_icon
 from .workers import run_async
 
 
@@ -75,7 +75,9 @@ class _Field:
                 edit.setText(path)
 
         lay.addWidget(edit, 1)
-        btn = make_button("…", on_click=browse)
+        btn = make_button("", on_click=browse)
+        btn.setIcon(library_icon("folder-open", 16))
+        btn.setFixedWidth(34)
         btn.setToolTip(tr("settings.browse"))
         lay.addWidget(btn)
         box.edit = edit

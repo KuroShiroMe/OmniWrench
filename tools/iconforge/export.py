@@ -25,24 +25,61 @@ class Style:
     padding: float = 0.18            # Anteil Rand, wenn ein Hintergrund gezeichnet wird
 
 
+def _viewbox(attrs: str) -> tuple[float, float, float, float]:
+    m = re.search(r'viewBox="([^"]+)"', attrs)
+    if m:
+        parts = [float(x) for x in re.split(r"[ ,]+", m.group(1).strip())[:4]]
+        if len(parts) == 4:
+            return tuple(parts)  # type: ignore[return-value]
+    w = re.search(r'\bwidth="([\d.]+)', attrs)
+    h = re.search(r'\bheight="([\d.]+)', attrs)
+    return 0.0, 0.0, float(w.group(1)) if w else 24.0, float(h.group(1)) if h else 24.0
+
+
 def build_svg(svg: bytes, style: Style) -> bytes:
-    """Lucide-SVG (24x24, stroke=currentColor) mit Farbe, Strichstärke und Hintergrund."""
-    text = svg.decode("utf-8")
-    text = re.sub(r"<!--.*?-->", "", text, flags=re.S).strip()
-    text = text.replace("currentColor", style.color)
+    """Symbol einfärben, Strichstärke setzen und optional auf einen Hintergrund legen.
+
+    Strich-Symbole (stroke=currentColor, z. B. Lucide/Tabler) und Flächen-Symbole
+    (fill=currentColor oder ganz ohne Farbangabe, z. B. Material/Simple Icons) werden
+    gleichermaßen unterstützt.
+    """
+    text = svg.decode("utf-8", errors="replace")
+    text = re.sub(r"<!--.*?-->|<\?xml.*?\?>|<!DOCTYPE.*?>", "", text, flags=re.S).strip()
+    root = re.search(r"<svg\b([^>]*)>", text, flags=re.S)
+    if root is None:
+        return svg
+    attrs = root.group(1)
+    if "currentColor" in text:
+        text = text.replace("currentColor", style.color)
+    else:
+        colors = set(re.findall(r'(?:fill|stroke)="(#[0-9a-fA-F]{3,8}|black|white)"', text))
+        if len(colors) == 1:
+            # Einfarbiges Symbol mit fest eingetragener Farbe -> umfärben
+            only = colors.pop()
+            text = re.sub(rf'((?:fill|stroke)=")({re.escape(only)})(")', rf"\g<1>{style.color}\g<3>", text)
+        elif not colors and not re.search(r'\sfill="', attrs):
+            # Ganz ohne Farbangabe (z. B. Material): Füllfarbe am Wurzelelement setzen (wird vererbt)
+            new_attrs = attrs + f' fill="{style.color}"'
+            text = text.replace(f"<svg{attrs}>", f"<svg{new_attrs}>", 1)
+        # mehrfarbige Symbole behalten ihre Farben
     text = re.sub(r'stroke-width="[\d.]+"', f'stroke-width="{style.stroke:g}"', text, count=1)
     if style.background == "none":
         return text.encode("utf-8")
-    inner = re.search(r"<svg[^>]*>(.*)</svg>", text, flags=re.S).group(1)
-    attrs = re.search(r"<svg([^>]*)>", text, flags=re.S).group(1)
+
+    attrs = re.search(r"<svg\b([^>]*)>", text, flags=re.S).group(1)
+    inner = re.search(r"<svg\b[^>]*>(.*)</svg>", text, flags=re.S).group(1)
     keep = " ".join(re.findall(r'(?:fill|stroke|stroke-width|stroke-linecap|stroke-linejoin)="[^"]*"', attrs))
+    x, y, w, h = _viewbox(attrs)
+    size = max(w, h)
     scale = 1 - 2 * style.padding
-    offset = 12 * (1 - scale)
-    shape = (f'<circle cx="12" cy="12" r="12" fill="{style.bg_color}"/>' if style.background == "circle"
-             else f'<rect width="24" height="24" rx="5" fill="{style.bg_color}"/>')
-    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">{shape}'
-            f'<g transform="translate({offset:g} {offset:g}) scale({scale:g})" {keep}>{inner}</g></svg>'
-            ).encode("utf-8")
+    # Symbol zentriert und verkleinert in ein quadratisches Feld der Größe size legen
+    tx = (size - w * scale) / 2 - x * scale
+    ty = (size - h * scale) / 2 - y * scale
+    shape = (f'<circle cx="{size / 2:g}" cy="{size / 2:g}" r="{size / 2:g}" fill="{style.bg_color}"/>'
+             if style.background == "circle"
+             else f'<rect width="{size:g}" height="{size:g}" rx="{size * 0.21:g}" fill="{style.bg_color}"/>')
+    return (f'<svg xmlns="http://www.w3.org/2000/svg" width="{size:g}" height="{size:g}" viewBox="0 0 {size:g} {size:g}">'
+            f'{shape}<g transform="translate({tx:g} {ty:g}) scale({scale:g})" {keep}>{inner}</g></svg>').encode("utf-8")
 
 
 def render(svg: bytes, size: int, background: str | None = None) -> QImage:

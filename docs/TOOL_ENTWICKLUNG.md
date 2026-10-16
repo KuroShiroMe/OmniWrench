@@ -50,7 +50,8 @@ Das Symbol der Kachel wird in dieser Reihenfolge bestimmt:
    `build_store.py` bettet sie in den Store-Katalog ein, damit sie auch im Store erscheint.
 2. **Symbol aus der Bibliothek:** `"icon": "server"`. Eingebaut sind rund 2.100 Symbole von
    [Lucide](https://lucide.dev/icons) (ISC-Lizenz, frei auch für kommerzielle Nutzung).
-   Übersicht im Programm unter *Extras › Symbol-Bibliothek*; ein Klick kopiert den Namen.
+   **Die Namen findest du im Tool IconForge** (Bibliothek „Lucide“): Der dort angezeigte Symbolname ist genau
+   der Wert für `"icon"`. Alternativ: *Extras › Symbol-Bibliothek*.
    Das Symbol wird weiß auf der Farbe `color` dargestellt.
 3. **Eigenes Kürzel:** `"icon_text": "EXO"` erzeugt ein Symbol mit diesem Text.
 4. **Nichts angegeben:** Anfangsbuchstaben des Namens (z. B. „DNS Cleanup“ → „DC“).
@@ -183,7 +184,7 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 ### Zugangsdaten und Passwortmanager
 
 OmniWrench hat einen eingebauten Passwortmanager (*Extras › Passwortmanager*). Mit dem Tool
-**Password Manager Manager** kommen externe Manager dazu (SecretManagement, KeePass, Netwrix …).
+**OmniVault** kommen externe Manager dazu (SecretManagement, KeePass, Netwrix …).
 Die Auswahl „Aus Passwortmanager“ durchsucht dann alle Manager gleichzeitig.
 
 Grundregeln:
@@ -245,7 +246,7 @@ def register_all(ctx):
     ctx.register_credential_provider(MyProvider())   # wird bei Deinstallation automatisch entfernt
 ```
 
-Vollständiges Beispiel: [password_manager_manager/connectors.py](../tools/password_manager_manager/connectors.py)
+Vollständiges Beispiel: [omnivault/connectors.py](../tools/omnivault/connectors.py)
 mit den JSON-Definitionen in `connector_types.json`.
 
 Lang laufende Aufgaben (AD-Abfragen, Netzwerk-Scans) gehören mit `run_async(fn, on_done, on_error)` in einen

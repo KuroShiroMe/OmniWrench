@@ -3,7 +3,7 @@
 APP_NAME = "OmniWrench"
 APP_ID = "OmniWrench"
 VENDOR = "DarkMatter"
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 
 # GitHub-Repository: Updates des Hauptprogramms und offizieller Tool-Store
 GITHUB_REPO = "Steffi-Tech/OmniWrench"

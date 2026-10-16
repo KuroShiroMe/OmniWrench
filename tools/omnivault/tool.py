@@ -1,76 +1,126 @@
-"""Password Manager Manager: eingebauter Passwortmanager + Konnektoren zu externen Managern."""
+"""OmniVault: eingebauter Passwortmanager + Konnektoren zu externen Managern."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
-    QListWidget, QListWidgetItem, QMenu, QMessageBox, QPushButton, QSplitter, QStackedWidget, QTableWidget,
-    QTableWidgetItem, QVBoxLayout, QWidget,
+    QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout,
+    QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPushButton, QSplitter,
+    QStackedWidget, QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget,
 )
 
 from omniwrench.core import credentials as core_credentials
 from omniwrench.sdk import ToolBase, run_async
 # Erstanbieter-Tool: nutzt Bausteine des Hauptprogramms direkt
 from omniwrench.ui.credentials import PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret
-from omniwrench.ui.widgets import library_icon
+from omniwrench.ui.widgets import clear_layout, library_icon
 
-from .connectors import ConnectorConfig, ConnectorStore, is_secret, make_provider, register_all, text
+from .connectors import ConnectorConfig, ConnectorStore, defaults, is_secret, is_visible, make_provider, register_all, text
 
 ROLE_KIND = Qt.ItemDataRole.UserRole
 ROLE_ID = Qt.ItemDataRole.UserRole + 1
 
 
+class FieldInput:
+    """Eingabefeld für eine Felddefinition aus connector_types.json."""
+
+    def __init__(self, f: dict, value, lang: str, on_change):
+        self.f = f
+        placeholder = text(f.get("placeholder"), lang)
+        kind = f.get("type", "string")
+        if is_secret(f):
+            self.widget = PasswordEdit(str(value or ""), placeholder)
+            self.get = self.widget.text
+        elif kind == "choice":
+            self.widget = QComboBox()
+            for opt in f.get("options", []):
+                self.widget.addItem(text(opt.get("label"), lang) or str(opt["value"]), opt["value"])
+            self.widget.setCurrentIndex(max(self.widget.findData(value), 0))
+            self.widget.currentIndexChanged.connect(on_change)
+            self.get = lambda: self.widget.currentData() or ""
+        elif kind == "bool":
+            self.widget = QCheckBox()
+            self.widget.setChecked(bool(value))
+            self.widget.toggled.connect(on_change)
+            self.get = lambda: "1" if self.widget.isChecked() else ""
+        elif kind in ("path_file", "path_dir"):
+            self.widget = QWidget()
+            h = QHBoxLayout(self.widget)
+            h.setContentsMargins(0, 0, 0, 0)
+            edit = QLineEdit(str(value or ""))
+            edit.setPlaceholderText(placeholder)
+            btn = QPushButton()
+            btn.setIcon(library_icon("folder-open", 16))
+            btn.setFixedWidth(34)
+
+            def browse():
+                if kind == "path_dir":
+                    path = QFileDialog.getExistingDirectory(self.widget, text(f["label"], lang), edit.text())
+                else:
+                    path, _ = QFileDialog.getOpenFileName(self.widget, text(f["label"], lang), edit.text())
+                if path:
+                    edit.setText(path)
+
+            btn.clicked.connect(browse)
+            h.addWidget(edit, 1)
+            h.addWidget(btn)
+            self.get = edit.text
+        else:
+            self.widget = QLineEdit(str(value or ""))
+            self.widget.setPlaceholderText(placeholder)
+            self.get = self.widget.text
+
+
 class ConnectorDialog(QDialog):
-    """Konnektor anlegen/bearbeiten - Felder kommen aus connector_types.json."""
+    """Konnektor anlegen/bearbeiten. Die Art des Managers wird oben gewählt, die Felder
+    passen sich an (Definitionen aus connector_types.json)."""
 
-    def __init__(self, tool: "PasswordManagerManager", conn: ConnectorConfig, is_new: bool):
+    def __init__(self, tool: "OmniVault", conn: ConnectorConfig | None):
         super().__init__(tool.root)
-        self.tool, self.conn = tool, conn
-        ctx = tool.context
-        tr, lang = ctx.tr, ctx.language
-        spec = tool.store.types[conn.type]
-        self.spec = spec
-        self.setWindowTitle(tr("dlg.title_new" if is_new else "dlg.title_edit", type=spec["name"]))
-        self.setMinimumWidth(520)
+        self.tool = tool
+        self.ctx = tool.context
+        self.is_new = conn is None
+        types = tool.store.types
+        self.conn = conn or tool.store.new(next(iter(types)), "")
+        tr = self.ctx.tr
+        self.setWindowTitle(tr("dlg.title_new") if self.is_new else tr("dlg.title_edit"))
+        self.setMinimumWidth(560)
         lay = QVBoxLayout(self)
-        desc = QLabel(text(spec.get("description"), lang))
-        desc.setWordWrap(True)
-        desc.setObjectName("Muted")
-        lay.addWidget(desc)
-        if spec.get("verified") is False:
-            warn = QLabel("⚠ " + tr("dlg.unverified"))
-            warn.setWordWrap(True)
-            warn.setStyleSheet("color: #f59e0b")
-            lay.addWidget(warn)
 
-        form = QFormLayout()
-        self.name = QLineEdit(conn.name)
-        form.addRow(tr("dlg.name"), self.name)
+        top = QFormLayout()
+        self.type_combo = QComboBox()
+        for type_id, spec in types.items():
+            self.type_combo.addItem(library_icon(spec.get("icon", "plug"), 16), spec["name"], type_id)
+        self.type_combo.setCurrentIndex(max(self.type_combo.findData(self.conn.type), 0))
+        self.type_combo.setEnabled(self.is_new)  # Art eines bestehenden Konnektors bleibt fest
+        self.type_combo.currentIndexChanged.connect(self._type_changed)
+        top.addRow(tr("dlg.type"), self.type_combo)
+        self.name = QLineEdit(self.conn.name)
+        self.name.setPlaceholderText(tr("dlg.name_placeholder"))
+        top.addRow(tr("dlg.name"), self.name)
         self.enabled = QCheckBox(tr("dlg.enabled"))
-        self.enabled.setChecked(conn.enabled)
-        form.addRow("", self.enabled)
+        self.enabled.setChecked(self.conn.enabled)
+        top.addRow("", self.enabled)
+        lay.addLayout(top)
 
-        values = tool.store.all_values(conn)
-        self.inputs: dict[str, QWidget] = {}
-        for f in spec["fields"]:
-            w = self._make_input(f, values.get(f["key"], ""), lang)
-            self.inputs[f["key"]] = w
-            caption = text(f["label"], lang) + (" *" if f.get("required") else "")
-            form.addRow(("🔑 " if f.get("auth") else "") + caption, w)
-        lay.addLayout(form)
+        self.desc = QLabel(wordWrap=True)
+        self.desc.setObjectName("Muted")
+        self.desc.setOpenExternalLinks(True)
+        lay.addWidget(self.desc)
+
+        self.fields_box = QWidget()
+        self.form = QFormLayout(self.fields_box)
+        self.form.setContentsMargins(0, 4, 0, 4)
+        lay.addWidget(self.fields_box)
 
         self.save_auth = QCheckBox(tr("dlg.save_auth"))
-        self.save_auth.setChecked(conn.save_auth)
-        self.save_auth.setToolTip(tr("dlg.save_auth_hint"))
+        self.save_auth.setChecked(self.conn.save_auth)
         lay.addWidget(self.save_auth)
-        hint = QLabel(tr("dlg.save_auth_hint"))
-        hint.setWordWrap(True)
+        hint = QLabel(tr("dlg.save_auth_hint"), wordWrap=True)
         hint.setObjectName("Muted")
         lay.addWidget(hint)
 
-        self.status = QLabel()
-        self.status.setWordWrap(True)
+        self.status = QLabel(wordWrap=True)
         lay.addWidget(self.status)
         row = QHBoxLayout()
         test = QPushButton(tr("dlg.test"))
@@ -83,55 +133,66 @@ class ConnectorDialog(QDialog):
         row.addWidget(buttons)
         lay.addLayout(row)
 
-    def _make_input(self, f: dict, value, lang: str) -> QWidget:
-        placeholder = text(f.get("placeholder"), lang)
-        if is_secret(f):
-            w = PasswordEdit(str(value or ""), placeholder)
-            return w
-        if f.get("type") in ("path_file", "path_dir"):
-            box = QWidget()
-            h = QHBoxLayout(box)
-            h.setContentsMargins(0, 0, 0, 0)
-            edit = QLineEdit(str(value or ""))
-            edit.setPlaceholderText(placeholder)
-            btn = QPushButton("…")
-            btn.setFixedWidth(34)
+        self.inputs: dict[str, FieldInput] = {}
+        self._values = tool.store.all_values(self.conn) if not self.is_new else {}
+        self._build_fields()
 
-            def browse():
-                if f["type"] == "path_dir":
-                    path = QFileDialog.getExistingDirectory(box, text(f["label"], lang), edit.text())
-                else:
-                    path, _ = QFileDialog.getOpenFileName(box, text(f["label"], lang), edit.text())
-                if path:
-                    edit.setText(path)
+    # ------------------------------------------------------------ Felder
+    @property
+    def spec(self) -> dict:
+        return self.tool.store.types[self.type_combo.currentData()]
 
-            btn.clicked.connect(browse)
-            h.addWidget(edit, 1)
-            h.addWidget(btn)
-            box.text = edit.text
-            return box
-        if f.get("type") == "bool":
-            w = QCheckBox()
-            w.setChecked(bool(value))
-            w.text = lambda w=w: "1" if w.isChecked() else ""
-            return w
-        w = QLineEdit(str(value or ""))
-        w.setPlaceholderText(placeholder)
-        return w
+    def _current_values(self) -> dict:
+        vals = {**defaults(self.spec), **self._values}
+        vals.update({k: inp.get() for k, inp in self.inputs.items()})
+        return vals
 
-    def _collect(self) -> tuple[ConnectorConfig, dict[str, str]]:
-        conn = ConnectorConfig(self.conn.id, self.conn.type, self.name.text().strip() or self.spec["name"],
-                               self.enabled.isChecked(), self.save_auth.isChecked(), {})
-        secrets = {}
-        for f in self.spec["fields"]:
-            val = self.inputs[f["key"]].text()
-            (secrets if is_secret(f) else conn.values)[f["key"]] = val
-        return conn, secrets
+    def _build_fields(self) -> None:
+        lang = self.ctx.language
+        spec = self.spec
+        desc = text(spec.get("description"), lang)
+        if spec.get("docs"):
+            desc += f" <a href='{spec['docs']}'>{self.ctx.tr('dlg.docs')}</a>"
+        self.desc.setText(desc)
+        values = self._current_values()
+        while self.form.rowCount():
+            self.form.removeRow(0)
+        self.inputs = {}
+        for f in spec["fields"]:
+            inp = FieldInput(f, values.get(f["key"], ""), lang, self._refresh_visibility)
+            self.inputs[f["key"]] = inp
+            caption = ("🔑 " if f.get("auth") else "") + text(f["label"], lang) + (" *" if f.get("required") else "")
+            self.form.addRow(caption, inp.widget)
+        self._refresh_visibility()
+
+    def _refresh_visibility(self, *_args) -> None:
+        values = self._current_values()
+        for key, inp in self.inputs.items():
+            self.form.setRowVisible(inp.widget, is_visible(inp.f, values))
+
+    def _type_changed(self) -> None:
+        old_default = self.tool.store.types.get(self.conn.type, {}).get("name", "")
+        if not self.name.text().strip() or self.name.text() == old_default:
+            self.name.setText("")
+        self.conn.type = self.type_combo.currentData()
+        self._values = {}
+        self._build_fields()
+        self.status.setText("")
 
     def _missing_required(self) -> list[str]:
-        lang = self.tool.context.language
-        return [text(f["label"], lang) for f in self.spec["fields"]
-                if f.get("required") and not self.inputs[f["key"]].text().strip()]
+        values = self._current_values()
+        return [text(f["label"], self.ctx.language) for f in self.spec["fields"]
+                if f.get("required") and is_visible(f, values) and not str(values.get(f["key"], "")).strip()]
+
+    # ------------------------------------------------------------ Aktionen
+    def _collect(self) -> tuple[ConnectorConfig, dict[str, str]]:
+        spec = self.spec
+        conn = ConnectorConfig(self.conn.id, self.type_combo.currentData(), self.name.text().strip() or spec["name"],
+                               self.enabled.isChecked(), self.save_auth.isChecked(), {})
+        secrets = {}
+        for f in spec["fields"]:
+            (secrets if is_secret(f) else conn.values)[f["key"]] = self.inputs[f["key"]].get()
+        return conn, secrets
 
     def _apply(self) -> ConnectorConfig:
         conn, secrets = self._collect()
@@ -140,45 +201,39 @@ class ConnectorDialog(QDialog):
         return conn
 
     def _ensure_modules(self) -> bool:
-        """Fehlende PowerShell-Module (z. B. SecretManagement) anbieten zu installieren."""
-        ctx = self.tool.context
+        """Fehlende PowerShell-Module (z. B. SecretManagement) zur Installation anbieten."""
         modules = self.spec.get("requirements", {}).get("powershell_modules", [])
         missing = [m for m in modules
-                   if ctx.run_powershell(f"if (Get-Module -ListAvailable -Name '{m}') {{ 'ok' }}").stdout.strip() != "ok"]
+                   if self.ctx.run_powershell(f"if (Get-Module -ListAvailable -Name '{m}') {{ 'ok' }}").stdout.strip() != "ok"]
         if not missing:
             return True
-        if QMessageBox.question(self, self.windowTitle(), ctx.tr("dlg.install_modules", modules=", ".join(missing))) \
+        if QMessageBox.question(self, self.windowTitle(), self.ctx.tr("dlg.install_modules", modules=", ".join(missing))) \
                 != QMessageBox.StandardButton.Yes:
             return False
-        self.status.setText(ctx.tr("dlg.installing"))
+        self.status.setText(self.ctx.tr("dlg.installing"))
         QApplication.processEvents()
         for m in missing:
-            res = ctx.run_powershell(
+            res = self.ctx.run_powershell(
                 "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12;"
                 f"Install-Module -Name '{m}' -Scope CurrentUser -Force -AllowClobber", timeout=900)
             if not res.ok:
                 self.status.setText("❌ " + (res.stderr or res.stdout)[:300])
                 return False
-        self.status.setText("✅ " + ctx.tr("dlg.installed", modules=", ".join(missing)))
+        self.status.setText("✅ " + self.ctx.tr("dlg.installed", modules=", ".join(missing)))
         return True
 
     def _test(self) -> None:
         missing = self._missing_required()
         if missing:
-            self.status.setText("⚠ " + self.tool.context.tr("dlg.missing", fields=", ".join(missing)))
+            self.status.setText("⚠ " + self.ctx.tr("dlg.missing", fields=", ".join(missing)))
             return
         if not self._ensure_modules():
             return
-        conn = self._apply()
+        conn, secrets = self._collect()
         provider = make_provider(conn, self.tool.store)
-        self.status.setText(self.tool.context.tr("dlg.testing"))
-        tr = self.tool.context.tr
-
-        def failed(err: str):
-            self.status.setText("❌ " + err)
-
-        def done(count):
-            self.status.setText("✅ " + tr("dlg.test_ok", count=count))
+        provider.values_override = {**conn.values, **secrets}
+        self.status.setText(self.ctx.tr("dlg.testing"))
+        tr = self.ctx.tr
 
         def run():
             try:
@@ -186,12 +241,13 @@ class ConnectorDialog(QDialog):
             except core_credentials.AuthenticationRequired:
                 raise RuntimeError(tr("dlg.test_auth")) from None
 
-        run_async(run, done, failed)
+        run_async(run, lambda count: self.status.setText("✅ " + tr("dlg.test_ok", count=count)),
+                  lambda err: self.status.setText("❌ " + err))
 
     def _save(self) -> None:
         missing = self._missing_required()
         if missing:
-            QMessageBox.warning(self, self.windowTitle(), self.tool.context.tr("dlg.missing", fields=", ".join(missing)))
+            QMessageBox.warning(self, self.windowTitle(), self.ctx.tr("dlg.missing", fields=", ".join(missing)))
             return
         if not self._ensure_modules():
             return
@@ -199,7 +255,7 @@ class ConnectorDialog(QDialog):
         self.accept()
 
 
-class PasswordManagerManager(ToolBase):
+class OmniVault(ToolBase):
     def create_widget(self, parent=None) -> QWidget:
         tr = self.context.tr
         self.store = ConnectorStore(self.context)
@@ -223,7 +279,7 @@ class PasswordManagerManager(ToolBase):
         row = QHBoxLayout()
         add = QPushButton(tr("ui.add_connector"))
         add.setIcon(library_icon("plus", 16))
-        add.clicked.connect(lambda: self._add_menu(add))
+        add.clicked.connect(self._add)
         row.addWidget(add)
         self.edit_btn = QPushButton(tr("ui.edit"))
         self.edit_btn.clicked.connect(self._edit)
@@ -338,26 +394,15 @@ class PasswordManagerManager(ToolBase):
             return [p] if p else []
         return list(manager.providers)
 
-    def _add_menu(self, button: QPushButton) -> None:
-        menu = QMenu(self.root)
-        for type_id, spec in self.store.types.items():
-            menu.addAction(library_icon(spec.get("icon", "plug"), 16), spec["name"],
-                           lambda t=type_id: self._add(t))
-        menu.exec(button.mapToGlobal(button.rect().bottomLeft()))
-
-    def _add(self, type_id: str) -> None:
-        conn = self.store.new(type_id, self.store.types[type_id]["name"])
-        dlg = ConnectorDialog(self, conn, is_new=True)
+    def _add(self) -> None:
+        dlg = ConnectorDialog(self, None)
         if dlg.exec():
             self._after_change(dlg.conn)
-        else:
-            self.store.delete(conn.id)  # beim Testen evtl. schon angelegt
-            self._fill_sources()
 
     def _edit(self) -> None:
         kind, cid = self._current()
         conn = self.store.get(cid) if kind == "conn" else None
-        if conn and ConnectorDialog(self, conn, is_new=False).exec():
+        if conn and ConnectorDialog(self, conn).exec():
             self._after_change(self.store.get(cid))
 
     def _remove(self) -> None:

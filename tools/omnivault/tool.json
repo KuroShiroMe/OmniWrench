@@ -1,6 +1,6 @@
 {
-  "id": "sec.password-manager-manager",
-  "name": "Password Manager Manager",
+  "id": "sec.omnivault",
+  "name": "OmniVault",
   "version": "1.0.0",
   "description": "Built-in password manager plus connectors to external password managers.",
   "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
@@ -8,11 +8,27 @@
   "category": "Security/Passwords",
   "icon": "vault",
   "color": "#f59e0b",
-  "entry": "tool:PasswordManagerManager",
-  "min_app_version": "0.4.0",
-  "platforms": ["windows"],
-  "tags": ["password", "passwort", "keepass", "secretmanagement", "netwrix", "credentials", "vault"],
+  "entry": "tool:OmniVault",
+  "min_app_version": "0.5.0",
+  "platforms": [
+    "windows"
+  ],
+  "tags": [
+    "password",
+    "passwort",
+    "keepass",
+    "secretmanagement",
+    "netwrix",
+    "credentials",
+    "vault"
+  ],
   "single_instance": true,
-  "hooks": {"startup": "connectors:register_all"},
-  "requirements": {"python": ["pykeepass>=4.1"]}
+  "hooks": {
+    "startup": "connectors:register_all"
+  },
+  "requirements": {
+    "python": [
+      "pykeepass>=4.1"
+    ]
+  }
 }

@@ -1,4 +1,4 @@
-"""Icon Store: Symbole durchsuchen, ansehen und in verschiedenen Formaten/Größen speichern."""
+"""IconForge: Symbole aus vielen freien Paketen durchsuchen, ansehen und exportieren."""
 
 from __future__ import annotations
 
@@ -8,56 +8,89 @@ from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, QSortF
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QGridLayout,
-    QHBoxLayout, QLabel, QLineEdit, QListView, QPushButton, QScrollArea, QSplitter, QStyle,
-    QStyledItemDelegate, QVBoxLayout, QWidget,
+    QHBoxLayout, QLabel, QLineEdit, QListView, QPushButton, QScrollArea, QSplitter, QStyle, QStyledItemDelegate,
+    QVBoxLayout, QWidget,
 )
 
-from omniwrench.core import icons
-from omniwrench.sdk import ToolBase
+from omniwrench.sdk import ToolBase, run_async
 
 from . import export
 from .export import Style
+from .packs import IconRef, PackStore, load_licenses
 
 GRID_ICON = 40
 PREVIEW = 160
+ALL_PACKS = "__all__"
+GREEN, RED = "#16a34a", "#dc2626"
 
 
 class IconModel(QAbstractListModel):
-    """Alle Symbole der Bibliothek; Vorschaubilder werden erst beim Anzeigen gerendert."""
+    """Symbole der gewählten Pakete; Vorschaubilder werden erst beim Anzeigen gerendert."""
 
-    NAME = Qt.ItemDataRole.UserRole
+    REF = Qt.ItemDataRole.UserRole
     SEARCH = Qt.ItemDataRole.UserRole + 1
     CATEGORIES = Qt.ItemDataRole.UserRole + 2
 
-    def __init__(self, color: str):
+    def __init__(self, store: PackStore, color: str):
         super().__init__()
-        self.names = list(icons.library_names())
+        self.store = store
         self.color = color
-        self._cache: dict[str, QIcon] = {}
-        self._search = {n: " ".join([n, n.replace("-", " "), *icons.library_info(n)["tags"]]).lower()
-                        for n in self.names}
+        self.refs: list[IconRef] = []
+        self._search: list[str] = []
+        self._cache: dict[IconRef, QIcon] = {}
+
+    def set_refs(self, refs: list[IconRef]) -> None:
+        self.beginResetModel()
+        self.refs = refs
+        names = {p: d["name"].lower() for p, d in self.store.defs.items()}
+        self._search = []
+        for r in refs:
+            info = self.store.info(r)
+            self._search.append(" ".join([r.name, r.name.replace("-", " ").replace("_", " "), names[r.pack],
+                                          *info.get("tags", [])]).lower())
+        self.endResetModel()
 
     def rowCount(self, parent=QModelIndex()):  # noqa: N802
-        return 0 if parent.isValid() else len(self.names)
+        return 0 if parent.isValid() else len(self.refs)
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
-        name = self.names[index.row()]
+        ref = self.refs[index.row()]
         if role == Qt.ItemDataRole.DisplayRole:
-            return name
+            return ref.name
         if role == Qt.ItemDataRole.DecorationRole:
-            if name not in self._cache:
-                svg = export.build_svg(icons.library_svg(name), Style(color=self.color))
-                self._cache[name] = QIcon(QPixmap.fromImage(export.render(svg, GRID_ICON * 2)))
-            return self._cache[name]
+            if ref not in self._cache:
+                try:
+                    svg = export.build_svg(self.store.svg(ref), Style(color=self.color))
+                    self._cache[ref] = QIcon(QPixmap.fromImage(export.render(svg, GRID_ICON * 2)))
+                except Exception:  # noqa: BLE001 - defekte SVG nicht anzeigen, Raster läuft weiter
+                    self._cache[ref] = QIcon()
+            return self._cache[ref]
         if role == Qt.ItemDataRole.ToolTipRole:
-            return name + "\n" + ", ".join(icons.library_info(name)["tags"][:12])
-        if role == self.NAME:
-            return name
+            return f"{ref.name}\n{self.store.defs[ref.pack]['name']} · {ref.variant}"
+        if role == self.REF:
+            return ref
         if role == self.SEARCH:
-            return self._search[name]
+            return self._search[index.row()]
         if role == self.CATEGORIES:
-            return icons.library_info(name)["categories"]
+            return self.store.info(ref).get("categories", [])
         return None
+
+
+class IconFilter(QSortFilterProxyModel):
+    def __init__(self):
+        super().__init__()
+        self.query = ""
+        self.category = ""
+
+    def set_filter(self, query: str, category: str) -> None:
+        self.query, self.category = query.strip().lower(), category
+        self.invalidateFilter()
+
+    def filterAcceptsRow(self, row, parent):  # noqa: N802
+        idx = self.sourceModel().index(row, 0, parent)
+        if self.category and self.category not in idx.data(IconModel.CATEGORIES):
+            return False
+        return all(word in idx.data(IconModel.SEARCH) for word in self.query.split())
 
 
 class IconDelegate(QStyledItemDelegate):
@@ -72,7 +105,7 @@ class IconDelegate(QStyledItemDelegate):
     def _lines(name: str, fm: QFontMetrics, width: int) -> list[str]:
         if fm.horizontalAdvance(name) <= width:
             return [name]
-        cuts = [i + 1 for i, ch in enumerate(name) if ch == "-"]
+        cuts = [i + 1 for i, ch in enumerate(name) if ch in "-_"]
         fitting = [c for c in cuts if fm.horizontalAdvance(name[:c]) <= width]
         cut = fitting[-1] if fitting else (cuts[0] if cuts else len(name))
         first, rest = name[:cut], name[cut:]
@@ -103,27 +136,10 @@ class IconDelegate(QStyledItemDelegate):
         fm = QFontMetrics(font)
         painter.setPen(pal.color(QPalette.ColorRole.Text if selected else QPalette.ColorRole.PlaceholderText))
         y = icon_rect.bottom() + 6
-        for line in self._lines(index.data(IconModel.NAME), fm, rect.width() - 8):
+        for line in self._lines(index.data(Qt.ItemDataRole.DisplayRole), fm, rect.width() - 8):
             painter.drawText(QRect(rect.left(), y, rect.width(), fm.height()), Qt.AlignmentFlag.AlignHCenter, line)
             y += fm.height()
         painter.restore()
-
-
-class IconFilter(QSortFilterProxyModel):
-    def __init__(self):
-        super().__init__()
-        self.query = ""
-        self.category = ""
-
-    def set_filter(self, query: str, category: str) -> None:
-        self.query, self.category = query.strip().lower(), category
-        self.invalidateFilter()
-
-    def filterAcceptsRow(self, row, parent):  # noqa: N802
-        idx = self.sourceModel().index(row, 0, parent)
-        if self.category and self.category not in idx.data(IconModel.CATEGORIES):
-            return False
-        return all(word in idx.data(IconModel.SEARCH) for word in self.query.split())
 
 
 class ColorButton(QPushButton):
@@ -140,21 +156,28 @@ class ColorButton(QPushButton):
         self.setToolTip(color)
 
     def _pick(self) -> None:
-        c = QColorDialog.getColor(QColor(self.color), self, options=QColorDialog.ColorDialogOption.ShowAlphaChannel)
+        c = QColorDialog.getColor(QColor(self.color), self)
         if c.isValid():
             self.set_color(c.name())
             self.on_change()
 
 
-class IconStore(ToolBase):
+def _section(text: str) -> QLabel:
+    lbl = QLabel(text.upper())
+    lbl.setObjectName("SectionTitle")
+    return lbl
+
+
+class IconForge(ToolBase):
     def create_widget(self, parent=None) -> QWidget:
         tr = self.context.tr
-        s = self.context.settings
+        self.store = PackStore(self.context.data_dir)
+        self.licenses = load_licenses()
         self.root = QWidget(parent)
         outer = QVBoxLayout(self.root)
         outer.setContentsMargins(16, 14, 16, 12)
 
-        # ---- Kopfzeile: Suche + Filter
+        # ---- Kopfzeile
         top = QHBoxLayout()
         title = QLabel(tr("tool.name"))
         title.setObjectName("PageTitle")
@@ -162,14 +185,17 @@ class IconStore(ToolBase):
         top.addStretch()
         self.search = QLineEdit(placeholderText="🔍  " + tr("ui.search"))
         self.search.setClearButtonEnabled(True)
-        self.search.setMinimumWidth(260)
+        self.search.setMinimumWidth(240)
         top.addWidget(self.search)
-        self.source = QComboBox()
-        self.source.addItem(f"Lucide {icons.library_version()}", "lucide")
-        self.source.setToolTip(tr("ui.source"))
-        top.addWidget(self.source)
+        self.pack = QComboBox()
+        self.pack.setMinimumWidth(230)
+        self.pack.setToolTip(tr("ui.pack_hint"))
+        top.addWidget(self.pack)
+        self.variant = QComboBox()
+        self.variant.setMinimumWidth(110)
+        top.addWidget(self.variant)
         self.category = QComboBox()
-        self.category.setMinimumWidth(200)
+        self.category.setMinimumWidth(180)
         top.addWidget(self.category)
         outer.addLayout(top)
         self.count = QLabel()
@@ -179,9 +205,8 @@ class IconStore(ToolBase):
         splitter = QSplitter(Qt.Orientation.Horizontal)
         outer.addWidget(splitter, 1)
 
-        # ---- Raster
         grid_color = "#e6e8ec" if self.root.palette().window().color().lightness() < 128 else "#1d2129"
-        self.model = IconModel(grid_color)
+        self.model = IconModel(self.store, grid_color)
         self.proxy = IconFilter()
         self.proxy.setSourceModel(self.model)
         self.view = QListView()
@@ -194,36 +219,105 @@ class IconStore(ToolBase):
         self.view.setResizeMode(QListView.ResizeMode.Adjust)
         self.view.setMovement(QListView.Movement.Static)
         self.view.setUniformItemSizes(True)
-        self.view.setWordWrap(True)
-        self.view.setTextElideMode(Qt.TextElideMode.ElideRight)
-        self.view.setSpacing(4)
         self.view.setObjectName("IconGrid")
         self.view.selectionModel().currentChanged.connect(lambda cur, _prev: self._select(cur))
         self.view.doubleClicked.connect(lambda *_: self._save())
         splitter.addWidget(self.view)
-
-        # ---- Details
         splitter.addWidget(self._build_details())
         splitter.setStretchFactor(0, 1)
-        splitter.setSizes([780, 380])
-
-        categories = icons.library_categories()
-        counts: dict[str, int] = {}
-        for n in self.model.names:
-            for c in icons.library_info(n)["categories"]:
-                counts[c] = counts.get(c, 0) + 1
-        self.category.addItem(tr("ui.all_categories", count=len(self.model.names)), "")
-        for cid, title_ in sorted(categories.items(), key=lambda kv: kv[1].lower()):
-            self.category.addItem(f"{title_}  ({counts.get(cid, 0)})", cid)
+        splitter.setSizes([760, 400])
 
         self._timer = QTimer(self.root, singleShot=True, interval=150)
         self._timer.timeout.connect(self._apply_filter)
         self.search.textChanged.connect(lambda: self._timer.start())
         self.category.currentIndexChanged.connect(self._apply_filter)
-        self._apply_filter()
-        self.view.setCurrentIndex(self.proxy.index(0, 0))
+        self.pack.currentIndexChanged.connect(self._pack_changed)
+        self.variant.currentIndexChanged.connect(self._load_items)
+        self._fill_packs(select="lucide")
         self.search.setFocus()
         return self.root
+
+    # ------------------------------------------------------------ Pakete
+    def _fill_packs(self, select: str) -> None:
+        tr = self.context.tr
+        self.pack.blockSignals(True)
+        self.pack.clear()
+        self.pack.addItem(tr("ui.pack_all"), ALL_PACKS)
+        for pid, spec in sorted(self.store.defs.items(), key=lambda kv: (not kv[1].get("builtin"), kv[1]["name"].lower())):
+            loaded = self.store.is_available(pid)
+            self.pack.addItem(spec["name"] + ("" if loaded else "  ⬇"), pid)
+            if not loaded:
+                self.pack.setItemData(self.pack.count() - 1, tr("ui.pack_download_hint"), Qt.ItemDataRole.ToolTipRole)
+        self.pack.setCurrentIndex(max(self.pack.findData(select), 0))
+        self.pack.blockSignals(False)
+        self._pack_changed()
+
+    def _pack_changed(self) -> None:
+        pid = self.pack.currentData()
+        if pid != ALL_PACKS and not self.store.is_available(pid):
+            self._download(pid)
+            return
+        tr = self.context.tr
+        self.variant.blockSignals(True)
+        self.variant.clear()
+        if pid == ALL_PACKS:
+            self.variant.addItem(tr("ui.variant_all"), "")
+            self.variant.setEnabled(False)
+        else:
+            spec = self.store.defs[pid]
+            available = self.store.index(pid)["variants"]
+            for vid, v in spec["variants"].items():
+                if vid in available:
+                    self.variant.addItem(v.get("label", vid), vid)
+            self.variant.setEnabled(self.variant.count() > 1)
+        self.variant.blockSignals(False)
+        self._load_items()
+
+    def _download(self, pid: str) -> None:
+        tr = self.context.tr
+        name = self.store.defs[pid]["name"]
+        self.pack.setEnabled(False)
+        self.count.setText(tr("ui.pack_loading", name=name))
+
+        def done(_):
+            self.pack.setEnabled(True)
+            self.context.notify(tr("ui.pack_loaded", name=name))
+            self._fill_packs(select=pid)
+
+        def failed(err):
+            self.pack.setEnabled(True)
+            self.count.setText("❌ " + tr("ui.pack_failed", name=name, error=err))
+
+        run_async(lambda progress: self.store.download(pid, progress), done, failed,
+                  lambda msg: self.count.setText(tr("ui.pack_loading", name=msg)))
+
+    def _load_items(self) -> None:
+        pid = self.pack.currentData()
+        if pid == ALL_PACKS:
+            refs = [r for p in self.store.defs if self.store.is_available(p) for r in self.store.items(p)]
+        else:
+            refs = self.store.items(pid, self.variant.currentData())
+        self.model.set_refs(refs)
+        # Kategorien der angezeigten Symbole
+        tr = self.context.tr
+        counts: dict[tuple[str, str], int] = {}
+        for r in refs:
+            for c in self.store.info(r).get("categories", []):
+                key = (r.pack, c)
+                counts[key] = counts.get(key, 0) + 1
+        titles: dict[str, tuple[str, int]] = {}
+        for (p, c), n in counts.items():
+            title, prev = titles.get(c, (self.store.category_title(p, c), 0))
+            titles[c] = (title, prev + n)
+        self.category.blockSignals(True)
+        self.category.clear()
+        self.category.addItem(tr("ui.all_categories", count=len(refs)), "")
+        for cid, (title, n) in sorted(titles.items(), key=lambda kv: kv[1][0].lower()):
+            self.category.addItem(f"{title}  ({n})", cid)
+        self.category.setEnabled(bool(titles))
+        self.category.blockSignals(False)
+        self._apply_filter()
+        self.view.setCurrentIndex(self.proxy.index(0, 0))
 
     # ------------------------------------------------------------ Details
     def _build_details(self) -> QWidget:
@@ -253,50 +347,55 @@ class IconStore(ToolBase):
         self.name_label.setObjectName("PageTitle")
         self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.name_label.setWordWrap(True)
         lay.addWidget(self.name_label)
+        self.pack_label = QLabel()
+        self.pack_label.setObjectName("Muted")
+        self.pack_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.pack_label.setOpenExternalLinks(True)
+        lay.addWidget(self.pack_label)
 
-        # Name für Tool-Entwickler
-        dev = QLabel(tr("ui.dev_name").upper())
-        dev.setObjectName("SectionTitle")
-        lay.addWidget(dev)
-        row = QHBoxLayout()
-        self.dev_name = QLineEdit()
-        self.dev_name.setReadOnly(True)
-        row.addWidget(self.dev_name, 1)
-        copy = QPushButton(tr("ui.copy"))
-        copy.clicked.connect(lambda: self._copy_text(self.dev_name.text()))
-        row.addWidget(copy)
-        lay.addLayout(row)
-
-        info = QLabel(tr("ui.info").upper())
-        info.setObjectName("SectionTitle")
-        lay.addWidget(info)
-        self.info_form = QFormLayout()
-        self.info_form.setVerticalSpacing(4)
+        lay.addWidget(_section(tr("ui.info")))
+        form = QFormLayout()
+        form.setVerticalSpacing(4)
         self.lbl_categories = QLabel(wordWrap=True)
         self.lbl_tags = QLabel(wordWrap=True)
-        self.lbl_source = QLabel(wordWrap=True)
-        self.lbl_source.setOpenExternalLinks(True)
-        for key, w in (("ui.categories", self.lbl_categories), ("ui.tags", self.lbl_tags),
-                       ("ui.source", self.lbl_source)):
+        for key, w in (("ui.categories", self.lbl_categories), ("ui.tags", self.lbl_tags)):
             cap = QLabel(tr(key))
             cap.setObjectName("Muted")
-            self.info_form.addRow(cap, w)
-        lay.addLayout(self.info_form)
+            form.addRow(cap, w)
+        lay.addLayout(form)
+
+        # Lizenz + Checkliste
+        lay.addWidget(_section(tr("ui.license")))
+        self.lic_name = QLabel(wordWrap=True)
+        self.lic_name.setOpenExternalLinks(True)
+        lay.addWidget(self.lic_name)
+        self.lic_summary = QLabel(wordWrap=True)
+        self.lic_summary.setObjectName("Muted")
+        lay.addWidget(self.lic_summary)
+        self.perm_box = QWidget()
+        self.perm_layout = QGridLayout(self.perm_box)
+        self.perm_layout.setContentsMargins(0, 2, 0, 2)
+        self.perm_layout.setHorizontalSpacing(8)
+        self.perm_layout.setVerticalSpacing(3)
+        lay.addWidget(self.perm_box)
+        disclaimer = QLabel(tr("ui.license_disclaimer"), wordWrap=True)
+        disclaimer.setObjectName("Muted")
+        lay.addWidget(disclaimer)
 
         # Darstellung
-        style_title = QLabel(tr("ui.style").upper())
-        style_title.setObjectName("SectionTitle")
-        lay.addWidget(style_title)
-        form = QFormLayout()
+        lay.addWidget(_section(tr("ui.style")))
+        sform = QFormLayout()
         self.color_btn = ColorButton(s.get("default_color") or "#1f2937", self._refresh_preview)
-        form.addRow(tr("ui.color"), self.color_btn)
+        sform.addRow(tr("ui.color"), self.color_btn)
         self.stroke = QDoubleSpinBox()
         self.stroke.setRange(0.5, 4.0)
         self.stroke.setSingleStep(0.25)
         self.stroke.setValue(2.0)
+        self.stroke.setToolTip(tr("ui.stroke_hint"))
         self.stroke.valueChanged.connect(self._refresh_preview)
-        form.addRow(tr("ui.stroke"), self.stroke)
+        sform.addRow(tr("ui.stroke"), self.stroke)
         bg_row = QHBoxLayout()
         self.bg = QComboBox()
         for key in ("none", "square", "circle"):
@@ -306,13 +405,11 @@ class IconStore(ToolBase):
         self.bg_color = ColorButton("#3b82f6", self._refresh_preview)
         self.bg_color.setEnabled(False)
         bg_row.addWidget(self.bg_color)
-        form.addRow(tr("ui.background"), bg_row)
-        lay.addLayout(form)
+        sform.addRow(tr("ui.background"), bg_row)
+        lay.addLayout(sform)
 
         # Export
-        exp_title = QLabel(tr("ui.export").upper())
-        exp_title.setObjectName("SectionTitle")
-        lay.addWidget(exp_title)
+        lay.addWidget(_section(tr("ui.export")))
         eform = QFormLayout()
         self.fmt = QComboBox()
         for f in export.FORMATS:
@@ -324,10 +421,9 @@ class IconStore(ToolBase):
         grid = QGridLayout(sizes_box)
         grid.setContentsMargins(0, 0, 0, 0)
         self.size_checks: dict[int, QCheckBox] = {}
-        default_sizes = set(s.get("default_sizes") or [256])
         for i, size in enumerate(export.SIZES):
             cb = QCheckBox(f"{size}")
-            cb.setChecked(size in default_sizes)
+            cb.setChecked(size == 256)
             self.size_checks[size] = cb
             grid.addWidget(cb, i // 4, i % 4)
         eform.addRow(tr("ui.sizes"), sizes_box)
@@ -338,7 +434,6 @@ class IconStore(ToolBase):
         self.fmt_hint = QLabel(wordWrap=True)
         self.fmt_hint.setObjectName("Muted")
         lay.addWidget(self.fmt_hint)
-
         btns = QHBoxLayout()
         clip = QPushButton(tr("ui.copy_image"))
         clip.clicked.connect(self._copy_image)
@@ -358,49 +453,78 @@ class IconStore(ToolBase):
     # ------------------------------------------------------------ Logik
     def _apply_filter(self) -> None:
         self.proxy.set_filter(self.search.text(), self.category.currentData() or "")
-        self.count.setText(self.context.tr("ui.count", shown=self.proxy.rowCount(), total=len(self.model.names)))
+        self.count.setText(self.context.tr("ui.count", shown=self.proxy.rowCount(), total=self.model.rowCount()))
         if self.proxy.rowCount() and not self.view.currentIndex().isValid():
             self.view.setCurrentIndex(self.proxy.index(0, 0))
 
-    def _current_name(self) -> str | None:
+    def _current(self) -> IconRef | None:
         idx = self.view.currentIndex()
-        return idx.data(IconModel.NAME) if idx.isValid() else None
+        return idx.data(IconModel.REF) if idx.isValid() else None
 
     def _select(self, index) -> None:
         if not index.isValid():
             return
-        name = index.data(IconModel.NAME)
-        info = icons.library_info(name)
-        titles = icons.library_categories()
-        self.name_label.setText(name)
-        self.dev_name.setText(name)
-        self.dev_name.setToolTip(f'"icon": "{name}"')
-        self.lbl_categories.setText(", ".join(titles.get(c, c) for c in info["categories"]) or "–")
-        self.lbl_tags.setText(", ".join(info["tags"]) or "–")
-        meta = icons.library_meta()
-        self.lbl_source.setText(f"<a href='https://lucide.dev/icons/{name}'>Lucide {icons.library_version()}</a> · "
-                                f"{meta.get('license', 'ISC')} – {self.context.tr('ui.license_hint')}")
+        ref: IconRef = index.data(IconModel.REF)
+        tr = self.context.tr
+        spec = self.store.defs[ref.pack]
+        info = self.store.info(ref)
+        version = self.store.index(ref.pack).get("version", "")
+        variant_label = spec["variants"].get(ref.variant, {}).get("label", ref.variant)
+        self.name_label.setText(ref.name)
+        self.pack_label.setText(f"<a href='{spec.get('homepage', '')}'>{spec['name']}</a> {version} · {variant_label}")
+        self.lbl_categories.setText(", ".join(self.store.category_title(ref.pack, c)
+                                              for c in info.get("categories", [])) or "–")
+        tags = info.get("tags", [])
+        self.lbl_tags.setText(", ".join(tags[:40]) + (" …" if len(tags) > 40 else "") or "–")
+        self._show_license(ref)
         self._refresh_preview()
+
+    def _show_license(self, ref: IconRef) -> None:
+        tr = self.context.tr
+        lang = self.context.language.split("_")[0]
+        key = self.store.license_key(ref.pack)
+        lic = self.licenses["licenses"].get(key, {})
+        self.lic_name.setText(f"<b><a href='{lic.get('url', '')}'>{lic.get('name', key)}</a></b>  ({key})")
+        summary = lic.get("summary", {})
+        self.lic_summary.setText(summary.get(lang) or summary.get("en", ""))
+        perms = dict(lic.get("permissions", {}))
+        if self.store.is_brand(ref):
+            perms["trademark_free"] = False
+        while self.perm_layout.count():
+            w = self.perm_layout.takeAt(0).widget()
+            if w:
+                w.deleteLater()
+        row = 0
+        for pkey in self.licenses["permission_order"]:
+            if pkey not in perms:
+                continue
+            ok = perms[pkey]
+            mark = QLabel("✔" if ok else "✘")
+            mark.setStyleSheet(f"color: {GREEN if ok else RED}; font-weight: 700; font-size: 11pt;")
+            self.perm_layout.addWidget(mark, row, 0, Qt.AlignmentFlag.AlignTop)
+            text = QLabel(tr(f"perm.{pkey}"), wordWrap=True)
+            self.perm_layout.addWidget(text, row, 1)
+            row += 1
+        self.perm_layout.setColumnStretch(1, 1)
 
     def _style(self) -> Style:
         return Style(color=self.color_btn.color, stroke=self.stroke.value(), background=self.bg.currentData(),
                      bg_color=self.bg_color.color)
 
-    def _svg(self, name: str) -> bytes:
-        return export.build_svg(icons.library_svg(name), self._style())
+    def _svg(self, ref: IconRef) -> bytes:
+        return export.build_svg(self.store.svg(ref), self._style())
 
     def _refresh_preview(self) -> None:
-        name = self._current_name()
-        if not name:
+        ref = self._current()
+        if not ref:
             return
-        pix = QPixmap.fromImage(export.render(self._svg(name), PREVIEW * 2))
+        pix = QPixmap.fromImage(export.render(self._svg(ref), PREVIEW * 2))
         pix.setDevicePixelRatio(2)
         self.preview.setPixmap(pix)
 
     def _bg_changed(self) -> None:
         has_bg = self.bg.currentData() != "none"
         self.bg_color.setEnabled(has_bg)
-        # Auf farbigem Hintergrund ist ein weißes Symbol meist gewünscht (und umgekehrt)
         default = self.context.settings.get("default_color") or "#1f2937"
         if has_bg and self.color_btn.color == default:
             self.color_btn.set_color("#ffffff")
@@ -411,9 +535,8 @@ class IconStore(ToolBase):
     def _fmt_changed(self) -> None:
         fmt = self.fmt.currentData()
         self.fmt_hint.setText(self.context.tr(f"fmt.{fmt}_hint"))
-        multi = fmt in ("png", "jpg", "ico")
         for cb in self.size_checks.values():
-            cb.setEnabled(multi or fmt == "pdf")
+            cb.setEnabled(fmt != "svg")
         self.custom_size.setEnabled(fmt != "svg")
 
     def _sizes(self) -> list[int]:
@@ -423,29 +546,25 @@ class IconStore(ToolBase):
                 sizes.append(int(part))
         return sorted(set(sizes)) or [256]
 
-    def _copy_text(self, text: str) -> None:
-        QApplication.clipboard().setText(text)
-        self.status.setText(self.context.tr("ui.copied", text=text))
-
     def _copy_image(self) -> None:
-        name = self._current_name()
-        if name:
+        ref = self._current()
+        if ref:
             size = max(self._sizes())
-            QApplication.clipboard().setImage(export.render(self._svg(name), size))
+            QApplication.clipboard().setImage(export.render(self._svg(ref), size))
             self.status.setText(self.context.tr("ui.image_copied", size=size))
 
     def _save(self) -> None:
-        name = self._current_name()
-        if not name:
+        ref = self._current()
+        if not ref:
             return
         fmt = self.fmt.currentData()
         start = Path(self.context.settings.get("export_dir") or Path.home() / "Pictures")
         path, _ = QFileDialog.getSaveFileName(self.root, self.context.tr("ui.save_as"),
-                                              str(start / f"{name}.{fmt}"), f"{fmt.upper()} (*.{fmt})")
+                                              str(start / f"{ref.name}.{fmt}"), f"{fmt.upper()} (*.{fmt})")
         if not path:
             return
         try:
-            written = export.export(Path(path), fmt, self._svg(name), self._sizes())
+            written = export.export(Path(path), fmt, self._svg(ref), self._sizes())
         except Exception as exc:  # noqa: BLE001
             self.status.setText("❌ " + str(exc))
             return
