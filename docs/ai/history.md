@@ -120,3 +120,5 @@
 - Dialog: missing CLI -> winget install offer (Bitwarden.CLI, AgileBits.1Password.CLI).
 - Tests: fake bw/op scripts + local fake Vault server (search, get, wrong credentials -> AuthenticationRequired,
   expired session/token -> re-login); dialog renders for all three types. Store: only omnivault zip rebuilt.
+- Same PR, on request: OmniVault locales for fr, es, de_bad, de_by, en_sco, en_posh (all 51 keys) + fr/es for every
+  label/description in connector_types.json (dialects fall back to de/en there via text()). Checked fr/es dialog renders.
