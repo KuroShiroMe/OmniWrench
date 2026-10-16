@@ -2,7 +2,7 @@
 
 ## Open / to verify with user
 - [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
-      Verify v0.6.0 asset order: OmniWrench-0.6.0.zip must be listed before -win64.zip (0.5.x updaters take the first).
+      0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
       Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
       someone with Netwrix Enterprise Pro confirms it works.

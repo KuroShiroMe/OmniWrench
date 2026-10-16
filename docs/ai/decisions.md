@@ -55,6 +55,8 @@
 ## EXE build (2026-10-16, my choices)
 - PyInstaller **onedir** (not onefile): faster start, fewer AV false positives, self-updater can overwrite files.
 - Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
+  (2026-10-16) GitHub sorts assets by name, so -win64 is listed first anyway; user chose to keep the names and
+  update 0.5.x installs manually once instead of renaming the source zip.
 - Local dev store not shipped with the EXE. No installer yet. Code signing: see "EXE signing" below.
 
 ## Round 8 decisions (2026-10-16)
