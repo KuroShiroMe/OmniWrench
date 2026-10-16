@@ -134,3 +134,6 @@
 - Stef picked "SignPath + MIT" on the decision card -> LICENSE (MIT), README "Lizenz" + "Code signing policy"
   (SignPath credit line, roles, privacy statement incl. GitHub store/update check), LICENSE shipped next to the EXE,
   EXE_SIGNIEREN.md with SignPath application steps.
+- Stef asked for copy-paste values: EXE_SIGNIEREN.md now has every SignPath form answer (English) in code blocks,
+  SignPath/GitHub settings after approval (slugs omniwrench / release-signing / omniwrench-exe); README privacy
+  statement got its own heading (#datenschutz) for the privacy URL.

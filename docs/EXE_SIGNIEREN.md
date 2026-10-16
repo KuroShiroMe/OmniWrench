@@ -23,29 +23,152 @@ enthält den Abschnitt „Code signing policy“.
 
 ## SignPath Foundation beantragen
 
-Voraussetzungen der [SignPath Foundation](https://signpath.org/terms), die OmniWrench schon erfüllt:
-OSI-Lizenz (MIT), nur eigener Quellcode plus freie Bibliotheken, aktiv gepflegt, automatischer Build aus
-dem Repository (GitHub Actions), Produktname und Version in der EXE (`version_info.txt`), Abschnitt
-„Code signing policy“ mit Rollen und Datenschutzhinweis in der README.
+### Vorher erledigen
 
-Noch zu tun:
-1. **Zwei-Faktor-Anmeldung** bei GitHub einschalten (Pflicht für alle Beteiligten, auch später bei SignPath).
-2. **Release veröffentlichen**, das signiert werden soll: SignPath signiert nur bereits veröffentlichte
-   Versionen, d. h. erst Tag/Release `vX.Y.Z`, dann signierter Build.
-3. **Antrag stellen** über das Formular auf [signpath.org](https://signpath.org) (Projekt-URL, Lizenz,
-   Download-Seite = GitHub Releases, Link auf die Code signing policy in der README).
-4. Nach der Zusage in SignPath: GitHub-Repository als Quelle verbinden (GitHub-App *SignPath*), Projekt
-   `omniwrench` mit Signierrichtlinie `release-signing` und der Artefakt-Konfiguration unten anlegen,
-   CI-Benutzer mit API-Token (Rolle *Submitter*) erstellen.
-5. In GitHub die Variablen und das Secret aus dem Abschnitt **SignPath** unten eintragen und
-   `SIGN_METHOD` = `signpath` setzen.
-6. Ab dann: Tag `vX.Y.Z` pushen → Workflow **EXE-Build** reicht die EXE bei SignPath ein → die Freigabe
-   erfolgt dort manuell (Approver) → der Workflow lädt die signierte EXE und packt das ZIP.
+1. **Zwei-Faktor-Anmeldung** bei GitHub einschalten (*Settings › Password and authentication*). Pflicht bei
+   SignPath, später auch für das SignPath-Konto.
+2. **PR #8 und diesen PR mergen**, damit Lizenz und „Code signing policy“ auf `main` sichtbar sind. Das
+   Antragsteam prüft die Links unten.
+3. **Release 0.6.0 veröffentlichen** (`v0.6.0` ist noch nicht getaggt). SignPath signiert nur bereits
+   veröffentlichte Versionen, und das Formular fragt nach der Download-Seite.
 
-Jede Signierung muss in SignPath von Hand freigegeben werden. Der Workflow wartet darauf bis zu
-10 Minuten; danach den Lauf nach der Freigabe neu starten.
+### Antragsformular: Werte zum Kopieren
 
-Bis zur Zusage bleibt `SIGN_METHOD` leer, die EXE wird unsigniert gebaut.
+Formular: [signpath.org/apply](https://signpath.org/apply). Die Fragen sind englisch, daher auch die
+Antworten. Die Feldnamen können leicht abweichen; die Reihenfolge entspricht dem Formular, wie andere
+Projekte es dokumentiert haben. Name und E-Mail-Adresse für Rückfragen selbst eintragen.
+
+**Project name**
+```text
+OmniWrench
+```
+
+**Repository URL**
+```text
+https://github.com/Steffi-Tech/OmniWrench
+```
+
+**Homepage URL**
+```text
+https://github.com/Steffi-Tech/OmniWrench
+```
+
+**Download URL**
+```text
+https://github.com/Steffi-Tech/OmniWrench/releases
+```
+
+**Privacy policy URL**
+```text
+https://github.com/Steffi-Tech/OmniWrench#datenschutz
+```
+
+**Code signing policy URL** (falls gefragt)
+```text
+https://github.com/Steffi-Tech/OmniWrench#code-signing-policy
+```
+
+**License**
+```text
+MIT
+```
+
+**Tagline / short description**
+```text
+Modular, open-source admin toolbox for Windows: install admin tools from a built-in store and run them in dockable tabs.
+```
+
+**Description**
+```text
+OmniWrench is a modular toolbox for Windows system administrators, written in Python with PySide6 (Qt).
+Tools such as an IPv4/IPv6 subnet calculator, an Active Directory user lookup, a password manager
+(OmniVault) and an icon browser (IconForge) are installed from a built-in store that is a plain GitHub
+repository, including their prerequisites (RSAT, PowerShell modules, winget and Python packages) after
+asking the user. Credentials are stored locally in an encrypted vault (Argon2id/AES-GCM or smart card).
+The Windows build is a PyInstaller program folder (OmniWrench.exe plus libraries) published as a ZIP on
+GitHub Releases. It is built from source by GitHub Actions; we want to sign OmniWrench.exe so that
+administrators can verify the publisher and to reduce antivirus false positives.
+The program does not send telemetry. It only contacts GitHub for the tool store and update checks
+(can be disabled) and the systems the user configures in a tool.
+```
+
+**Reputation**
+```text
+Public on GitHub since October 2026 and actively developed (several releases, the latest 0.6.0).
+All releases are built from source by GitHub Actions on windows-latest; every pull request runs locale
+checks, a Windows start test and the EXE build. Developed by a Windows system administrator for daily
+administration work; documentation (German) in the repository: README, docs/EXE_BUILD.md,
+docs/TOOL_ENTWICKLUNG.md.
+```
+
+**Maintainer type**
+```text
+Individual
+```
+
+**Build system**
+```text
+GitHub Actions
+```
+
+**Workflow / build configuration** (falls gefragt)
+```text
+https://github.com/Steffi-Tech/OmniWrench/blob/main/.github/workflows/build-exe.yml
+```
+
+**Artifacts to sign** (falls gefragt)
+```text
+OmniWrench.exe inside the program folder that is published as OmniWrench-X.Y.Z-win64.zip
+```
+
+Bestätigungs-Häkchen (OSI-Lizenz, keine Schadsoftware, Code signing policy, Zwei-Faktor-Anmeldung usw.)
+stimmen alle, sobald die Schritte unter *Vorher erledigen* erledigt sind.
+
+Hinweis: Das Projekt ist noch jung. Die Foundation achtet auf Bekanntheit und Pflege; neue Sterne, Downloads
+oder Beiträge (z. B. in Foren) vor dem Antrag oder bei Rückfragen nachtragen.
+
+### Nach der Zusage: Werte in SignPath
+
+| Einstellung | Wert |
+|---|---|
+| Project slug | `omniwrench` |
+| Trusted build system | GitHub.com, Repository `Steffi-Tech/OmniWrench` |
+| Signing policy slug | `release-signing` |
+| Approval | manuell, Approver `Steffi-Tech` |
+| Artifact configuration slug | `omniwrench-exe` (als Standard des Projekts markieren) |
+
+Artefakt-Konfiguration zum Einfügen:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
+  <zip-file>
+    <pe-file path="OmniWrench.exe" product-name="OmniWrench">
+      <authenticode-sign />
+    </pe-file>
+  </zip-file>
+</artifact-configuration>
+```
+
+Dann einen CI-Benutzer (z. B. `github-actions`) mit der Rolle *Submitter* für die Richtlinie
+`release-signing` anlegen und dessen API-Token erzeugen.
+
+### Nach der Zusage: Werte in GitHub
+
+*Settings › Secrets and variables › Actions*:
+
+| Typ | Name | Wert |
+|---|---|---|
+| Secret | `SIGNPATH_API_TOKEN` | API-Token des CI-Benutzers |
+| Variable | `SIGNPATH_ORGANIZATION_ID` | Organisations-ID aus SignPath (*Settings*, GUID) |
+| Variable | `SIGNPATH_PROJECT_SLUG` | `omniwrench` |
+| Variable | `SIGNPATH_POLICY_SLUG` | `release-signing` |
+| Variable | `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG` | `omniwrench-exe` |
+| Variable | `SIGN_METHOD` | `signpath` |
+
+Ab dann: Tag `vX.Y.Z` pushen → Workflow **EXE-Build** reicht die EXE bei SignPath ein → Freigabe in
+SignPath → der Workflow lädt die signierte EXE und packt das ZIP. Der Workflow wartet bis zu 10 Minuten auf
+die Freigabe, sonst den Lauf danach neu starten. Bis dahin bleibt `SIGN_METHOD` leer und die EXE unsigniert.
 
 ## Lokal signieren
 
@@ -75,22 +198,7 @@ normal durch.
 Einrichtung unter *Settings › Secrets and variables › Actions*. Zugangsdaten immer als **Secret**,
 Namen und Adressen als **Variable**:
 
-**SignPath** (`SIGN_METHOD` = `signpath`)
-- Secret `SIGNPATH_API_TOKEN` (Token eines CI-Benutzers in SignPath, Rolle *Submitter*)
-- Variablen `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_POLICY_SLUG`
-  (z. B. `release-signing`), optional `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG`
-- In SignPath das Repository als vertrauenswürdiges GitHub-Projekt verbinden und als Artefakt-Konfiguration
-  den Programmordner angeben (das GitHub-Artefakt ist ein ZIP mit dem Inhalt von `dist\OmniWrench`):
-
-  ```xml
-  <artifact-configuration xmlns="http://signpath.io/artifact-configuration/v1">
-    <zip-file>
-      <pe-file path="OmniWrench.exe">
-        <authenticode-sign />
-      </pe-file>
-    </zip-file>
-  </artifact-configuration>
-  ```
+**SignPath** (`SIGN_METHOD` = `signpath`): siehe *Nach der Zusage* oben.
 
 **Azure Artifact Signing** (`SIGN_METHOD` = `azure`)
 - Secrets `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET` (App-Registrierung mit der Rolle
