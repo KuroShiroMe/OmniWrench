@@ -27,9 +27,10 @@ enthält den Abschnitt „Code signing policy“.
 
 1. **Zwei-Faktor-Anmeldung** bei GitHub einschalten (*Settings › Password and authentication*). Pflicht bei
    SignPath, später auch für das SignPath-Konto.
-2. **PR #8 und diesen PR mergen**, damit Lizenz und „Code signing policy“ auf `main` sichtbar sind. Das
+2. **Diesen PR mergen**, damit Lizenz und „Code signing policy“ auf `main` sichtbar sind. Das
    Antragsteam prüft die Links unten.
-3. **Release 0.6.0 veröffentlichen** (`v0.6.0` ist noch nicht getaggt). SignPath signiert nur bereits
+3. **Release 0.6.0 veröffentlichen** (`v0.6.0` ist noch nicht getaggt): `git tag v0.6.0` und
+   `git push origin v0.6.0`, der Workflow **EXE-Build** erstellt das Release. SignPath signiert nur bereits
    veröffentlichte Versionen, und das Formular fragt nach der Download-Seite.
 
 ### Antragsformular: Werte zum Kopieren
