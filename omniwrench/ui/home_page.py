@@ -16,7 +16,8 @@ from PySide6.QtWidgets import (
 from omniwrench.core.i18n import tr
 from omniwrench.core.tool_manager import InstalledTool
 
-from .widgets import FitLabel, FlowLayout, clear_layout, label, library_icon, make_button, tool_icon
+from .scaling import clamp
+from .widgets import FitLabel, FlowLayout, ResponsiveRow, breakable, clear_layout, label, library_icon, make_button, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -79,7 +80,7 @@ class DetailsPanel(QFrame):
         self.page = page
         self.host = page.host
         self.setObjectName("DetailsPanel")
-        self.setMinimumWidth(280)
+        self.setMinimumWidth(260)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         scroll = QScrollArea()
@@ -141,7 +142,7 @@ class DetailsPanel(QFrame):
             (tr("details.category"), " › ".join(m.category_path)),
             (tr("details.author"), m.author or "–"),
             (tr("details.id"), m.id),
-            (tr("details.requirements"), "\n".join(reqs) if reqs else tr("details.none")),
+            (tr("details.requirements"), breakable("\n".join(reqs)) if reqs else tr("details.none")),
         ]
         if m.homepage:
             rows.append((tr("details.homepage"), f"<a href='{m.homepage}'>{m.homepage}</a>"))
@@ -153,11 +154,12 @@ class DetailsPanel(QFrame):
         self.lay.addLayout(form)
 
         self.lay.addStretch()
-        bottom = QHBoxLayout()
-        bottom.addWidget(make_button(tr("toolmenu.open_folder"), on_click=lambda: host.open_tool_folder(m.id)))
-        bottom.addStretch()
-        bottom.addWidget(make_button(tr("toolmenu.uninstall"), danger=True, on_click=lambda: host.uninstall_tool(m.id)))
-        self.lay.addLayout(bottom)
+        folder, uninstall = QHBoxLayout(), QHBoxLayout()
+        folder.addWidget(make_button(tr("toolmenu.open_folder"), on_click=lambda: host.open_tool_folder(m.id)))
+        folder.addStretch()
+        uninstall.addWidget(make_button(tr("toolmenu.uninstall"), danger=True,
+                                        on_click=lambda: host.uninstall_tool(m.id)))
+        self.lay.addWidget(ResponsiveRow(folder, uninstall))  # schmale Leiste: Buttons untereinander
 
 
 class HomePage(QWidget):
@@ -188,24 +190,26 @@ class HomePage(QWidget):
         self.splitter.addWidget(self.details)
         self.splitter.setStretchFactor(0, 1)
 
-        header = QHBoxLayout()
         titles = QVBoxLayout()
         titles.addWidget(label(tr("home.title"), "PageTitle"))
-        self.subtitle = label("", "PageSubtitle")
+        self.subtitle = label("", "PageSubtitle", wrap=True)
         titles.addWidget(self.subtitle)
-        header.addLayout(titles, 1)
+        search_row, buttons = QHBoxLayout(), QHBoxLayout()
         self.search = QLineEdit(placeholderText="🔍  " + tr("home.search"))
         self.search.setClearButtonEnabled(True)
-        self.search.setMinimumWidth(200)
-        self.search.setMaximumWidth(280)
+        self.search.setMinimumWidth(150)
+        self.search.setMaximumWidth(320)
         self.search.textChanged.connect(self.refresh)
-        header.addWidget(self.search, alignment=Qt.AlignmentFlag.AlignVCenter)
+        search_row.addWidget(self.search)
         self.filter_btn = make_button(tr("home.filter"), on_click=self._show_filter_menu)
         self.filter_btn.setIcon(library_icon("list-filter", 16))
-        header.addWidget(self.filter_btn, alignment=Qt.AlignmentFlag.AlignVCenter)
-        header.addWidget(make_button(tr("home.open_store"), primary=True, on_click=host.show_store),
-                         alignment=Qt.AlignmentFlag.AlignVCenter)
-        self.body.addLayout(header)
+        buttons.addWidget(self.filter_btn)
+        buttons.addWidget(make_button(tr("home.open_store"), primary=True, on_click=host.show_store))
+        buttons.addStretch()
+        controls = QHBoxLayout()
+        controls.addWidget(ResponsiveRow(search_row, buttons))
+        # Kopfzeile: bei wenig Platz rutschen Suche und Buttons unter den Titel (und notfalls untereinander)
+        self.body.addWidget(ResponsiveRow(titles, controls))
 
         # Aktiver Kategorie-Filter als "Chip" mit Entfernen-Knopf
         self.category_filter: tuple[str, ...] = ()
@@ -235,8 +239,10 @@ class HomePage(QWidget):
         self.details.show_tool(tool)
         if self.details.isHidden():
             self.details.show()
+            # Breite der Detail-Leiste wächst mit dem Fenster mit (klein: 300, große Monitore: bis 560)
             total = max(self.splitter.width(), 900)
-            self.splitter.setSizes([total - 340, 340])
+            side = clamp(total * 0.28, 300, 560)
+            self.splitter.setSizes([total - side, side])
 
     def clear_selection(self) -> None:
         self.selected = None

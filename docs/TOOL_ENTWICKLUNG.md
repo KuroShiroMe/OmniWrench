@@ -263,6 +263,21 @@ Hintergrund-Thread. Die Callbacks laufen wieder im GUI-Thread.
 **Sicherheit:** Passwörter nie in die Kommandozeile oder ins Skript einbauen. Übergib sie über `stdin`, wie es
 [ad_user_lookup/tool.py](../tools/ad_user_lookup/tool.py) vormacht.
 
+## Responsive Oberfläche und Skalierung
+
+OmniWrench läuft von kleinen Fenstern (ca. 1000 px) bis zu maximierten 8k-Monitoren. Zusätzlich zur
+Windows-Anzeigeskalierung kann unter *Einstellungen › Anzeige › Skalierung* vergrößert werden (75–300 %).
+
+- Alle Größen im Code sind logische Pixel bzw. Punkt (pt) – sie wachsen mit der Skalierung automatisch mit.
+  Keine Größen selbst umrechnen.
+- Layouts statt fester Breiten verwenden; Mindestbreiten einer Zeile sollten zusammen unter ca. 700 px bleiben.
+  Was breiter wird (viele Buttons, Seite-an-Seite-Bereiche), bei schmalem Fenster umbrechen oder untereinander
+  anordnen (Beispiel: `_layout_filter` in [subnet_calculator/tool.py](../tools/subnet_calculator/tool.py)).
+- Selbst gezeichnete Bilder (QPixmap/QImage) in `logische Größe × sdk.device_pixel_ratio()` rendern und
+  `pixmap.setDevicePixelRatio(...)` setzen, sonst werden sie bei 200–300 % unscharf.
+- Dialoge mit `sdk.fit_to_screen(dialog, breite, höhe)` statt `resize()` öffnen – so passen sie auch auf
+  kleine Bildschirme mit hoher Skalierung.
+
 ## Mehrsprachigkeit
 
 Jedes Tool bringt seine Sprachdateien in `locales/<code>.json` mit: flache JSON-Dateien mit Schlüssel → Text.

@@ -13,6 +13,7 @@ from omniwrench.core.i18n import tr
 from omniwrench.core.vault import Vault, VaultError
 
 from . import theme
+from .scaling import fit_min_width
 from .widgets import label, make_button
 from .workers import run_async
 
@@ -78,7 +79,7 @@ class LoginDialog(QDialog):
         self.setup_mode = not vault.exists
         self.setWindowTitle(f"{APP_NAME} - " + tr("login.title_setup" if self.setup_mode else "login.title_unlock"))
         self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
-        self.setMinimumWidth(500)
+        fit_min_width(self, 500)
 
         outer = QVBoxLayout(self)
         outer.setContentsMargins(24, 24, 24, 24)

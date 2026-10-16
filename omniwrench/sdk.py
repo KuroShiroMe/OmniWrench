@@ -38,7 +38,7 @@ if TYPE_CHECKING:
 __all__ = [
     "APP_VERSION", "ToolBase", "ToolContext", "InstallContext", "PSResult", "ps_quote", "run_async", "LANGUAGE_KEY",
     "pick_credential", "CredentialField", "Credential", "CredentialProvider", "AuthField",
-    "AuthenticationRequired",
+    "AuthenticationRequired", "device_pixel_ratio", "fit_to_screen",
 ]
 
 # Für Tools, die eigene Passwortmanager-Anbieter bereitstellen
@@ -84,6 +84,22 @@ def run_async(fn, on_done=None, on_error=None, on_progress=None) -> None:
     """
     from omniwrench.ui.workers import run_async as _run_async
     _run_async(fn, on_done, on_error, on_progress)
+
+
+def device_pixel_ratio() -> float:
+    """Pixelverhältnis des schärfsten Bildschirms (Windows-Skalierung x OmniWrench-Skalierung).
+
+    Selbst gezeichnete Bilder in logische Größe x diesem Wert rendern und
+    pixmap.setDevicePixelRatio(...) setzen - dann bleiben sie von 1k bis 8k scharf.
+    """
+    from omniwrench.ui.scaling import device_pixel_ratio as _ratio
+    return _ratio()
+
+
+def fit_to_screen(widget, width: int, height: int) -> None:
+    """Wie widget.resize(width, height), aber höchstens so groß wie der freie Bildschirmbereich."""
+    from omniwrench.ui.scaling import fit_to_screen as _fit
+    _fit(widget, width, height)
 
 
 class SecretStore:

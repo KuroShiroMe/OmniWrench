@@ -9,6 +9,10 @@
 - [ ] SecretManagement connector: live test (module not installed on dev machine).
 - [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
 - [ ] Real UAC run of elevated prerequisite install (only simulated so far).
+- [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
+- [ ] IconForge: toolbar min widths (search 240 + pack 230 + variant 110 + category 180) force a horizontal
+      scrollbar below ~1100 px dock width; preview/grid render at fixed 2x -> use sdk.device_pixel_ratio().
+      Left to the IconForge rework thread.
 
 ## Later (mentioned by user or proposed)
 - More password-manager connectors: Bitwarden/Vaultwarden, KeePassXC (browser protocol), 1Password, Passbolt, Psono,

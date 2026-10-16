@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QLineEdit, QListWidget, QLi
 from omniwrench.core import icons
 from omniwrench.core.i18n import tr
 
+from .scaling import fit_to_screen
 from .widgets import label, library_icon
 
 BATCH = 300  # Symbole werden stückweise geladen, damit der Dialog sofort erscheint
@@ -20,7 +21,7 @@ class IconBrowserDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle(tr("icons.title"))
-        self.resize(820, 600)
+        fit_to_screen(self, 820, 600)
         lay = QVBoxLayout(self)
         version = (icons.LIBRARY_DIR / "VERSION").read_text().strip() if (icons.LIBRARY_DIR / "VERSION").exists() else "?"
         lay.addWidget(label(tr("icons.hint", count=len(icons.library_names()), version=version), "Muted", wrap=True))
