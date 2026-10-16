@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-16T09:38:34+00:00",
+  "generated": "2026-10-16T09:45:43+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -51,7 +51,7 @@
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "DarkMatter",
@@ -93,9 +93,9 @@
           "category": "Design/Icons"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.0.zip",
-      "sha256": "802b6c05782c4b946cbc2b89dc203a9bab84f0c78969183d8e99cf8c3b89af97",
-      "size": 28699
+      "download_url": "packages/gfx.iconforge-1.1.1.zip",
+      "sha256": "564985821c058487e2d396d7c200b46943d4c893910d839ac335428b509afada",
+      "size": 29553
     },
     {
       "id": "sec.omnivault",

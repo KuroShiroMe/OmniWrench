@@ -64,3 +64,5 @@
 - Linux renders: offscreen platform works with fontconfig fonts; screen size via
   QT_QPA_PLATFORM="offscreen:configfile=screen.json" ({"screens":[{"width":7680,"height":4320,"dpr":1,...}]}).
 - build_store.py on Linux changes every zip (LF vs CRLF checkout) -> only commit zips of bumped tools.
+- QSplitter shrinks the stretch child first: give a QListView grid a minimum width of one cell (+ scrollbar + frame),
+  otherwise it collapses below one column while the side panel keeps its width.

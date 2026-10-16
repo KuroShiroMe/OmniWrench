@@ -13,6 +13,9 @@ concurrency:
   group: exe-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -49,3 +52,18 @@ jobs:
           name: OmniWrench-win64
           path: dist/OmniWrench-*-win64.zip
           if-no-files-found: error
+      - name: GitHub-Release erstellen
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (python -c "import omniwrench; print(omniwrench.__version__)").Trim()
+          $tag = "${{ github.ref_name }}"
+          if ($tag -ne "v$version") { throw "Tag $tag passt nicht zur Programmversion $version" }
+          python scripts/build_release.py
+          $notes = ".github/release-notes/$tag.md"
+          $noteArgs = if (Test-Path $notes) { @('--notes-file', $notes) } else { @('--generate-notes') }
+          # Quellpaket zuerst: ältere Programmversionen nehmen das erste passende ZIP
+          gh release create $tag "dist/OmniWrench-$version.zip" "dist/OmniWrench-$version-win64.zip" `
+            --title "OmniWrench $version" @noteArgs
