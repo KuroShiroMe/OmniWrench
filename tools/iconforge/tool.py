@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from PySide6.QtCore import QAbstractListModel, QModelIndex, QRect, QSize, QSortFilterProxyModel, Qt, QTimer
-from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette, QPixmap
+from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPalette
 from PySide6.QtWidgets import (
     QApplication, QCheckBox, QColorDialog, QComboBox, QDoubleSpinBox, QFileDialog, QFormLayout, QFrame, QGridLayout,
     QHBoxLayout, QLabel, QLineEdit, QListView, QPushButton, QScrollArea, QSizePolicy, QSplitter, QStyle,
@@ -63,7 +63,7 @@ class IconModel(QAbstractListModel):
             if ref not in self._cache:
                 try:
                     svg = export.build_svg(self.store.svg(ref), Style(color=self.color))
-                    self._cache[ref] = QIcon(QPixmap.fromImage(export.render(svg, GRID_ICON * 2)))
+                    self._cache[ref] = QIcon(export.render_pixmap(svg, GRID_ICON))
                 except Exception:  # noqa: BLE001 - defekte SVG nicht anzeigen, Raster läuft weiter
                     self._cache[ref] = QIcon()
             return self._cache[ref]
@@ -540,9 +540,7 @@ class IconForge(ToolBase):
         ref = self._current()
         if not ref:
             return
-        pix = QPixmap.fromImage(export.render(self._svg(ref), PREVIEW * 2))
-        pix.setDevicePixelRatio(2)
-        self.preview.setPixmap(pix)
+        self.preview.setPixmap(export.render_pixmap(self._svg(ref), PREVIEW))
 
     def _bg_changed(self) -> None:
         has_bg = self.bg.currentData() != "none"

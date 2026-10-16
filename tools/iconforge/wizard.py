@@ -60,8 +60,7 @@ class HeroBanner(QWidget):
         if key not in cache:
             try:
                 svg = export.build_svg(self._svgs[i], Style(color="#ffffff", stroke=1.75))
-                pix = QPixmap.fromImage(export.render(svg, px * 2))
-                pix.setDevicePixelRatio(2)
+                pix = export.render_pixmap(svg, px)
             except Exception:  # noqa: BLE001 - defektes Symbol einfach auslassen
                 pix = None
             cache[key] = pix
