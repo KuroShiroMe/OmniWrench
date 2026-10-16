@@ -75,6 +75,35 @@ def language_infos(directory: Path = APP_LOCALES_DIR) -> list[LanguageInfo]:
     return sorted(result, key=lambda i: (i.code != DEFAULT_LANGUAGE, i.native.lower()))
 
 
+def base_language(code: str) -> str:
+    """Basissprache eines Dialekts ("de_bad" -> "de"); bei Hauptsprachen der Code selbst."""
+    return code.split("_", 1)[0]
+
+
+def language_tree(codes=None, directory: Path = APP_LOCALES_DIR) -> list[tuple[LanguageInfo, int]]:
+    """Sprachen für Auswahllisten: jede Hauptsprache, darunter ihre Dialekte (Ebene 1).
+
+    codes: nur diese Sprachcodes (z. B. die eines Tools); Namen kommen aus den Sprachdateien
+    des Hauptprogramms. Ein Dialekt ohne vorhandene Basissprache steht auf Ebene 0.
+    """
+    infos = {i.code: i for i in language_infos(directory)}
+    wanted = list(infos) if codes is None else list(dict.fromkeys(codes))
+    items = [infos.get(c) or LanguageInfo(c, c, c, DEFAULT_LANGUAGE) for c in wanted]
+    order = {i.code: n for n, i in enumerate(language_infos(directory))}
+    key = lambda i: (order.get(i.code, len(order)), i.native.lower())
+    present = {i.code for i in items}
+    top = sorted((i for i in items if base_language(i.code) == i.code or base_language(i.code) not in present),
+                 key=key)
+    result: list[tuple[LanguageInfo, int]] = []
+    for parent in top:
+        result.append((parent, 0))
+        if base_language(parent.code) != parent.code:
+            continue
+        children = [i for i in items if i.code != parent.code and base_language(i.code) == parent.code]
+        result.extend((child, 1) for child in sorted(children, key=lambda i: i.native.lower()))
+    return result
+
+
 def fallback_chain(code: str, locales: dict[str, dict]) -> list[str]:
     """[code, fallback, fallback-des-fallbacks, …, "en"] - ohne Duplikate und Zyklen."""
     chain: list[str] = []

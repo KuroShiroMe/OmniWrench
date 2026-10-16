@@ -25,6 +25,8 @@ from .scaling import SCALE_CHOICES, fit_min_width, fit_to_screen, normalize
 from .widgets import label, library_icon, make_button, tool_icon
 from .workers import run_async
 
+LANGUAGE_INDENT = "\u2003\u2003"  # Dialekte eingerückt unter ihrer Hauptsprache
+
 
 # ====================================================================== Felder
 class _Field:
@@ -213,8 +215,8 @@ class ToolSettingsDialog(QDialog):
         current = tool.settings.get(LANGUAGE_KEY) or AUTO
         auto_lang = i18n.resolve_tool_language(set(available), AUTO)
         self.language.addItem(tr("settings.language_auto", language=i18n.native_name(auto_lang)), AUTO)
-        for code in available:
-            self.language.addItem(i18n.native_name(code), code)
+        for info, level in i18n.language_tree(available):
+            self.language.addItem(LANGUAGE_INDENT * level + info.native, info.code)
         self.language.setCurrentIndex(max(self.language.findData(current), 0))
         self.language.setToolTip(tr("settings.tool_language_hint"))
         lang_row.addRow(tr("settings.tool_language"), self.language)
@@ -284,9 +286,9 @@ class AppSettingsDialog(QDialog):
         page = QWidget()
         form = QFormLayout(page)
         self.language = QComboBox()
-        for info in i18n.language_infos():
+        for info, level in i18n.language_tree():
             text = info.native if info.native == info.name else f"{info.native}  ({info.name})"
-            self.language.addItem(text, info.code)
+            self.language.addItem(LANGUAGE_INDENT * level + text, info.code)
         self.language.setCurrentIndex(max(self.language.findData(i18n.current_language()), 0))
         form.addRow(tr("appsettings.language"), self.language)
         form.addRow("", label(tr("appsettings.language_hint"), "Muted", wrap=True))

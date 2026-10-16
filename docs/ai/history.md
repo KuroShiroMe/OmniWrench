@@ -173,3 +173,7 @@
 - de_bad: scale keys used a different spelling (ë, nooch, vun, het, selber) -> aligned with rest of file;
   "gönn" -> "gehn". de_by: typo "Ofmeidn", "söiba"/"no amoi" aligned to "sejba"/"nomoi", "Grichtt", "auswürfln".
 - en_posh "programme" consistently; en_sco "Copy user name". check_locales OK.
+- Follow-up (same thread): merged main (UAC, CI, signing). Reviewed the 12 new UAC/server keys too (fr "p. ex.",
+  de_bad/en_sco spelling aligned). Added Hessian `de_hes` (all keys, fallback de). Language dropdowns in app and tool
+  settings now indent dialects under the main language (i18n.language_tree, LANGUAGE_INDENT = 2 em spaces).
+  Gave Stef a list of further sensible languages (backlog).

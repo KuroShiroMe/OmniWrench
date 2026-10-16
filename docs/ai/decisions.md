@@ -32,7 +32,9 @@
 - Built-in password manager in main app (local provider in vault). Credential picker = simple full-text search.
 
 ## i18n
-- Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
+- Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), de_hes (Hessisch, added 2026-10-16 on Stef's request), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
+- Language dropdowns (app + tool settings) list dialects indented under their main language (Stef 2026-10-16).
+  Dialect code convention `<base>_<suffix>`; i18n.language_tree() groups by the part before "_".
 - App language in settings; change rebuilds UI without re-login.
 - Tools: own `locales/`; per-tool language setting ("auto" or fixed). Auto = app language if tool has it, else dialect base language (my addition, user informed), else English.
 

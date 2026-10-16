@@ -35,7 +35,10 @@
       until approval.
 - Optional later: installer (Inno Setup/MSIX, sign it too), self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
-- [ ] Native-speaker review of fr/es/dialect translations STILL OPEN. 2026-10-16: AI review done (main app locales
+- Further languages suggested to Stef 2026-10-16 (not started, waits for her pick): it, nl, pl, pt (pt-BR), cs, sv,
+  tr, uk; later ja, zh-Hans (font/width tests). RTL (ar, he) needs layout work. Fun dialects: Schwäbisch,
+  Sächsisch, Plattdeutsch, Schwiizerdütsch, Kölsch, Wienerisch.
+- [ ] Native-speaker review of fr/es/dialect translations STILL OPEN (incl. new de_hes). 2026-10-16: AI review done (main app locales
       only, see history); a real native speaker has NOT checked them. Open points: French typography (narrow
       no-break space before : ? ! and inside « », currently normal spaces), tool locales only exist in de/en
       (+ Subnet de_bad; OmniVault has all 8), new keys from connector/CI PRs need the same review.
