@@ -2,15 +2,20 @@
 
 Ablage geladener Pakete:  <tool_data>/packs/<pack>/<variant>/<name>.svg
                           <tool_data>/packs/<pack>/index.json   (Version, Varianten, Metadaten)
+Katalog (npm-Angaben):    <tool_data>/packs/catalog.json        (Version, Größe, Dateien, Datum je Paket)
 """
 
 from __future__ import annotations
 
 import io
 import json
+import random
 import re
 import shutil
 import tarfile
+import threading
+import zlib
+from colorsys import hls_to_rgb
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path, PurePosixPath
@@ -21,6 +26,8 @@ from omniwrench.core import icons, net
 PACKS_FILE = Path(__file__).with_name("icon_packs.json")
 LICENSES_FILE = Path(__file__).with_name("licenses.json")
 MIN_AGE_DAYS = 14
+CATALOG_TTL = timedelta(hours=24)
+NPM = "https://registry.npmjs.org/"
 
 
 @dataclass(frozen=True)
@@ -38,12 +45,40 @@ def load_licenses() -> dict:
     return json.loads(LICENSES_FILE.read_text(encoding="utf-8"))
 
 
+def _npm_url(package: str) -> str:
+    return NPM + package.replace("/", "%2F")
+
+
+def mature_version(meta: dict) -> str:
+    """Neueste stabile Version, die mindestens MIN_AGE_DAYS alt ist (sonst die neueste)."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=MIN_AGE_DAYS)
+    candidates = [(datetime.fromisoformat(t.replace("Z", "+00:00")), v) for v, t in meta["time"].items()
+                  if v in meta.get("versions", {}) and "-" not in v]
+    mature = [c for c in candidates if c[0] <= cutoff] or candidates
+    return max(mature)[1]
+
+
+def pack_color(pack: str, spec: dict) -> str:
+    """Akzentfarbe eines Pakets: aus icon_packs.json oder stabil aus der Paket-ID abgeleitet."""
+    if spec.get("color"):
+        return spec["color"]
+    hue = zlib.crc32(pack.encode()) % 360
+    r, g, b = hls_to_rgb(hue / 360, 0.46, 0.62)
+    return f"#{int(r * 255):02x}{int(g * 255):02x}{int(b * 255):02x}"
+
+
 class PackStore:
     def __init__(self, data_dir: Path):
         self.root = data_dir / "packs"
         self.root.mkdir(parents=True, exist_ok=True)
         self.defs = load_definitions()
         self._index: dict[str, dict] = {}
+        self._catalog_file = self.root / "catalog.json"
+        self._lock = threading.Lock()
+        try:
+            self._catalog: dict[str, dict] = json.loads(self._catalog_file.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            self._catalog = {}
 
     # ------------------------------------------------------------ Status
     def is_available(self, pack: str) -> bool:
@@ -83,17 +118,63 @@ class PackStore:
         brands = self.defs[ref.pack].get("brands_variant")
         return bool(brands) and ref.variant == brands
 
+    def downloadable(self) -> list[str]:
+        """Pakete, die aus dem npm-Registry geladen werden können (alle außer den eingebauten)."""
+        return sorted((p for p, d in self.defs.items() if not d.get("builtin")), key=lambda p: self.defs[p]["name"].lower())
+
+    def disk_size(self, pack: str) -> int:
+        folder = self.root / pack
+        return sum(f.stat().st_size for f in folder.rglob("*") if f.is_file()) if folder.exists() else 0
+
+    # ------------------------------------------------------------ Katalog (npm-Angaben vor dem Laden)
+    def catalog(self, pack: str) -> dict:
+        """Zwischengespeicherte Angaben: {version, size, files, published, exact, fetched} oder {}."""
+        return self._catalog.get(pack, {})
+
+    def catalog_fresh(self, pack: str, exact: bool = False) -> bool:
+        entry = self._catalog.get(pack)
+        if not entry or (exact and not entry.get("exact")):
+            return False
+        fetched = datetime.fromisoformat(entry["fetched"])
+        return datetime.now(timezone.utc) - fetched < CATALOG_TTL
+
+    def _store_catalog(self, pack: str, entry: dict) -> dict:
+        entry["fetched"] = datetime.now(timezone.utc).isoformat()
+        with self._lock:
+            self._catalog[pack] = entry
+            try:
+                self._catalog_file.write_text(json.dumps(self._catalog, separators=(",", ":")), encoding="utf-8")
+            except OSError:
+                pass
+        return entry
+
+    def fetch_summary(self, pack: str) -> dict:
+        """Schnelle Angaben zur neuesten Version (wenige KB) - für die Auswahlliste."""
+        if self.catalog_fresh(pack):
+            return self.catalog(pack)
+        info = json.loads(net.get_bytes(_npm_url(self.defs[pack]["package"]) + "/latest"))
+        dist = info.get("dist", {})
+        return self._store_catalog(pack, {"version": info.get("version", ""), "size": dist.get("unpackedSize", 0),
+                                          "files": dist.get("fileCount", 0), "published": "", "exact": False})
+
+    def fetch_release(self, pack: str) -> dict:
+        """Genaue Angaben zu der Version, die geladen würde (siehe mature_version)."""
+        if self.catalog_fresh(pack, exact=True):
+            return self.catalog(pack)
+        meta = json.loads(net.get_bytes(_npm_url(self.defs[pack]["package"])))
+        version = mature_version(meta)
+        dist = meta["versions"][version].get("dist", {})
+        return self._store_catalog(pack, {"version": version, "size": dist.get("unpackedSize", 0),
+                                          "files": dist.get("fileCount", 0),
+                                          "published": meta["time"].get(version, ""), "exact": True})
+
     # ------------------------------------------------------------ Laden
     def download(self, pack: str, progress: Callable[[str], None] = lambda m: None) -> None:
         spec = self.defs[pack]
         package = spec["package"]
         progress(f"{spec['name']} …")
-        meta = json.loads(net.get_bytes(f"https://registry.npmjs.org/{package.replace('/', '%2F')}"))
-        cutoff = datetime.now(timezone.utc) - timedelta(days=MIN_AGE_DAYS)
-        candidates = [(datetime.fromisoformat(t.replace("Z", "+00:00")), v) for v, t in meta["time"].items()
-                      if v in meta.get("versions", {}) and "-" not in v]
-        mature = [c for c in candidates if c[0] <= cutoff] or candidates
-        version = max(mature)[1]
+        meta = json.loads(net.get_bytes(_npm_url(package)))
+        version = mature_version(meta)
         info = meta["versions"][version]
         progress(f"{spec['name']} {version} …")
         data = net.get_bytes(info["dist"]["tarball"], timeout=600)
@@ -145,6 +226,7 @@ class PackStore:
         if meta_raw is not None:
             parse_meta(spec["meta"]["format"], meta_raw, meta_icons, categories)
         index = {"version": version, "license": spec["license"], "package": package,
+                 "published": meta["time"].get(version, ""),
                  "variants": {v: sorted(n) for v, n in variants.items() if n},
                  "meta": meta_icons, "categories": categories}
         (tmp / "index.json").write_text(json.dumps(index, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -153,6 +235,20 @@ class PackStore:
         self._index.pop(pack, None)
         total = sum(len(n) for n in index["variants"].values())
         progress(f"{spec['name']} {version} ({total})")
+
+    def samples(self, pack: str, count: int) -> list[bytes]:
+        """Einige Symbole eines verfügbaren Pakets (stabil je Paket) - z. B. für das Vorschau-Banner."""
+        if not self.is_available(pack):
+            return []
+        refs = self.items(pack, next(iter(self.index(pack)["variants"]), None))
+        picked = random.Random(pack).sample(refs, min(count, len(refs)))
+        out = []
+        for ref in picked:
+            try:
+                out.append(self.svg(ref))
+            except OSError:
+                pass
+        return out
 
     def remove(self, pack: str) -> None:
         shutil.rmtree(self.root / pack, ignore_errors=True)

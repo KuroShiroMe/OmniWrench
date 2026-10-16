@@ -21,4 +21,6 @@
   CI zip to the GitHub release.
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Native-speaker review of fr/es/dialect translations.
-- IconForge: pack management (remove/refresh downloaded libraries), more libraries (e.g. Azure/AWS architecture icons have special terms).
+- IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0
+  (wizard: download, download again, remove). Idea: real sample icons in the banner before download (needs a CDN
+  like jsDelivr; blocked in some networks, so not used yet).

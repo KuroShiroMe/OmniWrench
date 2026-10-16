@@ -66,3 +66,11 @@
 - IconForge libraries: only Lucide bundled offline; all others downloaded on demand when selected.
 - Every icon shows licence + checklist (licenses.json, permission_order); disclaimer "no legal guarantee".
 - Project/chats: maintained as docs/ai/claude-project/ (user sets up claude.ai project; files stay on GitHub).
+
+## Round 9 decisions (2026-10-16)
+- IconForge: library dropdown shows ONLY downloaded libraries; a download button next to it opens a wizard
+  (dropdown with name, size, publisher; preview = generated hero banner, title, meta info, source link).
+- IconForge right panel: export controls (sizes, format, save/copy) at the top, everything else below.
+- (mine) Wizard also offers "Download again" and "Remove" for downloaded libraries; publisher stored statically
+  in icon_packs.json (npm author fields are inconsistent).
+
