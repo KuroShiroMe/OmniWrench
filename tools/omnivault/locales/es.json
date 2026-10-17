@@ -6,7 +6,7 @@
   "tool.name": "OmniVault",
   "tool.description": "Gestor de contraseñas integrado con conectores a gestores externos.",
   "tool.long_description": "Gestiona credenciales en el gestor de contraseñas integrado de OmniWrench y conecta gestores externos (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Después, la selección de credenciales de OmniWrench busca en todos los gestores conectados. Las contraseñas de gestores externos solo se obtienen cuando se necesitan y se mantienen en memoria únicamente durante la sesión actual.",
-  "tool.category": "Seguridad/Contraseñas",
+  "tool.category": "Seguridad de la información/Contraseñas y secretos",
   "settings.max_results.label": "Máx. resultados por gestor",
   "ui.sources": "Orígenes",
   "ui.search_all": "Buscar en todos los gestores",

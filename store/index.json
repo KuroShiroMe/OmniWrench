@@ -1,16 +1,16 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-16T12:44:08+00:00",
+  "generated": "2026-10-17T20:29:59+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.1",
+      "version": "1.3.2",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "DarkMatter",
-      "category": "MS Server Tools/Active Directory",
+      "category": "identity/active_directory",
       "icon": "user-search",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
@@ -19,6 +19,7 @@
         "windows"
       ],
       "tags": [
+        "servicedesk",
         "active directory",
         "ad",
         "user",
@@ -35,27 +36,27 @@
           "name": "AD Benutzerabfrage",
           "description": "Benutzer im Active Directory suchen und Details anzeigen.",
           "long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
-          "category": "MS Server Tools/Active Directory"
+          "category": "Identität & Zugriff/Active Directory"
         },
         "en": {
           "name": "AD User Lookup",
           "description": "Search users in Active Directory and show their details.",
           "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
-          "category": "MS Server Tools/Active Directory"
+          "category": "Identity & Access/Active Directory"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.1.zip",
-      "sha256": "54fa421345bf32034a3af5608ea11dd84de9246f413a168a7a6aa822f76ca7cd",
-      "size": 6009
+      "download_url": "packages/ms.ad-user-lookup-1.3.2.zip",
+      "sha256": "02cdaf18a36d0fdc71f41ebee87043a1117749cf46add278594c58827ce39356",
+      "size": 6031
     },
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "DarkMatter",
-      "category": "Design/Icons",
+      "category": "documentation/icons",
       "icon": "pen-tool",
       "color": "#ec4899",
       "entry": "tool:IconForge",
@@ -64,6 +65,7 @@
         "windows"
       ],
       "tags": [
+        "design",
         "icons",
         "symbole",
         "visio",
@@ -84,27 +86,27 @@
           "name": "IconForge",
           "description": "Symbole und Piktogramme aus vielen freien Bibliotheken - suchen, anpassen und exportieren, z. B. für Visio.",
           "long_description": "Durchsuchbares Raster mit über 100.000 Symbolen aus mehr als 25 freien Bibliotheken (Lucide eingebaut, Tabler, Phosphor, Material, Fluent, Font Awesome u. a. werden bei Bedarf geladen). Zeigt Lizenz und erlaubte Nutzung je Symbol, passt Farbe, Strichstärke und Hintergrund an und exportiert als SVG, PNG, ICO, PDF oder JPG in mehreren Größen.",
-          "category": "Design/Symbole"
+          "category": "Dokumentation & Design/Icons"
         },
         "en": {
           "name": "IconForge",
           "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
           "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
-          "category": "Design/Icons"
+          "category": "Documentation & Design/Icons"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.1.zip",
-      "sha256": "564985821c058487e2d396d7c200b46943d4c893910d839ac335428b509afada",
-      "size": 29553
+      "download_url": "packages/gfx.iconforge-1.1.2.zip",
+      "sha256": "d93c317cf6219208a71d3cb4044ebe5a05b72d69cd12efac9c3a2b35f1b9abe6",
+      "size": 29583
     },
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "DarkMatter",
-      "category": "Security/Passwords",
+      "category": "security/passwords_secrets",
       "icon": "vault",
       "color": "#f59e0b",
       "entry": "tool:OmniVault",
@@ -113,6 +115,7 @@
         "windows"
       ],
       "tags": [
+        "security",
         "password",
         "passwort",
         "keepass",
@@ -140,63 +143,63 @@
           "name": "OmniVault",
           "description": "Eingebauter Passwortmanager mit Konnektoren zu externen Passwortmanagern.",
           "long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
-          "category": "Sicherheit/Passwörter"
+          "category": "Informationssicherheit/Passwörter & Geheimnisse"
         },
         "de_bad": {
           "name": "OmniVault",
           "description": "Igebauter Passwortmanager mit Aaschlüss an fremdi Passwortmanager.",
           "long_description": "Speichert Zuegangsdate im igebaute OmniWrench-Passwortmanager un hängt fremdi Manager aa (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). D Zuegangsdate-Uswahl in OmniWrench durchsuecht denn alli verbundene Manager. Passwörter vu fremde Manager wäre erscht abgholt, wenn mer sie brucht, un bliibe numme fir d laufendi Sitzung im Arbeitsspeicher.",
-          "category": "Sicherheit/Passwörter"
+          "category": "Informationssicherheit/Passwörter & Geheimnisse"
         },
         "de_by": {
           "name": "OmniVault",
           "description": "Eibauter Passwortmanager mit Oschlüss an fremde Passwortmanager.",
           "long_description": "Speichert Zuagangsdatn im eibautn OmniWrench-Passwortmanager und hängt fremde Manager o (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). De Zuagangsdatn-Auswahl in OmniWrench duachsuacht dann olle verbundnen Manager. Passwörter vo fremde Manager wern erst gholt, wenn ma s braucht, und bleim bloß für de laufende Sitzung im Arbeitsspeicher.",
-          "category": "Sicherheit/Passwörter"
+          "category": "Informationssicherheit/Passwörter & Geheimnisse"
         },
         "en": {
           "name": "OmniVault",
           "description": "Built-in password manager with connectors to external password managers.",
           "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
-          "category": "Security/Passwords"
+          "category": "Information Security/Passwords & Secrets"
         },
         "en_posh": {
           "name": "OmniVault",
           "description": "A distinguished built-in password manager, with connectors to external password managers.",
           "long_description": "Keeps one's credentials in the built-in OmniWrench password manager and receives external managers most cordially (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Thereafter every credential picker in OmniWrench consults all connected managers at once. Passwords from external managers are fetched only when required and kept in memory for the present session alone, as is proper.",
-          "category": "Security/Passwords"
+          "category": "Information Security/Passwords & Secrets"
         },
         "en_sco": {
           "name": "OmniVault",
           "description": "Built-in passwird keeper wi connectors tae ither passwird keepers.",
           "long_description": "Keeps yer credentials in the built-in OmniWrench passwird keeper an hooks up ither keepers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Syne the credential picker in OmniWrench raiks through aw the connected keepers at yince. Passwirds fae ither keepers are only fetched when needit an held in memory for this session alane.",
-          "category": "Security/Passwirds"
+          "category": "Information Security/Passwirds & Secrets"
         },
         "es": {
           "name": "OmniVault",
           "description": "Gestor de contraseñas integrado con conectores a gestores externos.",
           "long_description": "Gestiona credenciales en el gestor de contraseñas integrado de OmniWrench y conecta gestores externos (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Después, la selección de credenciales de OmniWrench busca en todos los gestores conectados. Las contraseñas de gestores externos solo se obtienen cuando se necesitan y se mantienen en memoria únicamente durante la sesión actual.",
-          "category": "Seguridad/Contraseñas"
+          "category": "Seguridad de la información/Contraseñas y secretos"
         },
         "fr": {
           "name": "OmniVault",
           "description": "Gestionnaire de mots de passe intégré avec connecteurs vers des gestionnaires externes.",
           "long_description": "Gère les identifiants dans le gestionnaire de mots de passe intégré d'OmniWrench et connecte des gestionnaires externes (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). La sélection d'identifiants d'OmniWrench recherche ensuite dans tous les gestionnaires connectés. Les mots de passe des gestionnaires externes ne sont récupérés qu'en cas de besoin et conservés en mémoire uniquement pour la session en cours.",
-          "category": "Sécurité/Mots de passe"
+          "category": "Sécurité de l'information/Mots de passe et secrets"
         }
       },
-      "download_url": "packages/sec.omnivault-1.1.0.zip",
-      "sha256": "893f64cb241e722b18578f95fc8a70c07b850b66058a309fe016e64c36b9b8dc",
-      "size": 35471
+      "download_url": "packages/sec.omnivault-1.1.1.zip",
+      "sha256": "aeb2cdac15ca2037967ef66798c9ba2b982196a4014d5ca9fc1dad7007b34896",
+      "size": 35598
     },
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "DarkMatter",
-      "category": "Network/IP Tools",
+      "category": "network/ip_dns_dhcp",
       "icon": "network",
       "color": "#0ea5e9",
       "entry": "tool:SubnetCalculator",
@@ -205,6 +208,7 @@
         "windows"
       ],
       "tags": [
+        "ip",
         "subnet",
         "cidr",
         "ipv4",
@@ -219,24 +223,24 @@
           "name": "Subnetzrechner",
           "description": "IPv4/IPv6-Netze berechnen und in Subnetze aufteilen.",
           "long_description": "Berechnet Netzadresse, Broadcast, Netzmaske, Wildcard, Hostbereich und Anzahl der Hosts. Teilt Netze in gleich große Subnetze auf und exportiert die Liste als CSV.",
-          "category": "Netzwerk/IP-Tools"
+          "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
         },
         "de_bad": {
           "name": "Netzle-Rechner",
           "description": "IPv4/IPv6-Netzle usrechne un in kleineri Stückle verteile.",
           "long_description": "Rechnet Netzadress, Broadcast, Netzmask, Wildcard, Hostbereich un wie viel Hosts nei bassed. Verteilt Netze in gliich großi Stückle un schreibt d Lischt als CSV raus.",
-          "category": "Netzwerk/IP-Werkzeigle"
+          "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
         },
         "en": {
           "name": "Subnet Calculator",
           "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
           "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-          "category": "Network/IP Tools"
+          "category": "Network & Connectivity/IP Addresses, DNS & DHCP"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.2.1.zip",
-      "sha256": "ef651cca5daed4ca4af92f4ef6fecf9953497d3d4c31dc39970f531fe54b23d6",
-      "size": 7511
+      "download_url": "packages/net.subnet-calculator-1.2.2.zip",
+      "sha256": "c899d5e95071a7fe47198b46cdf9fc191028eb475bcf3beb3e0ecaec9abd12d0",
+      "size": 7585
     }
   ]
 }

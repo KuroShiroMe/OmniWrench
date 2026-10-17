@@ -6,7 +6,7 @@
   "tool.name": "OmniVault",
   "tool.description": "Built-in passwird keeper wi connectors tae ither passwird keepers.",
   "tool.long_description": "Keeps yer credentials in the built-in OmniWrench passwird keeper an hooks up ither keepers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Syne the credential picker in OmniWrench raiks through aw the connected keepers at yince. Passwirds fae ither keepers are only fetched when needit an held in memory for this session alane.",
-  "tool.category": "Security/Passwirds",
+  "tool.category": "Information Security/Passwirds & Secrets",
   "settings.max_results.label": "Max. results per keeper",
   "ui.sources": "Sources",
   "ui.search_all": "Raik aw keepers",

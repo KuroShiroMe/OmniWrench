@@ -16,6 +16,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from omniwrench.core.categories import translation_keys as category_keys  # noqa: E402
 KEY_PATTERN = re.compile(r"""\btr\(\s*["']([a-z0-9_]+(?:\.[a-z0-9_]+)+)["']""")
 
 
@@ -65,6 +68,7 @@ def app_keys() -> set[str]:
     # dynamisch zusammengesetzte Schlüssel
     keys |= {f"req.{k}" for k in ("python", "windows_capabilities", "windows_features", "powershell_modules", "winget")}
     keys |= {"install.installing", "install.updating", "login.title_unlock", "login.please_login"}
+    keys |= category_keys()
     return keys
 
 

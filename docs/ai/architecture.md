@@ -15,6 +15,7 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
   system.py                   is_windows_server() (registry InstallationType, cached)
   elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
+  categories.py               AREAS {area: (subs)}, LEGACY_AREAS, category_path(manifest) -> [area, sub] localized
   manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path
   tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners

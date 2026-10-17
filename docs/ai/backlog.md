@@ -1,5 +1,7 @@
 # Backlog / next steps
 
+Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
+
 ## Open / to verify with user
 - [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
       0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
@@ -46,3 +48,5 @@
 - IconForge: more libraries (e.g. Azure/AWS architecture icons have special terms). Pack management done in 1.1.0
   (wizard: download, download again, remove). Idea: real sample icons in the banner before download (needs a CDN
   like jsDelivr; blocked in some networks, so not used yet).
+- Categories (done 2026-10-17, #32): dialect translations of category names are the base-language text (no dialect
+  flavour yet); native-speaker review together with #25.

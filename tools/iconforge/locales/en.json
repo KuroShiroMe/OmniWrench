@@ -6,7 +6,7 @@
   "tool.name": "IconForge",
   "tool.description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
   "tool.long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
-  "tool.category": "Design/Icons",
+  "tool.category": "Documentation & Design/Icons",
   "settings.default_color.label": "Default icon colour",
   "settings.default_format.label": "Default format",
   "settings.export_dir.label": "Export folder",
