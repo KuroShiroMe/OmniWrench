@@ -17,6 +17,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+from . import categories
 from .i18n import app_chain, load_locales, tr
 from .jsonio import read_json
 
@@ -65,7 +66,9 @@ class ToolManifest:
     description: str = ""
     long_description: str = ""
     author: str = ""
-    category: str = ""                   # Pfad mit "/", z. B. "Network/IP Tools" (übersetzbar)
+    category: str = ""                   # "<bereich>/<unterkategorie>" als IDs, z. B. "network/ip_dns_dhcp" (core/categories.py)
+    category_area: str = ""              # Anzeigename eines eigenen, der App unbekannten Bereichs (übersetzbar)
+    subcategory: str = ""                # Anzeigename einer eigenen Unterkategorie (übersetzbar)
     icon: str = ""                       # Bilddatei im Tool-Ordner ODER Name aus der Bibliothek (siehe core/icons.py)
     icon_text: str = ""                  # eigenes Kürzel für das generierte Symbol (max. 4 Zeichen)
     icon_data: str = ""                  # nur im Store: eingebettete Bilddatei (Base64), von build_store.py erzeugt
@@ -89,7 +92,7 @@ class ToolManifest:
     raw: dict = field(default_factory=dict, repr=False)
 
     def localized(self, field_name: str, chain: list[str] | None = None) -> str:
-        """Übersetzter Anzeigetext (name, description, long_description, category)."""
+        """Übersetzter Anzeigetext (siehe TRANSLATABLE_FIELDS)."""
         if chain is None:
             chain = app_chain()
         for code in chain:
@@ -112,8 +115,8 @@ class ToolManifest:
 
     @property
     def category_path(self) -> list[str]:
-        """Kategoriepfad in der Sprache des Hauptprogramms."""
-        return _split_category(self.localized("category"))
+        """Kategoriepfad (Bereich, ggf. Unterkategorie) in der Sprache des Hauptprogramms."""
+        return categories.category_path(self)
 
     @classmethod
     def from_dict(cls, data: dict) -> "ToolManifest":
@@ -140,7 +143,7 @@ class ToolManifest:
         return manifest
 
 
-TRANSLATABLE_FIELDS = ("name", "description", "long_description", "category")
+TRANSLATABLE_FIELDS = ("name", "description", "long_description", "category", "category_area", "subcategory")
 
 
 def read_tool_translations(tool_dir: Path) -> dict[str, dict[str, str]]:
@@ -151,10 +154,6 @@ def read_tool_translations(tool_dir: Path) -> dict[str, dict[str, str]]:
         if entry:
             result[code] = entry
     return result
-
-
-def _split_category(category: str) -> list[str]:
-    return [p.strip() for p in category.split("/") if p.strip()] or [tr("category.other")]
 
 
 @dataclass

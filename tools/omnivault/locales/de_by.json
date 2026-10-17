@@ -6,7 +6,7 @@
   "tool.name": "OmniVault",
   "tool.description": "Eibauter Passwortmanager mit Oschlüss an fremde Passwortmanager.",
   "tool.long_description": "Speichert Zuagangsdatn im eibautn OmniWrench-Passwortmanager und hängt fremde Manager o (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). De Zuagangsdatn-Auswahl in OmniWrench duachsuacht dann olle verbundnen Manager. Passwörter vo fremde Manager wern erst gholt, wenn ma s braucht, und bleim bloß für de laufende Sitzung im Arbeitsspeicher.",
-  "tool.category": "Sicherheit/Passwörter",
+  "tool.category": "Informationssicherheit/Passwörter & Geheimnisse",
   "settings.max_results.label": "Max. Treffer pro Manager",
   "ui.sources": "Quelln",
   "ui.search_all": "Olle Manager duachsuacha",

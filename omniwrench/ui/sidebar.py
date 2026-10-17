@@ -65,7 +65,7 @@ class Sidebar(QWidget):
         nodes: dict[tuple, QTreeWidgetItem] = {}
         for tool in sorted(self.host.manager.tools.values(), key=lambda t: t.manifest.display_name.lower()):
             m = tool.manifest
-            if query and query not in (m.display_name + "/".join(m.category_path)).lower():
+            if query and query not in (m.display_name + "/".join(m.category_path) + " ".join(m.tags)).lower():
                 continue
             parent = None
             path = m.category_path
@@ -78,7 +78,7 @@ class Sidebar(QWidget):
                     font.setBold(True)
                     node.setFont(0, font)
                     node.setData(0, CATEGORY_ROLE, key)
-                    node.setToolTip(0, tr("sidebar.category_hint"))
+                    node.setToolTip(0, f"{key[-1]}\n{tr('sidebar.category_hint')}")
                     (parent.addChild(node) if parent else self.tree.addTopLevelItem(node))
                     nodes[key] = node
                 parent = nodes[key]

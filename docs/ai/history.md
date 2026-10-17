@@ -181,3 +181,14 @@
   tr, uk) and 6 German dialects (de_swg, de_sxu, de_nds, de_gsw, de_ksh, de_wien), all 312 keys, AI-written.
   system_language() maps Windows names (italian, dutch, …). Language list sorts accent-insensitive (Čeština at C).
   Smoke test: 23 languages OK. Tool locales unchanged (fallback).
+
+## 2026-10-17 — Backlog as GitHub issues, service-oriented categories (thread "Backlog, Board, Kategorien")
+- Open backlog items as issues #17–#32, new proposals #33–#38 (labels test/windows/konnektor/alpha/blockiert/
+  nur-stef/übersetzung/idee/zurückgestellt/vorschlag/neues-tool/prio-*). No Projects API access from the cloud ->
+  Stef creates the GitHub Project board herself (auto-add workflow `is:issue`).
+- Categories: tool.json `category` = area/sub IDs (core/categories.py); app translates 11 areas + 42 subs
+  (`category.area.*`, `category.sub.*`, all 23 locales; dialects use base-language text). Own sub/area via
+  `subcategory`/`category_area` (+ tool locales). Legacy free-text paths mapped via LEGACY_AREAS.
+  `tool.category` in tool locales kept as written-out path for 0.6.x apps. Sidebar search includes tags,
+  category node tooltip shows full name. Tools bumped: AD 1.3.2, IconForge 1.1.2, OmniVault 1.1.1, Subnet 1.2.2.
+

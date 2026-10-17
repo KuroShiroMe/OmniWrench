@@ -1,11 +1,11 @@
 {
   "id": "gfx.iconforge",
   "name": "IconForge",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
   "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
   "author": "DarkMatter",
-  "category": "Design/Icons",
+  "category": "documentation/icons",
   "icon": "pen-tool",
   "color": "#ec4899",
   "entry": "tool:IconForge",
@@ -14,6 +14,7 @@
     "windows"
   ],
   "tags": [
+    "design",
     "icons",
     "symbole",
     "visio",

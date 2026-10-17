@@ -6,7 +6,7 @@
   "tool.name": "OmniVault",
   "tool.description": "A distinguished built-in password manager, with connectors to external password managers.",
   "tool.long_description": "Keeps one's credentials in the built-in OmniWrench password manager and receives external managers most cordially (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Thereafter every credential picker in OmniWrench consults all connected managers at once. Passwords from external managers are fetched only when required and kept in memory for the present session alone, as is proper.",
-  "tool.category": "Security/Passwords",
+  "tool.category": "Information Security/Passwords & Secrets",
   "settings.max_results.label": "Max. results per manager",
   "ui.sources": "Sources",
   "ui.search_all": "Consult all managers",
