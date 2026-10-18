@@ -33,6 +33,7 @@
   (always pass fresh dicts).
 - Tool `check()` runs before `_lib` is on sys.path -> add ctx.tool_dir/"_lib" to sys.path inside check (PMM install.py).
 - Bash heredocs containing many quotes break the Bash tool -> write a script file to the scratchpad and run it.
+- `ToolBase` ist KEIN QObject -> ein `Signal(...)` direkt als Klassenattribut einer ToolBase-Unterklasse wirft beim `connect` `'Signal' object has no attribute 'connect'`. Für Hintergrund->GUI entweder `run_async` oder eine eigene `class _Bridge(QObject)` mit den Signals (NetProbe). smoke_test fängt das ab.
 
 ## Python
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.
