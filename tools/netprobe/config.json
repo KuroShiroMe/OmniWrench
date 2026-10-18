@@ -1,0 +1,19 @@
+{
+  "settings": [
+    {
+      "key": "last_target",
+      "type": "string",
+      "label": "Last target",
+      "default": "",
+      "group": "General"
+    },
+    {
+      "key": "oui_download",
+      "type": "bool",
+      "label": "Load manufacturer list (MAC lookup)",
+      "default": true,
+      "group": "General",
+      "description": "Downloads the IEEE OUI list once to show the device manufacturer for MAC addresses."
+    }
+  ]
+}

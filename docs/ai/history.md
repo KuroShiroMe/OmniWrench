@@ -192,3 +192,20 @@
   `tool.category` in tool locales kept as written-out path for 0.6.x apps. Sidebar search includes tags,
   category node tooltip shows full name. Tools bumped: AD 1.3.2, IconForge 1.1.2, OmniVault 1.1.1, Subnet 1.2.2.
 
+
+## 2026-10-18 — NetProbe network test tool (thread "Netzwerker-Tools: ultimatives Test-Tool")
+- First networking tool. Input IP/DNS/CIDR/range -> target list; networks scanned (limit 4096). Battery of tests
+  toggleable per category in an options dialog (OptionsDialog: tristate per category, port profile, ping count,
+  timeouts, max hosts/sockets/hops, only_alive, OUI download).
+- Engine async in a thread, results marshalled to the GUI via Qt signals. Tests "auf Steroiden": ping with
+  loss/jitter/TTL/OS guess (IcmpSendEcho on Windows, `ping` on Linux – no raw sockets), parallel traceroute with
+  per-hop PTR/ASN/class/ping, port scan explained from a 136-port library (portlib.json, flags + de/en + usage list),
+  HTTP/TLS incl. unknown open ports (finds web UIs on odd ports), SMB/RDP/NTP/DNS-server, full DNS for names
+  (records, NS serials, SPF/DKIM/DMARC/MTA-STS/TLS-RPT, DNSSEC, wildcard, AD SRV). "Befunde" tab = ~60 best-practice
+  findings (findings.py), target list shows ⚠n.
+- UI: left target list with live status/progress, right an OWN nested QtAds CDockManager (verified it does not touch
+  the main window docking). Click a target -> dockable tab with only the categories that ran; tabs arrangeable side by
+  side inside the tool. render.Renderer builds the per-category widgets.
+- requirements.python dnspython>=2.6 (pip on install). category network/diagnostics, icon radar, min_app_version 0.6.0.
+- Checks green: compileall, check_locales (app 23 + tool de/en 339 keys), check_store, smoke_test. Store: netprobe
+  1.0.0 zip + index entry (other tools' zips restored, only net.netprobe entry merged – Linux-zip-hash gotcha).

@@ -100,6 +100,64 @@
       "size": 29583
     },
     {
+      "id": "net.netprobe",
+      "name": "NetProbe",
+      "version": "1.0.0",
+      "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS and a findings list per target.",
+      "long_description": "Enter an IP address, DNS name, network (CIDR) or range. Single addresses go straight into the list, networks are scanned. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter and TTL, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC). Each target opens its own dockable tab with results per category plus a Findings tab listing errors, warnings and best-practice notes. No admin rights required.",
+      "author": "DarkMatter",
+      "category": "network/diagnostics",
+      "icon": "radar",
+      "color": "#0ea5e9",
+      "entry": "tool:NetProbe",
+      "min_app_version": "0.6.0",
+      "platforms": [
+        "windows"
+      ],
+      "tags": [
+        "network",
+        "netzwerk",
+        "ping",
+        "traceroute",
+        "portscan",
+        "port",
+        "dns",
+        "tls",
+        "ssl",
+        "smb",
+        "rdp",
+        "ntp",
+        "scanner",
+        "diagnose",
+        "diagnostics",
+        "latency",
+        "subnet"
+      ],
+      "single_instance": false,
+      "requirements": {
+        "python": [
+          "dnspython>=2.6"
+        ]
+      },
+      "translations": {
+        "de": {
+          "name": "NetProbe",
+          "description": "Umfassendes Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS und eine Befundliste je Ziel.",
+          "long_description": "Eingabe einer IP-Adresse, eines DNS-Namens, eines Netzes (CIDR) oder Bereichs. Einzeladressen landen direkt in der Liste, Netze werden abgescannt. Für jedes Ziel führt NetProbe zahlreiche Tests aus, die sich nach Kategorie ein- und ausschalten lassen: Ping mit Laufzeit, Jitter und TTL, parallel ausgeführtes Traceroute mit Analyse jedes Sprungpunkts, TCP-Portscan mit einer Bibliothek von über 130 Diensten samt typischen Einsatzszenarien, HTTP- und TLS-Prüfung, SMB/RDP/NTP sowie eine vollständige DNS-Diagnose für Namen (Einträge, Nameserver, SPF/DKIM/DMARC, DNSSEC). Jedes Ziel öffnet einen eigenen, frei anordenbaren Tab mit Ergebnissen je Kategorie und einem Tab „Befunde“ mit Fehlern, Warnungen und Best-Practice-Hinweisen. Keine Administratorrechte nötig.",
+          "category": "Netzwerk & Konnektivität/Diagnose"
+        },
+        "en": {
+          "name": "NetProbe",
+          "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS and a findings list per target.",
+          "long_description": "Enter an IP address, DNS name, network (CIDR) or range. Single addresses go straight into the list, networks are scanned. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter and TTL, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names. Each target opens its own dockable tab with results per category plus a Findings tab. No admin rights required.",
+          "category": "Network & Connectivity/Diagnostics"
+        }
+      },
+      "download_url": "packages/net.netprobe-1.0.0.zip",
+      "sha256": "bd2035c50666b87caf44dac373840363453221599a2a4b3c5bf84b245f0fc37d",
+      "size": 61101
+    },
+    {
       "id": "sec.omnivault",
       "name": "OmniVault",
       "version": "1.1.1",
