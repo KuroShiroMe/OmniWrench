@@ -3,6 +3,11 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
+- [ ] NetProbe (net.netprobe 1.0.0): first networking tool, works on Linux renders + engine tests. Verify on Windows:
+      IcmpSendEcho ping (no admin), traceroute, port scan against a real LAN, TLS cert chain via Windows store
+      (truststore), DNS checks against real DNS (sandbox proxy only answers A/AAAA, so NS/TXT/MX/SOA untested here),
+      nested QtAds docking inside a tool dock (several result tabs side by side), tool install incl. pip dnspython.
+      Ideas for later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, save/export report, scheduled re-scan.
 - [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
       0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.

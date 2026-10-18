@@ -1,0 +1,2608 @@
+{
+ "_doc": "Port-Bibliothek von NetProbe. Schlüssel '<port>/<proto>'. flags: cleartext, admin, legacy, database, windows, ics.",
+ "ports": {
+  "20/tcp": {
+   "name": "FTP-Data",
+   "group": "file",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "FTP-Datenkanal (aktiver Modus).",
+    "u": [
+     "Dateiübertragung alter FTP-Server",
+     "Scanner/Kopierer, die per FTP ablegen"
+    ]
+   },
+   "en": {
+    "d": "FTP data channel (active mode).",
+    "u": [
+     "File transfer on legacy FTP servers",
+     "Scanners/copiers storing files via FTP"
+    ]
+   }
+  },
+  "21/tcp": {
+   "name": "FTP",
+   "group": "file",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "File Transfer Protocol, Anmeldedaten und Dateien unverschlüsselt.",
+    "u": [
+     "Datei-Upload auf Webhoster",
+     "Scan-to-FTP an Multifunktionsgeräten",
+     "Firmware-Updates von Netzwerkgeräten",
+     "Alte Austauschserver mit Partnern"
+    ]
+   },
+   "en": {
+    "d": "File Transfer Protocol, credentials and files in clear text.",
+    "u": [
+     "File upload to web hosting",
+     "Scan-to-FTP on multifunction printers",
+     "Firmware updates of network devices",
+     "Legacy partner exchange servers"
+    ]
+   }
+  },
+  "22/tcp": {
+   "name": "SSH",
+   "group": "remote",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Secure Shell: verschlüsselte Fernanmeldung, Dateiübertragung (SFTP/SCP) und Tunnel.",
+    "u": [
+     "Verwaltung von Linux-Servern, Switches, Firewalls",
+     "SFTP-Dateiaustausch",
+     "Git über SSH",
+     "Port-Weiterleitung/Tunnel",
+     "OpenSSH-Server unter Windows"
+    ]
+   },
+   "en": {
+    "d": "Secure Shell: encrypted remote login, file transfer (SFTP/SCP) and tunnels.",
+    "u": [
+     "Managing Linux servers, switches, firewalls",
+     "SFTP file exchange",
+     "Git over SSH",
+     "Port forwarding/tunnels",
+     "OpenSSH server on Windows"
+    ]
+   }
+  },
+  "23/tcp": {
+   "name": "Telnet",
+   "group": "remote",
+   "flags": [
+    "cleartext",
+    "admin",
+    "legacy"
+   ],
+   "de": {
+    "d": "Unverschlüsselte Fernanmeldung, Passwörter im Klartext.",
+    "u": [
+     "Alte Switches/Router",
+     "Industriesteuerungen, Drucker, USV-Karten",
+     "Serielle Konsolenserver"
+    ]
+   },
+   "en": {
+    "d": "Unencrypted remote login, passwords in clear text.",
+    "u": [
+     "Old switches/routers",
+     "Industrial controllers, printers, UPS cards",
+     "Serial console servers"
+    ]
+   }
+  },
+  "25/tcp": {
+   "name": "SMTP",
+   "group": "mail",
+   "flags": [],
+   "de": {
+    "d": "Mailübertragung zwischen Servern.",
+    "u": [
+     "Mailserver (Exchange, Postfix)",
+     "Relay für Scanner und Anwendungen",
+     "Spamfilter-Gateways"
+    ]
+   },
+   "en": {
+    "d": "Mail transfer between servers.",
+    "u": [
+     "Mail servers (Exchange, Postfix)",
+     "Relay for scanners and applications",
+     "Spam filter gateways"
+    ]
+   }
+  },
+  "37/tcp": {
+   "name": "Time",
+   "group": "infra",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "Veraltetes Zeitprotokoll (RFC 868).",
+    "u": [
+     "Sehr alte Geräte zur Zeitsynchronisation"
+    ]
+   },
+   "en": {
+    "d": "Obsolete time protocol (RFC 868).",
+    "u": [
+     "Very old devices for time sync"
+    ]
+   }
+  },
+  "43/tcp": {
+   "name": "WHOIS",
+   "group": "infra",
+   "flags": [],
+   "de": {
+    "d": "WHOIS-Abfragedienst.",
+    "u": [
+     "Domain- und IP-Registerabfragen"
+    ]
+   },
+   "en": {
+    "d": "WHOIS lookup service.",
+    "u": [
+     "Domain and IP registry lookups"
+    ]
+   }
+  },
+  "53/tcp": {
+   "name": "DNS",
+   "group": "infra",
+   "flags": [],
+   "de": {
+    "d": "Namensauflösung; TCP für große Antworten und Zonentransfers.",
+    "u": [
+     "DNS-Server (Active Directory, BIND)",
+     "Zonentransfer zwischen DNS-Servern",
+     "DNSSEC-Antworten"
+    ]
+   },
+   "en": {
+    "d": "Name resolution; TCP for large answers and zone transfers.",
+    "u": [
+     "DNS servers (Active Directory, BIND)",
+     "Zone transfer between DNS servers",
+     "DNSSEC answers"
+    ]
+   }
+  },
+  "67/udp": {
+   "name": "DHCP-Server",
+   "group": "infra",
+   "flags": [],
+   "de": {
+    "d": "Automatische IP-Vergabe (Serverseite).",
+    "u": [
+     "Windows-DHCP, Router, Firewalls"
+    ]
+   },
+   "en": {
+    "d": "Automatic IP assignment (server side).",
+    "u": [
+     "Windows DHCP, routers, firewalls"
+    ]
+   }
+  },
+  "69/udp": {
+   "name": "TFTP",
+   "group": "file",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Trivial FTP ohne Anmeldung.",
+    "u": [
+     "PXE-Boot",
+     "Konfigurationssicherung von Switches",
+     "IP-Telefone laden Firmware"
+    ]
+   },
+   "en": {
+    "d": "Trivial FTP without authentication.",
+    "u": [
+     "PXE boot",
+     "Switch configuration backup",
+     "IP phones loading firmware"
+    ]
+   }
+  },
+  "79/tcp": {
+   "name": "Finger",
+   "group": "legacy",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "Veralteter Dienst, gibt Benutzerinformationen preis.",
+    "u": [
+     "Alte Unix-Systeme"
+    ]
+   },
+   "en": {
+    "d": "Obsolete service disclosing user information.",
+    "u": [
+     "Old Unix systems"
+    ]
+   }
+  },
+  "80/tcp": {
+   "name": "HTTP",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Unverschlüsselter Webserver.",
+    "u": [
+     "Webseiten und Weiterleitung auf HTTPS",
+     "Weboberflächen von Druckern, Switches, Kameras",
+     "Let's-Encrypt-Validierung",
+     "WSUS, Zertifikatssperrlisten (CRL), PKI-Veröffentlichung"
+    ]
+   },
+   "en": {
+    "d": "Unencrypted web server.",
+    "u": [
+     "Websites and redirect to HTTPS",
+     "Web interfaces of printers, switches, cameras",
+     "Let's Encrypt validation",
+     "WSUS, certificate revocation lists (CRL), PKI publishing"
+    ]
+   }
+  },
+  "88/tcp": {
+   "name": "Kerberos",
+   "group": "directory",
+   "flags": [],
+   "de": {
+    "d": "Kerberos-Authentifizierung.",
+    "u": [
+     "Active-Directory-Domänencontroller",
+     "Single Sign-on"
+    ]
+   },
+   "en": {
+    "d": "Kerberos authentication.",
+    "u": [
+     "Active Directory domain controllers",
+     "Single sign-on"
+    ]
+   }
+  },
+  "102/tcp": {
+   "name": "ISO-TSAP / S7",
+   "group": "ics",
+   "flags": [
+    "ics"
+   ],
+   "de": {
+    "d": "ISO-on-TCP, u. a. Siemens S7-Steuerungen.",
+    "u": [
+     "Industrielle SPS (Siemens S7)"
+    ]
+   },
+   "en": {
+    "d": "ISO-on-TCP, e.g. Siemens S7 controllers.",
+    "u": [
+     "Industrial PLCs (Siemens S7)"
+    ]
+   }
+  },
+  "110/tcp": {
+   "name": "POP3",
+   "group": "mail",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Mailabruf ohne Verschlüsselung.",
+    "u": [
+     "Alte Mailclients",
+     "Abruf durch Ticketsysteme"
+    ]
+   },
+   "en": {
+    "d": "Mail retrieval without encryption.",
+    "u": [
+     "Old mail clients",
+     "Retrieval by ticket systems"
+    ]
+   }
+  },
+  "111/tcp": {
+   "name": "RPCbind",
+   "group": "unix",
+   "flags": [],
+   "de": {
+    "d": "Portmapper für Sun-RPC (NFS).",
+    "u": [
+     "NFS-Server",
+     "Linux/Unix-Dienste"
+    ]
+   },
+   "en": {
+    "d": "Portmapper for Sun RPC (NFS).",
+    "u": [
+     "NFS servers",
+     "Linux/Unix services"
+    ]
+   }
+  },
+  "119/tcp": {
+   "name": "NNTP",
+   "group": "legacy",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Usenet-News.",
+    "u": [
+     "Newsserver"
+    ]
+   },
+   "en": {
+    "d": "Usenet news.",
+    "u": [
+     "News servers"
+    ]
+   }
+  },
+  "123/udp": {
+   "name": "NTP",
+   "group": "infra",
+   "flags": [],
+   "de": {
+    "d": "Zeitsynchronisation.",
+    "u": [
+     "Domänencontroller (Zeitgeber)",
+     "Router/Firewalls als Zeitserver",
+     "NTP-Appliances"
+    ]
+   },
+   "en": {
+    "d": "Time synchronisation.",
+    "u": [
+     "Domain controllers (time source)",
+     "Routers/firewalls as time servers",
+     "NTP appliances"
+    ]
+   }
+  },
+  "135/tcp": {
+   "name": "MS-RPC",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Windows RPC-Endpunktzuordnung (DCOM).",
+    "u": [
+     "Fernverwaltung (WMI, MMC)",
+     "Active Directory, Exchange",
+     "Druckerfreigaben, DCOM-Anwendungen"
+    ]
+   },
+   "en": {
+    "d": "Windows RPC endpoint mapper (DCOM).",
+    "u": [
+     "Remote management (WMI, MMC)",
+     "Active Directory, Exchange",
+     "Printer shares, DCOM applications"
+    ]
+   }
+  },
+  "137/udp": {
+   "name": "NetBIOS-NS",
+   "group": "windows",
+   "flags": [
+    "windows",
+    "legacy"
+   ],
+   "de": {
+    "d": "NetBIOS-Namensdienst.",
+    "u": [
+     "Alte Windows-Namensauflösung",
+     "Netzwerkumgebung"
+    ]
+   },
+   "en": {
+    "d": "NetBIOS name service.",
+    "u": [
+     "Legacy Windows name resolution",
+     "Network neighbourhood"
+    ]
+   }
+  },
+  "139/tcp": {
+   "name": "NetBIOS-SSN",
+   "group": "windows",
+   "flags": [
+    "windows",
+    "legacy"
+   ],
+   "de": {
+    "d": "SMB über NetBIOS (alt).",
+    "u": [
+     "Dateifreigaben älterer Systeme",
+     "NAS mit SMB1-Kompatibilität"
+    ]
+   },
+   "en": {
+    "d": "SMB over NetBIOS (legacy).",
+    "u": [
+     "File shares of older systems",
+     "NAS with SMB1 compatibility"
+    ]
+   }
+  },
+  "143/tcp": {
+   "name": "IMAP",
+   "group": "mail",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Mailzugriff ohne Verschlüsselung.",
+    "u": [
+     "Mailserver",
+     "Mailarchivierung"
+    ]
+   },
+   "en": {
+    "d": "Mail access without encryption.",
+    "u": [
+     "Mail servers",
+     "Mail archiving"
+    ]
+   }
+  },
+  "161/udp": {
+   "name": "SNMP",
+   "group": "monitoring",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Geräteüberwachung und -verwaltung.",
+    "u": [
+     "Monitoring von Switches, Druckern, USV",
+     "Tonerstand, Portstatistiken"
+    ]
+   },
+   "en": {
+    "d": "Device monitoring and management.",
+    "u": [
+     "Monitoring switches, printers, UPS",
+     "Toner level, port statistics"
+    ]
+   }
+  },
+  "179/tcp": {
+   "name": "BGP",
+   "group": "infra",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Routing zwischen Netzen (Border Gateway Protocol).",
+    "u": [
+     "Internet-Router, Rechenzentren"
+    ]
+   },
+   "en": {
+    "d": "Routing between networks (Border Gateway Protocol).",
+    "u": [
+     "Internet routers, data centres"
+    ]
+   }
+  },
+  "389/tcp": {
+   "name": "LDAP",
+   "group": "directory",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Verzeichniszugriff (unverschlüsselt bzw. mit StartTLS).",
+    "u": [
+     "Active Directory",
+     "Anmeldung von Anwendungen gegen AD",
+     "Adressbücher von Scannern"
+    ]
+   },
+   "en": {
+    "d": "Directory access (unencrypted or with StartTLS).",
+    "u": [
+     "Active Directory",
+     "Application authentication against AD",
+     "Scanner address books"
+    ]
+   }
+  },
+  "443/tcp": {
+   "name": "HTTPS",
+   "group": "web",
+   "flags": [],
+   "de": {
+    "d": "Verschlüsselter Webserver.",
+    "u": [
+     "Webseiten, APIs, Webanwendungen",
+     "Weboberflächen von Geräten",
+     "SSL-VPN",
+     "Exchange OWA, RD-Gateway, ADFS"
+    ]
+   },
+   "en": {
+    "d": "Encrypted web server.",
+    "u": [
+     "Websites, APIs, web applications",
+     "Device web interfaces",
+     "SSL VPN",
+     "Exchange OWA, RD Gateway, ADFS"
+    ]
+   }
+  },
+  "445/tcp": {
+   "name": "SMB",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Windows-Dateifreigaben (Server Message Block).",
+    "u": [
+     "Datei- und Druckerfreigaben",
+     "Gruppenrichtlinien (SYSVOL)",
+     "Fernverwaltung (Admin-Freigaben C$)",
+     "NAS-Systeme"
+    ]
+   },
+   "en": {
+    "d": "Windows file sharing (Server Message Block).",
+    "u": [
+     "File and printer shares",
+     "Group Policy (SYSVOL)",
+     "Remote administration (admin shares C$)",
+     "NAS systems"
+    ]
+   }
+  },
+  "465/tcp": {
+   "name": "SMTPS",
+   "group": "mail",
+   "flags": [],
+   "de": {
+    "d": "SMTP mit direkter TLS-Verschlüsselung.",
+    "u": [
+     "Mailversand von Clients",
+     "Relay mit Anmeldung"
+    ]
+   },
+   "en": {
+    "d": "SMTP with implicit TLS.",
+    "u": [
+     "Mail submission from clients",
+     "Authenticated relay"
+    ]
+   }
+  },
+  "500/udp": {
+   "name": "IKE",
+   "group": "vpn",
+   "flags": [],
+   "de": {
+    "d": "IPsec-Schlüsselaustausch.",
+    "u": [
+     "Site-to-Site-VPN",
+     "Always On VPN",
+     "Firewall-VPN"
+    ]
+   },
+   "en": {
+    "d": "IPsec key exchange.",
+    "u": [
+     "Site-to-site VPN",
+     "Always On VPN",
+     "Firewall VPN"
+    ]
+   }
+  },
+  "502/tcp": {
+   "name": "Modbus",
+   "group": "ics",
+   "flags": [
+    "ics",
+    "cleartext"
+   ],
+   "de": {
+    "d": "Industrieprotokoll ohne Authentifizierung.",
+    "u": [
+     "SPS, Energiezähler, Gebäudeautomation"
+    ]
+   },
+   "en": {
+    "d": "Industrial protocol without authentication.",
+    "u": [
+     "PLCs, energy meters, building automation"
+    ]
+   }
+  },
+  "512/tcp": {
+   "name": "rexec",
+   "group": "legacy",
+   "flags": [
+    "cleartext",
+    "legacy"
+   ],
+   "de": {
+    "d": "Unix-Fernausführung ohne Verschlüsselung.",
+    "u": [
+     "Sehr alte Unix-Systeme"
+    ]
+   },
+   "en": {
+    "d": "Unix remote execution without encryption.",
+    "u": [
+     "Very old Unix systems"
+    ]
+   }
+  },
+  "513/tcp": {
+   "name": "rlogin",
+   "group": "legacy",
+   "flags": [
+    "cleartext",
+    "legacy"
+   ],
+   "de": {
+    "d": "Unix-Fernanmeldung ohne Verschlüsselung.",
+    "u": [
+     "Sehr alte Unix-Systeme"
+    ]
+   },
+   "en": {
+    "d": "Unix remote login without encryption.",
+    "u": [
+     "Very old Unix systems"
+    ]
+   }
+  },
+  "514/tcp": {
+   "name": "rsh",
+   "group": "legacy",
+   "flags": [
+    "cleartext",
+    "legacy"
+   ],
+   "de": {
+    "d": "Remote Shell ohne Verschlüsselung.",
+    "u": [
+     "Sehr alte Unix-Systeme"
+    ]
+   },
+   "en": {
+    "d": "Remote shell without encryption.",
+    "u": [
+     "Very old Unix systems"
+    ]
+   }
+  },
+  "514/udp": {
+   "name": "Syslog",
+   "group": "monitoring",
+   "flags": [],
+   "de": {
+    "d": "Protokollweiterleitung.",
+    "u": [
+     "Logserver, SIEM",
+     "Switches und Firewalls senden Logs"
+    ]
+   },
+   "en": {
+    "d": "Log forwarding.",
+    "u": [
+     "Log servers, SIEM",
+     "Switches and firewalls sending logs"
+    ]
+   }
+  },
+  "515/tcp": {
+   "name": "LPD",
+   "group": "printing",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "Line Printer Daemon.",
+    "u": [
+     "Drucker, Druckserver"
+    ]
+   },
+   "en": {
+    "d": "Line Printer Daemon.",
+    "u": [
+     "Printers, print servers"
+    ]
+   }
+  },
+  "548/tcp": {
+   "name": "AFP",
+   "group": "file",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "Apple Filing Protocol.",
+    "u": [
+     "Ältere Mac-Dateifreigaben, NAS"
+    ]
+   },
+   "en": {
+    "d": "Apple Filing Protocol.",
+    "u": [
+     "Older Mac file shares, NAS"
+    ]
+   }
+  },
+  "554/tcp": {
+   "name": "RTSP",
+   "group": "media",
+   "flags": [],
+   "de": {
+    "d": "Videostreaming.",
+    "u": [
+     "IP-Kameras, Videorekorder",
+     "Mediaserver"
+    ]
+   },
+   "en": {
+    "d": "Video streaming.",
+    "u": [
+     "IP cameras, video recorders",
+     "Media servers"
+    ]
+   }
+  },
+  "587/tcp": {
+   "name": "Submission",
+   "group": "mail",
+   "flags": [],
+   "de": {
+    "d": "Mailversand von Clients (meist mit STARTTLS).",
+    "u": [
+     "Outlook, Smartphones",
+     "Anwendungen mit Mailversand"
+    ]
+   },
+   "en": {
+    "d": "Mail submission from clients (usually STARTTLS).",
+    "u": [
+     "Outlook, smartphones",
+     "Applications sending mail"
+    ]
+   }
+  },
+  "593/tcp": {
+   "name": "RPC over HTTP",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "RPC über HTTP.",
+    "u": [
+     "Exchange (Outlook Anywhere, alt)",
+     "RD-Gateway"
+    ]
+   },
+   "en": {
+    "d": "RPC over HTTP.",
+    "u": [
+     "Exchange (Outlook Anywhere, legacy)",
+     "RD Gateway"
+    ]
+   }
+  },
+  "623/udp": {
+   "name": "IPMI",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Hardware-Fernverwaltung (BMC).",
+    "u": [
+     "Server-Managementkarten"
+    ]
+   },
+   "en": {
+    "d": "Hardware remote management (BMC).",
+    "u": [
+     "Server management controllers"
+    ]
+   }
+  },
+  "631/tcp": {
+   "name": "IPP",
+   "group": "printing",
+   "flags": [],
+   "de": {
+    "d": "Internet Printing Protocol.",
+    "u": [
+     "Netzwerkdrucker, CUPS, AirPrint"
+    ]
+   },
+   "en": {
+    "d": "Internet Printing Protocol.",
+    "u": [
+     "Network printers, CUPS, AirPrint"
+    ]
+   }
+  },
+  "636/tcp": {
+   "name": "LDAPS",
+   "group": "directory",
+   "flags": [],
+   "de": {
+    "d": "LDAP über TLS.",
+    "u": [
+     "Active Directory mit Zertifikat",
+     "Sichere Anwendungsanmeldung"
+    ]
+   },
+   "en": {
+    "d": "LDAP over TLS.",
+    "u": [
+     "Active Directory with certificate",
+     "Secure application authentication"
+    ]
+   }
+  },
+  "853/tcp": {
+   "name": "DNS over TLS",
+   "group": "infra",
+   "flags": [],
+   "de": {
+    "d": "Verschlüsselte DNS-Abfragen.",
+    "u": [
+     "Resolver mit DoT (z. B. Firewalls, Pi-hole)"
+    ]
+   },
+   "en": {
+    "d": "Encrypted DNS queries.",
+    "u": [
+     "Resolvers with DoT (e.g. firewalls, Pi-hole)"
+    ]
+   }
+  },
+  "873/tcp": {
+   "name": "rsync",
+   "group": "file",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Dateisynchronisation.",
+    "u": [
+     "Backup, Spiegelserver, NAS"
+    ]
+   },
+   "en": {
+    "d": "File synchronisation.",
+    "u": [
+     "Backup, mirror servers, NAS"
+    ]
+   }
+  },
+  "902/tcp": {
+   "name": "VMware ESXi",
+   "group": "virtualization",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "VMware-Authentifizierung und Konsole.",
+    "u": [
+     "ESXi-Hosts, vSphere-Client"
+    ]
+   },
+   "en": {
+    "d": "VMware authentication and console.",
+    "u": [
+     "ESXi hosts, vSphere client"
+    ]
+   }
+  },
+  "989/tcp": {
+   "name": "FTPS-Data",
+   "group": "file",
+   "flags": [],
+   "de": {
+    "d": "FTP über TLS (Daten).",
+    "u": [
+     "Sichere FTP-Server"
+    ]
+   },
+   "en": {
+    "d": "FTP over TLS (data).",
+    "u": [
+     "Secure FTP servers"
+    ]
+   }
+  },
+  "990/tcp": {
+   "name": "FTPS",
+   "group": "file",
+   "flags": [],
+   "de": {
+    "d": "FTP mit direktem TLS.",
+    "u": [
+     "Sichere FTP-Server"
+    ]
+   },
+   "en": {
+    "d": "FTP with implicit TLS.",
+    "u": [
+     "Secure FTP servers"
+    ]
+   }
+  },
+  "993/tcp": {
+   "name": "IMAPS",
+   "group": "mail",
+   "flags": [],
+   "de": {
+    "d": "IMAP über TLS.",
+    "u": [
+     "Mailclients, Smartphones"
+    ]
+   },
+   "en": {
+    "d": "IMAP over TLS.",
+    "u": [
+     "Mail clients, smartphones"
+    ]
+   }
+  },
+  "995/tcp": {
+   "name": "POP3S",
+   "group": "mail",
+   "flags": [],
+   "de": {
+    "d": "POP3 über TLS.",
+    "u": [
+     "Mailabruf durch Clients/Ticketsysteme"
+    ]
+   },
+   "en": {
+    "d": "POP3 over TLS.",
+    "u": [
+     "Mail retrieval by clients/ticket systems"
+    ]
+   }
+  },
+  "1080/tcp": {
+   "name": "SOCKS",
+   "group": "proxy",
+   "flags": [],
+   "de": {
+    "d": "SOCKS-Proxy.",
+    "u": [
+     "Proxy-Server, SSH-Tunnel"
+    ]
+   },
+   "en": {
+    "d": "SOCKS proxy.",
+    "u": [
+     "Proxy servers, SSH tunnels"
+    ]
+   }
+  },
+  "1194/udp": {
+   "name": "OpenVPN",
+   "group": "vpn",
+   "flags": [],
+   "de": {
+    "d": "OpenVPN.",
+    "u": [
+     "VPN-Server, Firewalls"
+    ]
+   },
+   "en": {
+    "d": "OpenVPN.",
+    "u": [
+     "VPN servers, firewalls"
+    ]
+   }
+  },
+  "1433/tcp": {
+   "name": "MS SQL Server",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Microsoft SQL Server.",
+    "u": [
+     "Datenbanken von Fachanwendungen",
+     "SCCM/MECM, WSUS, SharePoint"
+    ]
+   },
+   "en": {
+    "d": "Microsoft SQL Server.",
+    "u": [
+     "Databases of business applications",
+     "SCCM/MECM, WSUS, SharePoint"
+    ]
+   }
+  },
+  "1434/udp": {
+   "name": "SQL Browser",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "SQL-Server-Browserdienst (benannte Instanzen).",
+    "u": [
+     "SQL Server mit benannten Instanzen"
+    ]
+   },
+   "en": {
+    "d": "SQL Server Browser (named instances).",
+    "u": [
+     "SQL Server with named instances"
+    ]
+   }
+  },
+  "1521/tcp": {
+   "name": "Oracle DB",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Oracle-Datenbank-Listener.",
+    "u": [
+     "Oracle-Datenbanken, ERP"
+    ]
+   },
+   "en": {
+    "d": "Oracle database listener.",
+    "u": [
+     "Oracle databases, ERP"
+    ]
+   }
+  },
+  "1701/udp": {
+   "name": "L2TP",
+   "group": "vpn",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "L2TP-VPN.",
+    "u": [
+     "Ältere VPN-Zugänge"
+    ]
+   },
+   "en": {
+    "d": "L2TP VPN.",
+    "u": [
+     "Older VPN access"
+    ]
+   }
+  },
+  "1723/tcp": {
+   "name": "PPTP",
+   "group": "vpn",
+   "flags": [
+    "legacy"
+   ],
+   "de": {
+    "d": "Veraltetes VPN-Protokoll, kryptografisch gebrochen.",
+    "u": [
+     "Alte VPN-Zugänge"
+    ]
+   },
+   "en": {
+    "d": "Obsolete VPN protocol, cryptographically broken.",
+    "u": [
+     "Old VPN access"
+    ]
+   }
+  },
+  "1812/udp": {
+   "name": "RADIUS",
+   "group": "directory",
+   "flags": [],
+   "de": {
+    "d": "Zentrale Authentifizierung.",
+    "u": [
+     "WLAN (802.1X), VPN, NPS"
+    ]
+   },
+   "en": {
+    "d": "Central authentication.",
+    "u": [
+     "Wi-Fi (802.1X), VPN, NPS"
+    ]
+   }
+  },
+  "1883/tcp": {
+   "name": "MQTT",
+   "group": "iot",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Nachrichtenprotokoll für IoT (unverschlüsselt).",
+    "u": [
+     "Sensoren, Hausautomation, Industrie 4.0"
+    ]
+   },
+   "en": {
+    "d": "Messaging protocol for IoT (unencrypted).",
+    "u": [
+     "Sensors, home automation, Industry 4.0"
+    ]
+   }
+  },
+  "1900/udp": {
+   "name": "SSDP/UPnP",
+   "group": "iot",
+   "flags": [],
+   "de": {
+    "d": "Geräteerkennung (UPnP).",
+    "u": [
+     "Router, Smart-TVs, Mediaserver"
+    ]
+   },
+   "en": {
+    "d": "Device discovery (UPnP).",
+    "u": [
+     "Routers, smart TVs, media servers"
+    ]
+   }
+  },
+  "2049/tcp": {
+   "name": "NFS",
+   "group": "file",
+   "flags": [],
+   "de": {
+    "d": "Network File System.",
+    "u": [
+     "Linux-Dateifreigaben, VMware-Datastores, NAS"
+    ]
+   },
+   "en": {
+    "d": "Network File System.",
+    "u": [
+     "Linux file shares, VMware datastores, NAS"
+    ]
+   }
+  },
+  "2082/tcp": {
+   "name": "cPanel",
+   "group": "web",
+   "flags": [
+    "admin",
+    "cleartext"
+   ],
+   "de": {
+    "d": "cPanel-Verwaltung (HTTP).",
+    "u": [
+     "Webhosting-Verwaltung"
+    ]
+   },
+   "en": {
+    "d": "cPanel management (HTTP).",
+    "u": [
+     "Web hosting management"
+    ]
+   }
+  },
+  "2083/tcp": {
+   "name": "cPanel SSL",
+   "group": "web",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "cPanel-Verwaltung (HTTPS).",
+    "u": [
+     "Webhosting-Verwaltung"
+    ]
+   },
+   "en": {
+    "d": "cPanel management (HTTPS).",
+    "u": [
+     "Web hosting management"
+    ]
+   }
+  },
+  "2179/tcp": {
+   "name": "Hyper-V VMConnect",
+   "group": "virtualization",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Konsolenzugriff auf Hyper-V-VMs.",
+    "u": [
+     "Hyper-V-Manager, VMConnect"
+    ]
+   },
+   "en": {
+    "d": "Console access to Hyper-V VMs.",
+    "u": [
+     "Hyper-V Manager, VMConnect"
+    ]
+   }
+  },
+  "2222/tcp": {
+   "name": "SSH (alternativ)",
+   "group": "remote",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Häufiger Ausweichport für SSH.",
+    "u": [
+     "SSH auf NAS, Containern, Appliances"
+    ]
+   },
+   "en": {
+    "d": "Common alternative SSH port.",
+    "u": [
+     "SSH on NAS, containers, appliances"
+    ]
+   }
+  },
+  "2375/tcp": {
+   "name": "Docker API",
+   "group": "devops",
+   "flags": [
+    "admin",
+    "cleartext"
+   ],
+   "de": {
+    "d": "Docker-Schnittstelle ohne TLS: volle Kontrolle über den Host.",
+    "u": [
+     "Docker-Hosts mit Fernzugriff"
+    ]
+   },
+   "en": {
+    "d": "Docker API without TLS: full control of the host.",
+    "u": [
+     "Docker hosts with remote access"
+    ]
+   }
+  },
+  "2376/tcp": {
+   "name": "Docker API TLS",
+   "group": "devops",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Docker-Schnittstelle mit TLS.",
+    "u": [
+     "Docker-Hosts mit Fernzugriff"
+    ]
+   },
+   "en": {
+    "d": "Docker API with TLS.",
+    "u": [
+     "Docker hosts with remote access"
+    ]
+   }
+  },
+  "2483/tcp": {
+   "name": "Oracle DB",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Oracle-Datenbank (alternativ).",
+    "u": [
+     "Oracle-Datenbanken"
+    ]
+   },
+   "en": {
+    "d": "Oracle database (alternative).",
+    "u": [
+     "Oracle databases"
+    ]
+   }
+  },
+  "3000/tcp": {
+   "name": "Web-App (Dev)",
+   "group": "web",
+   "flags": [],
+   "de": {
+    "d": "Typischer Port für Entwicklungs- und Dashboard-Server.",
+    "u": [
+     "Grafana",
+     "Node.js-Anwendungen"
+    ]
+   },
+   "en": {
+    "d": "Typical port for development and dashboard servers.",
+    "u": [
+     "Grafana",
+     "Node.js applications"
+    ]
+   }
+  },
+  "3128/tcp": {
+   "name": "HTTP-Proxy",
+   "group": "proxy",
+   "flags": [],
+   "de": {
+    "d": "Squid und andere Web-Proxys.",
+    "u": [
+     "Unternehmens-Proxy"
+    ]
+   },
+   "en": {
+    "d": "Squid and other web proxies.",
+    "u": [
+     "Corporate proxy"
+    ]
+   }
+  },
+  "3260/tcp": {
+   "name": "iSCSI",
+   "group": "storage",
+   "flags": [],
+   "de": {
+    "d": "Blockspeicher über das Netz.",
+    "u": [
+     "SAN/NAS-Speicher für Hyper-V und VMware"
+    ]
+   },
+   "en": {
+    "d": "Block storage over the network.",
+    "u": [
+     "SAN/NAS storage for Hyper-V and VMware"
+    ]
+   }
+  },
+  "3268/tcp": {
+   "name": "AD Global Catalog",
+   "group": "directory",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Globaler Katalog des Active Directory.",
+    "u": [
+     "Gesamtstruktur-weite Suchen, Exchange"
+    ]
+   },
+   "en": {
+    "d": "Active Directory global catalog.",
+    "u": [
+     "Forest-wide searches, Exchange"
+    ]
+   }
+  },
+  "3269/tcp": {
+   "name": "AD Global Catalog SSL",
+   "group": "directory",
+   "flags": [],
+   "de": {
+    "d": "Globaler Katalog über TLS.",
+    "u": [
+     "Sichere gesamtstrukturweite Suchen"
+    ]
+   },
+   "en": {
+    "d": "Global catalog over TLS.",
+    "u": [
+     "Secure forest-wide searches"
+    ]
+   }
+  },
+  "3306/tcp": {
+   "name": "MySQL/MariaDB",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "MySQL- bzw. MariaDB-Datenbank.",
+    "u": [
+     "Webanwendungen, CMS, Monitoring"
+    ]
+   },
+   "en": {
+    "d": "MySQL or MariaDB database.",
+    "u": [
+     "Web applications, CMS, monitoring"
+    ]
+   }
+  },
+  "3389/tcp": {
+   "name": "RDP",
+   "group": "remote",
+   "flags": [
+    "admin",
+    "windows"
+   ],
+   "de": {
+    "d": "Remotedesktop.",
+    "u": [
+     "Fernwartung von Windows-Servern und -Clients",
+     "Terminalserver/RDS",
+     "Azure Virtual Desktop"
+    ]
+   },
+   "en": {
+    "d": "Remote Desktop.",
+    "u": [
+     "Remote administration of Windows servers and clients",
+     "Terminal servers/RDS",
+     "Azure Virtual Desktop"
+    ]
+   }
+  },
+  "3478/udp": {
+   "name": "STUN/TURN",
+   "group": "media",
+   "flags": [],
+   "de": {
+    "d": "NAT-Durchdringung für Echtzeitkommunikation.",
+    "u": [
+     "Teams, WebRTC, VoIP"
+    ]
+   },
+   "en": {
+    "d": "NAT traversal for real-time communication.",
+    "u": [
+     "Teams, WebRTC, VoIP"
+    ]
+   }
+  },
+  "4369/tcp": {
+   "name": "Erlang EPMD",
+   "group": "devops",
+   "flags": [],
+   "de": {
+    "d": "Erlang-Portmapper.",
+    "u": [
+     "RabbitMQ, CouchDB"
+    ]
+   },
+   "en": {
+    "d": "Erlang port mapper.",
+    "u": [
+     "RabbitMQ, CouchDB"
+    ]
+   }
+  },
+  "4500/udp": {
+   "name": "IPsec NAT-T",
+   "group": "vpn",
+   "flags": [],
+   "de": {
+    "d": "IPsec hinter NAT.",
+    "u": [
+     "VPN-Verbindungen"
+    ]
+   },
+   "en": {
+    "d": "IPsec behind NAT.",
+    "u": [
+     "VPN connections"
+    ]
+   }
+  },
+  "5000/tcp": {
+   "name": "UPnP/Dev/NAS",
+   "group": "web",
+   "flags": [],
+   "de": {
+    "d": "Vielfach genutzt: Synology DSM, Flask, Docker-Registry.",
+    "u": [
+     "Synology-Verwaltung (HTTP)",
+     "Entwicklungsserver"
+    ]
+   },
+   "en": {
+    "d": "Widely used: Synology DSM, Flask, Docker registry.",
+    "u": [
+     "Synology management (HTTP)",
+     "Development servers"
+    ]
+   }
+  },
+  "5001/tcp": {
+   "name": "Synology DSM SSL",
+   "group": "web",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Synology-Verwaltung (HTTPS).",
+    "u": [
+     "NAS-Verwaltung"
+    ]
+   },
+   "en": {
+    "d": "Synology management (HTTPS).",
+    "u": [
+     "NAS management"
+    ]
+   }
+  },
+  "5060/udp": {
+   "name": "SIP",
+   "group": "voip",
+   "flags": [],
+   "de": {
+    "d": "VoIP-Signalisierung.",
+    "u": [
+     "Telefonanlagen, IP-Telefone, SIP-Trunks"
+    ]
+   },
+   "en": {
+    "d": "VoIP signalling.",
+    "u": [
+     "PBX, IP phones, SIP trunks"
+    ]
+   }
+  },
+  "5060/tcp": {
+   "name": "SIP",
+   "group": "voip",
+   "flags": [],
+   "de": {
+    "d": "VoIP-Signalisierung (TCP).",
+    "u": [
+     "Telefonanlagen, SIP-Trunks"
+    ]
+   },
+   "en": {
+    "d": "VoIP signalling (TCP).",
+    "u": [
+     "PBX, SIP trunks"
+    ]
+   }
+  },
+  "5061/tcp": {
+   "name": "SIPS",
+   "group": "voip",
+   "flags": [],
+   "de": {
+    "d": "VoIP-Signalisierung über TLS.",
+    "u": [
+     "Teams Direct Routing, SBC"
+    ]
+   },
+   "en": {
+    "d": "VoIP signalling over TLS.",
+    "u": [
+     "Teams Direct Routing, SBC"
+    ]
+   }
+  },
+  "5222/tcp": {
+   "name": "XMPP",
+   "group": "messaging",
+   "flags": [],
+   "de": {
+    "d": "Chatprotokoll (Jabber).",
+    "u": [
+     "Chatserver, Push-Dienste"
+    ]
+   },
+   "en": {
+    "d": "Chat protocol (Jabber).",
+    "u": [
+     "Chat servers, push services"
+    ]
+   }
+  },
+  "5353/udp": {
+   "name": "mDNS",
+   "group": "iot",
+   "flags": [],
+   "de": {
+    "d": "Multicast-DNS (Bonjour).",
+    "u": [
+     "Drucker, Apple-Geräte, Chromecast"
+    ]
+   },
+   "en": {
+    "d": "Multicast DNS (Bonjour).",
+    "u": [
+     "Printers, Apple devices, Chromecast"
+    ]
+   }
+  },
+  "5432/tcp": {
+   "name": "PostgreSQL",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "PostgreSQL-Datenbank.",
+    "u": [
+     "Anwendungsdatenbanken, GIS"
+    ]
+   },
+   "en": {
+    "d": "PostgreSQL database.",
+    "u": [
+     "Application databases, GIS"
+    ]
+   }
+  },
+  "5671/tcp": {
+   "name": "AMQPS",
+   "group": "messaging",
+   "flags": [],
+   "de": {
+    "d": "AMQP über TLS.",
+    "u": [
+     "RabbitMQ, Azure Service Bus"
+    ]
+   },
+   "en": {
+    "d": "AMQP over TLS.",
+    "u": [
+     "RabbitMQ, Azure Service Bus"
+    ]
+   }
+  },
+  "5672/tcp": {
+   "name": "AMQP",
+   "group": "messaging",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Nachrichtenwarteschlange.",
+    "u": [
+     "RabbitMQ"
+    ]
+   },
+   "en": {
+    "d": "Message queue.",
+    "u": [
+     "RabbitMQ"
+    ]
+   }
+  },
+  "5900/tcp": {
+   "name": "VNC",
+   "group": "remote",
+   "flags": [
+    "admin",
+    "cleartext"
+   ],
+   "de": {
+    "d": "Bildschirmfernsteuerung (oft schwach geschützt).",
+    "u": [
+     "Fernwartung, Industrie-HMI, Linux-Desktops"
+    ]
+   },
+   "en": {
+    "d": "Remote screen control (often weakly protected).",
+    "u": [
+     "Remote support, industrial HMI, Linux desktops"
+    ]
+   }
+  },
+  "5938/tcp": {
+   "name": "TeamViewer",
+   "group": "remote",
+   "flags": [],
+   "de": {
+    "d": "TeamViewer-Verbindungen.",
+    "u": [
+     "Fernwartung"
+    ]
+   },
+   "en": {
+    "d": "TeamViewer connections.",
+    "u": [
+     "Remote support"
+    ]
+   }
+  },
+  "5985/tcp": {
+   "name": "WinRM HTTP",
+   "group": "windows",
+   "flags": [
+    "admin",
+    "windows"
+   ],
+   "de": {
+    "d": "PowerShell-Remoting über HTTP (Nachrichten verschlüsselt, Transport nicht).",
+    "u": [
+     "PowerShell-Remoting, Ansible, Server-Manager"
+    ]
+   },
+   "en": {
+    "d": "PowerShell remoting over HTTP (messages encrypted, transport not).",
+    "u": [
+     "PowerShell remoting, Ansible, Server Manager"
+    ]
+   }
+  },
+  "5986/tcp": {
+   "name": "WinRM HTTPS",
+   "group": "windows",
+   "flags": [
+    "admin",
+    "windows"
+   ],
+   "de": {
+    "d": "PowerShell-Remoting über HTTPS.",
+    "u": [
+     "Sichere Fernverwaltung"
+    ]
+   },
+   "en": {
+    "d": "PowerShell remoting over HTTPS.",
+    "u": [
+     "Secure remote management"
+    ]
+   }
+  },
+  "6379/tcp": {
+   "name": "Redis",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Redis-Datenspeicher (häufig ohne Anmeldung).",
+    "u": [
+     "Caches, Sitzungsspeicher"
+    ]
+   },
+   "en": {
+    "d": "Redis data store (often without authentication).",
+    "u": [
+     "Caches, session stores"
+    ]
+   }
+  },
+  "6443/tcp": {
+   "name": "Kubernetes API",
+   "group": "devops",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Kubernetes-API-Server.",
+    "u": [
+     "Kubernetes-Cluster"
+    ]
+   },
+   "en": {
+    "d": "Kubernetes API server.",
+    "u": [
+     "Kubernetes clusters"
+    ]
+   }
+  },
+  "6514/tcp": {
+   "name": "Syslog TLS",
+   "group": "monitoring",
+   "flags": [],
+   "de": {
+    "d": "Syslog über TLS.",
+    "u": [
+     "SIEM, Logserver"
+    ]
+   },
+   "en": {
+    "d": "Syslog over TLS.",
+    "u": [
+     "SIEM, log servers"
+    ]
+   }
+  },
+  "7680/tcp": {
+   "name": "Delivery Optimization",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Windows-Übermittlungsoptimierung (Peer-to-Peer-Updates).",
+    "u": [
+     "Windows-Clients teilen Updates im LAN"
+    ]
+   },
+   "en": {
+    "d": "Windows Delivery Optimization (peer-to-peer updates).",
+    "u": [
+     "Windows clients sharing updates in the LAN"
+    ]
+   }
+  },
+  "8000/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Entwicklungsserver, Geräteoberflächen, Splunk"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Development servers, device UIs, Splunk"
+    ]
+   }
+  },
+  "8006/tcp": {
+   "name": "Proxmox VE",
+   "group": "virtualization",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Proxmox-Weboberfläche.",
+    "u": [
+     "Virtualisierungsverwaltung"
+    ]
+   },
+   "en": {
+    "d": "Proxmox web interface.",
+    "u": [
+     "Virtualisation management"
+    ]
+   }
+  },
+  "8008/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Chromecast, Appliances"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Chromecast, appliances"
+    ]
+   }
+  },
+  "8080/tcp": {
+   "name": "HTTP-Proxy/Alt",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport oder Proxy.",
+    "u": [
+     "Tomcat, Jenkins, Proxys, Geräteoberflächen"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port or proxy.",
+    "u": [
+     "Tomcat, Jenkins, proxies, device UIs"
+    ]
+   }
+  },
+  "8081/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Repository-Manager, Admin-Oberflächen"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Repository managers, admin UIs"
+    ]
+   }
+  },
+  "8088/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Hadoop, Splunk-HEC"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Hadoop, Splunk HEC"
+    ]
+   }
+  },
+  "8090/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Confluence"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Confluence"
+    ]
+   }
+  },
+  "8291/tcp": {
+   "name": "MikroTik Winbox",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Verwaltung von MikroTik-Routern.",
+    "u": [
+     "MikroTik RouterOS"
+    ]
+   },
+   "en": {
+    "d": "Management of MikroTik routers.",
+    "u": [
+     "MikroTik RouterOS"
+    ]
+   }
+  },
+  "8443/tcp": {
+   "name": "HTTPS (alternativ)",
+   "group": "web",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Alternativer HTTPS-Port, oft Verwaltungsoberflächen.",
+    "u": [
+     "Firewalls, UniFi, VMware, Plesk"
+    ]
+   },
+   "en": {
+    "d": "Alternative HTTPS port, often management UIs.",
+    "u": [
+     "Firewalls, UniFi, VMware, Plesk"
+    ]
+   }
+  },
+  "8530/tcp": {
+   "name": "WSUS",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Windows Server Update Services (HTTP).",
+    "u": [
+     "Updateverteilung an Clients"
+    ]
+   },
+   "en": {
+    "d": "Windows Server Update Services (HTTP).",
+    "u": [
+     "Update distribution to clients"
+    ]
+   }
+  },
+  "8531/tcp": {
+   "name": "WSUS SSL",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "WSUS über HTTPS.",
+    "u": [
+     "Updateverteilung an Clients"
+    ]
+   },
+   "en": {
+    "d": "WSUS over HTTPS.",
+    "u": [
+     "Update distribution to clients"
+    ]
+   }
+  },
+  "8883/tcp": {
+   "name": "MQTT TLS",
+   "group": "iot",
+   "flags": [],
+   "de": {
+    "d": "MQTT über TLS.",
+    "u": [
+     "IoT, Azure IoT Hub"
+    ]
+   },
+   "en": {
+    "d": "MQTT over TLS.",
+    "u": [
+     "IoT, Azure IoT Hub"
+    ]
+   }
+  },
+  "8888/tcp": {
+   "name": "HTTP (alternativ)",
+   "group": "web",
+   "flags": [
+    "cleartext"
+   ],
+   "de": {
+    "d": "Alternativer Webport.",
+    "u": [
+     "Jupyter, Entwicklungsserver"
+    ]
+   },
+   "en": {
+    "d": "Alternative web port.",
+    "u": [
+     "Jupyter, development servers"
+    ]
+   }
+  },
+  "9000/tcp": {
+   "name": "Verwaltung/Dev",
+   "group": "web",
+   "flags": [],
+   "de": {
+    "d": "Häufig Portainer, SonarQube, PHP-FPM.",
+    "u": [
+     "Container- und Entwicklungswerkzeuge"
+    ]
+   },
+   "en": {
+    "d": "Often Portainer, SonarQube, PHP-FPM.",
+    "u": [
+     "Container and development tools"
+    ]
+   }
+  },
+  "9090/tcp": {
+   "name": "Prometheus/Cockpit",
+   "group": "monitoring",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Prometheus oder Cockpit-Weboberfläche.",
+    "u": [
+     "Monitoring, Linux-Verwaltung"
+    ]
+   },
+   "en": {
+    "d": "Prometheus or Cockpit web interface.",
+    "u": [
+     "Monitoring, Linux management"
+    ]
+   }
+  },
+  "9100/tcp": {
+   "name": "JetDirect/RAW",
+   "group": "printing",
+   "flags": [],
+   "de": {
+    "d": "Direktdruck (RAW) oder Prometheus Node Exporter.",
+    "u": [
+     "Netzwerkdrucker",
+     "Linux-Monitoring"
+    ]
+   },
+   "en": {
+    "d": "Direct printing (RAW) or Prometheus node exporter.",
+    "u": [
+     "Network printers",
+     "Linux monitoring"
+    ]
+   }
+  },
+  "9200/tcp": {
+   "name": "Elasticsearch",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Elasticsearch-REST-Schnittstelle.",
+    "u": [
+     "Suche, Logging (ELK)"
+    ]
+   },
+   "en": {
+    "d": "Elasticsearch REST API.",
+    "u": [
+     "Search, logging (ELK)"
+    ]
+   }
+  },
+  "9389/tcp": {
+   "name": "AD Web Services",
+   "group": "directory",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Active-Directory-Webdienste.",
+    "u": [
+     "AD-PowerShell-Modul, Verwaltungscenter"
+    ]
+   },
+   "en": {
+    "d": "Active Directory Web Services.",
+    "u": [
+     "AD PowerShell module, admin center"
+    ]
+   }
+  },
+  "9443/tcp": {
+   "name": "HTTPS (alternativ)",
+   "group": "web",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Alternativer HTTPS-Port.",
+    "u": [
+     "Portainer, vCenter-Dienste"
+    ]
+   },
+   "en": {
+    "d": "Alternative HTTPS port.",
+    "u": [
+     "Portainer, vCenter services"
+    ]
+   }
+  },
+  "10000/tcp": {
+   "name": "Webmin/NDMP",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Webmin oder NDMP-Backup.",
+    "u": [
+     "Linux-Verwaltung, Backup-Software"
+    ]
+   },
+   "en": {
+    "d": "Webmin or NDMP backup.",
+    "u": [
+     "Linux management, backup software"
+    ]
+   }
+  },
+  "10050/tcp": {
+   "name": "Zabbix Agent",
+   "group": "monitoring",
+   "flags": [],
+   "de": {
+    "d": "Zabbix-Agent.",
+    "u": [
+     "Monitoring"
+    ]
+   },
+   "en": {
+    "d": "Zabbix agent.",
+    "u": [
+     "Monitoring"
+    ]
+   }
+  },
+  "10051/tcp": {
+   "name": "Zabbix Server",
+   "group": "monitoring",
+   "flags": [],
+   "de": {
+    "d": "Zabbix-Server.",
+    "u": [
+     "Monitoring"
+    ]
+   },
+   "en": {
+    "d": "Zabbix server.",
+    "u": [
+     "Monitoring"
+    ]
+   }
+  },
+  "11211/tcp": {
+   "name": "Memcached",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "Memcached-Cache ohne Anmeldung.",
+    "u": [
+     "Caches von Webanwendungen"
+    ]
+   },
+   "en": {
+    "d": "Memcached cache without authentication.",
+    "u": [
+     "Web application caches"
+    ]
+   }
+  },
+  "17500/tcp": {
+   "name": "Dropbox LAN Sync",
+   "group": "file",
+   "flags": [],
+   "de": {
+    "d": "Dropbox-LAN-Synchronisation.",
+    "u": [
+     "Dropbox-Clients"
+    ]
+   },
+   "en": {
+    "d": "Dropbox LAN sync.",
+    "u": [
+     "Dropbox clients"
+    ]
+   }
+  },
+  "20000/tcp": {
+   "name": "DNP3/Usermin",
+   "group": "ics",
+   "flags": [
+    "ics"
+   ],
+   "de": {
+    "d": "DNP3 (Energieversorgung) oder Usermin.",
+    "u": [
+     "Fernwirktechnik"
+    ]
+   },
+   "en": {
+    "d": "DNP3 (utilities) or Usermin.",
+    "u": [
+     "Telecontrol systems"
+    ]
+   }
+  },
+  "27017/tcp": {
+   "name": "MongoDB",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "MongoDB-Datenbank.",
+    "u": [
+     "Webanwendungen, NoSQL"
+    ]
+   },
+   "en": {
+    "d": "MongoDB database.",
+    "u": [
+     "Web applications, NoSQL"
+    ]
+   }
+  },
+  "44818/tcp": {
+   "name": "EtherNet/IP",
+   "group": "ics",
+   "flags": [
+    "ics"
+   ],
+   "de": {
+    "d": "Industrieprotokoll (Rockwell).",
+    "u": [
+     "SPS, Antriebe"
+    ]
+   },
+   "en": {
+    "d": "Industrial protocol (Rockwell).",
+    "u": [
+     "PLCs, drives"
+    ]
+   }
+  },
+  "47808/udp": {
+   "name": "BACnet",
+   "group": "ics",
+   "flags": [
+    "ics"
+   ],
+   "de": {
+    "d": "Gebäudeautomation.",
+    "u": [
+     "Heizung, Lüftung, Klima"
+    ]
+   },
+   "en": {
+    "d": "Building automation.",
+    "u": [
+     "Heating, ventilation, air conditioning"
+    ]
+   }
+  },
+  "49152/tcp": {
+   "name": "Windows dyn. RPC",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Beginn des dynamischen RPC-Bereichs (49152–65535).",
+    "u": [
+     "AD-Replikation, DCOM, WMI"
+    ]
+   },
+   "en": {
+    "d": "Start of the dynamic RPC range (49152–65535).",
+    "u": [
+     "AD replication, DCOM, WMI"
+    ]
+   }
+  },
+  "50000/tcp": {
+   "name": "SAP/DB2",
+   "group": "database",
+   "flags": [
+    "database"
+   ],
+   "de": {
+    "d": "SAP- oder IBM-DB2-Dienste.",
+    "u": [
+     "ERP-Systeme"
+    ]
+   },
+   "en": {
+    "d": "SAP or IBM DB2 services.",
+    "u": [
+     "ERP systems"
+    ]
+   }
+  },
+  "51820/udp": {
+   "name": "WireGuard",
+   "group": "vpn",
+   "flags": [],
+   "de": {
+    "d": "WireGuard-VPN.",
+    "u": [
+     "Moderne VPN-Zugänge"
+    ]
+   },
+   "en": {
+    "d": "WireGuard VPN.",
+    "u": [
+     "Modern VPN access"
+    ]
+   }
+  },
+  "161/tcp": {
+   "name": "SNMP (TCP)",
+   "group": "monitoring",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "SNMP über TCP (selten).",
+    "u": [
+     "Monitoring"
+    ]
+   },
+   "en": {
+    "d": "SNMP over TCP (rare).",
+    "u": [
+     "Monitoring"
+    ]
+   }
+  },
+  "1194/tcp": {
+   "name": "OpenVPN (TCP)",
+   "group": "vpn",
+   "flags": [],
+   "de": {
+    "d": "OpenVPN über TCP.",
+    "u": [
+     "VPN durch restriktive Firewalls"
+    ]
+   },
+   "en": {
+    "d": "OpenVPN over TCP.",
+    "u": [
+     "VPN through restrictive firewalls"
+    ]
+   }
+  },
+  "3283/tcp": {
+   "name": "Apple Remote Desktop",
+   "group": "remote",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Apple-Fernverwaltung.",
+    "u": [
+     "Mac-Verwaltung"
+    ]
+   },
+   "en": {
+    "d": "Apple remote management.",
+    "u": [
+     "Mac management"
+    ]
+   }
+  },
+  "4786/tcp": {
+   "name": "Cisco Smart Install",
+   "group": "management",
+   "flags": [
+    "admin",
+    "legacy"
+   ],
+   "de": {
+    "d": "Cisco Smart Install, bekannt für Schwachstellen.",
+    "u": [
+     "Cisco-Switches"
+    ]
+   },
+   "en": {
+    "d": "Cisco Smart Install, known for vulnerabilities.",
+    "u": [
+     "Cisco switches"
+    ]
+   }
+  },
+  "5357/tcp": {
+   "name": "WSDAPI",
+   "group": "windows",
+   "flags": [
+    "windows"
+   ],
+   "de": {
+    "d": "Web Services for Devices (Geräteerkennung).",
+    "u": [
+     "Netzwerkerkennung von Windows, Drucker"
+    ]
+   },
+   "en": {
+    "d": "Web Services for Devices (discovery).",
+    "u": [
+     "Windows network discovery, printers"
+    ]
+   }
+  },
+  "7547/tcp": {
+   "name": "TR-069",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Fernverwaltung von Routern durch Provider.",
+    "u": [
+     "DSL-/Kabelrouter"
+    ]
+   },
+   "en": {
+    "d": "Remote management of routers by ISPs.",
+    "u": [
+     "DSL/cable routers"
+    ]
+   }
+  },
+  "8009/tcp": {
+   "name": "AJP",
+   "group": "web",
+   "flags": [],
+   "de": {
+    "d": "Apache JServ Protocol (Tomcat).",
+    "u": [
+     "Tomcat hinter Apache/IIS"
+    ]
+   },
+   "en": {
+    "d": "Apache JServ Protocol (Tomcat).",
+    "u": [
+     "Tomcat behind Apache/IIS"
+    ]
+   }
+  },
+  "9091/tcp": {
+   "name": "Verwaltung",
+   "group": "web",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Häufig Transmission oder Openfire-Verwaltung.",
+    "u": [
+     "Weboberflächen"
+    ]
+   },
+   "en": {
+    "d": "Often Transmission or Openfire admin.",
+    "u": [
+     "Web interfaces"
+    ]
+   }
+  },
+  "16992/tcp": {
+   "name": "Intel AMT",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Intel Active Management Technology (HTTP).",
+    "u": [
+     "Fernverwaltung von Clients auf Hardwareebene"
+    ]
+   },
+   "en": {
+    "d": "Intel Active Management Technology (HTTP).",
+    "u": [
+     "Hardware-level remote management of clients"
+    ]
+   }
+  },
+  "16993/tcp": {
+   "name": "Intel AMT TLS",
+   "group": "management",
+   "flags": [
+    "admin"
+   ],
+   "de": {
+    "d": "Intel AMT über TLS.",
+    "u": [
+     "Fernverwaltung von Clients auf Hardwareebene"
+    ]
+   },
+   "en": {
+    "d": "Intel AMT over TLS.",
+    "u": [
+     "Hardware-level remote management of clients"
+    ]
+   }
+  }
+ }
+}

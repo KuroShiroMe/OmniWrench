@@ -58,7 +58,7 @@ omniwrench/ui/
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
-                              omnivault (sec.omnivault), iconforge (gfx.iconforge) - see below
+                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
                               smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
@@ -103,3 +103,28 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
 - IconForge npm catalog: packs/catalog.json {pack: {version, size, files, published, exact, fetched}} (24 h TTL);
   PackStore.fetch_summary (/latest, for the wizard dropdown) / fetch_release (full doc, mature version).
   wizard.py: HeroBanner (painted, font-relative height) + PackWizard (signals packDownloaded/packRemoved).
+
+## NetProbe (net.netprobe) – network test tool
+- Input (IP / DNS name / CIDR / range a-b, comma/space separated) -> `targets.parse` -> list[Target]; single IP = one
+  entry, networks/ranges expand (limit 4096). `classify(ip)` labels private/cgnat/loopback/… for display.
+- `engine.Engine` runs asyncio in its own thread; per target a `TargetResult` (status PENDING/RUNNING/DONE/NO_ANSWER/
+  ERROR/STOPPED, raw dict per test, findings). Callbacks `on_update`/`on_finished` are marshalled to the GUI via Qt
+  signals in tool.py (never touch widgets from the worker thread). `options["tests"][id]` toggles each test;
+  CATEGORIES general/route/ports/web/services/dns map test ids -> result tabs.
+- Tests ("auf Steroiden"): ping = IcmpSendEcho (Windows, iphlpapi via ctypes) / `ping` subprocess (Linux), no raw
+  sockets/admin; `ping_stats` -> loss/avg/jitter/TTL/hop guess/OS guess. Traceroute increments TTL, each hop re-probed
+  in parallel (PTR, ASN via Team Cymru, class, ping). Port scan from profile quick/standard/extended/full/custom;
+  open ports explained from `portinfo.PORT_META` (portlib.json, 136 ports, flags cleartext/admin/legacy/database/
+  windows/ics + de/en description + usage list). HTTP/TLS probed on known web/TLS ports AND unknown open ports
+  (discovers web UIs on unusual ports); cert chain via truststore (Windows store). SMB2 negotiate, RDP NLA, NTP,
+  DNS-server (open resolver). For names: full DNS (`dnscheck`): A/AAAA/CNAME/MX/NS/TXT/SOA/CAA, NS serial compare,
+  SPF/DKIM/DMARC/MTA-STS/TLS-RPT, DNSSEC, wildcard, AD SRV.
+- `findings.evaluate(res)` -> ~60 Finding(level ERROR/WARN/INFO/OK) covering reachability/latency/route/ports/TLS/
+  HTTP/SMB/RDP/NTP/DNS/mail best practices; shown in the "Befunde" tab and summarised in the target list (⚠n).
+- UI (tool.py): top input row, left QTreeWidget target list with live status/progress, right an own nested
+  `ads.CDockManager` (does NOT interfere with the main window's dock manager). Click a target -> a CDockWidget tab
+  with a QTabWidget of only the categories that actually ran; tabs are dockable side by side inside the tool.
+  `render.Renderer(tr, lang)` builds every category widget; `category_order(res)` decides which tabs exist (web only
+  when a port returned usable HTTP/TLS). `&` in tab titles doubled so it is not read as a mnemonic.
+- requirements.python ["dnspython>=2.6"] (pip-installed on install, like OmniVault/pykeepass). OUI vendor DB cached in
+  <tool_data>/net.netprobe (localnet.VendorDB, optional download).
