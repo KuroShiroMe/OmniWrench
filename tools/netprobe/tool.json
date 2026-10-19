@@ -1,9 +1,9 @@
 {
   "id": "net.netprobe",
   "name": "NetProbe",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS and a findings list per target.",
-  "long_description": "Enter an IP address, DNS name, network (CIDR) or range. Single addresses go straight into the list, networks are scanned. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter and TTL, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC). Each target opens its own dockable tab with results per category plus a Findings tab listing errors, warnings and best-practice notes. No admin rights required.",
+  "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
   "author": "DarkMatter",
   "category": "network/diagnostics",
   "icon": "radar",

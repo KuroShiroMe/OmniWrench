@@ -40,11 +40,30 @@ TEST_IDS = tuple(t.id for t in TESTS)
 
 DEFAULT_OPTIONS = {
     "tests": {t.id: t.default for t in TESTS},
-    "ping_count": 10, "ping_interval_ms": 200, "ping_timeout_ms": 1000,
+    # ping_timeout_ms bewusst großzügig (ping.exe wartet 4 s) + Aufwärm-Pings gegen ARP-/Routing-Verluste,
+    # damit langsame erste Antworten nicht fälschlich als Paketverlust zählen.
+    "ping_count": 10, "ping_interval_ms": 300, "ping_timeout_ms": 2000, "ping_warmup": 2,
     "port_profile": "standard", "custom_ports": "", "port_timeout_ms": 800,
     "max_hosts": 16, "max_sockets": 300, "only_alive": True,
     "max_hops": 30, "hop_pings": 4, "dns_timeout_ms": 4000, "oui_download": True,
 }
+
+# Vorgefertigte Testprofile für das Dropdown neben „Starten“. "custom" nutzt die Einstellungen aus dem Dialog.
+TEMPLATE_IDS = ("overview", "standard", "deep", "custom")
+
+
+def template_options(template: str, custom: dict) -> dict:
+    """Liefert die Optionen für ein Testprofil; `custom` sind die vom Nutzer gespeicherten Einstellungen."""
+    if template == "custom":
+        return dict(custom)
+    if template == "overview":
+        on = {"resolve", "reverse", "ping", "asn", "tcp", "banner", "http", "tls"}
+        return {"tests": {t.id: (t.id in on) for t in TESTS},
+                "port_profile": "quick", "ping_count": 5, "ping_warmup": 2, "only_alive": True}
+    if template == "deep":
+        return {"tests": {t.id: True for t in TESTS},
+                "port_profile": "extended", "ping_count": 15, "ping_warmup": 3, "only_alive": False}
+    return {"tests": {t.id: t.default for t in TESTS}, "port_profile": "standard"}  # standard
 
 QUICK_PORTS = (21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 389, 443, 445, 587, 636, 993, 995, 1433, 3306, 3389,
                5900, 5985, 8080, 8443)
@@ -307,12 +326,22 @@ class Engine:
             return {"unavailable": True}
         loop = asyncio.get_running_loop()
         o = self.options
+        timeout = int(o["ping_timeout_ms"])
+        interval = o["ping_interval_ms"] / 1000
+        warmup = int(o.get("ping_warmup", 0))
+        # Aufwärm-Pings: ARP-Auflösung und erste Routing-Entscheidung passieren hier, nicht in der Statistik.
+        for _ in range(warmup):
+            await loop.run_in_executor(None, icmp.echo, ip, 128, timeout)
+            await asyncio.sleep(min(0.2, interval))
         echos = []
         for i in range(int(o["ping_count"])):
-            echos.append(await loop.run_in_executor(None, icmp.echo, ip, 128, int(o["ping_timeout_ms"])))
+            echos.append(await loop.run_in_executor(None, icmp.echo, ip, 128, timeout))
             if i < o["ping_count"] - 1:
-                await asyncio.sleep(o["ping_interval_ms"] / 1000)
-        return ping_stats(echos)
+                await asyncio.sleep(interval)
+        stats = ping_stats(echos)
+        stats["warmup"] = warmup
+        stats["timeout_ms"] = timeout
+        return stats
 
     async def _mtu(self, ip: str, ping: dict) -> dict:
         if not icmp.available() or not ping.get("received") or ":" in ip:

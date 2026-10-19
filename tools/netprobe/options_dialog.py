@@ -66,8 +66,16 @@ class OptionsDialog(QDialog):
         form.addRow(tr("opt.custom_ports"), self.custom_ports)
         self.ping_count = self._spin(1, 100, self._opts["ping_count"])
         form.addRow(tr("opt.ping_count"), self.ping_count)
+        self.ping_warmup = self._spin(0, 10, self._opts["ping_warmup"])
+        form.addRow(tr("opt.ping_warmup"), self.ping_warmup)
+        self.ping_timeout = self._spin(200, 10000, self._opts["ping_timeout_ms"], " ms", 100)
+        form.addRow(tr("opt.ping_timeout"), self.ping_timeout)
+        self.ping_interval = self._spin(0, 5000, self._opts["ping_interval_ms"], " ms", 50)
+        form.addRow(tr("opt.ping_interval"), self.ping_interval)
         self.port_timeout = self._spin(100, 10000, self._opts["port_timeout_ms"], " ms", 100)
         form.addRow(tr("opt.port_timeout"), self.port_timeout)
+        self.dns_timeout = self._spin(500, 20000, self._opts["dns_timeout_ms"], " ms", 500)
+        form.addRow(tr("opt.dns_timeout"), self.dns_timeout)
         self.max_hosts = self._spin(1, 256, self._opts["max_hosts"])
         form.addRow(tr("opt.max_hosts"), self.max_hosts)
         self.max_sockets = self._spin(16, 2000, self._opts["max_sockets"], "", 10)
@@ -122,7 +130,11 @@ class OptionsDialog(QDialog):
             self.checks[t.id].setChecked(t.default)
         self.port_profile.setCurrentIndex(self.port_profile.findData("standard"))
         self.ping_count.setValue(DEFAULT_OPTIONS["ping_count"])
+        self.ping_warmup.setValue(DEFAULT_OPTIONS["ping_warmup"])
+        self.ping_timeout.setValue(DEFAULT_OPTIONS["ping_timeout_ms"])
+        self.ping_interval.setValue(DEFAULT_OPTIONS["ping_interval_ms"])
         self.port_timeout.setValue(DEFAULT_OPTIONS["port_timeout_ms"])
+        self.dns_timeout.setValue(DEFAULT_OPTIONS["dns_timeout_ms"])
         self.max_hosts.setValue(DEFAULT_OPTIONS["max_hosts"])
         self.max_sockets.setValue(DEFAULT_OPTIONS["max_sockets"])
         self.max_hops.setValue(DEFAULT_OPTIONS["max_hops"])
@@ -135,7 +147,11 @@ class OptionsDialog(QDialog):
             "port_profile": self.port_profile.currentData(),
             "custom_ports": self.custom_ports.text(),
             "ping_count": self.ping_count.value(),
+            "ping_warmup": self.ping_warmup.value(),
+            "ping_timeout_ms": self.ping_timeout.value(),
+            "ping_interval_ms": self.ping_interval.value(),
             "port_timeout_ms": self.port_timeout.value(),
+            "dns_timeout_ms": self.dns_timeout.value(),
             "max_hosts": self.max_hosts.value(),
             "max_sockets": self.max_sockets.value(),
             "max_hops": self.max_hops.value(),

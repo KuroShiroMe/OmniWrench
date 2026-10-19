@@ -274,6 +274,10 @@ def _dns(out, dns):
             _add(out, "ns_recursive", WARN, category="dns", server=n["name"])
     if dns.get("cname_target_missing"):
         _add(out, "cname_dangling", ERROR, category="dns")
+    # CAA: schränkt ein, welche CA Zertifikate ausstellen darf (nur sinnvoll bei echter Zone mit A/AAAA)
+    has_addr = records.get("A", {}).get("values") or records.get("AAAA", {}).get("values")
+    if has_addr and not records.get("CAA", {}).get("values"):
+        _add(out, "dns_no_caa", INFO, category="dns")
     # DNSSEC
     sec = dns.get("dnssec", {})
     if sec.get("ds") and sec.get("dnskey"):
@@ -315,6 +319,12 @@ def _mail(out, mail):
             _add(out, "mail_dmarc_ok", OK, category="dns", policy=policy)
     if not mail.get("dkim_selectors"):
         _add(out, "mail_no_dkim", INFO, category="dns")
+    if mail.get("mta_sts"):
+        _add(out, "mail_mta_sts_ok", OK, category="dns")
+    else:
+        _add(out, "mail_no_mta_sts", INFO, category="dns")
+    if not mail.get("tls_rpt"):
+        _add(out, "mail_no_tls_rpt", INFO, category="dns")
     for mx in mail["mx"]:
         if mx.get("fcrdns") is False:
             _add(out, "mail_mx_no_ptr", INFO, category="dns", host=mx.get("host", ""))
