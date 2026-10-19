@@ -16,7 +16,7 @@ from .localnet import VendorDB, mac_of
 from .targets import Target, classify
 
 # ------------------------------------------------------------ Tests und Kategorien
-CATEGORIES = ("general", "route", "ports", "web", "services", "dns")
+CATEGORIES = ("general", "route", "ports", "web", "services", "dns", "link")
 
 
 @dataclass(frozen=True)
@@ -35,8 +35,14 @@ TESTS = (
     TestDef("smb", "services"), TestDef("rdp", "services"), TestDef("ntp", "services"),
     TestDef("dnsserver", "services"),
     TestDef("dns", "dns"), TestDef("mail", "dns"), TestDef("dnssec", "dns"),
+    # Leitungstest gegen eine Gegenstelle (braucht das linkagent-Mini-Tool/NetProbe drüben) – nie automatisch.
+    TestDef("link", "link", default=False),
 )
 TEST_IDS = tuple(t.id for t in TESTS)
+
+# Leitungstest-Optionen (eigener Abschnitt im Optionsdialog, Werte werden durch alle Profile getragen).
+LINK_KEYS = ("link_port", "link_token", "link_seconds", "link_connections", "link_scan_ports",
+             "link_latency", "link_download", "link_upload", "link_load", "link_portscan")
 
 DEFAULT_OPTIONS = {
     "tests": {t.id: t.default for t in TESTS},
@@ -46,10 +52,17 @@ DEFAULT_OPTIONS = {
     "port_profile": "standard", "custom_ports": "", "port_timeout_ms": 800,
     "max_hosts": 16, "max_sockets": 300, "only_alive": True,
     "max_hops": 30, "hop_pings": 4, "dns_timeout_ms": 4000, "oui_download": True,
+    # Leitungstest gegen eine Gegenstelle (linkagent). Token leer = noch keines erzeugt.
+    "link_port": 47600, "link_token": "", "link_seconds": 5, "link_connections": 8, "link_scan_ports": "",
+    "link_latency": True, "link_download": True, "link_upload": True, "link_load": True, "link_portscan": True,
 }
 
 # Vorgefertigte Testprofile für das Dropdown neben „Starten“. "custom" nutzt die Einstellungen aus dem Dialog.
-TEMPLATE_IDS = ("overview", "standard", "deep", "custom")
+# "link" misst die Leitung zu einer Gegenstelle und braucht dort das linkagent-Mini-Tool (oder NetProbe).
+TEMPLATE_IDS = ("overview", "standard", "deep", "link", "custom")
+
+# Profile, die eine laufende Gegenstelle voraussetzen -> in der Oberfläche mit Hinweis (Ausrufezeichen).
+TEMPLATES_NEED_AGENT = ("link",)
 
 
 def template_options(template: str, custom: dict) -> dict:
@@ -61,9 +74,33 @@ def template_options(template: str, custom: dict) -> dict:
         return {"tests": {t.id: (t.id in on) for t in TESTS},
                 "port_profile": "quick", "ping_count": 5, "ping_warmup": 2, "only_alive": True}
     if template == "deep":
-        return {"tests": {t.id: True for t in TESTS},
+        return {"tests": {t.id: True for t in TESTS if t.id != "link"},
                 "port_profile": "extended", "ping_count": 15, "ping_warmup": 3, "only_alive": False}
+    if template == "link":
+        # Fokus auf die Leitungsmessung: Name auflösen, kurzer Ping und der Leitungstest selbst.
+        on = {"resolve", "reverse", "ping", "link"}
+        opts = {"tests": {t.id: (t.id in on) for t in TESTS},
+                "port_profile": "quick", "ping_count": 5, "ping_warmup": 2, "only_alive": False}
+        for key in LINK_KEYS:                      # gespeicherte Leitungstest-Einstellungen übernehmen
+            if key in custom:
+                opts[key] = custom[key]
+        return opts
     return {"tests": {t.id: t.default for t in TESTS}, "port_profile": "standard"}  # standard
+
+
+def parse_scan_ports(text: str) -> list[int]:
+    """Portliste für den Pfad-Portscan aus Freitext; leer = Standardauswahl aus linkagent."""
+    from .linkagent import DEFAULT_SCAN_PORTS
+    ports: set[int] = set()
+    for part in (text or "").replace(";", ",").split(","):
+        part = part.strip()
+        if "-" in part:
+            a, _, b = part.partition("-")
+            if a.strip().isdigit() and b.strip().isdigit():
+                ports.update(range(max(1, int(a)), min(65535, int(b)) + 1))
+        elif part.isdigit() and 0 < int(part) < 65536:
+            ports.add(int(part))
+    return sorted(ports) or list(DEFAULT_SCAN_PORTS)
 
 QUICK_PORTS = (21, 22, 23, 25, 53, 80, 110, 135, 139, 143, 389, 443, 445, 587, 636, 993, 995, 1433, 3306, 3389,
                5900, 5985, 8080, 8443)
@@ -302,6 +339,8 @@ class Engine:
             tasks.append(self._step(res, "dnsserver", probes.dns_server_probe(ip)))
         if self._on("traceroute"):
             tasks.append(self._route(res, ip))
+        if self._on("link"):
+            tasks.append(self._link_test(res, ip))
         tasks.append(self._ports_and_services(res, ip))
         if dns_task:
             tasks.append(dns_task)
@@ -342,6 +381,68 @@ class Engine:
         stats["warmup"] = warmup
         stats["timeout_ms"] = timeout
         return stats
+
+    # -------------------------------------------------------------- Leitungstest (Gegenstelle)
+    async def _link_test(self, res: TargetResult, ip: str) -> None:
+        """Vermisst die Leitung zu einer Gegenstelle (linkagent). Blockierende Socket-Arbeit im Executor."""
+        from . import linkagent
+        o = self.options
+        loop = asyncio.get_running_loop()
+        out: dict = {"server_ip": ip, "server_port": int(o["link_port"])}
+        res.raw["link"] = out
+        token = str(o.get("link_token", "")).strip()
+        if not token:
+            out["error"] = "no_token"
+            res.done += 1
+            self.on_update(res)
+            return
+        client = linkagent.LinkClient(ip, int(o["link_port"]), token)
+        res.step = "link"
+        self.on_update(res)
+        try:
+            out["server"] = await loop.run_in_executor(None, client.handshake)
+        except Exception as exc:  # noqa: BLE001 - Verbindungs-/Auth-Fehler als Ergebnis zeigen
+            out["error"] = f"{type(exc).__name__}: {exc}"
+            res.done += 1
+            self.on_update(res)
+            return
+
+        seconds = int(o["link_seconds"])
+        conns = int(o["link_connections"])
+
+        async def phase(name: str, fn) -> object:
+            res.step = "link_" + name
+            self.on_update(res)
+            try:
+                return await loop.run_in_executor(None, fn)
+            except Exception as exc:  # noqa: BLE001
+                out.setdefault("errors", {})[name] = f"{type(exc).__name__}: {exc}"
+                return None
+
+        if o.get("link_latency", True):
+            r = await phase("latency", lambda: client.latency(count=max(10, min(100, seconds * 5)), interval=0.05))
+            if r:
+                out["latency"] = r
+        if o.get("link_download", True):
+            r = await phase("download", lambda: client.throughput(seconds, True, False))
+            if r:
+                out.update(r)
+        if o.get("link_upload", True):
+            r = await phase("upload", lambda: client.throughput(seconds, False, True))
+            if r:
+                out.update(r)
+        if o.get("link_load", True):
+            r = await phase("load", lambda: client.loadtest(conns, seconds))
+            if r:
+                out["load"] = r
+        if o.get("link_portscan", True):
+            ports = parse_scan_ports(str(o.get("link_scan_ports", "")))
+            r = await phase("portscan", lambda: client.path_scan(ports))
+            if r:
+                out["portscan"] = r
+        res.step = ""
+        res.done += 1
+        self.on_update(res)
 
     async def _mtu(self, ip: str, ping: dict) -> dict:
         if not icmp.available() or not ping.get("received") or ":" in ip:

@@ -531,6 +531,109 @@ class Renderer:
         lay.addStretch(1)
         return _scroll(inner)
 
+    # ------------------------------------------------------------ Leitungstest
+    def link_widget(self, result) -> QWidget:
+        tr = self.tr
+        link = result.raw.get("link", {})
+        inner = QWidget()
+        lay = QVBoxLayout(inner)
+        lay.setContentsMargins(12, 12, 12, 12)
+
+        error = link.get("error")
+        if error == "no_token":
+            lay.addWidget(QLabel(tr("link.no_token")))
+            lay.addStretch(1)
+            return _scroll(inner)
+        if error:
+            lay.addWidget(QLabel(tr("link.failed", error=error)))
+            lay.addWidget(_mono(tr("link.hint_start")))
+            lay.addStretch(1)
+            return _scroll(inner)
+
+        server = link.get("server", {})
+        if server:
+            srows = [(tr("link.server_host"), server.get("host", "")),
+                     (tr("link.server_os"), server.get("os", "")),
+                     (tr("link.server_addr"), f"{link.get('server_ip', '')}:{link.get('server_port', '')}")]
+            sbox = _section(tr("link.counterpart"))
+            sbox.layout().addWidget(_form(srows))
+            lay.addWidget(sbox)
+
+        lat = link.get("latency", {})
+        if lat:
+            lrows = [(tr("link.lat_rtt"), f"{lat.get('min', 0)} / {lat.get('avg', 0)} / {lat.get('max', 0)} ms"),
+                     (tr("link.lat_jitter"), f"{lat.get('jitter', 0)} ms"),
+                     (tr("link.lat_loss"), f"{lat.get('loss_pct', 0)} %  "
+                      f"({lat.get('received', 0)}/{lat.get('sent', 0)})")]
+            lbox = _section(tr("link.latency_title"))
+            lbox.layout().addWidget(_form(lrows))
+            lbox.layout().addWidget(self._sparkline(lat.get("rtts", [])))
+            lay.addWidget(lbox)
+
+        down, up = link.get("download", {}), link.get("upload", {})
+        if down or up:
+            peak = max(down.get("mbps", 0), up.get("mbps", 0), 1)
+            tbox = _section(tr("link.throughput_title"))
+            if down:
+                tbox.layout().addWidget(self._tp_bar(tr("link.download"), down.get("mbps", 0), peak, "#10b981"))
+            if up:
+                tbox.layout().addWidget(self._tp_bar(tr("link.upload"), up.get("mbps", 0), peak, "#3b82f6"))
+            lay.addWidget(tbox)
+
+        load = link.get("load", {})
+        if load:
+            lrows = [(tr("link.load_conn"), f"{load.get('ok', 0)}/{load.get('connections', 0)}"),
+                     (tr("link.load_total"), f"{load.get('mbps_total', 0)} Mbit/s"),
+                     (tr("link.load_per"), f"{load.get('mbps_per_conn', 0)} Mbit/s")]
+            if load.get("errors"):
+                lrows.append((tr("link.load_errors"), str(load["errors"])))
+            lbox = _section(tr("link.load_title"))
+            lbox.layout().addWidget(_form(lrows))
+            lay.addWidget(lbox)
+
+        scan = link.get("portscan", {})
+        if scan:
+            pbox = _section(tr("link.path_title"))
+            pbox.layout().addWidget(QLabel(tr("link.path_summary", open=len(scan.get("open", [])),
+                                                tested=len(scan.get("bound", [])))))
+            op = scan.get("open", [])
+            blocked = sorted(set(scan.get("filtered", [])) | set(scan.get("closed", [])))
+            if op:
+                pbox.layout().addWidget(_mono(tr("link.path_open") + " " + ", ".join(str(p) for p in sorted(op))))
+            if blocked:
+                lbl = _mono(tr("link.path_blocked") + " " + ", ".join(str(p) for p in blocked))
+                lbl.setStyleSheet("color:#f59e0b;")
+                pbox.layout().addWidget(lbl)
+            lay.addWidget(pbox)
+
+        for name, value in link.get("errors", {}).items():
+            lay.addWidget(_mono(f"⚠ {name}: {value}"))
+        lay.addStretch(1)
+        return _scroll(inner)
+
+    def _tp_bar(self, label: str, mbps: float, peak: float, color: str) -> QWidget:
+        w = QWidget()
+        row = QHBoxLayout(w)
+        row.setContentsMargins(0, 2, 0, 2)
+        name = QLabel(label)
+        name.setMinimumWidth(90)
+        row.addWidget(name)
+        bar = QFrame()
+        bar.setFixedHeight(16)
+        frac = max(0.02, min(1.0, mbps / peak)) if peak else 0.02
+        bar.setStyleSheet(f"background:{color};border-radius:3px;")
+        holder = QWidget()
+        hl = QHBoxLayout(holder)
+        hl.setContentsMargins(0, 0, 0, 0)
+        hl.addWidget(bar, int(frac * 1000))
+        hl.addStretch(int((1 - frac) * 1000) + 1)
+        row.addWidget(holder, 1)
+        val = _mono(f"{mbps:.1f} Mbit/s")
+        val.setMinimumWidth(110)
+        val.setAlignment(Qt.AlignmentFlag.AlignRight)
+        row.addWidget(val)
+        return w
+
     # ------------------------------------------------------------ Kategorien, die Daten haben
     def category_order(self, result) -> list[str]:
         raw = result.raw
@@ -554,6 +657,8 @@ class Renderer:
             present.append("services")
         if raw.get("dns"):
             present.append("dns")
+        if raw.get("link"):
+            present.insert(1 if len(present) > 1 else len(present), "link")  # früh einsortieren (Wichtiges oben)
         present.append("findings")
         return present
 
@@ -562,5 +667,5 @@ class Renderer:
             "profile": self.profile_widget, "connectivity": self.connectivity_widget,
             "route": self.route_widget, "ports": self.ports_widget,
             "web": self.web_widget, "services": self.services_widget, "dns": self.dns_widget,
-            "findings": self.findings_widget,
+            "link": self.link_widget, "findings": self.findings_widget,
         }[category](result)

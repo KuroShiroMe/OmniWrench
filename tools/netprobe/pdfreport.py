@@ -91,6 +91,32 @@ def _target_section(result, tr, lang: str) -> str:
                      f"<tr><th>Port</th><th>{_esc(tr('ports.col_service'))}</th><th></th></tr>"
                      f"{''.join(cells)}</table>")
 
+    # Leitungstest
+    link = raw.get("link", {})
+    if link and not link.get("error"):
+        lrows = []
+        lat = link.get("latency", {})
+        if lat.get("sent"):
+            lrows.append((tr("link.lat_rtt"), f"{lat.get('min', 0)} / {lat.get('avg', 0)} / {lat.get('max', 0)} ms"))
+            lrows.append((tr("link.lat_jitter"), f"{lat.get('jitter', 0)} ms"))
+            lrows.append((tr("link.lat_loss"), f"{lat.get('loss_pct', 0)} %"))
+        if link.get("download"):
+            lrows.append((tr("link.download"), f"{link['download'].get('mbps', 0)} Mbit/s"))
+        if link.get("upload"):
+            lrows.append((tr("link.upload"), f"{link['upload'].get('mbps', 0)} Mbit/s"))
+        load = link.get("load", {})
+        if load:
+            lrows.append((tr("link.load_total"), f"{load.get('mbps_total', 0)} Mbit/s "
+                          f"({load.get('ok', 0)}/{load.get('connections', 0)})"))
+        scan = link.get("portscan", {})
+        if scan.get("bound"):
+            lrows.append((tr("link.path_open"), ", ".join(str(p) for p in sorted(scan.get("open", []))) or "–"))
+            blocked = sorted(set(scan.get("filtered", [])) | set(scan.get("closed", [])))
+            if blocked:
+                lrows.append((tr("link.path_blocked"), ", ".join(str(p) for p in blocked)))
+        if lrows:
+            parts.append(f"<h3>{_esc(tr('cat.link'))}</h3>" + _rows(lrows))
+
     # DNS
     dns = raw.get("dns", {})
     records = dns.get("records", {})
