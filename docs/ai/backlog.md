@@ -3,6 +3,10 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
+- [ ] ScopeKeeper (net.scopekeeper 1.0.0, Alpha): Stef tests on Windows against real DHCP servers: login SSO/vault/manual,
+      PowerShell host start, partner via CIM and via RPC (netsh + failover API), replication diff, new/duplicate scope
+      incl. failover, failover create/edit/remove (role/LB mirroring), server check. Only tested here with a fake backend.
+      Remove the Alpha tag after a successful test. Later ideas: IPv6 scopes, policies/filters editing, superscopes.
 - [ ] NetProbe (net.netprobe 1.1.0): Verify on Windows: IcmpSendEcho ping incl. new warm-up + 2 s timeout (Stef saw
       loss that CMD didn't – likely the old 1 s timeout), persistent list + expandable network groups (x/y hosts),
       re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität

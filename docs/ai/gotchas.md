@@ -35,7 +35,17 @@
 - Bash heredocs containing many quotes break the Bash tool -> write a script file to the scratchpad and run it.
 - `ToolBase` ist KEIN QObject -> ein `Signal(...)` direkt als Klassenattribut einer ToolBase-Unterklasse wirft beim `connect` `'Signal' object has no attribute 'connect'`. Für Hintergrund->GUI entweder `run_async` oder eine eigene `class _Bridge(QObject)` mit den Signals (NetProbe). smoke_test fängt das ab.
 
+- FlowLayout (widgets.py) wraps as soon as a row reaches rect.right() (= width-1) and its sizeHint is only the widest
+  item -> in an HBox a button row wraps vertically. ScopeKeeper ButtonBar overrides sizeHint (one row + 1 px) and calls
+  updateGeometry on LayoutRequest (button widths change after styling).
+- `spinbox.valueChanged.connect(self.changed.emit)` with `changed = Signal()` -> "changed() only accepts 0 argument(s)"
+  at runtime; wrap in a lambda. Same for clicked(bool) -> Signal().
+- QTableWidget: styling items (setBackground/setToolTip) fires itemChanged -> keep blockSignals until styling is done,
+  otherwise itemChanged -> refill -> endless recursion.
+- smoke_test patches only the static QMessageBox helpers; `QMessageBox(...).exec()` instances block a headless test
+  (patch QMessageBox.exec in render/flow scripts).
 ## Python
+- `context.tr(key, default=None, **kw)`: never use `key=` or `default=` as placeholder names (TypeError "multiple values").
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.
 - Netwrix Password Secure: no public REST API; only C#/JS SDK (PsrApi) from customer portal.
 - `i18n.load_locales` is lru_cached per directory → `i18n.clear_cache()` after installs (tool_manager does).

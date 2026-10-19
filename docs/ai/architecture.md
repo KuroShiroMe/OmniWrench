@@ -58,7 +58,7 @@ omniwrench/ui/
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
-                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe) - see below
+                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe), scopekeeper (net.scopekeeper) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
                               smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
@@ -136,3 +136,32 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   Tabs: "profile" (Steckbrief: identity + findings strip + open-ports line) and "connectivity" (ping/MTU/route summary)
   replace the old "general" tab. PDF export via pdfreport.py (QPdfWriter + QTextDocument from HTML, no extra dependency).
   TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.
+
+## ScopeKeeper (net.scopekeeper) – Microsoft DHCP manager (Alpha, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1)
+- Layers: `ipcalc` (IPv4 math, ScopeModel, range/exclusion conversion, address translation between networks),
+  `optcodec` (option value parse/format/compare per definition type, STD_OPTION_IDS), `checks` (Checker -> Finding
+  level error/warning/bestpractice/info + category + obj + targets["Field:Name", "Range:n", "Option:003", ...] + fix id;
+  scope_findings/server_findings/draft), `netshdump` (parse `netsh dhcp server \\x dump`, build netsh commands,
+  `sync_plan` = replication diff), `service.DhcpService` (all server access, normalises cmdlet output n_scope/n_opt/...,
+  partner handling, replication, failover, scan), UI modules (tool, pages, page_scope, page_draft, editors, dialogs,
+  ui_base, runner).
+- Backend: ONE persistent Windows PowerShell 5.1 process (`pshost.PsHost` + `host.ps1`), line-JSON over stdin/stdout,
+  script sent base64 via -EncodedCommand bootstrap (no ps1 encoding issues). Commands: hello, connect (CIM session per
+  server, creds only via stdin), cim (whitelisted DhcpServer cmdlet + params; TimeSpan <-> seconds via {"__ts"}),
+  dhcp_in_dc, resolve, fo_api (DsmRpc C# P/Invoke on dhcpsapi: failover enum/create/set/add/remove/delete, optional
+  NewCredentials logon like runas /netonly), netsh (lines, progress per line), disconnect. Errors as `@ERR:key:..` /
+  `@RPC:op:server:code:text` -> translated in `DhcpService.host_text`.
+- Partner access: CIM first, else RPC (fo_api + netsh). `partner_mode` Auto (login checks all partners, dialog
+  retry/other creds/primary only) / Lazy / Off. Replication always reads the partner via netsh dump and writes netsh
+  commands (works without WinRM); custom classes/definitions are created on the partner first. Server options are
+  never auto-replicated ("Copy to partner" button).
+- Flow runner: UI actions are generators yielding `runner.Job(fn, status, cancellable)`; `Runner` runs fn via
+  run_async, sends the result back (or throws), shows status/progress/cancel. One flow at a time, `ScopeKeeper.run`
+  queues. UserError -> error box, others -> box with traceback.
+- UI: login page -> main page with own QtAds CDockManager: fixed docks Übersicht/Server-Optionen/Failover/Definitionen/
+  Prüfung + one closable dock per scope (`ScopeTab`: Allgemein+Bereiche, Optionen, Reservierungen, Ausschlüsse, Leases,
+  Failover, Befunde) or draft (`DraftTab`: new/duplicate with octet edits, conversion of ranges/options). Findings are
+  recomputed on every edit (`recheck`), mark fields (Markers "?" buttons, row tints, tab icons); double-click applies
+  the fix. Clipboard MIME application/x-omniwrench-scopekeeper+json for options/reservations/exclusions with network
+  conversion.
+- Test hook: `ScopeKeeper.backend_factory` replaces PsHost (fake backend for screenshots/flow tests; not in repo).

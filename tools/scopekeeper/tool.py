@@ -1,0 +1,766 @@
+"""ScopeKeeper – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
+
+Aufbau:
+* Anmeldeseite (Server, Anmeldedaten, Partner) -> Hauptbereich mit eigenem Dock-Manager (QtAds):
+  feste Seiten Übersicht, Server-Optionen, Failover, Definitionen, Prüfung; dazu je Scope ein Tab
+  und Entwürfe für neue Scopes.
+* Alle Serverzugriffe laufen über service.DhcpService im Hintergrund (runner.Runner); Dialoge und
+  Rückfragen laufen zwischen den Schritten im GUI-Thread.
+"""
+
+from __future__ import annotations
+
+import html
+import json
+import os
+import time
+from pathlib import Path
+
+import PySide6QtAds as ads
+from PySide6.QtCore import QMimeData, QObject, Qt, Signal
+from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtWidgets import (
+    QApplication, QButtonGroup, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QPlainTextEdit, QProgressBar, QPushButton, QRadioButton, QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
+    QWidget,
+)
+
+from omniwrench.sdk import CredentialField, ToolBase
+from omniwrench.ui import theme
+from omniwrench.ui.widgets import make_button
+
+from . import checks as ck
+from . import dialogs as dlg
+from .page_draft import DraftTab
+from .page_scope import ScopeTab
+from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
+from .pshost import PsHost
+from .runner import Job, Runner
+from .service import DhcpService, ReplicationError, UserError
+from .ui_base import FilterState, bold_label, confirm, error, hint_label, info, level_icon, short_list, text_dialog, warn
+
+MIME = "application/x-omniwrench-scopekeeper+json"
+MAX_SERVERS = 15
+
+
+class _Bridge(QObject):
+    """Log und Fortschritt kommen aus Hintergrund-Threads (ToolBase ist kein QObject)."""
+    log = Signal(str, bool)
+    progress = Signal(str, int, int)
+
+
+class ScopeKeeper(ToolBase):
+    backend_factory = None     # für Tests/Screenshots: Ersatz für den PowerShell-Host
+
+    # --- Aufbau --------------------------------------------------------------------------------------
+    def create_widget(self, parent=None) -> QWidget:
+        tr = self.tr = self.context.tr
+        self.settings = self.context.settings
+        self.bridge = _Bridge()
+        self.bridge.log.connect(self._append_log)
+        self.bridge.progress.connect(self._progress)
+        factory = type(self).backend_factory
+        self.backend = factory() if factory else PsHost(Path(__file__).with_name("host.ps1"))
+        self.svc = DhcpService(self.backend, tr, lambda t, e=False: self.bridge.log.emit(t, e),
+                               lambda t, i=0, n=0: self.bridge.progress.emit(t, i, n))
+        self.flt = FilterState(self.settings)
+        self.runner = Runner()
+        self.runner.busy_changed.connect(self._busy)
+        self.runner.status.connect(lambda t: self._progress(t, 0, 0) if t != "busy" else None)
+        self.runner.failed.connect(self._failed)
+        self.queue: list = []
+        self.tabs: dict[QWidget, ads.CDockWidget] = {}
+        self.scan: dict | None = None
+        self._classes: tuple[list[str], list[str]] | None = None
+        self._dock_seq = 0
+
+        self.root = QWidget(parent)
+        lay = QVBoxLayout(self.root)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(0)
+        self.stack = QStackedWidget()
+        lay.addWidget(self.stack, 1)
+        self.stack.addWidget(self._build_login())
+        self.stack.addWidget(self._build_main())
+        lay.addWidget(self._build_status())
+        self._shortcut = QShortcut(QKeySequence("Ctrl+W"), self.root)
+        self._shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+        self._shortcut.activated.connect(self._close_current)
+        return self.root
+
+    def _build_login(self) -> QWidget:
+        tr = self.tr
+        page = QWidget()
+        outer = QVBoxLayout(page)
+        outer.setContentsMargins(24, 24, 24, 24)
+        card = QFrame()
+        card.setObjectName("skcard")
+        card.setMaximumWidth(720)
+        card.setStyleSheet(f"QFrame#skcard {{ border:1px solid {theme.current['border']}; border-radius:8px;"
+                           f" background:{theme.current['surface']}; }}")
+        cl = QVBoxLayout(card)
+        cl.setContentsMargins(24, 20, 24, 20)
+        cl.setSpacing(10)
+        title = bold_label(tr("login.title"))
+        f = title.font()
+        f.setPointSizeF(f.pointSizeF() * 1.4)
+        title.setFont(f)
+        cl.addWidget(title)
+        cl.addWidget(hint_label(tr("login.intro")))
+        grid = QGridLayout()
+        grid.setColumnStretch(1, 1)
+        grid.addWidget(QLabel(tr("login.server")), 0, 0)
+        self.server = QComboBox()
+        self.server.setEditable(True)
+        self.server.addItems(self.settings.get("servers") or [])
+        self.server.setEditText(self.settings.get("last_server") or "")
+        self.server.lineEdit().setPlaceholderText(tr("login.server_ph"))
+        self.server.lineEdit().returnPressed.connect(self._login_clicked)
+        grid.addWidget(self.server, 0, 1)
+        self.ad_btn = make_button(tr("login.from_ad"), on_click=lambda: self.run(self.ad_flow()))
+        grid.addWidget(self.ad_btn, 0, 2)
+        grid.addWidget(QLabel(tr("login.auth")), 1, 0, Qt.AlignmentFlag.AlignTop)
+        modes = QVBoxLayout()
+        self.mode_group = QButtonGroup(page)
+        who = os.environ.get("USERDOMAIN", "") + ("\\" if os.environ.get("USERDOMAIN") else "") + os.environ.get("USERNAME", "")
+        self.m_sso = QRadioButton(tr("login.mode_sso", user=who or "–"))
+        self.m_vault = QRadioButton(tr("login.mode_vault"))
+        self.m_manual = QRadioButton(tr("login.mode_manual"))
+        for i, b in enumerate((self.m_sso, self.m_vault, self.m_manual)):
+            self.mode_group.addButton(b, i)
+            modes.addWidget(b)
+            if i == 1:
+                self.cred_field = CredentialField(settings=self.settings, key="credential")
+                modes.addWidget(self.cred_field)
+            if i == 2:
+                row = QHBoxLayout()
+                self.user = QLineEdit(self.settings.get("last_user") or "")
+                self.user.setPlaceholderText(tr("login.user_ph"))
+                self.password = QLineEdit()
+                self.password.setEchoMode(QLineEdit.EchoMode.Password)
+                self.password.setPlaceholderText(tr("login.password"))
+                self.password.returnPressed.connect(self._login_clicked)
+                row.addWidget(self.user)
+                row.addWidget(self.password)
+                modes.addLayout(row)
+        mode = self.settings.get("login_mode") or "sso"
+        {"sso": self.m_sso, "vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
+        self.mode_group.idToggled.connect(lambda *_: self._mode_changed())
+        grid.addLayout(modes, 1, 1, 1, 2)
+        cl.addLayout(grid)
+        self.auto_partner = QCheckBox(tr("login.auto_partner"))
+        self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
+        cl.addWidget(self.auto_partner)
+        cl.addWidget(hint_label(tr("login.auto_partner_hint")))
+        row = QHBoxLayout()
+        self.login_btn = make_button(tr("login.connect"), primary=True, on_click=self._login_clicked)
+        row.addWidget(self.login_btn)
+        self.login_status = QLabel("")
+        self.login_status.setWordWrap(True)
+        row.addWidget(self.login_status, 1)
+        cl.addLayout(row)
+        cl.addWidget(hint_label(tr("login.requirements")))
+        h = QHBoxLayout()
+        h.addStretch(1)
+        h.addWidget(card, 10)
+        h.addStretch(1)
+        outer.addStretch(1)
+        outer.addLayout(h)
+        outer.addStretch(2)
+        self._mode_changed()
+        return page
+
+    def _mode_changed(self) -> None:
+        self.cred_field.setEnabled(self.m_vault.isChecked())
+        self.user.setEnabled(self.m_manual.isChecked())
+        self.password.setEnabled(self.m_manual.isChecked())
+
+    def _build_main(self) -> QWidget:
+        tr = self.tr
+        page = QWidget()
+        lay = QVBoxLayout(page)
+        lay.setContentsMargins(8, 6, 8, 0)
+        lay.setSpacing(6)
+        top = QHBoxLayout()
+        self.conn_info = QLabel("")
+        self.conn_info.setTextFormat(Qt.TextFormat.RichText)
+        top.addWidget(self.conn_info, 1)
+        self.auto_repl = QCheckBox(tr("main.auto_replicate"))
+        self.auto_repl.setToolTip(tr("main.auto_replicate_tip"))
+        self.auto_repl.setChecked(bool(self.settings.get("auto_replicate", True)))
+        self.auto_repl.toggled.connect(lambda on: self.settings.set("auto_replicate", on))
+        top.addWidget(self.auto_repl)
+        self.logout_btn = make_button(tr("main.logout"), on_click=lambda: self.run(self.logout_flow()))
+        top.addWidget(self.logout_btn)
+        help_btn = QToolButton()
+        help_btn.setText("?")
+        help_btn.setToolTip(tr("main.help"))
+        help_btn.clicked.connect(lambda: text_dialog(self.root, tr("main.help"), tr("help.text"), tr("ui.close")))
+        top.addWidget(help_btn)
+        lay.addLayout(top)
+
+        split = QSplitter(Qt.Orientation.Vertical)
+        host = QWidget()
+        hl = QVBoxLayout(host)
+        hl.setContentsMargins(0, 0, 0, 0)
+        ads.CDockManager.setConfigFlag(ads.CDockManager.eConfigFlag.AllTabsHaveCloseButton, True)
+        ads.CDockManager.setConfigFlag(ads.CDockManager.eConfigFlag.AlwaysShowTabs, True)
+        self.dm = ads.CDockManager(host)
+        hl.addWidget(self.dm)
+        self.overview = OverviewPage(self)
+        self.overview.action.connect(self._ov_action)
+        self.srv_opts = ServerOptionsPage(self)
+        self.fo_page = FailoverPage(self)
+        self.defs_page = DefsPage(self)
+        self.check_page = CheckPage(self)
+        self.fixed_docks = []
+        self.area = None
+        for key, w in (("overview", self.overview), ("server_options", self.srv_opts), ("failover", self.fo_page),
+                       ("defs", self.defs_page), ("check", self.check_page)):
+            d = ads.CDockWidget(self.dm, tr("page." + key))
+            d.setObjectName(f"sk_{key}")
+            d.setWidget(w)
+            d.setFeature(ads.CDockWidget.DockWidgetFeature.DockWidgetClosable, False)
+            if self.area is None:
+                self.area = self.dm.addDockWidget(ads.CenterDockWidgetArea, d)
+            else:
+                self.dm.addDockWidgetTabToArea(d, self.area)
+            self.fixed_docks.append(d)
+        self.fixed_docks[0].setAsCurrentTab()
+        split.addWidget(host)
+        logw = QWidget()
+        ll = QVBoxLayout(logw)
+        ll.setContentsMargins(0, 0, 0, 0)
+        lh = QHBoxLayout()
+        lh.addWidget(bold_label(tr("main.log")))
+        lh.addStretch(1)
+        clr = QToolButton()
+        clr.setText(tr("main.log_clear"))
+        clr.clicked.connect(lambda: self.log_view.clear())
+        lh.addWidget(clr)
+        ll.addLayout(lh)
+        self.log_view = QPlainTextEdit()
+        self.log_view.setReadOnly(True)
+        self.log_view.setMaximumBlockCount(5000)
+        ll.addWidget(self.log_view)
+        split.addWidget(logw)
+        split.setStretchFactor(0, 5)
+        split.setStretchFactor(1, 1)
+        split.setSizes([640, 140])
+        lay.addWidget(split, 1)
+        self.main_area = host
+        return page
+
+    def _build_status(self) -> QWidget:
+        bar = QWidget()
+        lay = QHBoxLayout(bar)
+        lay.setContentsMargins(8, 3, 8, 3)
+        self.status = QLabel(self.tr("status.ready"))
+        self.status.setStyleSheet(f"color:{theme.current['muted']};")
+        lay.addWidget(self.status, 1)
+        self.pbar = QProgressBar()
+        self.pbar.setMaximumWidth(220)
+        self.pbar.setMaximumHeight(14)
+        self.pbar.setTextVisible(False)
+        self.pbar.hide()
+        lay.addWidget(self.pbar)
+        self.cancel_btn = QPushButton(self.tr("ui.cancel"))
+        self.cancel_btn.clicked.connect(self._cancel)
+        self.cancel_btn.hide()
+        lay.addWidget(self.cancel_btn)
+        return bar
+
+    # --- Ablaufsteuerung ----------------------------------------------------------------------------
+    def run(self, gen) -> bool:
+        if gen is None:
+            return False
+        if self.runner.active:
+            self.queue.append(gen)
+            return True
+        return self.runner.start(gen, self._next)
+
+    def _next(self) -> None:
+        if self.queue and not self.runner.active:
+            self.runner.start(self.queue.pop(0), self._next)
+        elif not self.runner.active:
+            self._progress(self.tr("status.ready"), 0, 0)
+
+    def _busy(self, busy: bool, cancellable: bool) -> None:
+        self.main_area.setEnabled(not busy)
+        self.logout_btn.setEnabled(not busy)
+        self.login_btn.setEnabled(not busy)
+        self.ad_btn.setEnabled(not busy)
+        self.pbar.setVisible(busy)
+        if busy:
+            self.pbar.setRange(0, 0)
+        self.cancel_btn.setVisible(busy and cancellable)
+        self.cancel_btn.setEnabled(True)
+        if busy:
+            QApplication.setOverrideCursor(Qt.CursorShape.BusyCursor)
+        else:
+            while QApplication.overrideCursor() is not None:
+                QApplication.restoreOverrideCursor()
+
+    def _cancel(self) -> None:
+        self.svc.cancel.set()
+        self.cancel_btn.setEnabled(False)
+        self._progress(self.tr("status.cancelling"), 0, 0)
+
+    def _progress(self, text: str, i: int, n: int) -> None:
+        if text:
+            self.status.setText(text)
+        if n:
+            self.pbar.setRange(0, n)
+            self.pbar.setValue(i)
+
+    def _append_log(self, text: str, is_error: bool) -> None:
+        stamp = time.strftime("%H:%M:%S")
+        color = theme.current["danger"] if is_error else theme.current["text"]
+        body = html.escape(text).replace("\n", "<br>&nbsp;&nbsp;")
+        self.log_view.appendHtml(f"<span style='color:{theme.current['muted']}'>{stamp}</span> "
+                                 f"<span style='color:{color}'>{body}</span>")
+
+    def _failed(self, text: str) -> None:
+        self._append_log(text, True)
+        self.login_status.setText("")
+        error(self.root, self.tr("ui.error"), text)
+
+    def notify(self, text: str) -> None:
+        self.svc.log(text)
+        self.context.notify(text)
+
+    # --- Anmeldung -----------------------------------------------------------------------------------
+    def _login_clicked(self) -> None:
+        if self.runner.active:
+            return
+        server = self.server.currentText().strip()
+        if not server:
+            warn(self.root, self.tr("login.title"), self.tr("login.err_server"))
+            return
+        if self.m_vault.isChecked():
+            self.login_status.setText(self.tr("login.cred_loading"))
+            self.cred_field.resolve_async(lambda cred: self.run(self.login_flow(server, cred, True)))
+        elif self.m_manual.isChecked():
+            if not self.user.text().strip():
+                warn(self.root, self.tr("login.title"), self.tr("login.err_user"))
+                return
+            self.run(self.login_flow(server, (self.user.text().strip(), self.password.text()), False))
+        else:
+            self.run(self.login_flow(server, None, False))
+
+    def login_flow(self, server: str, cred, from_vault: bool):
+        tr, svc = self.tr, self.svc
+        if from_vault and not cred:
+            self.login_status.setText(tr("login.no_cred"))
+            return
+        user, pw = cred if cred else ("", "")
+        mode = "vault" if from_vault else "manual" if cred else "sso"
+        self.settings.set("login_mode", mode)
+        if mode == "manual":
+            self.settings.set("last_user", user)
+        self.settings.set("auto_partner", self.auto_partner.isChecked())
+        self.login_status.setText(tr("login.connecting", server=server))
+        hello = yield Job(svc.hello, tr("status.starting_host"))
+        if not (hello or {}).get("dhcp"):
+            raise UserError(tr("err.no_module"))
+        yield Job(lambda: svc.connect(server, user, pw), tr("status.connecting", server=server))
+        self.password.clear()
+        self.remember_server(server)
+        self.settings.set("last_server", server)
+        yield Job(svc.load_all, tr("status.loading_server", server=server))
+        svc.partner_mode = "Lazy"
+        if self.auto_partner.isChecked():
+            svc.partner_mode = "Auto"
+            yield from self.partner_login_flow()
+        self.login_status.setText("")
+        self._classes = None
+        self.scan = None
+        self.check_page.scan = None
+        self.refresh_pages()
+        self.stack.setCurrentIndex(1)
+        self.fixed_docks[0].setAsCurrentTab()
+
+    def partner_login_flow(self):
+        tr, svc = self.tr, self.svc
+        for pn in svc.partners():
+            user, pw = None, ""
+            while True:
+                try:
+                    yield Job(lambda: svc.connect_partner(pn, user, pw), tr("status.partner", partner=pn))
+                    break
+                except UserError as e:
+                    choice = dlg.partner_login_dialog(self.root, tr, pn, str(e))
+                    if choice == "retry":
+                        continue
+                    if choice == "other":
+                        c = dlg.credentials_dialog(self.root, tr, pn, svc.partner_user.get(pn, svc.user))
+                        if c:
+                            user, pw = c
+                            continue
+                        break
+                    if choice == "primary":
+                        svc.partner_mode = "Off"
+                        svc.log(tr("log.primary_only"), True)
+                        return
+                    break
+
+    def ad_flow(self):
+        tr = self.tr
+        items = yield Job(self.svc.dhcp_in_dc, tr("status.ad"))
+        if not items:
+            info(self.root, tr("login.from_ad"), tr("login.ad_none"))
+            return
+        cur = self.server.currentText()
+        names = sorted({i["name"] for i in items if i.get("name")}, key=str.lower)
+        self.server.clear()
+        self.server.addItems(names)
+        self.server.setEditText(cur or names[0])
+        self.server.showPopup()
+        self.svc.log(tr("log.ad_found", n=len(names)))
+
+    def logout_flow(self):
+        tr = self.tr
+        dirty = [w for w in self.tabs if isinstance(w, ScopeTab) and w.is_dirty()]
+        if dirty and not confirm(self.root, tr("main.logout"), tr("main.confirm_logout", list=short_list([w.sid for w in dirty])) ):
+            return
+        for w in list(self.tabs):
+            self.close_tab(w, force=True)
+        yield Job(self.svc.disconnect, tr("status.disconnecting"))
+        self.stack.setCurrentIndex(0)
+
+    def remember_server(self, server: str) -> None:
+        lst = [s for s in (self.settings.get("servers") or []) if s.lower() != server.lower()]
+        lst.insert(0, server)
+        self.settings.set("servers", lst[:MAX_SERVERS])
+        cur = self.server.currentText()
+        self.server.clear()
+        self.server.addItems(lst[:MAX_SERVERS])
+        self.server.setEditText(cur)
+
+    def known_servers(self) -> list[str]:
+        out = []
+        for s in list(self.settings.get("servers") or []) + self.svc.partners():
+            if s and s.lower() not in (x.lower() for x in out):
+                out.append(s)
+        return out
+
+    # --- Hauptbereich -------------------------------------------------------------------------------
+    def refresh_pages(self) -> None:
+        self.overview.set_data(self.svc, self.scan)
+        self.fo_page.refresh()
+        self.defs_page.refresh()
+        self.srv_opts.set_options(self._server_option_list())
+        self.update_conn_info()
+
+    def _server_option_list(self) -> list[dict]:
+        return list(self.svc.server_option_rows)
+
+    def update_conn_info(self) -> None:
+        tr, svc = self.tr, self.svc
+        parts = [f"<b>{html.escape(svc.server or '')}</b>", html.escape(svc.user or tr("ui.sso")),
+                 html.escape(tr("conn.protocol", proto=svc.protocol or "–"))]
+        warn_state = svc.partner_mode == "Off" or bool(svc.partner_fail) or bool(svc.netsh_fail)
+        for pn in svc.partners():
+            parts.append(html.escape(f"{tr('conn.partner')} {pn}: {svc.partner_state(pn)}"))
+        if svc.partner_mode == "Off":
+            parts.append(html.escape(tr("conn.primary_only")))
+        color = theme.current["warning"] if warn_state else theme.current["text"]
+        self.conn_info.setText(f"<span style='color:{color}'>" + " · ".join(parts) + "</span>")
+
+    def checker(self) -> ck.Checker:
+        return ck.Checker(self.tr, self.svc.defs, self.svc.server_options, self.svc.failovers)
+
+    def set_scan(self, scan: dict) -> None:
+        self.scan = scan
+        self.check_page.set_scan(scan)
+        self.overview.set_data(self.svc, scan)
+        self.fo_page.refresh()
+        self.update_conn_info()
+
+    def reload_all_flow(self):
+        yield Job(self.svc.load_all, self.tr("status.loading_server", server=self.svc.server))
+        self._classes = None
+        self.refresh_pages()
+
+    def refresh_overview_rows(self):
+        yield Job(self.svc.load_overview, self.tr("status.loading"))
+        self.overview.set_data(self.svc, self.scan)
+        self.fo_page.refresh()
+        self.update_conn_info()
+
+    def _ov_action(self, a: str) -> None:
+        g = self.overview.grid
+        ids = [r["id"] for r in g.selected_rows()]
+        if a == "Refresh":
+            self.run(self.reload_all_flow())
+        elif a == "New":
+            self.open_draft(None)
+        elif a == "Edit":
+            for sid in ids[:10]:
+                self.open_scope(sid)
+        elif a == "Duplicate" and ids:
+            self.open_draft(ids[0])
+        elif a in ("Activate", "Deactivate") and ids:
+            self.run(self.state_flow(ids, a == "Activate"))
+        elif a == "Remove" and ids:
+            self.run(self.remove_scopes_flow(ids))
+
+    def state_flow(self, ids: list[str], active: bool):
+        tr, svc = self.tr, self.svc
+        state = "Active" if active else "InActive"
+        ids = [i for i in ids if (svc.scope_info.get(i) or {}).get("scope", {}).get("state") != state]
+        if not ids:
+            return
+        if not confirm(self.root, tr("ov.activate" if active else "ov.deactivate"),
+                       tr("ov.confirm_state", state=tr("state." + state), list=short_list(ids))):
+            return
+        for sid in ids:
+            yield Job(lambda sid=sid: svc.scope_set(sid, State=state), tr("status.saving"))
+            svc.log(tr("log.scope_state", id=sid, state=tr("state." + state)))
+            tab = self.scope_tab(sid)
+            yield from self.after_change(sid, tab)
+            if tab is not None:
+                yield from tab.load_flow(leases=False)
+        yield from self.refresh_overview_rows()
+
+    def remove_scopes_flow(self, ids: list[str]):
+        tr, svc = self.tr, self.svc
+        fo = [i for i in ids if i in svc.scope_fo]
+        text = tr("ov.confirm_remove", list=short_list(ids))
+        if fo:
+            text += "\n\n" + tr("ov.confirm_remove_fo", list=short_list(fo))
+        word = tr("ov.delete_word")
+        if not dlg.confirm_typed(self.root, tr, tr("ov.remove"), text, word):
+            return
+        errs = []
+        for sid in ids:
+            rel = svc.scope_fo.get(sid)
+            try:
+                if rel:
+                    errs += (yield Job(lambda rel=rel, sid=sid: svc.remove_fo_scopes(rel, [sid]), tr("status.fo_remove", id=sid)))
+                    yield Job(svc.load_failovers, tr("status.loading"))
+                yield Job(lambda sid=sid: svc.scope_remove(sid), tr("status.removing", id=sid))
+                svc.log(tr("log.scope_removed", id=sid))
+                tab = self.scope_tab(sid)
+                if tab is not None:
+                    self.close_tab(tab, force=True)
+            except UserError as e:
+                errs.append(f"{sid}: {e}")
+        if errs:
+            warn(self.root, tr("ov.remove"), short_list(errs, 12))
+        yield Job(svc.load_failovers, tr("status.loading"))
+        yield from self.refresh_overview_rows()
+
+    # --- Tabs ----------------------------------------------------------------------------------------
+    def scope_tab(self, sid: str) -> ScopeTab | None:
+        return next((w for w in self.tabs if isinstance(w, ScopeTab) and w.sid == sid), None)
+
+    def _add_dock(self, w: QWidget, title: str) -> ads.CDockWidget:
+        self._dock_seq += 1
+        d = ads.CDockWidget(self.dm, title)
+        d.setObjectName(f"sk_tab_{self._dock_seq}")
+        d.setWidget(w)
+        d.setFeature(ads.CDockWidget.DockWidgetFeature.DockWidgetDeleteOnClose, True)
+        d.setFeature(ads.CDockWidget.DockWidgetFeature.CustomCloseHandling, True)
+        d.closeRequested.connect(lambda w=w: self.close_tab(w))
+        self.dm.addDockWidgetTabToArea(d, self.area)
+        self.tabs[w] = d
+        w.dock = d
+        d.setAsCurrentTab()
+        d.raise_()
+        return d
+
+    def open_scope(self, sid: str, show_findings: bool = False) -> None:
+        tab = self.scope_tab(sid)
+        if tab is None:
+            tab = ScopeTab(self, sid)
+            self._add_dock(tab, sid)
+            self.run(tab.load_flow(leases=True))
+        else:
+            self.tabs[tab].setAsCurrentTab()
+            self.tabs[tab].raise_()
+        if show_findings:
+            tab.select_page("Findings")
+
+    def open_draft(self, source: str | None) -> None:
+        d = DraftTab(self, source)
+        self._add_dock(d, self.tr("draft.tab_dup", id=source) if source else self.tr("draft.tab_new"))
+        self.run(d.init_flow())
+
+    def close_tab(self, w: QWidget, force: bool = False) -> None:
+        d = self.tabs.get(w)
+        if d is None:
+            return
+        if not force and not w.can_close():
+            return
+        self.tabs.pop(w, None)
+        try:
+            self.ctl_disconnect(w)
+        except Exception:  # noqa: BLE001
+            pass
+        d.closeDockWidget()
+
+    def ctl_disconnect(self, w: QWidget) -> None:
+        for name in ("_refresh_marks",):
+            fn = getattr(w, name, None)
+            if fn:
+                try:
+                    self.flt.changed.disconnect(fn)
+                except (RuntimeError, TypeError):
+                    pass
+
+    def _close_current(self) -> None:
+        for w, d in list(self.tabs.items()):
+            if d.isCurrentTab() and (d.isAncestorOf(QApplication.focusWidget()) if QApplication.focusWidget() else True):
+                self.close_tab(w)
+                return
+
+    def update_tab(self, w: QWidget, lvl: str | None) -> None:
+        d = self.tabs.get(w)
+        if d is None:
+            return
+        d.setIcon(level_icon(lvl) if lvl else level_icon(None))
+        if isinstance(w, ScopeTab):
+            title = w.sid + (" *" if w.is_dirty() else "") + (" ⟳" if w.unreplicated else "")
+            d.setWindowTitle(title)
+
+    # --- Gemeinsame Abläufe --------------------------------------------------------------------------
+    def after_change(self, sid: str, tab=None):
+        """Nach einer Änderung: bei Failover sofort replizieren (Auto-Replikation) oder als offen markieren."""
+        tr, svc = self.tr, self.svc
+        rel = svc.scope_fo.get(sid)
+        if not rel:
+            return
+        if self.auto_repl.isChecked() and svc.partner_mode != "Off":
+            try:
+                yield Job(lambda: svc.replicate([sid]), tr("status.replicating", id=sid, partner=rel["partner"]))
+                if tab is not None:
+                    tab.set_unreplicated(False)
+            except UserError as e:
+                if tab is not None:
+                    tab.set_unreplicated(True)
+                warn(self.root, tr("scope.replicate"), str(e))
+            self.update_conn_info()
+        else:
+            svc.log(tr("log.repl_pending", id=sid, partner=rel["partner"]))
+            if tab is not None:
+                tab.set_unreplicated(True)
+
+    def _mark_replicated(self, ok: list[str], failed: list[str]) -> None:
+        for sid in ok:
+            t = self.scope_tab(sid)
+            if t is not None:
+                t.set_unreplicated(False)
+        for sid in failed:
+            t = self.scope_tab(sid)
+            if t is not None:
+                t.set_unreplicated(True)
+
+    def replicate_ids_flow(self, ids: list[str]):
+        tr, svc = self.tr, self.svc
+        if not confirm(self.root, tr("fo.replicate"), tr("fo.confirm_replicate_ids", list=short_list(ids))):
+            return
+        try:
+            ok = yield Job(lambda: svc.replicate(ids), tr("status.replicating_n", n=len(ids)))
+            self._mark_replicated(ok, [])
+            self.notify(tr("log.repl_ok_n", n=len(ok)))
+        except ReplicationError as e:
+            self._mark_replicated(e.ok, [i for i in ids if i not in e.ok])
+            warn(self.root, tr("fo.replicate"), str(e))
+        self.update_conn_info()
+
+    def replicate_rel_flow(self, rel: dict):
+        tr, svc = self.tr, self.svc
+        if not confirm(self.root, tr("fo.replicate"), tr("fo.confirm_replicate", name=rel["name"], partner=rel["partner"],
+                                                         n=len(rel["scopes"]))):
+            return
+        try:
+            ok = yield Job(lambda: svc.replicate_relationship(rel["name"]), tr("status.replicating_rel", name=rel["name"]))
+            self._mark_replicated(ok, [])
+            self.notify(tr("log.repl_ok_n", n=len(ok)))
+        except ReplicationError as e:
+            self._mark_replicated(e.ok, [i for i in rel["scopes"] if i not in e.ok])
+            warn(self.root, tr("fo.replicate"), str(e))
+        self.update_conn_info()
+
+    def load_classes(self):
+        if self._classes is None:
+            try:
+                cls = yield Job(self.svc.classes, self.tr("status.loading"))
+            except UserError:
+                cls = []
+            vendors = sorted(c["name"] for c in cls if c["type"].lower() == "vendor")
+            users = sorted(c["name"] for c in cls if c["type"].lower() == "user")
+            self._classes = (vendors, users)
+        return self._classes
+
+    def new_definition_flow(self, preset: dict):
+        tr, svc = self.tr, self.svc
+        vendors, _users = yield from self.load_classes()
+        with_partner = bool(svc.partners()) and svc.partner_mode != "Off"
+        d = dlg.definition_dialog(self.root, tr, None, vendors, with_partner, preset or None)
+        if not d:
+            return False
+        if svc.opt_def(d["id"], d["vendor"]):
+            warn(self.root, tr("def.new"), tr("def.err_exists", tag=f"{d['id']:03d}"))
+            return False
+        yield Job(lambda: svc.def_add(d), tr("status.saving"))
+        svc.log(tr("log.def_created", tag=f"{d['id']:03d}", name=d["name"]))
+        yield Job(svc.load_defs, tr("status.loading"))
+        if d.get("partner"):
+            errs = []
+
+            def work():
+                for pn in svc.partners():
+                    try:
+                        svc.copy_def_to_partner(d, pn)
+                    except UserError as e:
+                        errs.append(tr("err.def_partner", tag=f"{d['id']:03d}", partner=pn, error=str(e)))
+            yield Job(work, tr("status.to_partner"))
+            if errs:
+                warn(self.root, tr("def.new"), short_list(errs, 8))
+        self.defs_page.refresh()
+        return True
+
+    # --- Zwischenablage ------------------------------------------------------------------------------
+    def clip_set(self, kind: str, items: list[dict], sid: str, mask: str, text: str) -> None:
+        payload = {"App": "OmniWrench.ScopeKeeper", "Kind": kind, "Server": self.svc.server, "SourceScopeId": sid,
+                   "SourceMask": mask, "Items": items}
+        md = QMimeData()
+        md.setData(MIME, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
+        md.setText(text)
+        QApplication.clipboard().setMimeData(md)
+        self._progress(self.tr("clip.copied", n=len(items), kind=self.tr("clip.kind." + kind)), 0, 0)
+
+    def clip_get(self) -> dict | None:
+        md = QApplication.clipboard().mimeData()
+        if md is None or not md.hasFormat(MIME):
+            return None
+        try:
+            data = json.loads(bytes(md.data(MIME)).decode("utf-8"))
+        except (ValueError, UnicodeDecodeError):
+            return None
+        return data if isinstance(data, dict) and data.get("App") == "OmniWrench.ScopeKeeper" else None
+
+    # --- Lebenszyklus ------------------------------------------------------------------------------
+    def on_settings_changed(self, changed_keys: set[str]) -> None:
+        if "credential" in changed_keys:
+            self.cred_field.set_value(self.settings.get("credential"))
+        if "auto_replicate" in changed_keys:
+            self.auto_repl.setChecked(bool(self.settings.get("auto_replicate", True)))
+        if "auto_partner" in changed_keys:
+            self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
+
+    def can_close(self) -> bool:
+        dirty = [w for w in getattr(self, "tabs", {}) if isinstance(w, ScopeTab) and w.is_dirty()]
+        if dirty:
+            return confirm(self.root, self.tr("ui.close"), self.tr("main.confirm_logout", list=short_list([w.sid for w in dirty])))
+        return True
+
+    def shutdown(self) -> None:
+        runner = getattr(self, "runner", None)
+        if runner is not None:
+            runner.abort()
+        backend = getattr(self, "backend", None)
+        if backend is not None and hasattr(backend, "close"):
+            backend.close()

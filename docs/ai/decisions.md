@@ -122,3 +122,12 @@
 - Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
   file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.
+
+## ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
+- Stef wanted the full concept rebuilt as OmniWrench tool, not a copy. Name ScopeKeeper, id net.scopekeeper, category
+  network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it.
+- Requirement RSAT DHCP tools (windows_capabilities Rsat.DHCP.Tools); uninstall keeps RSAT.
+- Defaults: connect failover partners at login = on, auto replication = on (both switchable in settings/main page).
+- Partner fallback chain kept from the script: CIM/WinRM -> RPC (failover API + netsh dump/commands).
+- Server options are never replicated automatically; deleting scopes needs the typed word (ov.delete_word).
+- Passwords only via stdin to the PowerShell host, never on a command line or in logs.

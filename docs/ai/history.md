@@ -228,3 +228,15 @@ Stef hat 1.0.0 getestet und eine Liste Verbesserungen gewünscht (net.netprobe 1
 - OFFEN (eigener Folge-Schritt): Leitungstest/Remote-Agent (echte Latenz, Durchsatz, Lasttest, Portscan durch die
   Strecke) via Mini-Tool/Script auf der Gegenstelle oder NetProbe↔NetProbe; Export-Button im Optionsfenster mit
   Ausrufezeichen-Hinweis bei Profilen, die das Mini-Tool brauchen. Außerdem weitere MX-Toolbox-Funktionen (Blacklists).
+
+## 2026-10-19 — ScopeKeeper: DHCP-Verwaltung neu gebaut (thread "DHCP Management Tool")
+Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept neu als OmniWrench-Tool, keine Kopie.
+- Neues Tool net.scopekeeper 1.0.0 (Alpha): Anmeldung (SSO/Tresor/manuell, Server-MRU, „Aus AD laden“), Übersicht,
+  Scope-Tabs mit Live-Befunden + Korrekturen, Entwurf/Duplikat mit Netzumrechnung, Server-Optionen, Failover-Seite
+  (anlegen/ändern/Scopes/Vergleich/Rohdaten/löschen), Definitionen, serverweite Prüfung, Zwischenablage, Replikation
+  auf den Partner (netsh, auch ohne WinRM), Protokoll. 947 Texte de/en.
+- Mit Fake-Backend durchgespielt (Login, Replikation, Vergleich, Speichern, Entwurf anlegen inkl. Failover, Status,
+  Löschen); dabei behoben: Endlosschleife in der Optionstabelle des Entwurfs, Signal-Argumentfehler LeaseEdit,
+  tr(key=) Konflikt beim Vergleich, Knopfzeilen umbrachen senkrecht, „&“ im Tab-Titel, leere Fehlerliste beim
+  Übertragen. Screenshots in /mnt/project-files/scopekeeper/.
+- Checks grün: compileall, pyflakes, check_locales, check_store (nur scopekeeper-zip + Index-Eintrag), smoke_test.

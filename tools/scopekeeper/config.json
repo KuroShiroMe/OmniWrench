@@ -1,0 +1,34 @@
+{
+  "settings": [
+    {
+      "key": "last_server",
+      "type": "string",
+      "label": "Last server",
+      "default": "",
+      "group": "Connection"
+    },
+    {
+      "key": "auto_partner",
+      "type": "bool",
+      "label": "Connect failover partners at login",
+      "default": true,
+      "group": "Connection",
+      "description": "Checks access to all failover partners right after login. Otherwise the partner is contacted only when needed."
+    },
+    {
+      "key": "auto_replicate",
+      "type": "bool",
+      "label": "Replicate changes automatically",
+      "default": true,
+      "group": "Connection",
+      "description": "After every change on a failover scope the scope is synchronised to the partner."
+    },
+    {
+      "key": "credential",
+      "type": "credential",
+      "label": "Stored credentials",
+      "description": "Used when \"Stored credentials\" is selected at login. Stored encrypted in the vault.",
+      "group": "Login"
+    }
+  ]
+}
