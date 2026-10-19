@@ -128,3 +128,11 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   when a port returned usable HTTP/TLS). `&` in tab titles doubled so it is not read as a mnemonic.
 - requirements.python ["dnspython>=2.6"] (pip-installed on install, like OmniVault/pykeepass). OUI vendor DB cached in
   <tool_data>/net.netprobe (localnet.VendorDB, optional download).
+- v1.1: persistent target list in tool.py keyed by address (res_for_addr/item_for_addr/dock_for_addr); networks are an
+  expandable parent (group_items, "x/y hosts" via list.hosts); re-testing a target reuses its entry and re-points the
+  open dock; several Engine instances can run at once (self.engines). Stale updates guarded by `res_for_addr[addr] is res`.
+  Test profiles (engine.template_options: overview/standard/deep/custom) via a dropdown next to Start. Ping has warm-up
+  pings (ping_warmup, discarded) + a generous default timeout (2 s) so slow replies aren't miscounted as loss.
+  Tabs: "profile" (Steckbrief: identity + findings strip + open-ports line) and "connectivity" (ping/MTU/route summary)
+  replace the old "general" tab. PDF export via pdfreport.py (QPdfWriter + QTextDocument from HTML, no extra dependency).
+  TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.

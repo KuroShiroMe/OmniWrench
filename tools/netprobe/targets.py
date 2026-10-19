@@ -20,6 +20,7 @@ class Target:
     address: str            # IP-Adresse oder (noch nicht aufgelöster) Name
     name: str = ""          # eingegebener DNS-Name
     from_network: bool = False
+    group: str = ""         # ursprüngliche Netz-/Bereichsangabe (z. B. "192.168.1.0/24"), sonst leer
 
     @property
     def label(self) -> str:
@@ -57,8 +58,9 @@ def parse(text: str, limit: int) -> list[Target]:
             if net.num_addresses > limit + 2:
                 raise TargetError(f"limit:{limit}")
             single = net.num_addresses == 1
+            group = "" if single else item
             for ip in _hosts(net):
-                add(Target(str(ip), from_network=not single))
+                add(Target(str(ip), from_network=not single, group=group))
         elif (m := IPV4_RANGE.match(item)):
             first, last = m.group(1), m.group(2)
             try:
@@ -70,7 +72,7 @@ def parse(text: str, limit: int) -> list[Target]:
             if end < start or int(end) - int(start) >= limit:
                 raise TargetError(f"limit:{limit}")
             for n in range(int(start), int(end) + 1):
-                add(Target(str(ipaddress.ip_address(n)), from_network=True))
+                add(Target(str(ipaddress.ip_address(n)), from_network=True, group=item))
         else:
             try:
                 add(Target(str(ipaddress.ip_address(item.strip("[]")))))

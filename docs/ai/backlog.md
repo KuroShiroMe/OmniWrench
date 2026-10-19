@@ -3,11 +3,16 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] NetProbe (net.netprobe 1.0.0): first networking tool, works on Linux renders + engine tests. Verify on Windows:
-      IcmpSendEcho ping (no admin), traceroute, port scan against a real LAN, TLS cert chain via Windows store
-      (truststore), DNS checks against real DNS (sandbox proxy only answers A/AAAA, so NS/TXT/MX/SOA untested here),
-      nested QtAds docking inside a tool dock (several result tabs side by side), tool install incl. pip dnspython.
-      Ideas for later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, save/export report, scheduled re-scan.
+- [ ] NetProbe (net.netprobe 1.1.0): Verify on Windows: IcmpSendEcho ping incl. new warm-up + 2 s timeout (Stef saw
+      loss that CMD didn't – likely the old 1 s timeout), persistent list + expandable network groups (x/y hosts),
+      re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität
+      tabs, DNS best-practice findings (CAA/MTA-STS/TLS-RPT), PDF export (QPdfWriter). DNS checks need real DNS
+      (sandbox proxy only answers A/AAAA). Ideas later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, scheduled re-scan.
+- [ ] NetProbe Leitungstest/Remote-Agent (eigener Folge-PR, von Stef gewünscht 2026-10-19): echte Latenz, Durchsatz,
+      Lasttest, Portscan durch die Strecke – via kleines plattformübergreifendes Mini-Tool/Script auf der Gegenstelle
+      ODER NetProbe↔NetProbe (IP der Gegenseite eingeben). Export-Button dafür ins Optionsfenster; bei Profilen, die das
+      Mini-Tool brauchen, ein Ausrufezeichen als Hinweis. So klein wie möglich, Linux+Windows. Plus weitere
+      MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay-Test).
 - [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
       0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.

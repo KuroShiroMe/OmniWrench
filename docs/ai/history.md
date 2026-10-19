@@ -209,3 +209,22 @@
 - requirements.python dnspython>=2.6 (pip on install). category network/diagnostics, icon radar, min_app_version 0.6.0.
 - Checks green: compileall, check_locales (app 23 + tool de/en 339 keys), check_store, smoke_test. Store: netprobe
   1.0.0 zip + index entry (other tools' zips restored, only net.netprobe entry merged – Linux-zip-hash gotcha).
+
+## 2026-10-19 — NetProbe v2: Feedback-Runde (thread "Netzwerker-Tools: ultimatives Test-Tool")
+Stef hat 1.0.0 getestet und eine Liste Verbesserungen gewünscht (net.netprobe 1.1.0):
+- Zielliste bleibt dauerhaft: neue Tests werden angehängt statt die Liste zu löschen. Netze/Bereiche erscheinen als
+  aufklappbare Gruppe mit Fortschritt „x/y Hosts“. Ein erneuter Test eines schon vorhandenen Ziels aktualisiert den
+  Eintrag in place (res_for_addr/item_for_addr nach Adresse, mehrere Engines parallel möglich).
+- Kontextmenü + Buttons: Wiederholen, Löschen, Export (PDF), Alle löschen. targets.parse taggt jetzt die Herkunft
+  (Target.group = ursprüngliche Netz-/Bereichsangabe) fürs Gruppieren.
+- Ping-Fix (Stef sah Paketverlust, CMD nicht): Default-Timeout 1000→2000 ms (ping.exe wartet 4 s – langsame Antworten
+  wurden fälschlich als Verlust gezählt) + Aufwärm-Pings (ping_warmup=2, nicht gezählt, gegen ARP/Routing-Erstverlust).
+  Timeout/Intervall/Warmup/DNS-Timeout jetzt im Optionsdialog einstellbar.
+- Testprofile als Dropdown neben „Starten“: overview/standard/deep/custom (engine.template_options).
+- Tabs umgebaut: erster Tab „Steckbrief“ (Identität + Befunde-Ampel oben + offene-Ports-Zeile), Verbindungs-/Qualität
+  jetzt eigener Tab „Konnektivität“ (Ping, MTU, Routen-Kurzüberblick). Wichtiges oben, scrollbar.
+- Mehr DNS-Best-Practice-Befunde: CAA fehlt, MTA-STS, TLS-RPT (Daten kamen schon aus dnscheck).
+- PDF-Export je Ziel/Auswahl über QPdfWriter+QTextDocument (keine Zusatzbibliothek), tools/netprobe/pdfreport.py.
+- OFFEN (eigener Folge-Schritt): Leitungstest/Remote-Agent (echte Latenz, Durchsatz, Lasttest, Portscan durch die
+  Strecke) via Mini-Tool/Script auf der Gegenstelle oder NetProbe↔NetProbe; Export-Button im Optionsfenster mit
+  Ausrufezeichen-Hinweis bei Profilen, die das Mini-Tool brauchen. Außerdem weitere MX-Toolbox-Funktionen (Blacklists).

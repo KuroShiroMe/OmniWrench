@@ -110,13 +110,29 @@ class Renderer:
             row.addWidget(tag)
         return card
 
-    # ------------------------------------------------------------ Allgemein
-    def general_widget(self, result) -> QWidget:
+    # ------------------------------------------------------------ Steckbrief (Profil)
+    def profile_widget(self, result) -> QWidget:
         tr = self.tr
         inner = QWidget()
         lay = QVBoxLayout(inner)
         lay.setContentsMargins(12, 12, 12, 12)
         raw = result.raw
+
+        # Kopfzeile: ein kurzer Steckbrief-Titel + Befunde-Ampel ganz oben (Wichtiges zuerst).
+        headline = result.target.label
+        sub = []
+        rev = raw.get("reverse", {})
+        nb = raw.get("netbios", {})
+        hostname = (rev.get("ptr") or [None])[0] or nb.get("computer")
+        if hostname and hostname != headline:
+            sub.append(hostname)
+        if result.ip and result.ip != headline:
+            sub.append(result.ip)
+        head = QLabel(f"<span style='font-size:15px;font-weight:700'>{headline}</span>"
+                      + (f"  <span style='color:#9ca3af'>{'  ·  '.join(sub)}</span>" if sub else ""))
+        head.setTextFormat(Qt.TextFormat.RichText)
+        lay.addWidget(head)
+        lay.addWidget(self._findings_strip(result))
 
         addr = raw.get("address", {})
         rows = [(tr("g.input"), result.target.label)]
@@ -126,9 +142,13 @@ class Renderer:
         rows.append((tr("g.ip"), result.ip or "–"))
         if addr:
             rows.append((tr("g.ip_class"), tr("class." + addr.get("class", "public"))))
-        rev = raw.get("reverse", {})
         if rev.get("ptr"):
             rows.append((tr("g.ptr"), ", ".join(rev["ptr"])))
+        if nb.get("answer"):
+            if nb.get("computer"):
+                rows.append((tr("g.netbios_name"), nb["computer"]))
+            if nb.get("domain"):
+                rows.append((tr("g.netbios_domain"), nb["domain"]))
         asn = raw.get("asn", {})
         if asn.get("asn"):
             rows.append((tr("g.asn"), f"AS{asn['asn']} {asn.get('owner', '')}".strip()))
@@ -141,19 +161,45 @@ class Renderer:
             vendor = mac.get("vendor", "")
             vendor = tr("g.mac_random") if vendor == "local" else vendor
             rows.append((tr("g.mac"), f"{mac['mac']}  {vendor}".strip()))
-        nb = raw.get("netbios", {})
-        if nb.get("answer"):
-            if nb.get("computer"):
-                rows.append((tr("g.netbios_name"), nb["computer"]))
-            if nb.get("domain"):
-                rows.append((tr("g.netbios_domain"), nb["domain"]))
         box = _section(tr("g.identity"))
         box.layout().addWidget(_form(rows))
         lay.addWidget(box)
 
+        # Kurzzusammenfassung: offene Ports als eine Zeile (Details im Ports-Tab).
+        openp = raw.get("tcp", {}).get("open", {})
+        if openp:
+            ports_line = ", ".join(f"{p}" for p in sorted(openp)[:20]) + ("…" if len(openp) > 20 else "")
+            sbox = _section(tr("profile.summary"))
+            sbox.layout().addWidget(_form([(tr("profile.open_ports"), f"{len(openp)}  ({ports_line})")]))
+            lay.addWidget(sbox)
+        lay.addStretch(1)
+        return _scroll(inner)
+
+    def _findings_strip(self, result) -> QWidget:
+        counts = {lvl: sum(1 for f in result.findings if f.level == lvl) for lvl in (fx.ERROR, fx.WARN, fx.INFO, fx.OK)}
+        strip = QWidget()
+        row = QHBoxLayout(strip)
+        row.setContentsMargins(0, 2, 0, 2)
+        for lvl in (fx.ERROR, fx.WARN, fx.INFO, fx.OK):
+            chip = QLabel(f"  {counts[lvl]} {self.tr('level.' + lvl)}  ")
+            chip.setStyleSheet(f"background:{LEVEL_COLOR[lvl]}22;color:{LEVEL_COLOR[lvl]};"
+                               f"border:1px solid {LEVEL_COLOR[lvl]}55;border-radius:10px;padding:2px 4px;")
+            row.addWidget(chip)
+        row.addStretch(1)
+        return strip
+
+    # ------------------------------------------------------------ Konnektivität
+    def connectivity_widget(self, result) -> QWidget:
+        tr = self.tr
+        inner = QWidget()
+        lay = QVBoxLayout(inner)
+        lay.setContentsMargins(12, 12, 12, 12)
+        raw = result.raw
         ping = raw.get("ping", {})
         if ping and not ping.get("unavailable"):
             lay.addWidget(self._ping_box(ping))
+        elif ping.get("unavailable"):
+            lay.addWidget(QLabel(tr("conn.ping_unavailable")))
         mtu = raw.get("mtu", {})
         if mtu.get("mtu"):
             mrows = [(tr("g.mtu"), str(mtu["mtu"])), (tr("g.mtu_payload"), str(mtu.get("payload", "")))]
@@ -162,8 +208,20 @@ class Renderer:
             mbox = _section(tr("g.mtu_title"))
             mbox.layout().addWidget(_form(mrows))
             lay.addWidget(mbox)
+        # Kurzer Routenüberblick (Details im Route-Tab).
+        route = raw.get("traceroute", {})
+        if route.get("hops"):
+            final = route["hops"][-1]
+            rtts = final.get("rtts") or []
+            rbox = _section(tr("conn.route_title"))
+            rrows = [(tr("conn.route_hops"), str(len(route["hops"]))),
+                     (tr("conn.route_reached"), tr("g.yes") if route.get("reached") else tr("g.no"))]
+            if rtts:
+                rrows.append((tr("conn.route_final_rtt"), f"{sum(rtts) / len(rtts):.1f} ms"))
+            rbox.layout().addWidget(_form(rrows))
+            lay.addWidget(rbox)
         for key, value in result.errors.items():
-            if key in ("ping", "reverse", "mac", "netbios", "asn", "engine", "resolve", "mtu"):
+            if key in ("ping", "mtu"):
                 lay.addWidget(_mono(f"⚠ {key}: {value}"))
         lay.addStretch(1)
         return _scroll(inner)
@@ -185,6 +243,9 @@ class Renderer:
             if ping.get("ttl"):
                 rows.append((tr("g.ping_ttl"), f"{ping['ttl']} ({tr('g.hops')}: {ping.get('hops', '?')}, "
                                                f"{tr('os.' + ping.get('os_guess', 'unix'))})"))
+        if ping.get("timeout_ms"):
+            rows.append((tr("g.ping_params"),
+                         tr("g.ping_params_val", timeout=ping["timeout_ms"], warmup=ping.get("warmup", 0))))
         box.layout().addWidget(_form(rows))
         if ping.get("received"):
             box.layout().addWidget(self._sparkline(ping.get("rtts", [])))
@@ -474,8 +535,11 @@ class Renderer:
     def category_order(self, result) -> list[str]:
         raw = result.raw
         present = []
-        if any(k in raw for k in ("address", "ping", "reverse", "mac", "netbios", "asn", "mtu")) or result.ip:
-            present.append("general")
+        if any(k in raw for k in ("address", "resolve", "reverse", "mac", "netbios", "asn")) or result.ip:
+            present.append("profile")
+        ping = raw.get("ping", {})
+        if (ping and not ping.get("unavailable")) or raw.get("mtu", {}).get("mtu") or raw.get("traceroute", {}).get("hops"):
+            present.append("connectivity")
         if raw.get("traceroute", {}).get("hops"):
             present.append("route")
         if raw.get("tcp", {}).get("open") or "tcp" in result.errors:
@@ -495,7 +559,8 @@ class Renderer:
 
     def widget_for(self, category: str, result) -> QWidget:
         return {
-            "general": self.general_widget, "route": self.route_widget, "ports": self.ports_widget,
+            "profile": self.profile_widget, "connectivity": self.connectivity_widget,
+            "route": self.route_widget, "ports": self.ports_widget,
             "web": self.web_widget, "services": self.services_widget, "dns": self.dns_widget,
             "findings": self.findings_widget,
         }[category](result)
