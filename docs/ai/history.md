@@ -255,3 +255,16 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
   Latenz, Durchsatz, Lasttest 3 Verb., Portscan 32 Ports, Befund link_ok), standalone-CLI serve+probe, PDF, check_store.
 - OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
   0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
+
+## 2026-10-20 Kategorien nur noch eine Ebene + Tags (Stef)
+- Stef: "Kategorien nur noch auf die Hauptkategorien reduzieren, alle Tools kriegen sinnvolle Tags". Weicht von der
+  2-Ebenen-Entscheidung vom 2026-10-17 ab -> decisions.md angepasst.
+- core/categories.py: AREAS nur noch IDs, SUBCATEGORIES/category.sub.* entfernt (43 Schlüssel x 23 Sprachen),
+  category_id() statt category_ids(); "bereich/unterkategorie" und Freitext-Pfade werden auf den Bereich reduziert
+  (Rückwärtskompatibel, z. B. ScopeKeeper PR #43). manifest: Feld `subcategory` entfernt (unbekannte Felder werden ignoriert).
+- Tags sichtbar: Details auf Home (Zeile "Tags") und Store-Karte ("Tags: …"), Klick sucht danach (widgets.tag_links).
+  Neue Schlüssel details.tags, store.tags in allen 23 App-Sprachen.
+- Alle 5 Tools: category = Bereich, neu kuratierte Tags (sprachneutral/Englisch), tool.category in Tool-Sprachdateien
+  nur noch Bereich, Patch-Version +1, Store neu gebaut (alte ZIPs entfernt).
+- TOOL_ENTWICKLUNG.md: Kategorien-Abschnitt auf eine Ebene, neuer Abschnitt "Tags".
+- Geprüft: check_locales, check_store, smoke_test (Linux offscreen), Render Home-Details/Suche/Store.

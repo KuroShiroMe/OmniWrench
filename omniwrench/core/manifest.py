@@ -66,9 +66,8 @@ class ToolManifest:
     description: str = ""
     long_description: str = ""
     author: str = ""
-    category: str = ""                   # "<bereich>/<unterkategorie>" als IDs, z. B. "network/ip_dns_dhcp" (core/categories.py)
+    category: str = ""                   # Bereich als ID, z. B. "network" (core/categories.py)
     category_area: str = ""              # Anzeigename eines eigenen, der App unbekannten Bereichs (übersetzbar)
-    subcategory: str = ""                # Anzeigename einer eigenen Unterkategorie (übersetzbar)
     icon: str = ""                       # Bilddatei im Tool-Ordner ODER Name aus der Bibliothek (siehe core/icons.py)
     icon_text: str = ""                  # eigenes Kürzel für das generierte Symbol (max. 4 Zeichen)
     icon_data: str = ""                  # nur im Store: eingebettete Bilddatei (Base64), von build_store.py erzeugt
@@ -76,7 +75,7 @@ class ToolManifest:
     entry: str = "tool:Tool"             # "<modul>:<Klasse>"
     min_app_version: str = "0.0.0"
     platforms: list[str] = field(default_factory=lambda: ["windows"])
-    tags: list[str] = field(default_factory=list)
+    tags: list[str] = field(default_factory=list)  # Schlagwörter (Technologie, Aufgabe), sichtbar und durchsuchbar
     homepage: str = ""
     single_instance: bool = False        # nur ein Tab gleichzeitig erlaubt
     # Einstiegspunkte, die das Hauptprogramm unabhängig von geöffneten Tabs aufruft:
@@ -115,7 +114,7 @@ class ToolManifest:
 
     @property
     def category_path(self) -> list[str]:
-        """Kategoriepfad (Bereich, ggf. Unterkategorie) in der Sprache des Hauptprogramms."""
+        """Kategoriepfad (nur der Bereich) in der Sprache des Hauptprogramms."""
         return categories.category_path(self)
 
     @classmethod
@@ -143,7 +142,7 @@ class ToolManifest:
         return manifest
 
 
-TRANSLATABLE_FIELDS = ("name", "description", "long_description", "category", "category_area", "subcategory")
+TRANSLATABLE_FIELDS = ("name", "description", "long_description", "category", "category_area")
 
 
 def read_tool_translations(tool_dir: Path) -> dict[str, dict[str, str]]:

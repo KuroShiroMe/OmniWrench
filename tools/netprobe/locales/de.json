@@ -6,7 +6,7 @@
   "tool.name": "NetProbe",
   "tool.description": "Umfassendes Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS, Leitungstest zu einer Gegenstelle und eine Befundliste je Ziel.",
   "tool.long_description": "Eingabe einer IP-Adresse, eines DNS-Namens, eines Netzes (CIDR) oder Bereichs samt Auswahl eines Testprofils. Einzeladressen landen direkt in der Liste, Netze werden abgescannt. Für jedes Ziel führt NetProbe zahlreiche Tests aus, die sich nach Kategorie ein- und ausschalten lassen: Ping mit Laufzeit, Jitter und TTL, parallel ausgeführtes Traceroute mit Analyse jedes Sprungpunkts, TCP-Portscan mit einer Bibliothek von über 130 Diensten samt typischen Einsatzszenarien, HTTP- und TLS-Prüfung, SMB/RDP/NTP sowie eine vollständige DNS-Diagnose für Namen (Einträge, Nameserver, SPF/DKIM/DMARC, DNSSEC). Der Leitungstest misst die echte Qualität der Verbindung zu einer Gegenstelle (wahre Latenz, Durchsatz in beide Richtungen, ein Lasttest und ein Pfad-Portscan) – gegen ein zweites NetProbe oder ein winziges exportiertes Mini-Tool. Jedes Ziel öffnet einen eigenen, frei anordenbaren Tab mit Ergebnissen je Kategorie und einem Tab „Befunde“ mit Fehlern, Warnungen und Best-Practice-Hinweisen. Keine Administratorrechte nötig.",
-  "tool.category": "Netzwerk & Konnektivität/Diagnose",
+  "tool.category": "Netzwerk & Konnektivität",
   "settings.last_target.label": "Letztes Ziel",
   "settings.oui_download.label": "Herstellerliste laden (MAC-Suche)",
   "settings.oui_download.description": "Lädt die IEEE-OUI-Liste einmalig, um zu MAC-Adressen den Gerätehersteller anzuzeigen.",

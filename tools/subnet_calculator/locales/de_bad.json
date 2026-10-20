@@ -4,7 +4,7 @@
   "tool.name": "Netzle-Rechner",
   "tool.description": "IPv4/IPv6-Netzle usrechne un in kleineri Stückle verteile.",
   "tool.long_description": "Rechnet Netzadress, Broadcast, Netzmask, Wildcard, Hostbereich un wie viel Hosts nei bassed. Verteilt Netze in gliich großi Stückle un schreibt d Lischt als CSV raus.",
-  "tool.category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP",
+  "tool.category": "Netzwerk & Konnektivität",
 
   "settings.default_network.label": "Netzle biim Start",
   "settings.max_subnets.label": "Maximal so viel Stückle aazeige",

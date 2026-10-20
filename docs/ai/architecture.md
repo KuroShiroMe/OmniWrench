@@ -15,8 +15,8 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
   system.py                   is_windows_server() (registry InstallationType, cached)
   elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
-  categories.py               AREAS {area: (subs)}, LEGACY_AREAS, category_path(manifest) -> [area, sub] localized
-  manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
+  categories.py               AREAS (ids, one level), LEGACY_AREAS, category_id(), category_path(manifest) -> [area] localized
+  manifest.py                 ToolManifest (id,name,version,category,tags,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path
   tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners
   tool_manager.py             ToolManager(QObject): refresh, create_instance, install_zip/dir (backup+rollback),
@@ -39,7 +39,7 @@ omniwrench/ui/
   main_window.py              QtAds dock manager; home/store docks; open_tool/close_tool/reload_tool_tabs;
                               tool menu; install/uninstall/check/repair; updates; lock; layout save/restore
   home_page.py                ToolTile (FitLabel), DetailsPanel, HomePage (filter, select_tool)
-  store_page.py               StoreCard, StorePage (category tree, filters)
+  store_page.py               StoreCard (clickable tags -> search), StorePage (category tree, filters)
   sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
   settings_dialogs.py         _Field/build_settings_form (schema -> widgets, translated via tool locale),
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
