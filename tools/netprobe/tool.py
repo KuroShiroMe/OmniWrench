@@ -22,7 +22,10 @@ from omniwrench.ui.widgets import library_icon, make_button
 
 from . import findings as fx
 from . import pdfreport
-from .engine import DONE, ERROR, NO_ANSWER, RUNNING, STOPPED, TEMPLATE_IDS, Engine, TargetResult, template_options
+from .engine import (
+    DONE, ERROR, NO_ANSWER, RUNNING, STOPPED, TEMPLATE_IDS, TEMPLATES_NEED_AGENT,
+    Engine, TargetResult, template_options,
+)
 from .localnet import VendorDB
 from .options_dialog import OptionsDialog
 from .portinfo import library_ports
@@ -40,6 +43,81 @@ class _Bridge(QObject):
     finished = Signal(object)
 
 
+def _local_ips() -> list[str]:
+    """Beste Schätzung der eigenen LAN-Adresse(n), damit der Nutzer weiß, was auf der Gegenstelle einzutragen ist."""
+    import socket
+    ips: list[str] = []
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("10.255.255.255", 1))          # kein echter Verkehr, nur Routenwahl
+        ips.append(s.getsockname()[0])
+        s.close()
+    except OSError:
+        pass
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip not in ips and not ip.startswith("127."):
+                ips.append(ip)
+    except OSError:
+        pass
+    return ips
+
+
+class _LinkControl:
+    """Brücke zwischen Optionsdialog und Tool für Mini-Tool-Export und eingebauten Gegenstellen-Server."""
+
+    def __init__(self, tool: "NetProbe"):
+        self.tool = tool
+        self.tr = tool.context.tr
+
+    def export(self, opts: dict, parent) -> None:
+        from pathlib import Path
+        src = Path(__file__).with_name("linkagent.py")
+        default = str(Path.home() / "linkagent.py")
+        path, _ = QFileDialog.getSaveFileName(parent, self.tr("link.export_tool"), default, "Python (*.py)")
+        if not path:
+            return
+        try:
+            Path(path).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        except OSError as exc:
+            QMessageBox.warning(parent, self.tr("link.export_tool"), str(exc))
+            return
+        port = opts.get("link_port", 47600)
+        token = (opts.get("link_token") or "").strip() or "<TOKEN>"
+        cmd = f"python {Path(path).name} serve --port {port} --token {token}"
+        QMessageBox.information(parent, self.tr("link.export_tool"),
+                                self.tr("link.export_done", path=path, cmd=cmd))
+
+    def serve_running(self) -> bool:
+        return bool(self.tool._link_server and self.tool._link_server.running)
+
+    def serve_info(self) -> str:
+        srv = self.tool._link_server
+        if not srv:
+            return ""
+        ips = ", ".join(_local_ips()) or "?"
+        return self.tr("link.serve_running", ips=ips, port=srv.port, token=srv.token)
+
+    def toggle_serve(self, opts: dict, parent) -> None:
+        from . import linkagent
+        if self.serve_running():
+            self.tool._link_server.stop()
+            self.tool._link_server = None
+            return
+        token = (opts.get("link_token") or "").strip()
+        if not token:
+            QMessageBox.warning(parent, self.tr("cat.link"), self.tr("link.need_token"))
+            return
+        srv = linkagent.LinkServer(token, host="0.0.0.0", port=int(opts.get("link_port", 47600)))
+        try:
+            srv.start()
+        except OSError as exc:
+            QMessageBox.warning(parent, self.tr("cat.link"), self.tr("link.serve_failed", error=str(exc)))
+            return
+        self.tool._link_server = srv
+
+
 class NetProbe(ToolBase):
     def create_widget(self, parent=None) -> QWidget:
         tr = self.context.tr
@@ -50,6 +128,7 @@ class NetProbe(ToolBase):
         self.group_items: dict[str, QTreeWidgetItem] = {}
         self.dock_for_addr: dict[str, ads.CDockWidget] = {}
         self._dock_seq = 0
+        self._link_server = None          # eingebauter Gegenstellen-Server (linkagent.LinkServer)
 
         root = QWidget(parent)
         outer = QVBoxLayout(root)
@@ -68,8 +147,12 @@ class NetProbe(ToolBase):
         self.template.setToolTip(tr("ui.template_hint"))
         saved_tpl = self.context.settings.get("template", "standard")
         self.template.setCurrentIndex(max(0, self.template.findData(saved_tpl)))
-        self.template.currentIndexChanged.connect(
-            lambda: self.context.settings.set("template", self.template.currentData()))
+        self.template.currentIndexChanged.connect(self._on_template_changed)
+        # Ausrufezeichen für Profile, die eine laufende Gegenstelle (Mini-Tool/NetProbe) voraussetzen.
+        self.link_hint = QLabel("❗")
+        self.link_hint.setStyleSheet("color:#f59e0b;font-weight:700;")
+        self.link_hint.setToolTip(tr("link.profile_hint"))
+        self.link_hint.hide()
         self.start_btn = make_button(tr("ui.start"), primary=True, on_click=self._start)
         self.start_btn.setIcon(library_icon("play", 16, "#ffffff"))
         self.stop_btn = make_button(tr("ui.stop"), danger=True, on_click=self._stop)
@@ -79,6 +162,7 @@ class NetProbe(ToolBase):
         top.addWidget(QLabel(tr("ui.target")))
         top.addWidget(self.input, 1)
         top.addWidget(self.template)
+        top.addWidget(self.link_hint)
         top.addWidget(self.options_btn)
         top.addWidget(self.start_btn)
         top.addWidget(self.stop_btn)
@@ -155,12 +239,18 @@ class NetProbe(ToolBase):
         self._bridge.updated.connect(self._apply_update)
         self._bridge.finished.connect(self._on_finished)
         self._update_controls()
+        self._on_template_changed()
         return root
+
+    def _on_template_changed(self) -> None:
+        self.context.settings.set("template", self.template.currentData())
+        self.link_hint.setVisible(self.template.currentData() in TEMPLATES_NEED_AGENT)
 
     # ------------------------------------------------------------ Optionen/Steuerung
     def _options(self) -> None:
         current = self.context.settings.get("options", {})
-        dlg = OptionsDialog(current if isinstance(current, dict) else {}, self.context.tr, self.input.window())
+        dlg = OptionsDialog(current if isinstance(current, dict) else {}, self.context.tr,
+                            self.input.window(), link_ctl=_LinkControl(self))
         if dlg.exec():
             self.context.settings.set("options", dlg.result())
 
@@ -497,3 +587,6 @@ class NetProbe(ToolBase):
     def shutdown(self) -> None:
         for engine in list(self.engines):
             engine.stop()
+        if self._link_server is not None:
+            self._link_server.stop()
+            self._link_server = None

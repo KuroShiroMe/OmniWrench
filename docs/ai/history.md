@@ -228,3 +228,30 @@ Stef hat 1.0.0 getestet und eine Liste Verbesserungen gewünscht (net.netprobe 1
 - OFFEN (eigener Folge-Schritt): Leitungstest/Remote-Agent (echte Latenz, Durchsatz, Lasttest, Portscan durch die
   Strecke) via Mini-Tool/Script auf der Gegenstelle oder NetProbe↔NetProbe; Export-Button im Optionsfenster mit
   Ausrufezeichen-Hinweis bei Profilen, die das Mini-Tool brauchen. Außerdem weitere MX-Toolbox-Funktionen (Blacklists).
+
+## 2026-10-19 — NetProbe v1.2: Leitungstest/Remote-Agent (eigener PR nach v1.1)
+Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen.
+- Neues eigenständiges Mini-Tool `tools/netprobe/linkagent.py` – NUR Standardbibliothek, läuft Windows+Linux
+  (Python 3.8+). Enthält Server (`LinkServer`) + Client (`LinkClient`) + CLI (`serve`/`probe`). NetProbe importiert
+  denselben Client; das exportierte Skript ist dieselbe Datei. Protokoll: längengerahmtes JSON (MAGIC+Länge) über TCP,
+  Token-Pflicht im Hello. Messungen: echte (anwendungsnahe) Latenz per Echo, Durchsatz je Richtung (source/sink),
+  Lasttest mit K parallelen Verbindungen (ThreadPoolExecutor), Pfad-Portscan (Server bindet eine Portauswahl, Client
+  prüft, was die Strecke durchlässt). Sicherheit: Last entsteht NUR gegen eine Gegenstelle, die das Tool mit demselben
+  Token bewusst startet (nicht gegen beliebige Fremdrechner richtbar); Dauer/Parallelität/Portanzahl/Idle begrenzt.
+- Engine: Kategorie/Test "link" (default aus), Profil `template.link` ("Leitungstest (Gegenstelle)"), LINK_KEYS werden
+  durch alle Profile getragen. `_link_test` läuft blockierend im Executor, Phasen aktualisieren res.step
+  (link_latency/download/upload/load/portscan). parse_scan_ports() für die Pfad-Ports.
+- Oberfläche: Optionsdialog hat einen eigenen Abschnitt „Leitungstest“ (Port, Token+„Neu“, Dauer, Lasttest-
+  Verbindungen, Pfad-Ports, Messungs-Checkboxen) mit **Mini-Tool-Export** (QFileDialog, zeigt den Startbefehl) und
+  **„Als Gegenstelle dienen“** (startet/stoppt den eingebauten LinkServer; Lebenszyklus liegt im Tool via _LinkControl,
+  damit er den Dialog überlebt). Beim Profil „Leitungstest“ steht ein ❗ neben dem Dropdown mit Hinweis (Mini-Tool drüben
+  starten). Ergebnis-Tab „Leitungstest“ (render.link_widget): Gegenstelle, Latenz+Sparkline, Durchsatz-Balken je
+  Richtung, Lasttest, Pfad-Portscan; früh einsortiert. Befunde link_ok/link_loss/link_unreachable/link_path_blocked.
+  PDF-Report um den Leitungstest-Abschnitt ergänzt.
+- +62 Lokalisierungsschlüssel de/en (cat.link, test.link_*, template.link, link.*, fx.link_*). tool.json 1.1.0→1.2.0,
+  neue Tags (leitungstest, throughput, lasttest, iperf …), Beschreibungen erweitert.
+- Geprüft: compileall, check_locales (App 23), Tool-de⊆en + Platzhalter-Parität, Offscreen-Render (Haupttool, Options-
+  Leitungsabschnitt, Ergebnis-Tab), Ende-zu-Ende über die echte Engine gegen einen lokalen LinkServer (Handshake,
+  Latenz, Durchsatz, Lasttest 3 Verb., Portscan 32 Ports, Befund link_ok), standalone-CLI serve+probe, PDF, check_store.
+- OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
+  0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
