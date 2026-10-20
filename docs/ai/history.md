@@ -229,6 +229,50 @@ Stef hat 1.0.0 getestet und eine Liste Verbesserungen gewünscht (net.netprobe 1
   Strecke) via Mini-Tool/Script auf der Gegenstelle oder NetProbe↔NetProbe; Export-Button im Optionsfenster mit
   Ausrufezeichen-Hinweis bei Profilen, die das Mini-Tool brauchen. Außerdem weitere MX-Toolbox-Funktionen (Blacklists).
 
+## 2026-10-19 — NetProbe v1.2: Leitungstest/Remote-Agent (eigener PR nach v1.1)
+Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen.
+- Neues eigenständiges Mini-Tool `tools/netprobe/linkagent.py` – NUR Standardbibliothek, läuft Windows+Linux
+  (Python 3.8+). Enthält Server (`LinkServer`) + Client (`LinkClient`) + CLI (`serve`/`probe`). NetProbe importiert
+  denselben Client; das exportierte Skript ist dieselbe Datei. Protokoll: längengerahmtes JSON (MAGIC+Länge) über TCP,
+  Token-Pflicht im Hello. Messungen: echte (anwendungsnahe) Latenz per Echo, Durchsatz je Richtung (source/sink),
+  Lasttest mit K parallelen Verbindungen (ThreadPoolExecutor), Pfad-Portscan (Server bindet eine Portauswahl, Client
+  prüft, was die Strecke durchlässt). Sicherheit: Last entsteht NUR gegen eine Gegenstelle, die das Tool mit demselben
+  Token bewusst startet (nicht gegen beliebige Fremdrechner richtbar); Dauer/Parallelität/Portanzahl/Idle begrenzt.
+- Engine: Kategorie/Test "link" (default aus), Profil `template.link` ("Leitungstest (Gegenstelle)"), LINK_KEYS werden
+  durch alle Profile getragen. `_link_test` läuft blockierend im Executor, Phasen aktualisieren res.step
+  (link_latency/download/upload/load/portscan). parse_scan_ports() für die Pfad-Ports.
+- Oberfläche: Optionsdialog hat einen eigenen Abschnitt „Leitungstest“ (Port, Token+„Neu“, Dauer, Lasttest-
+  Verbindungen, Pfad-Ports, Messungs-Checkboxen) mit **Mini-Tool-Export** (QFileDialog, zeigt den Startbefehl) und
+  **„Als Gegenstelle dienen“** (startet/stoppt den eingebauten LinkServer; Lebenszyklus liegt im Tool via _LinkControl,
+  damit er den Dialog überlebt). Beim Profil „Leitungstest“ steht ein ❗ neben dem Dropdown mit Hinweis (Mini-Tool drüben
+  starten). Ergebnis-Tab „Leitungstest“ (render.link_widget): Gegenstelle, Latenz+Sparkline, Durchsatz-Balken je
+  Richtung, Lasttest, Pfad-Portscan; früh einsortiert. Befunde link_ok/link_loss/link_unreachable/link_path_blocked.
+  PDF-Report um den Leitungstest-Abschnitt ergänzt.
+- +62 Lokalisierungsschlüssel de/en (cat.link, test.link_*, template.link, link.*, fx.link_*). tool.json 1.1.0→1.2.0,
+  neue Tags (leitungstest, throughput, lasttest, iperf …), Beschreibungen erweitert.
+- Geprüft: compileall, check_locales (App 23), Tool-de⊆en + Platzhalter-Parität, Offscreen-Render (Haupttool, Options-
+  Leitungsabschnitt, Ergebnis-Tab), Ende-zu-Ende über die echte Engine gegen einen lokalen LinkServer (Handshake,
+  Latenz, Durchsatz, Lasttest 3 Verb., Portscan 32 Ports, Befund link_ok), standalone-CLI serve+probe, PDF, check_store.
+- OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
+  0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
+
+## 2026-10-20 — NetProbe 1.2.1: Mini-Tool als eigenständige .exe (ohne Python)
+Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Python startbar sein.
+- Neues scripts/build_linkagent.py: baut tools/netprobe/linkagent.py mit PyInstaller als Einzeldatei
+  (dist/linkagent.exe bzw. dist/linkagent, nur stdlib, ~8 MB, Windows-Versionsinfo). Auf Linux gebaut und
+  getestet (serve+probe laufen ohne Python).
+- build_exe.py baut das Mini-Tool mit und legt linkagent.exe in den Programmordner (APP_DIR) neben
+  OmniWrench.exe; landet damit automatisch im -win64-Zip und beim Selbst-Update. --sign signiert es mit.
+- build-exe.yml: Schritt „Mini-Tool (linkagent) prüfen“ (--help), und beim Tag-Release wird linkagent.exe
+  zusätzlich als eigenständiges Asset hochgeladen.
+- Export im Optionsdialog jetzt zwei Knöpfe: „Mini-Tool (.exe)“ (kopiert die gebaute Datei, über
+  _LinkControl.agent_binary() aus APP_DIR bzw. APP_DIR/dist gefunden; deaktiviert mit Hinweis, wenn aus dem
+  Quellcode keine Binärdatei vorliegt) und „Als Skript (.py)“ (wie bisher). Neue Texte link.export_exe/
+  export_script/export_exe_missing/export_no_binary/export_done_exe.
+- tool.json 1.2.0 → 1.2.1, Store neu gebaut. Geprüft: compileall, check_locales, de⊆en-Parität, Linux-Build +
+  serve/probe des Binaries, Offscreen-Render des Export-Bereichs (beide Knöpfe, .exe-Knopf aktiv), check_store.
+  Windows-.exe-Build selbst läuft in CI (hier nur Linux-Binary gebaut).
+
 ## 2026-10-19 — ScopeKeeper: DHCP-Verwaltung neu gebaut (thread "DHCP Management Tool")
 Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept neu als OmniWrench-Tool, keine Kopie.
 - Neues Tool net.scopekeeper 1.0.0 (Alpha): Anmeldung (SSO/Tresor/manuell, Server-MRU, „Aus AD laden“), Übersicht,

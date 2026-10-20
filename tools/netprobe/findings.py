@@ -40,8 +40,29 @@ def evaluate(res) -> list[Finding]:
     _dnsserver(out, raw.get("dnsserver", {}))
     _reverse(out, raw.get("reverse", {}), res)
     _dns(out, raw.get("dns", {}))
+    _link(out, raw.get("link", {}))
     out.sort(key=lambda f: (ORDER[f.level], f.category, f.port or 0, f.id))
     return out
+
+
+def _link(out, link):
+    if not link:
+        return
+    if link.get("error") == "no_token":
+        return                                     # reiner Konfigurationszustand, kein Befund
+    if link.get("error"):
+        _add(out, "link_unreachable", WARN, category="link")
+        return
+    lat = link.get("latency", {})
+    if lat.get("sent"):
+        if lat.get("loss_pct", 0) > 0:
+            _add(out, "link_loss", WARN, category="link", loss=lat["loss_pct"])
+        else:
+            _add(out, "link_ok", OK, category="link", avg=lat.get("avg", 0))
+    scan = link.get("portscan", {})
+    blocked = len(scan.get("filtered", [])) + len(scan.get("closed", []))
+    if scan.get("bound") and blocked:
+        _add(out, "link_path_blocked", INFO, category="link", blocked=blocked, total=len(scan["bound"]))
 
 
 def _reachability(out, res):

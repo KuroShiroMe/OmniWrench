@@ -20,11 +20,13 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
       re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität
       tabs, DNS best-practice findings (CAA/MTA-STS/TLS-RPT), PDF export (QPdfWriter). DNS checks need real DNS
       (sandbox proxy only answers A/AAAA). Ideas later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, scheduled re-scan.
-- [ ] NetProbe Leitungstest/Remote-Agent (eigener Folge-PR, von Stef gewünscht 2026-10-19): echte Latenz, Durchsatz,
-      Lasttest, Portscan durch die Strecke – via kleines plattformübergreifendes Mini-Tool/Script auf der Gegenstelle
-      ODER NetProbe↔NetProbe (IP der Gegenseite eingeben). Export-Button dafür ins Optionsfenster; bei Profilen, die das
-      Mini-Tool brauchen, ein Ausrufezeichen als Hinweis. So klein wie möglich, Linux+Windows. Plus weitere
-      MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay-Test).
+- [x] NetProbe Leitungstest/Remote-Agent (net.netprobe 1.2.0, eigener PR 2026-10-19): echte Latenz, Durchsatz,
+      Lasttest, Pfad-Portscan via Mini-Tool `linkagent.py` (stdlib-only, Win+Linux) ODER NetProbe↔NetProbe.
+      Export-Button + „Als Gegenstelle dienen“ im Optionsfenster, ❗ beim Profil „Leitungstest“. Token-Pflicht (Last nur
+      gegen einwilligende Gegenstelle). Auf Windows zu prüfen: Server-Bind auf 0.0.0.0, Firewall-Freigabe für den Port,
+      echte Durchsatz-/Latenzwerte über eine reale Strecke zwischen zwei Rechnern.
+- [ ] NetProbe weitere MX-Toolbox-Funktionen (nächster Schritt, von Stef gewünscht): DNSBL-Blacklist-Prüfung,
+      SMTP-Open-Relay-Test.
 - [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
       0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
 - [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.

@@ -5,16 +5,22 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit,
-    QScrollArea, QSpinBox, QVBoxLayout, QWidget,
+    QPushButton, QScrollArea, QSpinBox, QVBoxLayout, QWidget,
 )
 
 from .engine import CATEGORIES, DEFAULT_OPTIONS, TESTS
 
 
 class OptionsDialog(QDialog):
-    def __init__(self, options: dict, tr, parent=None):
+    def __init__(self, options: dict, tr, parent=None, link_ctl=None):
+        """`link_ctl` (optional) steuert den eingebauten Gegenstellen-Server und den Mini-Tool-Export.
+
+        Erwartet die Methoden ``export(opts, parent)``, ``toggle_serve(opts, parent)``, ``serve_running()``
+        und ``serve_info()`` – bereitgestellt vom Tool, damit der Server den Dialog überlebt.
+        """
         super().__init__(parent)
         self.tr = tr
+        self.link_ctl = link_ctl
         self.setWindowTitle(tr("opt.title"))
         self._opts = DEFAULT_OPTIONS | options
         tests = DEFAULT_OPTIONS["tests"] | options.get("tests", {})
@@ -26,11 +32,13 @@ class OptionsDialog(QDialog):
         inner = QWidget()
         lay = QVBoxLayout(inner)
 
-        # Tests nach Kategorie
+        # Tests nach Kategorie (der Leitungstest bekommt unten einen eigenen Abschnitt)
         by_cat: dict[str, list] = {c: [] for c in CATEGORIES}
         for t in TESTS:
-            by_cat[t.category].append(t)
+            by_cat.setdefault(t.category, []).append(t)
         for cat in CATEGORIES:
+            if cat == "link":
+                continue
             box = QGroupBox(tr("cat." + cat))
             grid = QVBoxLayout(box)
             head = QHBoxLayout()
@@ -91,6 +99,8 @@ class OptionsDialog(QDialog):
         lay.addWidget(params)
         self._update_custom()
 
+        lay.addWidget(self._link_section())
+
         scroll.setWidget(inner)
         outer.addWidget(scroll, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
@@ -100,6 +110,116 @@ class OptionsDialog(QDialog):
         reset.clicked.connect(self._reset)
         outer.addWidget(buttons)
         self.resize(560, 640)
+
+    def _link_section(self) -> QGroupBox:
+        """Abschnitt Leitungstest: Gegenstelle, Messungen, Mini-Tool-Export und eingebauter Server."""
+        tr = self.tr
+        o = self._opts
+        box = QGroupBox(tr("cat.link"))
+        v = QVBoxLayout(box)
+        v.addWidget(self._wrap_note(tr("link.section_hint")))
+
+        self.checks["link"] = QCheckBox(tr("link.enable"))
+        self.checks["link"].setChecked(bool(o["tests"].get("link", False)))
+        v.addWidget(self.checks["link"])
+
+        form = QFormLayout()
+        self.link_port = self._spin(1, 65535, o["link_port"], "", 1)
+        form.addRow(tr("link.port"), self.link_port)
+        token_row = QHBoxLayout()
+        self.link_token = QLineEdit(str(o.get("link_token", "")))
+        self.link_token.setPlaceholderText(tr("link.token_hint"))
+        gen = QPushButton(tr("link.token_new"))
+        gen.clicked.connect(self._new_token)
+        token_row.addWidget(self.link_token, 1)
+        token_row.addWidget(gen)
+        tw = QWidget()
+        tw.setLayout(token_row)
+        form.addRow(tr("link.token"), tw)
+        self.link_seconds = self._spin(1, 60, o["link_seconds"], " s", 1)
+        form.addRow(tr("link.seconds"), self.link_seconds)
+        self.link_connections = self._spin(1, 64, o["link_connections"], "", 1)
+        form.addRow(tr("link.connections"), self.link_connections)
+        self.link_scan_ports = QLineEdit(str(o.get("link_scan_ports", "")))
+        self.link_scan_ports.setPlaceholderText(tr("link.scan_ports_hint"))
+        form.addRow(tr("link.scan_ports"), self.link_scan_ports)
+        v.addLayout(form)
+
+        measures = QHBoxLayout()
+        self.link_latency = QCheckBox(tr("link.latency"))
+        self.link_download = QCheckBox(tr("link.download"))
+        self.link_upload = QCheckBox(tr("link.upload"))
+        self.link_load = QCheckBox(tr("link.load"))
+        self.link_portscan = QCheckBox(tr("link.portscan"))
+        for cb, key in ((self.link_latency, "link_latency"), (self.link_download, "link_download"),
+                        (self.link_upload, "link_upload"), (self.link_load, "link_load"),
+                        (self.link_portscan, "link_portscan")):
+            cb.setChecked(bool(o.get(key, True)))
+            measures.addWidget(cb)
+        measures.addStretch(1)
+        v.addLayout(measures)
+
+        # Mini-Tool-Export (eigenständige Datei ohne Python / als Skript) und eingebauter Gegenstellen-Server
+        actions = QHBoxLayout()
+        self.export_exe_btn = QPushButton(tr("link.export_exe"))
+        self.export_exe_btn.clicked.connect(self._export_binary)
+        self.export_py_btn = QPushButton(tr("link.export_script"))
+        self.export_py_btn.clicked.connect(self._export_script)
+        self.serve_btn = QPushButton()
+        self.serve_btn.clicked.connect(self._toggle_serve)
+        actions.addWidget(self.export_exe_btn)
+        actions.addWidget(self.export_py_btn)
+        actions.addWidget(self.serve_btn)
+        actions.addStretch(1)
+        v.addLayout(actions)
+        self.serve_status = QLabel()
+        self.serve_status.setStyleSheet("color:#9ca3af;")
+        self.serve_status.setWordWrap(True)
+        v.addWidget(self.serve_status)
+        if self.link_ctl is None:
+            self.export_exe_btn.setEnabled(False)
+            self.export_py_btn.setEnabled(False)
+            self.serve_btn.setEnabled(False)
+        else:
+            has_binary = self.link_ctl.agent_binary() is not None
+            self.export_exe_btn.setEnabled(has_binary)
+            if not has_binary:
+                self.export_exe_btn.setToolTip(self.tr("link.export_exe_missing"))
+        self._refresh_serve()
+        return box
+
+    def _wrap_note(self, text: str) -> QLabel:
+        lbl = QLabel(text)
+        lbl.setWordWrap(True)
+        lbl.setStyleSheet("color:#9ca3af;")
+        return lbl
+
+    def _new_token(self) -> None:
+        from .linkagent import new_token
+        self.link_token.setText(new_token())
+
+    def _export_binary(self) -> None:
+        if self.link_ctl is not None:
+            self.link_ctl.export_binary(self._collect(), self)
+
+    def _export_script(self) -> None:
+        if self.link_ctl is not None:
+            self.link_ctl.export_script(self._collect(), self)
+
+    def _toggle_serve(self) -> None:
+        if self.link_ctl is not None:
+            self.link_ctl.toggle_serve(self._collect(), self)
+            self._refresh_serve()
+
+    def _refresh_serve(self) -> None:
+        running = bool(self.link_ctl and self.link_ctl.serve_running())
+        self.serve_btn.setText(self.tr("link.serve_stop") if running else self.tr("link.serve_start"))
+        if self.link_ctl is None:
+            self.serve_status.setText(self.tr("link.serve_unavailable"))
+        elif running:
+            self.serve_status.setText(self.link_ctl.serve_info())
+        else:
+            self.serve_status.setText(self.tr("link.serve_idle"))
 
     def _spin(self, lo, hi, value, suffix="", step=1):
         s = QSpinBox()
@@ -140,8 +260,17 @@ class OptionsDialog(QDialog):
         self.max_hops.setValue(DEFAULT_OPTIONS["max_hops"])
         self.only_alive.setChecked(DEFAULT_OPTIONS["only_alive"])
         self.oui_download.setChecked(DEFAULT_OPTIONS["oui_download"])
+        self.link_port.setValue(DEFAULT_OPTIONS["link_port"])
+        self.link_seconds.setValue(DEFAULT_OPTIONS["link_seconds"])
+        self.link_connections.setValue(DEFAULT_OPTIONS["link_connections"])
+        self.link_scan_ports.setText(DEFAULT_OPTIONS["link_scan_ports"])
+        for cb, key in ((self.link_latency, "link_latency"), (self.link_download, "link_download"),
+                        (self.link_upload, "link_upload"), (self.link_load, "link_load"),
+                        (self.link_portscan, "link_portscan")):
+            cb.setChecked(DEFAULT_OPTIONS[key])
+        # Token bewusst stehen lassen (muss mit der Gegenstelle übereinstimmen).
 
-    def result(self) -> dict:
+    def _collect(self) -> dict:
         return {
             "tests": {t.id: self.checks[t.id].isChecked() for t in TESTS},
             "port_profile": self.port_profile.currentData(),
@@ -157,4 +286,17 @@ class OptionsDialog(QDialog):
             "max_hops": self.max_hops.value(),
             "only_alive": self.only_alive.isChecked(),
             "oui_download": self.oui_download.isChecked(),
+            "link_port": self.link_port.value(),
+            "link_token": self.link_token.text().strip(),
+            "link_seconds": self.link_seconds.value(),
+            "link_connections": self.link_connections.value(),
+            "link_scan_ports": self.link_scan_ports.text(),
+            "link_latency": self.link_latency.isChecked(),
+            "link_download": self.link_download.isChecked(),
+            "link_upload": self.link_upload.isChecked(),
+            "link_load": self.link_load.isChecked(),
+            "link_portscan": self.link_portscan.isChecked(),
         }
+
+    def result(self) -> dict:
+        return self._collect()

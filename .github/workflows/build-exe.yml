@@ -34,6 +34,12 @@ jobs:
           python -m pip install -r requirements.txt pyinstaller
       - name: EXE bauen
         run: python scripts/build_exe.py
+      - name: Mini-Tool (linkagent) prüfen
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist\OmniWrench\linkagent.exe)) { throw "linkagent.exe fehlt im Programmordner" }
+          $p = Start-Process dist\OmniWrench\linkagent.exe -ArgumentList '--help' -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "linkagent.exe --help: Exitcode $($p.ExitCode)" }
       - name: EXE prüfen (eingebautes pip)
         shell: pwsh
         run: |
@@ -148,3 +154,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { throw "gh release create fehlgeschlagen" }
           gh release upload $tag "dist/OmniWrench-$version-win64.zip"
           if ($LASTEXITCODE -ne 0) { throw "gh release upload fehlgeschlagen" }
+          # NetProbe-Leitungstest-Mini-Tool als eigenständige Datei (ohne Python auf der Gegenstelle)
+          if (Test-Path dist\linkagent.exe) {
+            gh release upload $tag "dist/linkagent.exe"
+            if ($LASTEXITCODE -ne 0) { throw "gh release upload linkagent.exe fehlgeschlagen" }
+          }
