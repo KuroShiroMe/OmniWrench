@@ -159,13 +159,16 @@ class OptionsDialog(QDialog):
         measures.addStretch(1)
         v.addLayout(measures)
 
-        # Mini-Tool-Export und eingebauter Gegenstellen-Server
+        # Mini-Tool-Export (eigenständige Datei ohne Python / als Skript) und eingebauter Gegenstellen-Server
         actions = QHBoxLayout()
-        self.export_btn = QPushButton(tr("link.export_tool"))
-        self.export_btn.clicked.connect(self._export_agent)
+        self.export_exe_btn = QPushButton(tr("link.export_exe"))
+        self.export_exe_btn.clicked.connect(self._export_binary)
+        self.export_py_btn = QPushButton(tr("link.export_script"))
+        self.export_py_btn.clicked.connect(self._export_script)
         self.serve_btn = QPushButton()
         self.serve_btn.clicked.connect(self._toggle_serve)
-        actions.addWidget(self.export_btn)
+        actions.addWidget(self.export_exe_btn)
+        actions.addWidget(self.export_py_btn)
         actions.addWidget(self.serve_btn)
         actions.addStretch(1)
         v.addLayout(actions)
@@ -174,8 +177,14 @@ class OptionsDialog(QDialog):
         self.serve_status.setWordWrap(True)
         v.addWidget(self.serve_status)
         if self.link_ctl is None:
-            self.export_btn.setEnabled(False)
+            self.export_exe_btn.setEnabled(False)
+            self.export_py_btn.setEnabled(False)
             self.serve_btn.setEnabled(False)
+        else:
+            has_binary = self.link_ctl.agent_binary() is not None
+            self.export_exe_btn.setEnabled(has_binary)
+            if not has_binary:
+                self.export_exe_btn.setToolTip(self.tr("link.export_exe_missing"))
         self._refresh_serve()
         return box
 
@@ -189,9 +198,13 @@ class OptionsDialog(QDialog):
         from .linkagent import new_token
         self.link_token.setText(new_token())
 
-    def _export_agent(self) -> None:
+    def _export_binary(self) -> None:
         if self.link_ctl is not None:
-            self.link_ctl.export(self._collect(), self)
+            self.link_ctl.export_binary(self._collect(), self)
+
+    def _export_script(self) -> None:
+        if self.link_ctl is not None:
+            self.link_ctl.export_script(self._collect(), self)
 
     def _toggle_serve(self) -> None:
         if self.link_ctl is not None:
