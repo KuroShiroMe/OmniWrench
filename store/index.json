@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-17T20:29:59+00:00",
+  "generated": "2026-10-20T10:08:06+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -252,8 +252,8 @@
     },
     {
       "id": "net.scopekeeper",
-      "name": "ScopeKeeper",
-      "version": "1.0.1",
+      "name": "MS DHCP Extended Management",
+      "version": "1.1.0",
       "description": "Manage Microsoft DHCP servers: scopes, options, reservations, failover and a full configuration check.",
       "long_description": "Alpha – not yet tested against real DHCP servers. Connects to a Microsoft DHCP server (IPv4) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address ranges, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options, failover relationships with comparison and raw view, option definitions and a server-wide scan. Requires the RSAT DHCP tools (added automatically during installation).",
       "author": "DarkMatter",
@@ -288,21 +288,21 @@
       },
       "translations": {
         "de": {
-          "name": "ScopeKeeper",
+          "name": "MS DHCP Extended Management",
           "description": "Microsoft-DHCP-Server verwalten: Scopes, Optionen, Reservierungen, Failover und eine vollständige Konfigurationsprüfung.",
           "long_description": "Alpha – noch nicht gegen echte DHCP-Server getestet. Verbindet sich mit einem Microsoft-DHCP-Server (IPv4) über das angemeldete Konto, gespeicherte oder abweichende Anmeldedaten und behält die Failover-Partner im Blick. Jeder Scope öffnet sich in einem eigenen Tab mit Allgemein, Adressbereichen, Optionen, Reservierungen, Ausschlüssen, Leases und Failover-Status; Befunde (Fehler, Warnungen, Best Practice) entstehen schon während der Eingabe und markieren die betroffenen Felder. Neue Scopes entstehen aus einem Entwurf oder als Duplikat eines vorhandenen Scopes, Adressen werden dabei auf das neue Netz umgerechnet. Änderungen an Failover-Scopes lassen sich automatisch auf den Partner replizieren (auch wenn der Partner nur per RPC erreichbar ist, wie bei der DHCP-Konsole). Weitere Seiten: Server-Optionen, Failover-Beziehungen mit Abgleich und Rohansicht, Optionsdefinitionen und eine serverweite Prüfung. Benötigt die RSAT-DHCP-Tools (werden bei der Installation automatisch hinzugefügt).",
           "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
         },
         "en": {
-          "name": "ScopeKeeper",
+          "name": "MS DHCP Extended Management",
           "description": "Manage Microsoft DHCP servers: scopes, options, reservations, failover and a full configuration check.",
           "long_description": "Alpha – not yet tested against real DHCP servers. Connects to a Microsoft DHCP server (IPv4) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address ranges, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options, failover relationships with comparison and raw view, option definitions and a server-wide scan. Requires the RSAT DHCP tools (added automatically during installation).",
           "category": "Network & Connectivity/IP addresses, DNS & DHCP"
         }
       },
-      "download_url": "packages/net.scopekeeper-1.0.1.zip",
-      "sha256": "2f993b1f2d1809ad609cd4e26c78a7abfe33b81314245f18d61ebaf24dd97466",
-      "size": 133513
+      "download_url": "packages/net.scopekeeper-1.1.0.zip",
+      "sha256": "644126c010de1b94a3ce00d4aa8091f2ff922375dceb4ad596b49148f0e44093",
+      "size": 139980
     },
     {
       "id": "net.subnet-calculator",

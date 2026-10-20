@@ -10,11 +10,13 @@ from PySide6.QtGui import QAction, QBrush, QColor, QFont, QIcon, QKeySequence, Q
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout,
     QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QPushButton,
-    QSpinBox, QTableWidget, QTableWidgetItem, QToolButton, QVBoxLayout, QWidget,
+    QSpinBox, QTableWidget, QTableWidgetItem, QToolButton, QToolTip, QVBoxLayout, QWidget,
 )
 
 from omniwrench.ui import theme
-from omniwrench.ui.widgets import FlowLayout, make_button
+import html
+
+from omniwrench.ui.widgets import FlowLayout, library_icon, make_button
 
 from . import checks as ck
 from . import ipcalc as ip
@@ -131,11 +133,6 @@ class FormDialog(QDialog):
         self._fields = fields
         self.widgets: dict[str, QWidget] = {}
         lay = QVBoxLayout(self)
-        if hint:
-            h = QLabel(hint)
-            h.setWordWrap(True)
-            h.setStyleSheet(f"color:{theme.current['muted']};")
-            lay.addWidget(h)
         form = QFormLayout()
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.ExpandingFieldsGrow)
         for f in fields:
@@ -201,7 +198,11 @@ class FormDialog(QDialog):
         bb.addButton(tr("ui.cancel"), QDialogButtonBox.ButtonRole.RejectRole)
         bb.accepted.connect(self._accept)
         bb.rejected.connect(self.reject)
-        lay.addWidget(bb)
+        row = QHBoxLayout()
+        if hint:
+            row.addWidget(help_icon(hint))     # Hinweis als Fragezeichen neben den Schaltflächen
+        row.addWidget(bb, 1)
+        lay.addLayout(row)
         self.result_values: dict | None = None
 
     def values(self) -> dict:
@@ -923,6 +924,29 @@ def finding_tip(tr, findings: list[ck.Finding], limit: int = 12) -> str:
     if len(findings) > limit:
         lines.append(tr("find.more", n=len(findings) - limit))
     return "\n".join(lines)
+
+
+class HelpIcon(QLabel):
+    """Kleines Fragezeichen statt langer Hinweistexte: Text als Tooltip (Mauszeiger darüber oder Klick)."""
+
+    def __init__(self, text: str, parent=None):
+        super().__init__(parent)
+        self.setPixmap(library_icon("circle-help", 16, theme.current["muted"]).pixmap(16, 16))
+        self.setFixedSize(QSize(20, 20))
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.setCursor(Qt.CursorShape.WhatsThisCursor)
+        self.set_text(text)
+
+    def set_text(self, text: str) -> None:
+        body = "<br>".join(html.escape(x) for x in text.split("\n"))
+        self.setToolTip(f"<p style='max-width:420px'>{body}</p>" if text else "")
+
+    def mousePressEvent(self, e) -> None:  # noqa: N802
+        QToolTip.showText(e.globalPosition().toPoint(), self.toolTip(), self)
+
+
+def help_icon(text: str) -> HelpIcon:
+    return HelpIcon(text)
 
 
 def hint_label(text: str) -> QLabel:

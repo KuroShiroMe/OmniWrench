@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QSplitter, QTabWidget,
+    QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QPushButton, QSplitter, QTabWidget,
     QVBoxLayout, QWidget,
 )
 
@@ -16,7 +16,7 @@ from . import ipcalc as ip
 from .editors import OptionsPanel, opt_row_key
 from .runner import Job
 from .ui_base import (
-    ButtonBar, FindingsToolbar, FindingsView, Grid, bold_label, confirm, finding_tip, hint_label, info, level_color,
+    ButtonBar, FindingsToolbar, FindingsView, Grid, bold_label, confirm, finding_tip, help_icon, hint_label, info, level_color,
     level_icon, level_name, short_list, text_dialog, tint, warn,
 )
 
@@ -539,8 +539,8 @@ class DefsPage(QWidget):
         bar = ButtonBar([("Refresh", tr("ui.refresh")), ("New", tr("def.new")), ("Edit", tr("def.edit")),
                          ("Remove", tr("def.remove")), ("ToPartner", tr("def.to_partner"))], primary=("New",))
         bar.action.connect(self._action)
+        bar.add_widget(help_icon(tr("def.note")))
         lay.addWidget(bar)
-        lay.addWidget(hint_label(tr("def.note")))
 
     def refresh(self) -> None:
         rows = [dict(d, default_t=", ".join(d["default"])) for d in sorted(self.svc.defs.values(), key=lambda d: (d["vendor"], d["id"]))]
@@ -638,8 +638,12 @@ class CheckPage(QWidget):
         lay.setContentsMargins(8, 8, 8, 8)
         top = QHBoxLayout()
         self.bar = ButtonBar([("Scan", tr("chk.scan"))], primary=("Scan",))
-        self.bar.action.connect(lambda _a: self.ctl.run(self.scan_flow()))
+        self.bar.action.connect(lambda _a: self.ctl.start_scan())
         top.addWidget(self.bar)
+        self.cancel_btn = QPushButton(tr("ui.cancel"))
+        self.cancel_btn.clicked.connect(self._cancel)
+        self.cancel_btn.hide()
+        top.addWidget(self.cancel_btn)
         self.with_leases = QCheckBox(tr("chk.with_leases"))
         self.with_leases.setToolTip(tr("chk.with_leases_tip"))
         self.with_partner = QCheckBox(tr("chk.with_partner"))
@@ -649,7 +653,17 @@ class CheckPage(QWidget):
         self.state = QLabel(tr("chk.not_run"))
         self.state.setStyleSheet(f"color:{theme.current['muted']};")
         top.addWidget(self.state, 1)
+        self.pbar = QProgressBar()
+        self.pbar.setMaximumWidth(260)
+        self.pbar.setMaximumHeight(14)
+        self.pbar.setTextVisible(False)
+        self.pbar.hide()
+        top.addWidget(self.pbar)
         lay.addLayout(top)
+        self._pending = QTimer(self)        # Zwischenstände gebündelt anzeigen (nicht nach jedem Scope neu zeichnen)
+        self._pending.setSingleShot(True)
+        self._pending.setInterval(300)
+        self._pending.timeout.connect(self.refresh)
         tiles = QGridLayout()
         self.tiles: dict[str, Tile] = {}
         for i, lv in enumerate(ck.LEVELS):
@@ -698,19 +712,56 @@ class CheckPage(QWidget):
         if a == "Open" and r:
             self.ctl.open_scope(r["id"], show_findings=True)
 
-    def scan_flow(self):
-        tr, svc = self.tr, self.svc
-        wl, wp = self.with_leases.isChecked(), self.with_partner.isChecked()
-        self.state.setText(tr("chk.running"))
-        try:
-            scan = yield Job(lambda: svc.scan(wl, wp), tr("scan.loading"), cancellable=True)
-        except Exception:
-            self.state.setText(tr("chk.failed"))
-            raise
-        self.ctl.set_scan(scan)
-        svc.log(tr("log.scan_done", n=len(scan["scopes"]), sec=scan["seconds"]))
+    # --- Prüfung im Hintergrund (Scanner-Signale) -------------------------------------------------------
+    def _cancel(self) -> None:
+        self.cancel_btn.setEnabled(False)
+        self.state.setText(self.tr("status.cancelling"))
+        self.ctl.scanner.cancel()
+
+    def scan_started(self) -> None:
+        self.bar.buttons["Scan"].setEnabled(False)
+        self.with_leases.setEnabled(False)
+        self.with_partner.setEnabled(False)
+        self.cancel_btn.setEnabled(True)
+        self.cancel_btn.show()
+        self.pbar.setRange(0, 0)
+        self.pbar.show()
+        self.state.setText(self.tr("chk.running"))
+        self.live = {"time": "", "scopes": {}, "server": [], "partial": True, "seconds": 0, "running": True,
+                     "with_leases": self.with_leases.isChecked()}
+
+    def scan_progress(self, text: str, i: int, n: int) -> None:
+        if text:
+            self.state.setText(text)
+        if n:
+            self.pbar.setRange(0, n)
+            self.pbar.setValue(i)
+
+    def scope_done(self, sid: str, entry: dict, i: int, n: int) -> None:
+        live = getattr(self, "live", None)
+        if live is None:
+            return
+        live["scopes"][sid] = entry
+        if self.scan is None or self.scan.get("running"):
+            self.scan = live
+            if not self._pending.isActive():
+                self._pending.start()
+
+    def scan_stopped(self) -> None:
+        self.bar.buttons["Scan"].setEnabled(True)
+        self.with_leases.setEnabled(True)
+        self.with_partner.setEnabled(True)
+        self.cancel_btn.hide()
+        self.pbar.hide()
+        self.live = None
+
+    def scan_failed(self, text: str) -> None:
+        self.state.setText(self.tr("chk.failed") + " " + text.splitlines()[0] if text else self.tr("chk.failed"))
+        if self.scan is not None and self.scan.get("running"):
+            self.scan = None
 
     def set_scan(self, scan: dict | None) -> None:
+        self._pending.stop()
         self.scan = scan
         self.refresh()
 
@@ -720,8 +771,10 @@ class CheckPage(QWidget):
         flt = self.ctl.flt
         if not scan:
             return
-        self.state.setText(tr("chk.state_partial" if scan.get("partial") else "chk.state", time=scan["time"], sec=scan["seconds"],
-                              n=len(scan["scopes"])) + ("  " + tr("chk.state_leases") if scan.get("with_leases") else ""))
+        if not scan.get("running"):
+            self.state.setText(tr("chk.state_partial" if scan.get("partial") else "chk.state", time=scan["time"],
+                                  sec=scan["seconds"], n=len(scan["scopes"]))
+                               + ("  " + tr("chk.state_leases") if scan.get("with_leases") else ""))
         allf = list(scan["server"])
         for v in scan["scopes"].values():
             allf += v["findings"]

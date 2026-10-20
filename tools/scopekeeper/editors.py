@@ -13,7 +13,7 @@ from omniwrench.ui import theme
 
 from . import checks as ck
 from . import ipcalc as ip
-from .ui_base import MONO, ButtonBar, Grid, hint_label, level_color, tint
+from .ui_base import MONO, ButtonBar, Grid, help_icon, level_color, tint
 
 
 class LeaseEdit(QWidget):
@@ -85,8 +85,8 @@ class RangeEditor(QWidget):
         row.addWidget(self.bar, 1)
         self.sum = QLabel("")
         row.addWidget(self.sum)
+        row.addWidget(help_icon(tr("rng.note")))
         lay.addLayout(row)
-        lay.addWidget(hint_label(tr("rng.note")))
         self._updating = False
         self.confirm_whole = None   # Rückfrage vor "Ganzes Netz" bei mehreren Bereichen
 
@@ -253,9 +253,8 @@ class OptionsPanel(QWidget):
             btns.append(("ToPartner", tr("opt.to_partner")))
         self.bar = ButtonBar(btns)
         self.bar.action.connect(self.action.emit)
+        self.bar.add_widget(help_icon(tr("opt.server_note") if server_level else tr("opt.scope_note")))
         lay.addWidget(self.bar)
-        self.note = hint_label(tr("opt.server_note") if server_level else tr("opt.scope_note"))
-        lay.addWidget(self.note)
 
     def set_options(self, options: list[dict], defs: dict) -> None:
         self.grid.set_rows(option_rows(options, defs))

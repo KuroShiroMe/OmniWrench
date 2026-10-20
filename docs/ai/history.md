@@ -243,3 +243,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-20 Stef-Test: „Aus AD laden“ und Login scheiterten mit "'list' object has no attribute 'get'". Ursache:
   `items = , $x` in Hashtables von host.ps1 verschachtelte alle Listen. Behoben in 1.0.1, mit echtem pwsh + Stub-Cmdlets
   nachgestellt und geprüft.
+- 2026-10-20 Stef-Wunsch (1.1.0): Umbenennung in „MS DHCP Extended Management“; Prüfung parallel (RunspacePool
+  cim_many, 8 Threads, zweiter PowerShell-Prozess, UI bleibt bedienbar, abbrechbar, Scope-Ergebnisse laufen live ein);
+  Opt-out „Server direkt nach der Anmeldung prüfen“; Ladeansicht beim Anmelden (bei Fehler zurück); Verbindungsaufbau
+  als Schritte statt Fehlermeldung; Hinweistexte -> ?-Icons. Mit Fake-Backend + pwsh-Stubs getestet (10 Abfragen à
+  300 ms in 0,7 s).

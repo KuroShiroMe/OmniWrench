@@ -417,13 +417,16 @@ function Connect-Target {
     $errs = @()
     foreach ($proto in 'Wsman', 'Dcom') {
         $session = $null
+        Send-Progress @{ step = 'try'; proto = $proto }
         try {
             $opt = New-CimSessionOption -Protocol $proto
             $session = New-CimSession @base -SessionOption $opt
             $null = Get-DhcpServerVersion -CimSession $session -ErrorAction Stop
             return $session
         } catch {
-            $errs += "$($proto.ToUpper()): $(Get-InnerMessage $_)"
+            $msg = Get-InnerMessage $_
+            $errs += "$($proto.ToUpper()): $msg"
+            Send-Progress @{ step = 'fail'; proto = $proto; error = $msg }
             if ($session) { Remove-CimSession -CimSession $session -ErrorAction SilentlyContinue }
         }
     }
@@ -668,6 +671,53 @@ $script:Handlers = @{
     netsh = {
         param($A)
         @{ items = (Invoke-NetshBatch ([string]$A.server) ([string[]]@($A.lines)) ([int]$A.timeout)) }
+    }
+    # Viele Lese-Cmdlets parallel in einem RunspacePool (schnelle Prüfung). Jedes Ergebnis kommt sofort als
+    # Fortschritt {"key":..,"items":[..]} bzw. {"key":..,"error":".."}; die Antwort selbst enthält nur die Anzahl.
+    cim_many = {
+        param($A)
+        $calls = @($A.calls)
+        foreach ($c in $calls) { if ([string]$c.name -notmatch '^Get-DhcpServer\w*$') { throw "@ERR:bad_cmdlet:$($c.name)" } }
+        $threads = [Math]::Max(1, [Math]::Min(16, [int]$A.threads))
+        $iss = [System.Management.Automation.Runspaces.InitialSessionState]::CreateDefault()
+        if (-not $script:PoolInit) { [void]$iss.ImportPSModule(@('DhcpServer')) }
+        $pool = [RunspaceFactory]::CreateRunspacePool(1, $threads, $iss, $Host)
+        $pool.Open()
+        $work = {
+            param($Name, $Session, $P, $Init)
+            $ErrorActionPreference = 'Stop'
+            if ($Init) { . ([ScriptBlock]::Create($Init)) }
+            & $Name -CimSession $Session @P -ErrorAction Stop
+        }
+        $jobs = New-Object System.Collections.ArrayList
+        try {
+            foreach ($c in $calls) {
+                $key = [string]$c.key
+                try { $s = Get-Session ([string]$c.server) } catch { Send-Progress @{ key = $key; error = (Get-InnerMessage $_) }; continue }
+                $ps = [PowerShell]::Create()
+                $ps.RunspacePool = $pool
+                [void]$ps.AddScript($work).AddArgument([string]$c.name).AddArgument($s).AddArgument((ConvertTo-Hashtable $c.params)).AddArgument($script:PoolInit)
+                [void]$jobs.Add(@{ key = $key; ps = $ps; h = $ps.BeginInvoke() })
+            }
+            $open = New-Object System.Collections.ArrayList
+            foreach ($j in $jobs) { [void]$open.Add($j) }
+            while ($open.Count) {
+                $done = @($open | Where-Object { $_.h.IsCompleted })
+                if (-not $done.Count) { Start-Sleep -Milliseconds 15; continue }
+                foreach ($j in $done) {
+                    $open.Remove($j)
+                    try {
+                        $res = $j.ps.EndInvoke($j.h)
+                        $items = New-Object System.Collections.ArrayList
+                        foreach ($r in $res) { if ($null -ne $r) { [void]$items.Add((ConvertTo-Plain $r)) } }
+                        Send-Progress @{ key = $j.key; items = $items.ToArray() }
+                    } catch {
+                        Send-Progress @{ key = $j.key; error = (Get-InnerMessage $_) }
+                    } finally { $j.ps.Dispose() }
+                }
+            }
+        } finally { $pool.Close(); $pool.Dispose() }
+        @{ count = $jobs.Count }
     }
 }
 

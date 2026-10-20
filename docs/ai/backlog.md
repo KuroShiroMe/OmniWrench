@@ -7,6 +7,9 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
       PowerShell host start, partner via CIM and via RPC (netsh + failover API), replication diff, new/duplicate scope
       incl. failover, failover create/edit/remove (role/LB mirroring), server check. Only tested here with a fake backend.
       Remove the Alpha tag after a successful test. Later ideas: IPv6 scopes, policies/filters editing, superscopes.
+      1.1.0 (renamed MS DHCP Extended Management): verify background check speed/correctness on a real server (compare
+      with a check run with the scan host disabled?), cancel, auto check after login, loading view, help icons.
+      THREADS=8 may need tuning (DHCP server load vs. speed).
 - [ ] NetProbe (net.netprobe 1.1.0): Verify on Windows: IcmpSendEcho ping incl. new warm-up + 2 s timeout (Stef saw
       loss that CMD didn't – likely the old 1 s timeout), persistent list + expandable network groups (x/y hosts),
       re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität

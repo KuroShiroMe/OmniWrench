@@ -16,6 +16,14 @@
       "description": "Checks access to all failover partners right after login. Otherwise the partner is contacted only when needed."
     },
     {
+      "key": "auto_scan",
+      "type": "bool",
+      "label": "Check the server after login",
+      "default": true,
+      "group": "Connection",
+      "description": "Starts the server check in the background after login."
+    },
+    {
       "key": "auto_replicate",
       "type": "bool",
       "label": "Replicate changes automatically",

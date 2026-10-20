@@ -131,3 +131,10 @@
 - Partner fallback chain kept from the script: CIM/WinRM -> RPC (failover API + netsh dump/commands).
 - Server options are never replicated automatically; deleting scopes needs the typed word (ov.delete_word).
 - Passwords only via stdin to the PowerShell host, never on a command line or in logs.
+- 2026-10-20 (Stef): display name "MS DHCP Extended Management" (tool.json name + tool.name). id/folder/class/MIME stay
+  scopekeeper (internal only). Check runs in the background, never freezes the UI; login checkbox "Server direkt nach
+  der Anmeldung prüfen" (setting auto_scan, default on). Login shows a loading view, on failure back to the login form.
+  Connection fallback is logged as normal steps ("WinRM nicht möglich – versuche DCOM …"), not as errors.
+  Long hint labels replaced by "?" help icons with tooltip (ui_base.help_icon).
+- Scan host gets the login password in memory (DhcpService.secrets) to log in a second PowerShell process; never
+  written to disk/settings, cleared on reset/logout.

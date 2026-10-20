@@ -165,3 +165,12 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   the fix. Clipboard MIME application/x-omniwrench-scopekeeper+json for options/reservations/exclusions with network
   conversion.
 - Test hook: `ScopeKeeper.backend_factory` replaces PsHost (fake backend for screenshots/flow tests; not in repo).
+- Fast scan (1.1.0): `scanner.Scanner` (QObject, own thread, own PsHost) -> `DhcpService.clone_for(host)` + `attach()`
+  (re-login with in-memory secrets, partners via set_cred) -> `fast_scan`: phase 1 = one `cim_many` with all
+  server-level Gets, phase 2 = per-scope Gets (options, reservations, DNS, opt. leases) in parallel; results land in
+  `svc.prefetch` (key = json [name, server, params]) so the normal `cim()`/load/check code is reused unchanged. Host
+  command `cim_many`: RunspacePool (1..16, THREADS=8), only `Get-DhcpServer*`, each result streamed as progress
+  {key, items|error}; `$script:PoolInit` = test hook (stub functions dot-sourced per runspace). Each scope is evaluated
+  once its keys are in -> `scope_done` signal -> CheckPage refresh coalesced by a 300 ms timer. Cancel = kill the scan
+  host (`PsHost.kill`), next scan starts a new one; partial result has partial=True.
+- Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.

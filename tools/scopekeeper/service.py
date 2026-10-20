@@ -11,6 +11,7 @@ erledigt der PowerShell-Host (pshost.py / host.ps1); hier liegt die Logik:
 
 from __future__ import annotations
 
+import json
 import re
 import threading
 import time
@@ -168,6 +169,8 @@ class DhcpService:
         self.server_option_rows: list[dict] = []
         self.failovers: list[dict] = []
         self.scope_fo: dict[str, dict] = {}
+        self.secrets: dict[str, tuple[str, str]] = {}   # nur im Speicher: "*" = Primärserver, sonst Partner (für die Prüfung)
+        self.prefetch: dict[str, object] | None = None   # Ergebnisse von cim_many (schnelle Prüfung)
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -205,20 +208,65 @@ class DhcpService:
         except HostError as e:
             raise UserError(self.host_text(str(e))) from None
 
+    def _key(self, name: str, server: str | None, params: dict) -> str:
+        return json.dumps([name, (server or self.server or "").lower(), params], sort_keys=True, default=str)
+
     def cim(self, name: str, server: str | None = None, **params) -> list[dict]:
         p = {k: v for k, v in params.items() if v is not None}
+        if self.prefetch is not None:
+            hit = self.prefetch.get(self._key(name, server, p))
+            if isinstance(hit, UserError):
+                raise hit
+            if hit is not None:
+                return list(hit)
         data = self.call("cim", {"server": server or self.server, "name": name, "params": p})
         return list((data or {}).get("items") or [])
+
+    def cim_many(self, calls: list[tuple[str, str | None, dict]], threads: int = 8, on_result=None) -> dict[str, object]:
+        """Viele Get-Cmdlets parallel (RunspacePool im Host). Ergebnis: Schlüssel -> Liste bzw. UserError."""
+        out: dict[str, object] = {}
+        req = []
+        for name, server, params in calls:
+            p = {k: v for k, v in params.items() if v is not None}
+            req.append({"key": self._key(name, server, p), "name": name, "server": server or self.server, "params": p})
+
+        def prog(msg):
+            k = msg.get("key")
+            if k is None:
+                return
+            v = UserError(self.host_text(str(msg["error"]))) if "error" in msg else list(msg.get("items") or [])
+            out[k] = v
+            if on_result:
+                on_result(k, v)
+        if req:
+            self.call("cim_many", {"calls": req, "threads": threads}, prog)
+        return out
 
     def hello(self) -> dict:
         return self.call("hello")
 
+    def _conn_steps(self, server: str, partner: bool):
+        """Fortschritt des Verbindungsaufbaus als ruhige Protokollzeilen (WinRM -> DCOM -> ggf. RPC)."""
+        names = {"wsman": "WinRM", "dcom": "DCOM"}
+
+        def on_step(msg):
+            proto = names.get(str(msg.get("proto", "")).lower(), str(msg.get("proto", "")))
+            if msg.get("step") == "try" and proto == "WinRM":
+                self.log(self.tr("log.conn_try", server=server, proto=proto))
+            elif msg.get("step") == "fail" and proto == "WinRM":
+                self.log(self.tr("log.conn_next", proto=proto, next="DCOM"))
+            elif msg.get("step") == "fail" and partner:
+                self.log(self.tr("log.conn_next", proto=proto, next="RPC"))
+        return on_step
+
     # --- Verbindung ---------------------------------------------------------------------------------
     def connect(self, server: str, user: str = "", password: str = "") -> str:
         self.reset()
-        data = self.call("connect", {"server": server, "user": user, "password": password, "primary": True})
+        data = self.call("connect", {"server": server, "user": user, "password": password, "primary": True},
+                         self._conn_steps(server, False))
         self.server = server
         self.user = user
+        self.secrets = {"*": (user, password)} if user else {}
         self.protocol = (data or {}).get("protocol", "")
         self.log(self.tr("log.connected", server=server, user=user or self.tr("ui.sso"), proto=self.protocol))
         return self.protocol
@@ -247,11 +295,13 @@ class DhcpService:
         args = {"server": pn, "reuse": True} if user is None else {"server": pn, "user": user, "password": password}
         if user:
             self.partner_user[pn] = user
+            self.secrets[pn] = (user, password)
         else:
             self.partner_user.pop(pn, None)
+            self.secrets.pop(pn, None)
         self.dump_cache = {k: v for k, v in self.dump_cache.items() if not k.startswith(pn + "|")}
         try:
-            data = self.call("connect", args)
+            data = self.call("connect", args, self._conn_steps(pn, True))
             self.partner_via[pn] = "Cim"
             self.partner_fail.pop(pn, None)
             self.log(self.tr("log.partner_connected", partner=pn, proto=(data or {}).get("protocol", ""),
@@ -263,7 +313,6 @@ class DhcpService:
             return "Cim"
         except UserError as e:
             wsman = str(e)
-            self.log(self.tr("log.partner_winrm_failed", partner=pn, error=" | ".join(x for x in wsman.splitlines() if x.strip())), True)
             self.partner_fail[pn] = self.tr("err.partner_winrm", partner=pn)
             self.partner_via.pop(pn, None)
             self.netsh_fail.pop(pn, None)
@@ -280,7 +329,7 @@ class DhcpService:
             self.fo_api(pn, "enum")
             self.test_netsh(pn)
             self.partner_via[pn] = "Rpc"
-            self.log(self.tr("log.partner_rpc", partner=pn))
+            self.log(self.tr("log.conn_rpc_ok", server=pn))
             return True
         except UserError as e:
             self.netsh_fail[pn] = str(e)
@@ -308,14 +357,13 @@ class DhcpService:
             return via
         if pn not in self.partner_fail:
             try:
-                self.call("connect", {"server": pn, "reuse": True})
+                self.call("connect", {"server": pn, "reuse": True}, self._conn_steps(pn, True))
                 self.partner_via[pn] = "Cim"
                 self.log(self.tr("log.partner_connected", partner=pn, proto="", user=self.user or self.tr("ui.sso")))
                 return "Cim"
             except UserError as e:
                 last = [x for x in str(e).splitlines() if x.strip()]
                 self.partner_fail[pn] = self.tr("err.partner_winrm_detail", partner=pn, error=last[-1].strip() if last else "")
-                self.log(self.tr("log.partner_use_rpc", text=self.partner_fail[pn]), True)
         if self.enable_rpc_partner(pn):
             return "Rpc"
         m = self.partner_fail.get(pn, "")
@@ -1268,6 +1316,117 @@ class DhcpService:
         pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
         scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
         scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
+        scan["seconds"] = int(time.time() - started)
+        return scan
+
+
+    # --- Schnelle Prüfung (eigener Host-Prozess, läuft parallel zur Bedienung) -----------------------
+    def clone_for(self, backend, log=None, progress=None) -> "DhcpService":
+        """Kopie des Verbindungszustands für einen zweiten Host-Prozess (die Prüfung blockiert so nichts)."""
+        c = DhcpService(backend, self.tr, log or self._log, progress or self._progress)
+        c.server, c.user, c.protocol = self.server, self.user, self.protocol
+        c.partner_mode = self.partner_mode
+        c.partner_via = {k: v for k, v in self.partner_via.items() if v == "Rpc"}   # CIM-Partner neu verbinden
+        c.partner_fail = dict(self.partner_fail)
+        c.partner_user = dict(self.partner_user)
+        c.netsh_ok = set(self.netsh_ok)
+        c.netsh_fail = dict(self.netsh_fail)
+        c.secrets = dict(self.secrets)
+        return c
+
+    def attach(self) -> None:
+        """Meldet den zweiten Host mit denselben Anmeldedaten am Server (und für die Partner) an."""
+        user, pw = self.secrets.get("*", ("", ""))
+        self.call("connect", {"server": self.server, "user": user, "password": pw, "primary": True})
+        for pn, (u, p) in self.secrets.items():
+            if pn != "*":
+                self.call("set_cred", {"server": pn, "user": u, "password": p})
+
+    def fast_scan(self, with_leases: bool, compare_partners: bool, on_scope=None, threads: int = 8) -> dict:
+        """Wie scan(), aber alle Lesezugriffe gebündelt und parallel; Scopes werden sofort ausgewertet,
+        sobald ihre Daten da sind (on_scope(id, eintrag, fertig, gesamt)). Abbruch liefert ein Teilergebnis."""
+        tr = self.tr
+        started = time.time()
+        scan = {"time": time.strftime("%H:%M:%S"), "scopes": {}, "server": [], "partial": False, "with_leases": with_leases}
+        self.prefetch = {}
+        try:
+            self.progress(tr("scan.loading"))
+            srv = [("Get-DhcpServerv4OptionDefinition", {"All": True}), ("Get-DhcpServerv4OptionValue", {"All": True}),
+                   ("Get-DhcpServerv4Failover", {}), ("Get-DhcpServerv4Scope", {}), ("Get-DhcpServerv4ScopeStatistics", {}),
+                   ("Get-DhcpServerv4ExclusionRange", {}), ("Get-DhcpServerVersion", {}), ("Get-DhcpServerSetting", {}),
+                   ("Get-DhcpServerAuditLog", {}), ("Get-DhcpServerDatabase", {}), ("Get-DhcpServerv4DnsSetting", {}),
+                   ("Get-DhcpServerDnsCredential", {}), ("Get-DhcpServerv4Binding", {}), ("Get-DhcpServerv4Superscope", {}),
+                   ("Get-DhcpServerv4Policy", {}), ("Get-DhcpServerv4FilterList", {}), ("Get-DhcpServerv4Filter", {"List": "Allow"})]
+            self.prefetch.update(self.cim_many([(n, None, p) for n, p in srv], threads))
+            self.load_defs()
+            self.load_server_options()
+            self.load_failovers()
+            self.load_overview()
+            checker = ck.Checker(tr, self.defs, self.server_options, self.failovers)
+            scopes = {s["id"]: s for s in self.scopes}
+            per = [("Get-DhcpServerv4OptionValue", {"All": True}), ("Get-DhcpServerv4Reservation", {}),
+                   ("Get-DhcpServerv4DnsSetting", {})]
+            if with_leases:
+                per.append(("Get-DhcpServerv4Lease", {}))
+            calls, need, owner = [], {}, {}
+            for sid in scopes:
+                need[sid] = set()
+                for name, p in per:
+                    pp = dict(p, ScopeId=sid)
+                    k = self._key(name, None, pp)
+                    calls.append((name, None, pp))
+                    need[sid].add(k)
+                    owner[k] = sid
+            n = len(scopes)
+
+            def evaluate(sid):
+                s = scopes[sid]
+                info = self.scope_info.get(sid) or {}
+                try:
+                    data = self.scan_data(s, info.get("stat"), info.get("exclusions") or [], with_leases)
+                    f = ck.sort_findings(checker.scope_findings(data))
+                except Exception as e:  # noqa: BLE001 - ein defekter Scope darf die Prüfung nicht abbrechen
+                    data = None
+                    f = [ck.Finding(ck.WARN, "scan", tr("chk.scan_scope_failed", error=str(e)), obj="Scan")]
+                    f[0].scope_id = sid
+                entry = {"scope": s, "findings": f, "data": data}
+                scan["scopes"][sid] = entry
+                done = len(scan["scopes"])
+                self.progress(tr("scan.scope", i=done, n=n, id=sid, name=s["name"]), done, n)
+                if on_scope:
+                    on_scope(sid, entry, done, n)
+
+            def on_result(k, v):
+                self.prefetch[k] = v
+                sid = owner.get(k)
+                if sid is None or sid in scan["scopes"]:
+                    return
+                need[sid].discard(k)
+                if not need[sid]:
+                    evaluate(sid)
+            self.progress(tr("scan.scopes_parallel", n=n, threads=threads), 0, n)
+            try:
+                self.cim_many(calls, threads, on_result)
+            except UserError:
+                if not self.cancel.is_set():
+                    raise
+            if self.cancel.is_set():
+                scan["partial"] = True
+            else:
+                for sid in scopes:
+                    if sid not in scan["scopes"]:
+                        evaluate(sid)
+                self.progress(tr("scan.server"))
+                info = self.server_info()
+                pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+                scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
+                scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
+        except UserError:
+            if not self.cancel.is_set():
+                raise
+            scan["partial"] = True
+        finally:
+            self.prefetch = None
         scan["seconds"] = int(time.time() - started)
         return scan
 

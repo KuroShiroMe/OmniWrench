@@ -21,7 +21,7 @@ from .editors import LeaseEdit, OptionsPanel, RangeEditor, opt_row_key
 from .runner import Job
 from .service import ReplicationError, UserError
 from .ui_base import (
-    ButtonBar, FindingsView, Grid, Markers, ask3, bold_label, confirm, finding_tip, hint_label, info, level_color, level_icon,
+    ButtonBar, FindingsView, Grid, Markers, ask3, bold_label, confirm, finding_tip, help_icon, info, level_color, level_icon,
     level_name, short_list, text_dialog, tint, warn,
 )
 
@@ -125,7 +125,8 @@ class ScopeTab(QWidget):
         rbox = QGroupBox(tr("scope.ranges"))
         rl = QVBoxLayout(rbox)
         rh = QHBoxLayout()
-        rh.addWidget(hint_label(tr("scope.ranges_hint")), 1)
+        rh.addWidget(help_icon(tr("scope.ranges_hint")))
+        rh.addStretch(1)
         rh.addWidget(self.markers.add("Ranges", None))
         rl.addLayout(rh)
         self.ranges = RangeEditor(tr)
@@ -187,8 +188,8 @@ class ScopeTab(QWidget):
         bar = ButtonBar([("Add", tr("excl.add")), ("Remove", tr("excl.remove")), ("Copy", tr("ui.copy")),
                          ("Paste", tr("ui.paste"))])
         bar.action.connect(self._ex_action)
+        bar.add_widget(help_icon(tr("excl.note")))
         lay.addWidget(bar)
-        lay.addWidget(hint_label(tr("excl.note")))
         self.tabs.addTab(w, tr("scope.page.exclusions"))
 
     def _build_leases(self) -> None:

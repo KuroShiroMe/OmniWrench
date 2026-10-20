@@ -84,12 +84,15 @@ class PsHost:
         self._proc.stdin.flush()
 
     def _read_message(self, on_progress: Callable[[dict], None] | None) -> dict:
-        assert self._proc and self._proc.stdout
+        proc = self._proc
+        if not (proc and proc.stdout):
+            raise HostDied("PowerShell")
         while True:
-            raw = self._proc.stdout.readline()
+            raw = proc.stdout.readline()
             if not raw:
                 tail = " | ".join(self._stderr[-5:])
-                self._proc = None
+                if self._proc is proc:
+                    self._proc = None
                 raise HostDied(tail or "PowerShell")
             text = raw.decode("utf-8", errors="replace").rstrip("\r\n")
             if text.startswith(PROGRESS):
@@ -119,6 +122,16 @@ class PsHost:
             if not msg.get("ok"):
                 raise HostError(msg.get("error") or "?")
             return msg.get("data")
+
+    def kill(self) -> None:
+        """Sofort beenden (Abbruch einer laufenden Abfrage); ein wartender call() endet mit HostDied."""
+        proc = self._proc
+        self._proc = None
+        if proc:
+            try:
+                proc.kill()
+            except Exception:  # noqa: BLE001
+                pass
 
     def close(self) -> None:
         proc = self._proc

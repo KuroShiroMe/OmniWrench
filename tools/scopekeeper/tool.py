@@ -1,4 +1,4 @@
-"""ScopeKeeper – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
+"""MS DHCP Extended Management (intern: ScopeKeeper) – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
 
 Aufbau:
 * Anmeldeseite (Server, Anmeldedaten, Partner) -> Hauptbereich mit eigenem Dock-Manager (QtAds):
@@ -36,8 +36,9 @@ from .page_scope import ScopeTab
 from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
 from .pshost import PsHost
 from .runner import Job, Runner
+from .scanner import Scanner
 from .service import DhcpService, ReplicationError, UserError
-from .ui_base import FilterState, bold_label, confirm, error, hint_label, info, level_icon, short_list, text_dialog, warn
+from .ui_base import FilterState, bold_label, confirm, error, help_icon, info, level_icon, short_list, text_dialog, warn
 
 MIME = "application/x-omniwrench-scopekeeper+json"
 MAX_SERVERS = 15
@@ -59,8 +60,7 @@ class ScopeKeeper(ToolBase):
         self.bridge = _Bridge()
         self.bridge.log.connect(self._append_log)
         self.bridge.progress.connect(self._progress)
-        factory = type(self).backend_factory
-        self.backend = factory() if factory else PsHost(Path(__file__).with_name("host.ps1"))
+        self.backend = self._new_backend()
         self.svc = DhcpService(self.backend, tr, lambda t, e=False: self.bridge.log.emit(t, e),
                                lambda t, i=0, n=0: self.bridge.progress.emit(t, i, n))
         self.flt = FilterState(self.settings)
@@ -68,6 +68,7 @@ class ScopeKeeper(ToolBase):
         self.runner.busy_changed.connect(self._busy)
         self.runner.status.connect(lambda t: self._progress(t, 0, 0) if t != "busy" else None)
         self.runner.failed.connect(self._failed)
+        self.scanner = Scanner(self._new_backend, lambda: self.svc, lambda t, e=False: self.bridge.log.emit(t, e))
         self.queue: list = []
         self.tabs: dict[QWidget, ads.CDockWidget] = {}
         self.scan: dict | None = None
@@ -82,14 +83,24 @@ class ScopeKeeper(ToolBase):
         lay.addWidget(self.stack, 1)
         self.stack.addWidget(self._build_login())
         self.stack.addWidget(self._build_main())
+        self.stack.addWidget(self._build_loading())
         lay.addWidget(self._build_status())
         self._shortcut = QShortcut(QKeySequence("Ctrl+W"), self.root)
         self._shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self._shortcut.activated.connect(self._close_current)
+        cp = self.check_page
+        self.scanner.running_changed.connect(lambda on: None if on else cp.scan_stopped())
+        self.scanner.progress.connect(cp.scan_progress)
+        self.scanner.scope_done.connect(cp.scope_done)
+        self.scanner.finished.connect(self._scan_finished)
+        self.scanner.failed.connect(self._scan_failed)
         return self.root
 
-    def _build_login(self) -> QWidget:
-        tr = self.tr
+    def _new_backend(self):
+        factory = type(self).backend_factory
+        return factory() if factory else PsHost(Path(__file__).with_name("host.ps1"))
+
+    def _card(self) -> tuple[QWidget, QVBoxLayout, QFrame]:
         page = QWidget()
         outer = QVBoxLayout(page)
         outer.setContentsMargins(24, 24, 24, 24)
@@ -101,12 +112,56 @@ class ScopeKeeper(ToolBase):
         cl = QVBoxLayout(card)
         cl.setContentsMargins(24, 20, 24, 20)
         cl.setSpacing(10)
+        h = QHBoxLayout()
+        h.addStretch(1)
+        h.addWidget(card, 10)
+        h.addStretch(1)
+        outer.addStretch(1)
+        outer.addLayout(h)
+        outer.addStretch(2)
+        return page, cl, card
+
+    def _build_loading(self) -> QWidget:
+        """Während der Anmeldung nur Fortschritt; bei einem Fehler geht es zurück zur Anmeldemaske."""
+        page, cl, _card = self._card()
+        self.load_title = bold_label("")
+        f = self.load_title.font()
+        f.setPointSizeF(f.pointSizeF() * 1.3)
+        self.load_title.setFont(f)
+        cl.addWidget(self.load_title)
+        self.load_bar = QProgressBar()
+        self.load_bar.setRange(0, 0)
+        self.load_bar.setTextVisible(False)
+        self.load_bar.setMaximumHeight(10)
+        cl.addWidget(self.load_bar)
+        self.load_steps = QLabel("")
+        self.load_steps.setTextFormat(Qt.TextFormat.RichText)
+        self.load_steps.setWordWrap(True)
+        self.load_steps.setStyleSheet(f"color:{theme.current['muted']};")
+        cl.addWidget(self.load_steps)
+        self._steps: list[str] = []
+        return page
+
+    def _step(self, text: str, is_error: bool = False) -> None:
+        if self.stack.currentIndex() != 2:
+            return
+        color = theme.current["danger"] if is_error else theme.current["muted"]
+        self._steps.append(f"<span style='color:{color}'>{html.escape(text)}</span>")
+        self._steps = self._steps[-8:]
+        self.load_steps.setText("<br>".join(self._steps))
+
+    def _build_login(self) -> QWidget:
+        tr = self.tr
+        page, cl, card = self._card()
+        th = QHBoxLayout()
         title = bold_label(tr("login.title"))
         f = title.font()
         f.setPointSizeF(f.pointSizeF() * 1.4)
         title.setFont(f)
-        cl.addWidget(title)
-        cl.addWidget(hint_label(tr("login.intro")))
+        th.addWidget(title)
+        th.addWidget(help_icon(tr("login.intro") + "\n\n" + tr("login.requirements")))
+        th.addStretch(1)
+        cl.addLayout(th)
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
         grid.addWidget(QLabel(tr("login.server")), 0, 0)
@@ -150,8 +205,14 @@ class ScopeKeeper(ToolBase):
         cl.addLayout(grid)
         self.auto_partner = QCheckBox(tr("login.auto_partner"))
         self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
-        cl.addWidget(self.auto_partner)
-        cl.addWidget(hint_label(tr("login.auto_partner_hint")))
+        self.auto_scan = QCheckBox(tr("login.auto_scan"))
+        self.auto_scan.setChecked(bool(self.settings.get("auto_scan", True)))
+        for box, tip in ((self.auto_partner, "login.auto_partner_hint"), (self.auto_scan, "login.auto_scan_hint")):
+            r = QHBoxLayout()
+            r.addWidget(box)
+            r.addWidget(help_icon(tr(tip)))
+            r.addStretch(1)
+            cl.addLayout(r)
         row = QHBoxLayout()
         self.login_btn = make_button(tr("login.connect"), primary=True, on_click=self._login_clicked)
         row.addWidget(self.login_btn)
@@ -159,14 +220,6 @@ class ScopeKeeper(ToolBase):
         self.login_status.setWordWrap(True)
         row.addWidget(self.login_status, 1)
         cl.addLayout(row)
-        cl.addWidget(hint_label(tr("login.requirements")))
-        h = QHBoxLayout()
-        h.addStretch(1)
-        h.addWidget(card, 10)
-        h.addStretch(1)
-        outer.addStretch(1)
-        outer.addLayout(h)
-        outer.addStretch(2)
         self._mode_changed()
         return page
 
@@ -314,6 +367,7 @@ class ScopeKeeper(ToolBase):
             self.pbar.setValue(i)
 
     def _append_log(self, text: str, is_error: bool) -> None:
+        self._step(text, is_error)
         stamp = time.strftime("%H:%M:%S")
         color = theme.current["danger"] if is_error else theme.current["text"]
         body = html.escape(text).replace("\n", "<br>&nbsp;&nbsp;")
@@ -323,6 +377,8 @@ class ScopeKeeper(ToolBase):
     def _failed(self, text: str) -> None:
         self._append_log(text, True)
         self.login_status.setText("")
+        if self.stack.currentIndex() == 2:      # Anmeldung fehlgeschlagen -> zurück zur Anmeldemaske
+            self.stack.setCurrentIndex(0)
         error(self.root, self.tr("ui.error"), text)
 
     def notify(self, text: str) -> None:
@@ -359,7 +415,12 @@ class ScopeKeeper(ToolBase):
         if mode == "manual":
             self.settings.set("last_user", user)
         self.settings.set("auto_partner", self.auto_partner.isChecked())
-        self.login_status.setText(tr("login.connecting", server=server))
+        self.settings.set("auto_scan", self.auto_scan.isChecked())
+        self.login_status.setText("")
+        self.load_title.setText(tr("login.connecting", server=server))
+        self._steps = []
+        self.load_steps.setText("")
+        self.stack.setCurrentIndex(2)
         hello = yield Job(svc.hello, tr("status.starting_host"))
         if not (hello or {}).get("dhcp"):
             raise UserError(tr("err.no_module"))
@@ -379,6 +440,8 @@ class ScopeKeeper(ToolBase):
         self.refresh_pages()
         self.stack.setCurrentIndex(1)
         self.fixed_docks[0].setAsCurrentTab()
+        if self.auto_scan.isChecked():
+            self.start_scan()
 
     def partner_login_flow(self):
         tr, svc = self.tr, self.svc
@@ -425,6 +488,7 @@ class ScopeKeeper(ToolBase):
             return
         for w in list(self.tabs):
             self.close_tab(w, force=True)
+        self.scanner.reset()
         yield Job(self.svc.disconnect, tr("status.disconnecting"))
         self.stack.setCurrentIndex(0)
 
@@ -469,6 +533,24 @@ class ScopeKeeper(ToolBase):
 
     def checker(self) -> ck.Checker:
         return ck.Checker(self.tr, self.svc.defs, self.svc.server_options, self.svc.failovers)
+
+    # --- Prüfung im Hintergrund ----------------------------------------------------------------------
+    def start_scan(self) -> None:
+        cp = self.check_page
+        if self.scanner.running or not self.svc.server:
+            return
+        cp.scan_started()
+        if not self.scanner.start(cp.with_leases.isChecked(), cp.with_partner.isChecked()):
+            cp.scan_stopped()
+
+    def _scan_finished(self, scan: dict) -> None:
+        self.set_scan(scan)
+        key = "log.scan_cancelled" if scan.get("partial") else "log.scan_done"
+        self.svc.log(self.tr(key, n=len(scan["scopes"]), sec=scan["seconds"]))
+
+    def _scan_failed(self, text: str) -> None:
+        self.check_page.scan_failed(text)
+        self.svc.log(self.tr("log.scan_failed", error=text), True)
 
     def set_scan(self, scan: dict) -> None:
         self.scan = scan
@@ -750,6 +832,8 @@ class ScopeKeeper(ToolBase):
             self.auto_repl.setChecked(bool(self.settings.get("auto_replicate", True)))
         if "auto_partner" in changed_keys:
             self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
+        if "auto_scan" in changed_keys:
+            self.auto_scan.setChecked(bool(self.settings.get("auto_scan", True)))
 
     def can_close(self) -> bool:
         dirty = [w for w in getattr(self, "tabs", {}) if isinstance(w, ScopeTab) and w.is_dirty()]
@@ -758,6 +842,9 @@ class ScopeKeeper(ToolBase):
         return True
 
     def shutdown(self) -> None:
+        scanner = getattr(self, "scanner", None)
+        if scanner is not None:
+            scanner.reset()
         runner = getattr(self, "runner", None)
         if runner is not None:
             runner.abort()

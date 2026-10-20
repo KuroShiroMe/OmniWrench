@@ -48,6 +48,8 @@
   `@{ items = , $arr }` nests the array -> JSON `[[...]]` (ScopeKeeper 1.0.0 bug: "'list' object has no attribute
   'get'"). Test host.ps1 output shapes with real pwsh (Linux tarball works, stub the DhcpServer cmdlets), not only
   with a Python fake backend.
+- RunspacePool workers don't see functions of the host runspace: stub cmdlets for tests must be passed as script text
+  and dot-sourced inside each worker (`$script:PoolInit` in host.ps1). A CimSession object can be shared across runspaces.
 ## Python
 - `context.tr(key, default=None, **kw)`: never use `key=` or `default=` as placeholder names (TypeError "multiple values").
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.

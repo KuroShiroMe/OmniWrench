@@ -21,7 +21,7 @@ from .editors import LeaseEdit, RangeEditor
 from .runner import Job
 from .service import UserError
 from .ui_base import (
-    MONO, ButtonBar, FindingsView, Markers, bold_label, confirm, hint_label, info, level_color, level_icon, level_name,
+    MONO, ButtonBar, FindingsView, Markers, bold_label, confirm, help_icon, hint_label, info, level_color, level_icon, level_name,
     short_list, tint, warn,
 )
 
@@ -173,7 +173,8 @@ class DraftTab(QWidget):
         rbox = QGroupBox(tr("scope.ranges"))
         rl = QVBoxLayout(rbox)
         rh = QHBoxLayout()
-        rh.addWidget(hint_label(tr("draft.ranges_hint")), 1)
+        rh.addWidget(help_icon(tr("draft.ranges_hint")))
+        rh.addStretch(1)
         rh.addWidget(self.markers.add("Ranges", None))
         rl.addLayout(rh)
         self.ranges = RangeEditor(tr)
@@ -227,8 +228,8 @@ class DraftTab(QWidget):
                          ("None", tr("draft.none")), ("AdaptAll", tr("draft.adapt_all")), ("AdaptNone", tr("draft.adapt_none")),
                          ("Paste", tr("ui.paste")), ("NewDef", tr("def.new"))])
         bar.action.connect(self._opt_action)
+        bar.add_widget(help_icon(tr("draft.opt_note")))
         lay.addWidget(bar)
-        lay.addWidget(hint_label(tr("draft.opt_note")))
         self.tabs.addTab(w, tr("scope.page.options"))
 
     # --- Laden ---------------------------------------------------------------------------------------
