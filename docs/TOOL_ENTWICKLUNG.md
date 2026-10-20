@@ -206,6 +206,7 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | `get_credential(key)` | `(benutzer, passwort)` einer `credential`-Einstellung (blockiert, solange ein externer Manager antwortet) |
 | `get_credential_async(key, on_done)` | dasselbe im Hintergrund, `on_done((benutzer, passwort) \| None)` läuft im GUI-Thread |
 | `secrets.get/set/delete(key)` | freier, verschlüsselter Speicher des Tools |
+| `secrets.is_lost(key)` | `True`, wenn der Wert beim Zurücksetzen des Masterpassworts verworfen und noch nicht neu gesetzt wurde (dann z. B. ❗ anzeigen) |
 | `tr(key, default=None, **platzhalter)` / `language` | Übersetzung aus `locales/` bzw. aktive Sprache |
 | `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\DarkMatter\OmniWrench\tool_data\<id>`) |
 | `tool_dir` | Installationsordner (für mitgelieferte Dateien) |

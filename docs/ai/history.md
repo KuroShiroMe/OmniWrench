@@ -255,3 +255,14 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
   Latenz, Durchsatz, Lasttest 3 Verb., Portscan 32 Ports, Befund link_ok), standalone-CLI serve+probe, PDF, check_store.
 - OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
   0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
+
+## 2026-10-20 — Masterpasswort zurücksetzen (verlorenes Passwort)
+Stef: Passwort zurücksetzen können, wenn es verloren geht; dabei nur Passwörter löschen (auch Vault-Konnektoren),
+alle Einträge bleiben mit ❗ beim Passwort und funktionieren erst nach Neusetzen.
+- core/dpapi.py (neu), Vault.recovery + reset() + Verlustliste, Credential.missing, is_missing(), SecretStore.is_lost,
+  ToolSettingsStore.is_lost. Login: Link „Passwort vergessen?“ -> ResetDialog (neues Passwort, Bestätigungs-Haken).
+- ❗-Markierung: Passwortmanager-Liste, Auswahl, credential-Felder (neuer ✎-Knopf zum Nachtragen), geheime
+  Tool-Einstellungen, GitHub-Token, OmniVault-Konnektorliste (OmniVault 1.1.1 -> 1.1.2).
+- 12 neue App-Schlüssel in allen 23 Sprachen. Geprüft: Reset-Ablauf per Skript (Linux, Schema "plain"), Renders,
+  smoke_test, check_locales, check_store. DPAPI selbst nur unter Windows prüfbar.
+

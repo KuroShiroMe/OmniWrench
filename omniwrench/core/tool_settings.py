@@ -37,6 +37,10 @@ class ToolSettingsStore:
             return sdef.default if sdef and sdef.default is not None else default
         return value
 
+    def is_lost(self, key: str) -> bool:
+        """True, wenn das Geheimnis beim Zurücksetzen des Tresors verloren ging (noch nicht neu gesetzt)."""
+        return self._vault.is_lost(self._vault_key(key))
+
     def all(self) -> dict[str, Any]:
         return {s.key: self.get(s.key) for s in self.schema}
 

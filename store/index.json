@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-17T20:29:59+00:00",
+  "generated": "2026-10-20T09:45:39+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -169,7 +169,7 @@
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "DarkMatter",
@@ -255,9 +255,9 @@
           "category": "Sécurité de l'information/Mots de passe et secrets"
         }
       },
-      "download_url": "packages/sec.omnivault-1.1.1.zip",
-      "sha256": "aeb2cdac15ca2037967ef66798c9ba2b982196a4014d5ca9fc1dad7007b34896",
-      "size": 35598
+      "download_url": "packages/sec.omnivault-1.1.2.zip",
+      "sha256": "8bfd2a17371041882c7e4388e4e8d6fb0117ba3d0059060b358ed06b246fdf49",
+      "size": 35867
     },
     {
       "id": "net.subnet-calculator",

@@ -34,6 +34,9 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 
+- [ ] Master password reset (PR 2026-10-20): verify on Windows that DPAPI protect/unprotect works (recovery
+      copy written on unlock, reset keeps entries); in a cloud/Linux run only the "plain" fallback was tested.
+
 - [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
       (Settings > Branches) - only the user can do that.
 

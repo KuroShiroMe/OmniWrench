@@ -37,9 +37,10 @@ class _Field:
     Fehlt ein Schlüssel, wird der Text aus config.json verwendet.
     """
 
-    def __init__(self, sdef: SettingDef, value: Any, t: Translator):
+    def __init__(self, sdef: SettingDef, value: Any, t: Translator, lost: bool = False):
         self.sdef = sdef
         self.t = t
+        self.lost = lost   # Geheimnis ging beim Zurücksetzen des Tresors verloren
         self.widget = self._build(sdef, value)
 
     def text(self, attr: str) -> str:
@@ -116,7 +117,7 @@ class _Field:
         elif t in ("path_file", "path_dir"):
             w = self._path_edit(value, directory=(t == "path_dir"))
         elif t == "secret":
-            w = self._password_edit(value)
+            w = self._password_edit(value, tr("vault.lost_placeholder") if self.lost and not value else "")
         elif t == "credential":
             w = CredentialField(value or {})
         elif t == "certificate":
@@ -156,8 +157,12 @@ class _Field:
 
 
 def build_settings_form(schema: list[SettingDef], values: dict[str, Any],
-                        t: Translator) -> tuple[QWidget, list[_Field]]:
-    """Erzeugt aus einem Einstellungsschema ein Formular (bei mehreren Gruppen mit Tabs)."""
+                        t: Translator, lost: set[str] | None = None) -> tuple[QWidget, list[_Field]]:
+    """Erzeugt aus einem Einstellungsschema ein Formular (bei mehreren Gruppen mit Tabs).
+
+    lost: Schlüssel geheimer Felder, deren Wert beim Zurücksetzen des Tresors verloren ging.
+    """
+    lost = lost or set()
     groups: dict[str, list[SettingDef]] = {}
     for s in schema:
         groups.setdefault(s.group or "", []).append(s)
@@ -172,9 +177,11 @@ def build_settings_form(schema: list[SettingDef], values: dict[str, Any],
         form.setFieldGrowthPolicy(QFormLayout.FieldGrowthPolicy.AllNonFixedFieldsGrow)
         form.setVerticalSpacing(10)
         for s in defs:
-            f = _Field(s, values.get(s.key), t)
+            f = _Field(s, values.get(s.key), t, lost=s.key in lost and not values.get(s.key))
             fields.append(f)
-            form.addRow(f.text("label") + (" *" if s.required else ""), f.widget)
+            form.addRow(("❗ " if f.lost else "") + f.text("label") + (" *" if s.required else ""), f.widget)
+            if f.lost:
+                form.addRow("", label(tr("vault.missing"), "Muted", wrap=True))
             if f.text("description"):
                 form.addRow("", label(f.text("description"), "Muted", wrap=True))
         return page
@@ -229,7 +236,8 @@ class ToolSettingsDialog(QDialog):
             lay.addWidget(label(tr("settings.no_settings"), "Muted"))
             self.fields = []
         else:
-            form, self.fields = build_settings_form(tool.schema, tool.settings.all(), translator)
+            lost = {s.key for s in tool.schema if s.type == "secret" and tool.settings.is_lost(s.key)}
+            form, self.fields = build_settings_form(tool.schema, tool.settings.all(), translator, lost)
             lay.addWidget(form, 1)
             if any(f.sdef.is_secret for f in self.fields):
                 lay.addWidget(label("🔒 " + tr("settings.secrets_hint"), "Muted"))
@@ -374,7 +382,10 @@ class AppSettingsDialog(QDialog):
         self.token = QLineEdit(self.vault.get("app:github_token", "") or "")
         self.token.setEchoMode(QLineEdit.EchoMode.Password)
         self.token.setPlaceholderText(tr("appsettings.token_placeholder"))
-        form.addRow(tr("appsettings.token"), self.token)
+        token_lost = self.vault.is_lost("app:github_token")
+        if token_lost:
+            self.token.setPlaceholderText(tr("vault.lost_placeholder"))
+        form.addRow(("❗ " if token_lost else "") + tr("appsettings.token"), self.token)
         return page
 
     # ----- Sicherheit
