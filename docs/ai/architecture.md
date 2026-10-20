@@ -58,7 +58,7 @@ omniwrench/ui/
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
-                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe), scopekeeper (net.scopekeeper) - see below
+                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe), ms_dhcp_extended (net.ms-dhcp-extended) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
                               smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
@@ -137,7 +137,8 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   replace the old "general" tab. PDF export via pdfreport.py (QPdfWriter + QTextDocument from HTML, no extra dependency).
   TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.
 
-## ScopeKeeper (net.scopekeeper) – Microsoft DHCP manager (Alpha, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1)
+## MS DHCP Extended Management (net.ms-dhcp-extended, folder tools/ms_dhcp_extended, class MsDhcpExtended) – Microsoft DHCP manager
+  (Alpha, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1; was net.scopekeeper/ScopeKeeper until 2026-10-20)
 - Layers: `ipcalc` (IPv4 math, ScopeModel, range/exclusion conversion, address translation between networks),
   `optcodec` (option value parse/format/compare per definition type, STD_OPTION_IDS), `checks` (Checker -> Finding
   level error/warning/bestpractice/info + category + obj + targets["Field:Name", "Range:n", "Option:003", ...] + fix id;
@@ -145,32 +146,38 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   `sync_plan` = replication diff), `service.DhcpService` (all server access, normalises cmdlet output n_scope/n_opt/...,
   partner handling, replication, failover, scan), UI modules (tool, pages, page_scope, page_draft, editors, dialogs,
   ui_base, runner).
-- Backend: ONE persistent Windows PowerShell 5.1 process (`pshost.PsHost` + `host.ps1`), line-JSON over stdin/stdout,
-  script sent base64 via -EncodedCommand bootstrap (no ps1 encoding issues). Commands: hello, connect (CIM session per
-  server, creds only via stdin), cim (whitelisted DhcpServer cmdlet + params; TimeSpan <-> seconds via {"__ts"}),
-  dhcp_in_dc, resolve, fo_api (DsmRpc C# P/Invoke on dhcpsapi: failover enum/create/set/add/remove/delete, optional
-  NewCredentials logon like runas /netonly), netsh (lines, progress per line), disconnect. Errors as `@ERR:key:..` /
-  `@RPC:op:server:code:text` -> translated in `DhcpService.host_text`.
-- Partner access: CIM first, else RPC (fo_api + netsh). `partner_mode` Auto (login checks all partners, dialog
+- Backend (no PowerShell since 2026-10-20): `backend.ApiBackend.call(cmd, args, on_progress)` with hello, connect,
+  set_cred, disconnect, cim, cim_many, dhcp_in_dc, resolve, fo_api, netsh. `dhcpapi.py` = ctypes on dhcpsapi.dll
+  (DHCP Server Management API over RPC, like the MMC); `dhcpapi.CMDLETS` maps the old cmdlet names to API calls and
+  returns cmdlet-shaped dicts (ScopeId, StartRange, LeaseDuration in s …) so service.py normalisers stay unchanged.
+  Alt. creds = LogonUser(NEW_CREDENTIALS) + ImpersonateLoggedOnUser per call/thread (runas /netonly). Lease time =
+  option 51 (DWord), DNS settings = option 81 bit flags (DNS_FLAG_*), reservation names = client records
+  (DhcpGetClientInfoV4/SetClientInfoV4); reservation UID may carry subnet(LE)+0x01 prefix -> stripped. netsh: Python
+  writes a .cmd batch with ##BEGIN/##RC markers, runs it hidden (CreateProcessWithLogonW netcredentials-only if creds),
+  polls the output file. Errors `@ERR:key:..` / `@RPC:op:server:code:text` -> `DhcpService.host_text`.
+- Struct layouts verified against the official Win32 metadata (windows-sys 0.52 Dhcp/mod.rs) with
+  scripts/dhcp_api_check/verify_api.py; logic tested on Linux with a fake dhcpsapi (fake_dhcpsapi.c, same layouts)
+  via test_api.py (`dhcpapi.setup(ctypes.CDLL(...))`). Re-run both after touching dhcpapi.py.
+- Partner access: DHCP API first (partner_via "Cim" = API, label "verbunden"), else netsh path ("Rpc"). `partner_mode` Auto (login checks all partners, dialog
   retry/other creds/primary only) / Lazy / Off. Replication always reads the partner via netsh dump and writes netsh
   commands (works without WinRM); custom classes/definitions are created on the partner first. Server options are
   never auto-replicated ("Copy to partner" button).
 - Flow runner: UI actions are generators yielding `runner.Job(fn, status, cancellable)`; `Runner` runs fn via
-  run_async, sends the result back (or throws), shows status/progress/cancel. One flow at a time, `ScopeKeeper.run`
+  run_async, sends the result back (or throws), shows status/progress/cancel. One flow at a time, `MsDhcpExtended.run`
   queues. UserError -> error box, others -> box with traceback.
 - UI: login page -> main page with own QtAds CDockManager: fixed docks Übersicht/Server-Optionen/Failover/Definitionen/
   Prüfung + one closable dock per scope (`ScopeTab`: Allgemein+Bereiche, Optionen, Reservierungen, Ausschlüsse, Leases,
   Failover, Befunde) or draft (`DraftTab`: new/duplicate with octet edits, conversion of ranges/options). Findings are
   recomputed on every edit (`recheck`), mark fields (Markers "?" buttons, row tints, tab icons); double-click applies
-  the fix. Clipboard MIME application/x-omniwrench-scopekeeper+json for options/reservations/exclusions with network
+  the fix. Clipboard MIME application/x-omniwrench-ms-dhcp-extended+json for options/reservations/exclusions with network
   conversion.
-- Test hook: `ScopeKeeper.backend_factory` replaces PsHost (fake backend for screenshots/flow tests; not in repo).
-- Fast scan (1.1.0): `scanner.Scanner` (QObject, own thread, own PsHost) -> `DhcpService.clone_for(host)` + `attach()`
+- Test hook: `MsDhcpExtended.backend_factory` replaces ApiBackend (fake backend for screenshots/flow tests; not in repo).
+- Fast scan: `scanner.Scanner` (QObject, own thread, own ApiBackend) -> `DhcpService.clone_for(backend)` + `attach()`
   (re-login with in-memory secrets, partners via set_cred) -> `fast_scan`: phase 1 = one `cim_many` with all
   server-level Gets, phase 2 = per-scope Gets (options, reservations, DNS, opt. leases) in parallel; results land in
-  `svc.prefetch` (key = json [name, server, params]) so the normal `cim()`/load/check code is reused unchanged. Host
-  command `cim_many`: RunspacePool (1..16, THREADS=8), only `Get-DhcpServer*`, each result streamed as progress
-  {key, items|error}; `$script:PoolInit` = test hook (stub functions dot-sourced per runspace). Each scope is evaluated
-  once its keys are in -> `scope_done` signal -> CheckPage refresh coalesced by a 300 ms timer. Cancel = kill the scan
-  host (`PsHost.kill`), next scan starts a new one; partial result has partial=True.
+  `svc.prefetch` (key = json [name, server, params]) so the normal `cim()`/load/check code is reused unchanged.
+  `cim_many` = ThreadPoolExecutor (1..16, THREADS=8), only Get-*, each result streamed as progress {key, items|error};
+  DhcpApi itself parallelises per-subnet work of "all scopes" queries. Each scope is evaluated once its keys are in
+  -> `scope_done` signal -> CheckPage refresh coalesced by a 300 ms timer. Cancel = `ApiBackend.kill()` (stops
+  waiting, pending calls cancelled); partial result has partial=True.
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.

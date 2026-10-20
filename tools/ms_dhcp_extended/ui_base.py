@@ -1,4 +1,4 @@
-"""Gemeinsame Oberflächenbausteine von ScopeKeeper: Tabellen, Schaltflächenleisten, Befundliste, Markierungen
+"""Gemeinsame Oberflächenbausteine von MS DHCP Extended Management: Tabellen, Schaltflächenleisten, Befundliste, Markierungen
 und Dialoge. Farben kommen aus dem App-Theme, damit hell und dunkel funktionieren."""
 
 from __future__ import annotations

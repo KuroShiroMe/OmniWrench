@@ -248,3 +248,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   Opt-out „Server direkt nach der Anmeldung prüfen“; Ladeansicht beim Anmelden (bei Fehler zurück); Verbindungsaufbau
   als Schritte statt Fehlermeldung; Hinweistexte -> ?-Icons. Mit Fake-Backend + pwsh-Stubs getestet (10 Abfragen à
   300 ms in 0,7 s).
+- 2026-10-20 Stef: interne Kennung auch ändern (neues Tool net.ms-dhcp-extended, Ordner ms_dhcp_extended) und
+  „möglichst alles in Python“. DHCP-Zugriff komplett neu über dhcpsapi.dll (ctypes, backend.py/dhcpapi.py),
+  PowerShell-Host (host.ps1/pshost.py) entfernt, netsh direkt aus Python. Strukturen gegen Win32-Metadaten geprüft,
+  Abläufe mit Fake-DLL unter Linux getestet. Inventar der übrigen PowerShell-Nutzung in backlog.md.

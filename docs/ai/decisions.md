@@ -123,18 +123,21 @@
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
   file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.
 
-## ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
+## MS DHCP Extended Management, formerly ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
 - Stef wanted the full concept rebuilt as OmniWrench tool, not a copy. Name ScopeKeeper, id net.scopekeeper, category
   network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it.
 - Requirement RSAT DHCP tools (windows_capabilities Rsat.DHCP.Tools); uninstall keeps RSAT.
 - Defaults: connect failover partners at login = on, auto replication = on (both switchable in settings/main page).
 - Partner fallback chain kept from the script: CIM/WinRM -> RPC (failover API + netsh dump/commands).
 - Server options are never replicated automatically; deleting scopes needs the typed word (ov.delete_word).
-- Passwords only via stdin to the PowerShell host, never on a command line or in logs.
-- 2026-10-20 (Stef): display name "MS DHCP Extended Management" (tool.json name + tool.name). id/folder/class/MIME stay
-  scopekeeper (internal only). Check runs in the background, never freezes the UI; login checkbox "Server direkt nach
+- Passwords never on a command line or in logs (only in memory; passed to LogonUser/CreateProcessWithLogonW).
+- 2026-10-20 (Stef): display name "MS DHCP Extended Management" (tool.json name + tool.name). Same day (Stef): internal id
+  changed too -> net.ms-dhcp-extended (new tool, must be installed fresh; no migration from net.scopekeeper). Check runs in the background, never freezes the UI; login checkbox "Server direkt nach
   der Anmeldung prüfen" (setting auto_scan, default on). Login shows a loading view, on failure back to the login form.
-  Connection fallback is logged as normal steps ("WinRM nicht möglich – versuche DCOM …"), not as errors.
+  Connection steps are logged calmly ("Verbinde … per RPC …"), never styled as errors.
   Long hint labels replaced by "?" help icons with tooltip (ui_base.help_icon).
-- Scan host gets the login password in memory (DhcpService.secrets) to log in a second PowerShell process; never
-  written to disk/settings, cleared on reset/logout.
+- Scan backend gets the login password in memory (DhcpService.secrets) to log in a second time; never written to
+  disk/settings, cleared on reset/logout.
+- 2026-10-20 (Stef, binding for all work): "möglichst alles in Python, PowerShell nur wenn unbedingt nötig".
+  DHCP tool therefore uses dhcpsapi.dll via ctypes (no WinRM/CIM/DhcpServer module); RSAT stays only for netsh dhcp
+  (replication). Other PowerShell uses in the app: see backlog (inventory 2026-10-20).

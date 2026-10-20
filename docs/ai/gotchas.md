@@ -36,7 +36,7 @@
 - `ToolBase` ist KEIN QObject -> ein `Signal(...)` direkt als Klassenattribut einer ToolBase-Unterklasse wirft beim `connect` `'Signal' object has no attribute 'connect'`. Für Hintergrund->GUI entweder `run_async` oder eine eigene `class _Bridge(QObject)` mit den Signals (NetProbe). smoke_test fängt das ab.
 
 - FlowLayout (widgets.py) wraps as soon as a row reaches rect.right() (= width-1) and its sizeHint is only the widest
-  item -> in an HBox a button row wraps vertically. ScopeKeeper ButtonBar overrides sizeHint (one row + 1 px) and calls
+  item -> in an HBox a button row wraps vertically. DHCP tool ButtonBar overrides sizeHint (one row + 1 px) and calls
   updateGeometry on LayoutRequest (button widths change after styling).
 - `spinbox.valueChanged.connect(self.changed.emit)` with `changed = Signal()` -> "changed() only accepts 0 argument(s)"
   at runtime; wrap in a lambda. Same for clicked(bool) -> Signal().
@@ -45,11 +45,14 @@
 - smoke_test patches only the static QMessageBox helpers; `QMessageBox(...).exec()` instances block a headless test
   (patch QMessageBox.exec in render/flow scripts).
 - PowerShell: unary comma only for function RETURN values (`return , $arr`). Inside a hashtable literal
-  `@{ items = , $arr }` nests the array -> JSON `[[...]]` (ScopeKeeper 1.0.0 bug: "'list' object has no attribute
+  `@{ items = , $arr }` nests the array -> JSON `[[...]]` (DHCP tool 1.0.0 bug, old PowerShell host: "'list' object has no attribute
   'get'"). Test host.ps1 output shapes with real pwsh (Linux tarball works, stub the DhcpServer cmdlets), not only
   with a Python fake backend.
-- RunspacePool workers don't see functions of the host runspace: stub cmdlets for tests must be passed as script text
-  and dot-sourced inside each worker (`$script:PoolInit` in host.ps1). A CimSession object can be shared across runspaces.
+- dhcpsapi via ctypes: IPs are host-order DWORDs; client arrays are arrays of POINTERS (DHCP_CLIENT_INFO_ARRAY_V5);
+  option data type lives only in the element OptionType (definition type = DefaultValue element type); the DNS
+  credential function is DhcpServerQueryDnsRegCredentials (not ...Get...). Verify new structs against windows-sys
+  metadata (raw.githubusercontent.com/microsoft/windows-rs/0.52.0/crates/libs/sys/src/Windows/Win32/NetworkManagement/
+  Dhcp/mod.rs) - mingw's dhcpsapi.h lacks most V5/failover structs.
 ## Python
 - `context.tr(key, default=None, **kw)`: never use `key=` or `default=` as placeholder names (TypeError "multiple values").
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.

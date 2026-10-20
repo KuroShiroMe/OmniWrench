@@ -1,4 +1,4 @@
-"""Eingabedialoge von ScopeKeeper (Option, Reservierung, Ausschluss, Failover, Definition, Anmeldung)."""
+"""Eingabedialoge von MS DHCP Extended Management (Option, Reservierung, Ausschluss, Failover, Definition, Anmeldung)."""
 
 from __future__ import annotations
 

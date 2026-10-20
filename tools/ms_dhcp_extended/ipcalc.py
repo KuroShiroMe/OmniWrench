@@ -1,4 +1,4 @@
-"""IPv4-Hilfsfunktionen für ScopeKeeper (intern als int).
+"""IPv4-Hilfsfunktionen für MS DHCP Extended Management (intern als int).
 
 Bereiche sind Tupel (start, end) als int. Ein Scope-Modell beschreibt Netz, Präfix, Maske, Broadcast
 und die Verteilbereiche (Scope-Bereich minus Ausschlüsse).

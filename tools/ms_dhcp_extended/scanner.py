@@ -1,9 +1,9 @@
-"""Serverprüfung im Hintergrund: eigener PowerShell-Prozess, damit die Bedienung währenddessen frei bleibt.
+"""Serverprüfung im Hintergrund: eigener Thread mit eigenem Zugriff, damit die Bedienung währenddessen frei bleibt.
 
-Der Prüf-Host meldet sich mit denselben Anmeldedaten an wie der Haupt-Host (DhcpService.clone_for/attach)
-und liest alle Daten gebündelt und parallel (cim_many, RunspacePool). Jeder Scope wird ausgewertet, sobald
-seine Daten da sind; die Ergebnisse kommen als Qt-Signale in den GUI-Thread. Abbrechen beendet den
-Prüf-Host sofort, die nächste Prüfung startet ihn neu.
+Der Prüf-Zugriff meldet sich mit denselben Anmeldedaten an wie der Hauptzugriff (DhcpService.clone_for/attach)
+und liest alle Daten gebündelt und parallel (cim_many, Thread-Pool). Jeder Scope wird ausgewertet, sobald
+seine Daten da sind; die Ergebnisse kommen als Qt-Signale in den GUI-Thread. Abbrechen stoppt die
+Sammelabfragen sofort, die nächste Prüfung meldet sich neu an.
 """
 
 from __future__ import annotations
@@ -42,7 +42,7 @@ class Scanner(QObject):
         self.running = True
         self.running_changed.emit(True)
         threading.Thread(target=self._run, args=(main, with_leases, with_partner), daemon=True,
-                         name="ScopeKeeper-Pruefung").start()
+                         name="DhcpExt-Pruefung").start()
         return True
 
     def _run(self, main, with_leases: bool, with_partner: bool) -> None:

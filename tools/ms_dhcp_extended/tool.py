@@ -1,4 +1,4 @@
-"""MS DHCP Extended Management (intern: ScopeKeeper) – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
+"""MS DHCP Extended Management – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
 
 Aufbau:
 * Anmeldeseite (Server, Anmeldedaten, Partner) -> Hauptbereich mit eigenem Dock-Manager (QtAds):
@@ -14,7 +14,6 @@ import html
 import json
 import os
 import time
-from pathlib import Path
 
 import PySide6QtAds as ads
 from PySide6.QtCore import QMimeData, QObject, Qt, Signal
@@ -34,13 +33,13 @@ from . import dialogs as dlg
 from .page_draft import DraftTab
 from .page_scope import ScopeTab
 from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
-from .pshost import PsHost
+from .backend import ApiBackend
 from .runner import Job, Runner
 from .scanner import Scanner
 from .service import DhcpService, ReplicationError, UserError
 from .ui_base import FilterState, bold_label, confirm, error, help_icon, info, level_icon, short_list, text_dialog, warn
 
-MIME = "application/x-omniwrench-scopekeeper+json"
+MIME = "application/x-omniwrench-ms-dhcp-extended+json"
 MAX_SERVERS = 15
 
 
@@ -50,7 +49,7 @@ class _Bridge(QObject):
     progress = Signal(str, int, int)
 
 
-class ScopeKeeper(ToolBase):
+class MsDhcpExtended(ToolBase):
     backend_factory = None     # für Tests/Screenshots: Ersatz für den PowerShell-Host
 
     # --- Aufbau --------------------------------------------------------------------------------------
@@ -98,7 +97,7 @@ class ScopeKeeper(ToolBase):
 
     def _new_backend(self):
         factory = type(self).backend_factory
-        return factory() if factory else PsHost(Path(__file__).with_name("host.ps1"))
+        return factory() if factory else ApiBackend()
 
     def _card(self) -> tuple[QWidget, QVBoxLayout, QFrame]:
         page = QWidget()
@@ -806,7 +805,7 @@ class ScopeKeeper(ToolBase):
 
     # --- Zwischenablage ------------------------------------------------------------------------------
     def clip_set(self, kind: str, items: list[dict], sid: str, mask: str, text: str) -> None:
-        payload = {"App": "OmniWrench.ScopeKeeper", "Kind": kind, "Server": self.svc.server, "SourceScopeId": sid,
+        payload = {"App": "OmniWrench.MsDhcpExtended", "Kind": kind, "Server": self.svc.server, "SourceScopeId": sid,
                    "SourceMask": mask, "Items": items}
         md = QMimeData()
         md.setData(MIME, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
@@ -822,7 +821,7 @@ class ScopeKeeper(ToolBase):
             data = json.loads(bytes(md.data(MIME)).decode("utf-8"))
         except (ValueError, UnicodeDecodeError):
             return None
-        return data if isinstance(data, dict) and data.get("App") == "OmniWrench.ScopeKeeper" else None
+        return data if isinstance(data, dict) and data.get("App") == "OmniWrench.MsDhcpExtended" else None
 
     # --- Lebenszyklus ------------------------------------------------------------------------------
     def on_settings_changed(self, changed_keys: set[str]) -> None:

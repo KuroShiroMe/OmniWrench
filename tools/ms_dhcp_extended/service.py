@@ -1,11 +1,11 @@
-"""DHCP-Zugriffe von ScopeKeeper: Laden, Ändern, Failover, Replikation, Abgleich und Server-Scan.
+"""DHCP-Zugriffe von MS DHCP Extended Management: Laden, Ändern, Failover, Replikation, Abgleich und Server-Scan.
 
 Alle Methoden blockieren und laufen in Hintergrund-Threads der Oberfläche. Die eigentlichen Zugriffe
-erledigt der PowerShell-Host (pshost.py / host.ps1); hier liegt die Logik:
+erledigt backend.py direkt aus Python (DHCP-API per RPC + netsh dhcp, kein PowerShell); hier liegt die Logik:
 
-* Verbundener Server: DhcpServer-Cmdlets über eine CIM-Sitzung (WSMan, Fallback DCOM).
-* Failover-Partner: 1. eigene CIM-Sitzung direkt von diesem Rechner, 2. automatisch per RPC
-  (Failover-API + netsh dhcp, wie die DHCP-Konsole) - ohne Double Hop.
+* Verbundener Server und Failover-Partner: DHCP Server Management API (dhcpsapi.dll), wie die DHCP-Konsole.
+  Die Abfragen heißen intern weiter wie die DhcpServer-Cmdlets (dhcpapi.CMDLETS).
+* Partner, der nur per netsh erreichbar ist: Failover-API + netsh dhcp - ohne Double Hop.
 * Replikation: Scope lokal lesen, Partner per netsh dump lesen, Abweichungen per netsh angleichen.
 """
 
@@ -21,7 +21,7 @@ from . import checks as ck
 from . import ipcalc as ip
 from . import netshdump as nd
 from . import optcodec as oc
-from .pshost import HostError
+from .backend import HostError
 
 FLAG_MCLT, FLAG_SAFE, FLAG_PCT, FLAG_MODE, FLAG_SECRET = 0x1, 0x2, 0x8, 0x10, 0x40
 SAFE_OFF = 4294967295
@@ -246,17 +246,13 @@ class DhcpService:
         return self.call("hello")
 
     def _conn_steps(self, server: str, partner: bool):
-        """Fortschritt des Verbindungsaufbaus als ruhige Protokollzeilen (WinRM -> DCOM -> ggf. RPC)."""
-        names = {"wsman": "WinRM", "dcom": "DCOM"}
-
+        """Fortschritt des Verbindungsaufbaus als ruhige Protokollzeilen (RPC, beim Partner ggf. weiter mit netsh)."""
         def on_step(msg):
-            proto = names.get(str(msg.get("proto", "")).lower(), str(msg.get("proto", "")))
-            if msg.get("step") == "try" and proto == "WinRM":
+            proto = str(msg.get("proto", ""))
+            if msg.get("step") == "try":
                 self.log(self.tr("log.conn_try", server=server, proto=proto))
-            elif msg.get("step") == "fail" and proto == "WinRM":
-                self.log(self.tr("log.conn_next", proto=proto, next="DCOM"))
             elif msg.get("step") == "fail" and partner:
-                self.log(self.tr("log.conn_next", proto=proto, next="RPC"))
+                self.log(self.tr("log.conn_next", proto=proto, next="netsh"))
         return on_step
 
     # --- Verbindung ---------------------------------------------------------------------------------
@@ -1322,7 +1318,7 @@ class DhcpService:
 
     # --- Schnelle Prüfung (eigener Host-Prozess, läuft parallel zur Bedienung) -----------------------
     def clone_for(self, backend, log=None, progress=None) -> "DhcpService":
-        """Kopie des Verbindungszustands für einen zweiten Host-Prozess (die Prüfung blockiert so nichts)."""
+        """Kopie des Verbindungszustands für einen zweiten Zugriff (die Prüfung blockiert so nichts)."""
         c = DhcpService(backend, self.tr, log or self._log, progress or self._progress)
         c.server, c.user, c.protocol = self.server, self.user, self.protocol
         c.partner_mode = self.partner_mode
@@ -1335,7 +1331,7 @@ class DhcpService:
         return c
 
     def attach(self) -> None:
-        """Meldet den zweiten Host mit denselben Anmeldedaten am Server (und für die Partner) an."""
+        """Meldet den zweiten Zugriff mit denselben Anmeldedaten am Server (und für die Partner) an."""
         user, pw = self.secrets.get("*", ("", ""))
         self.call("connect", {"server": self.server, "user": user, "password": pw, "primary": True})
         for pn, (u, p) in self.secrets.items():

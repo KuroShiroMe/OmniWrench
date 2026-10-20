@@ -1,13 +1,21 @@
-"""Installationsroutine von ScopeKeeper.
+"""Installationsroutine von MS DHCP Extended Management.
 
 Die RSAT-Funktion aus tool.json -> requirements.windows_capabilities installiert das Hauptprogramm
-selbst (mit UAC-Abfrage). Hier wird nur geprüft, ob das PowerShell-Modul DhcpServer verfügbar ist.
+selbst (mit UAC-Abfrage; nötig für netsh dhcp). Hier wird nur geprüft, ob die DHCP-Schnittstelle von
+Windows (dhcpsapi.dll) geladen werden kann - ohne PowerShell.
 """
 
 
+import ctypes
+import os
+
+
 def check(ctx):
-    res = ctx.run_powershell("if (Get-Module -ListAvailable -Name DhcpServer) { 'ok' } else { 'missing' }")
-    if res.stdout.strip() != "ok":
+    if os.name != "nt":
+        return [ctx.tr("install.missing")]
+    try:
+        ctypes.WinDLL("dhcpsapi.dll")
+    except OSError:
         return [ctx.tr("install.missing")]
     return []
 

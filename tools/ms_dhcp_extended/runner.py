@@ -71,7 +71,7 @@ class Runner(QObject):
             self.failed.emit(str(e))
             return
         except Exception as e:  # noqa: BLE001 - Programmfehler sichtbar machen statt still abzubrechen
-            log.exception("ScopeKeeper-Ablauf")
+            log.exception("DHCP-Ablauf")
             self._end()
             self.failed.emit(f"{e}\n\n{traceback.format_exc(limit=6)}")
             return
