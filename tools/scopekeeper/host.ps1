@@ -483,7 +483,7 @@ function ConvertFrom-FoStruct {
         name = $R.Name; primary_ip = (ConvertFrom-IPNumber $R.PrimaryServer); secondary_ip = (ConvertFrom-IPNumber $R.SecondaryServer)
         primary_name = $R.PrimaryServerName; secondary_name = $R.SecondaryServerName; mode = $R.Mode; server_type = $R.ServerType
         state = $R.State; prev_state = $R.PrevState; mclt = $R.Mclt; safe_period = $R.SafePeriod; percentage = [int]$R.Percentage
-        secret = [bool]$R.SharedSecret; scopes = , @($R.Scopes | ForEach-Object { ConvertFrom-IPNumber $_ })
+        secret = [bool]$R.SharedSecret; scopes = @($R.Scopes | ForEach-Object { ConvertFrom-IPNumber $_ })
     }
 }
 
@@ -517,7 +517,7 @@ function Get-NetshSegment {
     param([string]$Text, [int]$Index, [string]$Cmd)
     $m = [regex]::Match($Text, "##BEGIN$Index##\r?\n(?<o>[\s\S]*?)##RC$Index=(?<c>-?\d+)")
     if (-not $m.Success) { return $null }
-    @{ cmd = $Cmd; code = [int]$m.Groups['c'].Value; out = , @($m.Groups['o'].Value -split "\r?\n" | Where-Object { $_.Trim() }) }
+    @{ cmd = $Cmd; code = [int]$m.Groups['c'].Value; out = @($m.Groups['o'].Value -split "\r?\n" | Where-Object { $_.Trim() }) }
 }
 
 # netsh-dhcp-Befehle gegen einen Server: ein unsichtbarer Prozess, ein netsh-Aufruf pro Zeile.
@@ -567,7 +567,7 @@ function Invoke-NetshBatch {
     }
     for ($k = $next; $k -lt $Lines.Count; $k++) {
         $seg = Get-NetshSegment $txt $k $Lines[$k]
-        if (-not $seg) { $seg = @{ cmd = $Lines[$k]; code = -1; out = , @() } }
+        if (-not $seg) { $seg = @{ cmd = $Lines[$k]; code = -1; out = @() } }
         [void]$results.Add($seg)
         Send-Progress @{ i = $k; n = $Lines.Count; result = $seg }
     }
@@ -627,14 +627,14 @@ $script:Handlers = @{
         $res = @(& $name -CimSession $s @p -ErrorAction Stop)
         $items = New-Object System.Collections.ArrayList
         foreach ($r in $res) { if ($null -ne $r) { [void]$items.Add((ConvertTo-Plain $r)) } }
-        @{ items = , $items.ToArray() }
+        @{ items = $items.ToArray() }
     }
     dhcp_in_dc = {
         param($A)
         Import-Module DhcpServer -ErrorAction Stop
         $items = New-Object System.Collections.ArrayList
         foreach ($r in @(Get-DhcpServerInDC -ErrorAction Stop)) { [void]$items.Add(@{ name = [string]$r.DnsName; ip = [string]$r.IPAddress }) }
-        @{ items = , $items.ToArray() }
+        @{ items = $items.ToArray() }
     }
     resolve = {
         param($A)
@@ -654,7 +654,7 @@ $script:Handlers = @{
             'enum' {
                 $list = New-Object System.Collections.ArrayList
                 foreach ($r in @([DsmRpc]::EnumRelationships($server, $c[0], $c[1], $c[2]))) { [void]$list.Add((ConvertFrom-FoStruct $r)) }
-                return @{ items = , $list.ToArray() }
+                return @{ items = $list.ToArray() }
             }
             'create' { [DsmRpc]::CreateRelationship($server, (ConvertTo-FoStruct $A.rel), $c[0], $c[1], $c[2]) }
             'set' { [DsmRpc]::SetRelationship($server, [uint32]$A.flags, (ConvertTo-FoStruct $A.rel), $c[0], $c[1], $c[2]) }

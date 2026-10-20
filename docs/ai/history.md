@@ -240,3 +240,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   tr(key=) Konflikt beim Vergleich, Knopfzeilen umbrachen senkrecht, „&“ im Tab-Titel, leere Fehlerliste beim
   Übertragen. Screenshots in /mnt/project-files/scopekeeper/.
 - Checks grün: compileall, pyflakes, check_locales, check_store (nur scopekeeper-zip + Index-Eintrag), smoke_test.
+- 2026-10-20 Stef-Test: „Aus AD laden“ und Login scheiterten mit "'list' object has no attribute 'get'". Ursache:
+  `items = , $x` in Hashtables von host.ps1 verschachtelte alle Listen. Behoben in 1.0.1, mit echtem pwsh + Stub-Cmdlets
+  nachgestellt und geprüft.

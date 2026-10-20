@@ -44,6 +44,10 @@
   otherwise itemChanged -> refill -> endless recursion.
 - smoke_test patches only the static QMessageBox helpers; `QMessageBox(...).exec()` instances block a headless test
   (patch QMessageBox.exec in render/flow scripts).
+- PowerShell: unary comma only for function RETURN values (`return , $arr`). Inside a hashtable literal
+  `@{ items = , $arr }` nests the array -> JSON `[[...]]` (ScopeKeeper 1.0.0 bug: "'list' object has no attribute
+  'get'"). Test host.ps1 output shapes with real pwsh (Linux tarball works, stub the DhcpServer cmdlets), not only
+  with a Python fake backend.
 ## Python
 - `context.tr(key, default=None, **kw)`: never use `key=` or `default=` as placeholder names (TypeError "multiple values").
 - Python 3.14 in venv `.venv`; packages: PySide6 6.11, PySide6-QtAds 5.1, cryptography 50 (Argon2id available), truststore.
