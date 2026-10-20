@@ -102,9 +102,9 @@
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
-      "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported cross-platform mini tool. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
+      "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "DarkMatter",
       "category": "network/diagnostics",
       "icon": "radar",
@@ -162,9 +162,9 @@
           "category": "Network & Connectivity/Diagnostics"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.0.zip",
-      "sha256": "31b98165f4134d3db8ac96562a2711d5dddd3a982057153bfda4177f94b3c108",
-      "size": 82398
+      "download_url": "packages/net.netprobe-1.2.1.zip",
+      "sha256": "61602979d0a65c57470746618e1fbeabdd97e0a92d325af22714a271f9aa1750",
+      "size": 83452
     },
     {
       "id": "sec.omnivault",
