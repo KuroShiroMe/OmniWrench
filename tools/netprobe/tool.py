@@ -9,6 +9,8 @@ Kontextmenü und Buttons bieten Wiederholen, Löschen und PDF-Export.
 
 from __future__ import annotations
 
+import sys
+
 import PySide6QtAds as ads
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QAction, QBrush, QColor, QFont
@@ -71,22 +73,60 @@ class _LinkControl:
         self.tool = tool
         self.tr = tool.context.tr
 
-    def export(self, opts: dict, parent) -> None:
+    def agent_binary(self):
+        """Pfad zu einer fertig gebauten linkagent-Datei (EXE/Binary), falls vorhanden – sonst None."""
         from pathlib import Path
-        src = Path(__file__).with_name("linkagent.py")
-        default = str(Path.home() / "linkagent.py")
-        path, _ = QFileDialog.getSaveFileName(parent, self.tr("link.export_tool"), default, "Python (*.py)")
+        try:
+            from omniwrench.core.paths import APP_DIR
+        except Exception:  # noqa: BLE001 - außerhalb der App (Tests) einfach keine Binärdatei
+            return None
+        name = "linkagent.exe" if sys.platform == "win32" else "linkagent"
+        for cand in (APP_DIR / name, APP_DIR / "dist" / name):
+            if cand.is_file():
+                return cand
+        return None
+
+    def export_binary(self, opts: dict, parent) -> None:
+        """Exportiert die eigenständige linkagent-Datei (ohne Python auf der Gegenstelle)."""
+        import shutil
+        from pathlib import Path
+        binary = self.agent_binary()
+        if binary is None:
+            QMessageBox.information(parent, self.tr("link.export_tool"), self.tr("link.export_no_binary"))
+            return
+        default = str(Path.home() / binary.name)
+        flt = "Programm (*.exe)" if sys.platform == "win32" else "Programm (*)"
+        path, _ = QFileDialog.getSaveFileName(parent, self.tr("link.export_tool"), default, flt)
         if not path:
             return
         try:
-            Path(path).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+            shutil.copy2(binary, path)
         except OSError as exc:
             QMessageBox.warning(parent, self.tr("link.export_tool"), str(exc))
             return
         port = opts.get("link_port", 47600)
         token = (opts.get("link_token") or "").strip() or "<TOKEN>"
-        cmd = f"python {Path(path).name} serve --port {port} --token {token}"
+        cmd = f"{Path(path).name} serve --port {port} --token {token}"
         QMessageBox.information(parent, self.tr("link.export_tool"),
+                                self.tr("link.export_done_exe", path=path, cmd=cmd))
+
+    def export_script(self, opts: dict, parent) -> None:
+        """Exportiert das Mini-Tool als Python-Skript (für Gegenstellen mit Python, z. B. Linux)."""
+        from pathlib import Path
+        src = Path(__file__).with_name("linkagent.py")
+        default = str(Path.home() / "linkagent.py")
+        path, _ = QFileDialog.getSaveFileName(parent, self.tr("link.export_script"), default, "Python (*.py)")
+        if not path:
+            return
+        try:
+            Path(path).write_text(src.read_text(encoding="utf-8"), encoding="utf-8")
+        except OSError as exc:
+            QMessageBox.warning(parent, self.tr("link.export_script"), str(exc))
+            return
+        port = opts.get("link_port", 47600)
+        token = (opts.get("link_token") or "").strip() or "<TOKEN>"
+        cmd = f"python {Path(path).name} serve --port {port} --token {token}"
+        QMessageBox.information(parent, self.tr("link.export_script"),
                                 self.tr("link.export_done", path=path, cmd=cmd))
 
     def serve_running(self) -> bool:
