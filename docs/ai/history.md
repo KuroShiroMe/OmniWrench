@@ -255,3 +255,15 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
   Latenz, Durchsatz, Lasttest 3 Verb., Portscan 32 Ports, Befund link_ok), standalone-CLI serve+probe, PDF, check_store.
 - OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
   0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
+
+## 2026-10-20 Tool-Updates: Startmeldung, Alle aktualisieren, Auto-Update (Thread „Tool-Updates“)
+- Stef: Meldung beim Start bei Tool-Updates (alle aktualisieren oder verschieben), Haken „Dieses Fenster nach Abschluss
+  schließen“ in Update-Fenstern (gemerkt), „Alle aktualisieren“ in Store und Optionen, Option für automatische
+  Hintergrund-Updates. (Kategorien/Tags und Passwort-Zurücksetzen laufen in eigenen Threads.)
+- Gebaut: repository.update_tools, MainWindow._show_tool_update_prompt/update_all_tools/update_tools_in_background,
+  TaskDialog auto_close, Store-Button, Optionen › Updates (Auto-Update, Fenster-Haken, „Alle aktualisieren (n)“),
+  Settings auto_update_tools/close_update_window, 20 neue Schlüssel in allen 23 Sprachen, README-Datenschutz ergänzt.
+- Geprüft (Linux offscreen): Testskript mit Fake-Store (2 Tools hochversioniert): Startmeldung, Alle aktualisieren
+  inkl. geöffnetem Tool, Haken gemerkt + Einzel-Update schließt sich selbst, Auto-Update ohne Meldung; smoke_test
+  (23 Sprachen), check_locales, check_store. Windows-Test durch Stef offen.
+
