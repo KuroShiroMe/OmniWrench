@@ -41,3 +41,8 @@ git tag vX.Y.Z; git push origin vX.Y.Z               # CI (Build) creates the Gi
 - Tool packages: `tools/<name>/` with tool.json, config.json, install.py, tool.py, locales/. Bump version → rebuild store → commit store/.
 - Commit messages German, end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Bump `omniwrench/__init__.py` version for app releases.
 - Verify UI visually: render with real fonts + `WA_DontShowOnScreen` and `grab()` (see gotchas).
+
+## Wiki & tool template (since 2026-10-22)
+- User/developer docs live in the GitHub Wiki. Source = `wiki/` (German), mirrored by `.github/workflows/wiki.yml` on push to main. Never edit in the wiki editor. Rules: `wiki/Entwicklung-Wiki-Seiten.md`.
+- **Every tool gets a full wiki page** `wiki/Tool-<Display-Name>.md` per `wiki/Vorlage-Tool-Seite.md`, in the same PR as the tool/feature; `homepage` in tool.json points to it; add to Tools.md, _Sidebar.md, Home.md. Check whether site/ (landing page) needs an update.
+- `docs/` = internal only (Stef + Claude), `docs/README.md` points to the wiki. `templates/tool-repo/` = source of the GitHub template repo `KuroShiroMe/OmniWrench-Tool-Template` (see `templates/README.md`).

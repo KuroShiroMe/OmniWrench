@@ -1,0 +1,20 @@
+{
+  "_meta": {"name": "German", "native": "Deutsch"},
+
+  "tool.name": "__TOOL_NAME__",
+  "tool.description": "Kurzbeschreibung für Kachel und Store.",
+  "tool.long_description": "Ausführliche Beschreibung für Store-Karte und Detailleiste.",
+
+  "settings.default_host.label": "Standard-Host",
+  "settings.default_host.placeholder": "z. B. server01.contoso.local",
+  "settings.max_results.label": "Max. Ergebnisse",
+
+  "ui.host_placeholder": "Hostname",
+  "ui.run": "Auflösen",
+  "ui.running": "Löse auf …",
+  "ui.found": "{count} Adresse(n)",
+  "ui.error": "Fehler: {error}",
+
+  "install.ready": "Installiert.",
+  "install.update": "Aktualisiert von {old}."
+}

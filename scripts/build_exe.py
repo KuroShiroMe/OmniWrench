@@ -161,10 +161,7 @@ def pyinstaller_args(console: bool) -> list[str]:
 
 
 def copy_extras(app_dir: Path) -> None:
-    """Dateien neben der EXE, die das Programm über APP_DIR öffnet."""
-    docs = app_dir / "docs"
-    docs.mkdir(exist_ok=True)
-    shutil.copy2(ROOT / "docs" / "TOOL_ENTWICKLUNG.md", docs / "TOOL_ENTWICKLUNG.md")
+    """Dateien neben der EXE (Hilfe und Entwicklerdoku stehen im Wiki)."""
     shutil.copy2(ROOT / "README.md", app_dir / "README.md")
     shutil.copy2(ROOT / "LICENSE", app_dir / "LICENSE")
 

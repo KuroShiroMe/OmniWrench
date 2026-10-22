@@ -381,3 +381,14 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   2 screenshots, download cards (Windows setup/zip, Linux deb/tar.gz). script.js swaps links to latest release via
   GitHub API, falls back to hard-coded v0.7.0 links. Screenshots rendered from the real app (offscreen, de, dark).
 - Deploy: `.github/workflows/pages.yml` (Actions Pages, on push to main touching site/). Domain set in repo settings.
+
+## 2026-10-22 GitHub Wiki + tool template repo
+- Stef wants GitHub Wiki for everything, standardized pages + template, developer area, "template function" for
+  own repositories, docs/ only internal with README pointing to the wiki.
+- Wrote `wiki/` (33 pages + images): Home, Installation, Erste-Schritte, Bedienung, Store-und-Tools, Einstellungen,
+  Tresor-und-Anmeldung, Passwortmanager, Sprachen, Datenablage-und-Datenschutz, Fehlerbehebung, Tools + 6 tool pages,
+  2 templates, 11 Entwicklung-* pages, _Sidebar, _Footer. Screenshots in wiki/images (rendered from the KuroShiro
+  branch; DHCP images partly reused from project files, old WinRM header cropped away).
+- `templates/tool-repo/` (template repo content, tested locally: setup, build, check, version guard, new_tool).
+- `.github/workflows/wiki.yml`, `docs/README.md`, help menu entries (menu.wiki in all 23 locales), build_exe no
+  longer copies docs/TOOL_ENTWICKLUNG.md.

@@ -1,0 +1,7 @@
+{
+  "settings": [
+    {"key": "default_host", "type": "string", "label": "Default host", "default": "example.com",
+     "placeholder": "e.g. server01.contoso.local"},
+    {"key": "max_results", "type": "int", "label": "Max. results", "default": 50, "min": 1, "max": 1000}
+  ]
+}

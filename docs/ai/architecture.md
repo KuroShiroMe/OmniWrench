@@ -224,3 +224,17 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   (stacked bars per category) + top scopes + segmented buttons/QStackedWidget instead of tabs. DefsPage: lock banner,
   writes only after unlock; dock shown only with setting expert_mode. Grid.enable_layout(settings,key) = movable/
   hideable columns stored {"order","hidden"}; overview + failover use it.
+
+## Wiki and template (2026-10-22)
+```
+wiki/                         GitHub-Wiki source (German), *.md + images/; mirrored by .github/workflows/wiki.yml
+  Tool-<Name>.md              one page per tool (template: Vorlage-Tool-Seite.md)
+  Entwicklung-*.md            developer area (package format, SDK, i18n, layout, own repo, template, testing)
+templates/tool-repo/          content of the template repo KuroShiroMe/OmniWrench-Tool-Template
+  .github/workflows/setup.yml   one-time self setup (scripts/setup_repo.py, marker .github/template-setup.json)
+  .github/workflows/store.yml   checks (compileall, check_locales, store.py check) + builds/commits store/ on main
+  scripts/store.py              incremental store build with version guard (uses OmniWrench's manifest validation)
+  scripts/new_tool.py           new tool from template/tool + docs page from template/Tool-Seite.md
+docs/README.md                internal docs index, points to the wiki
+```
+- Help menu: `WIKI_URL` in ui/main_window.py (from GITHUB_REPO), `menu.wiki` (F1) and `menu.dev_docs` open the wiki.

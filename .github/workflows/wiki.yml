@@ -1,0 +1,47 @@
+# Überträgt den Ordner wiki/ ins GitHub-Wiki (https://github.com/KuroShiroMe/OmniWrench/wiki).
+# Das Wiki ist ein Spiegel: Seiten nur im Repository per Pull Request ändern, Änderungen im Wiki-Editor
+# werden beim nächsten Lauf überschrieben, gelöschte Dateien verschwinden auch im Wiki.
+# Voraussetzung (einmalig): Wiki in Settings › General › Features aktiviert und eine erste Seite von Hand
+# angelegt, sonst existiert das Wiki-Repository noch nicht.
+name: Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["wiki/**", ".github/workflows/wiki.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    name: Wiki abgleichen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Wiki-Repository holen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ! git clone --depth 1 "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki-repo; then
+            echo "::error::Wiki nicht gefunden. Wiki aktivieren und eine erste Seite anlegen, dann erneut ausführen."
+            exit 1
+          fi
+      - name: Seiten übertragen
+        run: |
+          rsync -a --delete --exclude .git wiki/ wiki-repo/
+          cd wiki-repo
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Wiki ist aktuell."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Wiki aus ${GITHUB_SHA::7} abgeglichen"
+          git push

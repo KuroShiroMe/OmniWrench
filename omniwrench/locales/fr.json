@@ -40,6 +40,7 @@
   "menu.check_updates": "Rechercher des &mises à jour",
   "menu.settings": "&Paramètres …",
   "menu.help": "&Aide",
+  "menu.wiki": "&Aide en ligne (wiki)",
   "menu.dev_docs": "&Développement d'outils (doc)",
   "menu.log_folder": "Ouvrir le dossier des &journaux",
   "menu.about": "À &propos …",

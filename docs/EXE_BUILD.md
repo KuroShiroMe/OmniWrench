@@ -60,7 +60,7 @@ Windows startet das Setup still mit UAC-Abfrage, Linux installiert das neue Pake
 * pip: Tool-Abhängigkeiten aus `tool.json → requirements.python` installiert die EXE über
   `OmniWrench.exe --pip install …` in den `_lib`-Ordner des Tools. Pakete ohne fertiges Wheel
   (nur Quellcode) lassen sich so nicht bauen.
-* Neben der EXE: `docs\TOOL_ENTWICKLUNG.md` (Menü *Hilfe*) und `README.md`.
+* Neben der EXE: `README.md` und `LICENSE`. Hilfe und Entwicklerdoku öffnet das Menü *Hilfe* im GitHub-Wiki.
 * Windows-Versionsinfo (Hersteller DarkMatter, Version aus `omniwrench/__init__.py`) und Programmsymbol
   aus `resources/app.svg`.
 

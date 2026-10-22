@@ -60,3 +60,13 @@ that are not plain test steps.
 - Categories (done 2026-10-17, #32): dialect translations of category names are the base-language text (no dialect
   flavour yet); native-speaker review together with #25.
   2026-10-20: reduced to one level + tags (all tools incl. MS DHCP Extended 1.2.1 since 2026-10-22).
+
+## Wiki / template repo (2026-10-22)
+- [ ] Stef: enable wiki (Settings › General › Features › Wikis) and create a first page by hand ("Home", any text),
+      then run workflow "Wiki" once (Actions › Wiki › Run workflow). Afterwards it syncs on every push to main.
+- [ ] Stef: create public repo `KuroShiroMe/OmniWrench-Tool-Template`, copy `templates/tool-repo/` content (incl.
+      dotfiles), tick Settings › General › "Template repository", Actions workflow permissions "Read and write".
+      Then test "Use this template" once.
+- [ ] Optional: protect wiki from manual edits (Settings › Wikis › "Restrict editing to collaborators only").
+- [ ] Rich screenshots for AD Benutzerabfrage (only empty search mask, needs a domain) and fresh DHCP overview/scope/
+      draft images (current ones are 1.0.0 cropped; a fake backend via MsDhcpExtended.backend_factory would allow it).
