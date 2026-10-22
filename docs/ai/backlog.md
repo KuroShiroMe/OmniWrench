@@ -3,6 +3,19 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
+- [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.2.0, Alpha tag removed 2026-10-22; was net.scopekeeper): Stef tests on Windows against
+      real DHCP servers. Backend is new (DHCP API via ctypes, no PowerShell) - only tested with a fake DLL on Linux.
+      Check: login SSO/vault/manual (runas-netonly creds), overview/stats, scope tab (ranges, options incl. binary/
+      vendor, reservations names/types/MAC format, leases states/expiry, DNS settings = option 81), save/range change,
+      new/duplicate scope, failover create/edit/remove (role/LB mirroring), replication via netsh, server check speed,
+      cancel, auto check after login. 1.1.0: rights probe (DHCP Users account -> read-only UI; untested on real
+      servers), partner scopes/options view, per-option transfer, failover rows per server. THREADS=8 may need tuning. Old net.scopekeeper installs must be removed by hand.
+      Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
+- [ ] PowerShell -> Python inventory (2026-10-20, Stef wants PowerShell only where unavoidable): core/prerequisites
+      (Windows capabilities/winget/PS modules, elevated - DISM API/`dism.exe` possible), core/certificates (cert store
+      list/sign/decrypt via .NET - Python needs CryptoAPI/NCrypt via ctypes for smartcards), core/app_updater
+      (apply_update.ps1 after exit - could be a .cmd + tar.exe), ad_user_lookup (ActiveDirectory module - LDAP via
+      ldap3/ctypes ADSI possible), omnivault PowerShellConnector + SecretManagement (by design PowerShell, stays).
 - [ ] NetProbe (net.netprobe 1.1.0): Verify on Windows: IcmpSendEcho ping incl. new warm-up + 2 s timeout (Stef saw
       loss that CMD didn't – likely the old 1 s timeout), persistent list + expandable network groups (x/y hosts),
       re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität
@@ -64,3 +77,5 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
   like jsDelivr; blocked in some networks, so not used yet).
 - Categories (done 2026-10-17, #32): dialect translations of category names are the base-language text (no dialect
   flavour yet); native-speaker review together with #25.
+  2026-10-20: reduced to one level + tags. ScopeKeeper (PR #43) still says `network/ip_dns_dhcp` -> works (sub ignored),
+  but should switch to `network` + tags (DHCP, Failover, …) when that PR is next touched.

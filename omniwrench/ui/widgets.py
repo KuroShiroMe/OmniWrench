@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import base64
 import hashlib
+import html
 from pathlib import Path
 from typing import Callable
+from urllib.parse import quote
 
 from PySide6.QtCore import QByteArray, QPoint, QRect, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
@@ -212,6 +214,12 @@ def breakable(text: str) -> str:
         if ch in _BREAK_AFTER and run > 8:
             out.append("\u200b")
     return "".join(out)
+
+
+def tag_links(tags: list[str]) -> str:
+    """Tags als Links (Rich Text); linkActivated liefert das Tag URL-kodiert (urllib.parse.unquote)."""
+    return " · ".join(f"<a href='{quote(t)}' style='text-decoration:none'>{html.escape(t).replace(' ', '&nbsp;')}</a>"
+                      for t in tags)
 
 
 def make_button(text: str, primary: bool = False, danger: bool = False, on_click: Callable | None = None) -> QPushButton:
