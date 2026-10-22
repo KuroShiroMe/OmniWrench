@@ -285,3 +285,38 @@ Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Pytho
   nur noch Bereich, Patch-Version +1 (NetProbe nach Merge mit main 1.2.2), Store neu gebaut (alte ZIPs entfernt).
 - TOOL_ENTWICKLUNG.md: Kategorien-Abschnitt auf eine Ebene, neuer Abschnitt "Tags".
 - Geprüft: check_locales, check_store, smoke_test (Linux offscreen), Render Home-Details/Suche/Store.
+- 2026-10-22 nach Merge mit main (#49): MS DHCP Extended ebenfalls auf Bereich `network` + kuratierte Tags, 1.2.1.
+
+## 2026-10-19 — ScopeKeeper: DHCP-Verwaltung neu gebaut (thread "DHCP Management Tool")
+Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept neu als OmniWrench-Tool, keine Kopie.
+- Neues Tool net.scopekeeper 1.0.0 (Alpha): Anmeldung (SSO/Tresor/manuell, Server-MRU, „Aus AD laden“), Übersicht,
+  Scope-Tabs mit Live-Befunden + Korrekturen, Entwurf/Duplikat mit Netzumrechnung, Server-Optionen, Failover-Seite
+  (anlegen/ändern/Scopes/Vergleich/Rohdaten/löschen), Definitionen, serverweite Prüfung, Zwischenablage, Replikation
+  auf den Partner (netsh, auch ohne WinRM), Protokoll. 947 Texte de/en.
+- Mit Fake-Backend durchgespielt (Login, Replikation, Vergleich, Speichern, Entwurf anlegen inkl. Failover, Status,
+  Löschen); dabei behoben: Endlosschleife in der Optionstabelle des Entwurfs, Signal-Argumentfehler LeaseEdit,
+  tr(key=) Konflikt beim Vergleich, Knopfzeilen umbrachen senkrecht, „&“ im Tab-Titel, leere Fehlerliste beim
+  Übertragen. Screenshots in /mnt/project-files/scopekeeper/.
+- Checks grün: compileall, pyflakes, check_locales, check_store (nur scopekeeper-zip + Index-Eintrag), smoke_test.
+- 2026-10-20 Stef-Test: „Aus AD laden“ und Login scheiterten mit "'list' object has no attribute 'get'". Ursache:
+  `items = , $x` in Hashtables von host.ps1 verschachtelte alle Listen. Behoben in 1.0.1, mit echtem pwsh + Stub-Cmdlets
+  nachgestellt und geprüft.
+- 2026-10-20 Stef-Wunsch (1.1.0): Umbenennung in „MS DHCP Extended Management“; Prüfung parallel (RunspacePool
+  cim_many, 8 Threads, zweiter PowerShell-Prozess, UI bleibt bedienbar, abbrechbar, Scope-Ergebnisse laufen live ein);
+  Opt-out „Server direkt nach der Anmeldung prüfen“; Ladeansicht beim Anmelden (bei Fehler zurück); Verbindungsaufbau
+  als Schritte statt Fehlermeldung; Hinweistexte -> ?-Icons. Mit Fake-Backend + pwsh-Stubs getestet (10 Abfragen à
+  300 ms in 0,7 s).
+- 2026-10-20 Stef: interne Kennung auch ändern (neues Tool net.ms-dhcp-extended, Ordner ms_dhcp_extended) und
+  „möglichst alles in Python“. DHCP-Zugriff komplett neu über dhcpsapi.dll (ctypes, backend.py/dhcpapi.py),
+  PowerShell-Host (host.ps1/pshost.py) entfernt, netsh direkt aus Python. Strukturen gegen Win32-Metadaten geprüft,
+  Abläufe mit Fake-DLL unter Linux getestet. Inventar der übrigen PowerShell-Nutzung in backlog.md.
+
+- 2026-10-22 Stef tested 1.0.0 and asked for 6 changes -> 1.1.0: movable overview columns (new default order), failover
+  view with one row per server + all scopes of the selected server (split detection), check page with distribution
+  bars/top scopes and segmented switch, server options per failover server with sync state + per-option transfer +
+  opt-out partner checkbox, definitions behind expert mode + unlock, rights detection (read-only hides edits).
+  Fixed on the way: QMessageBox checkbox segfault, FlowLayout wrapping with hidden buttons. Fake-DLL/fake-backend tests.
+- 2026-10-22 Stef (after 1.1.0 merge) -> 1.2.0: check column "Höchster Befund" (was "Bewertung"), failover list as
+  expandable relationship rows (▸/▾, double-click, arrow keys) with both servers below, server options show only the
+  selected server's own options (missing ones stay as findings; "Anzeigen" jumps to the server that has it), Alpha
+  tag/note removed at Stef's request. Fixed: findings list row heights computed while page hidden (giant rows).
