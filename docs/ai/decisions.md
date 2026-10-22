@@ -195,3 +195,9 @@
 - 2026-10-22 (Stef, 1.2.0): failover list = expandable relationship row, children = the two servers (collapsed by
   default). Server options list only the selected server's options (no rows for options that exist only on the
   partner). Alpha note removed although the rights probe is still untested on real servers (Stef's call).
+
+## Landing page (2026-10-22)
+- kuroshiro.me = static landing page from `site/` in the OmniWrench repo, deployed via GitHub Pages (Actions,
+  `.github/workflows/pages.yml`). My choice: no extra repo (cloud can't create repos, downloads/screenshots stay in sync
+  with the product). Can move to a `KuroShiroMe.github.io` user-site repo later if KuroShiro gets more products.
+- Page language German, dark design in app colors, no tracking, no external fonts/scripts except the GitHub API call.
