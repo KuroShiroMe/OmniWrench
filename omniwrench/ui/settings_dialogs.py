@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Callable
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -263,10 +263,13 @@ class ToolSettingsDialog(QDialog):
 
 # ============================================================ Hauptprogramm
 class AppSettingsDialog(QDialog):
-    def __init__(self, settings: AppSettings, vault: Vault, parent: QWidget | None = None):
+    def __init__(self, settings: AppSettings, vault: Vault, parent: QWidget | None = None,
+                 tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None):
         super().__init__(parent)
         self.settings = settings
         self.vault = vault
+        self._tool_updates = tool_updates or (lambda: 0)
+        self._update_all = update_all
         self.language_changed = False
         self.scale_changed = False
         self.setWindowTitle(tr("appsettings.title"))
@@ -379,6 +382,20 @@ class AppSettingsDialog(QDialog):
         self.prerelease = QCheckBox(tr("appsettings.prereleases"))
         self.prerelease.setChecked(self.settings.get("include_prereleases", False))
         form.addRow("", self.prerelease)
+        self.auto_update = QCheckBox(tr("appsettings.auto_update_tools"))
+        self.auto_update.setChecked(self.settings.get("auto_update_tools", False))
+        form.addRow("", self.auto_update)
+        form.addRow("", label(tr("appsettings.auto_update_hint"), "Muted", wrap=True))
+        self.close_update_window = QCheckBox(tr("appsettings.close_update_window"))
+        self.close_update_window.setChecked(self.settings.get("close_update_window", False))
+        form.addRow("", self.close_update_window)
+        if self._update_all is not None:
+            self.update_all_btn = make_button("", primary=True, on_click=self._run_update_all)
+            row = QHBoxLayout()
+            row.addWidget(self.update_all_btn)
+            row.addStretch()
+            form.addRow(tr("appsettings.tool_updates"), row)
+            self._refresh_update_all()
         self.token = QLineEdit(self.vault.get("app:github_token", "") or "")
         self.token.setEchoMode(QLineEdit.EchoMode.Password)
         self.token.setPlaceholderText(tr("appsettings.token_placeholder"))
@@ -387,6 +404,18 @@ class AppSettingsDialog(QDialog):
             self.token.setPlaceholderText(tr("vault.lost_placeholder"))
         form.addRow(("❗ " if token_lost else "") + tr("appsettings.token"), self.token)
         return page
+
+    def _refresh_update_all(self) -> None:
+        n = self._tool_updates()
+        self.update_all_btn.setText(tr("updates.update_all_count", count=n) if n else tr("updates.tools_current"))
+        self.update_all_btn.setEnabled(n > 0)
+
+    def _run_update_all(self) -> None:
+        # Haken aus diesem Dialog gilt sofort, nicht erst beim Speichern
+        self.settings.set("close_update_window", self.close_update_window.isChecked())
+        self._update_all()
+        self.close_update_window.setChecked(self.settings.get("close_update_window", False))
+        self._refresh_update_all()
 
     # ----- Sicherheit
     def _security_tab(self) -> QWidget:
@@ -498,6 +527,8 @@ class AppSettingsDialog(QDialog):
         s.set("app_update_repo", self.update_repo.text().strip(), save=False)
         s.set("check_updates_on_start", self.check_start.isChecked(), save=False)
         s.set("include_prereleases", self.prerelease.isChecked(), save=False)
+        s.set("auto_update_tools", self.auto_update.isChecked(), save=False)
+        s.set("close_update_window", self.close_update_window.isChecked(), save=False)
         s.save()
         token = self.token.text().strip()
         if token != (self.vault.get("app:github_token", "") or ""):

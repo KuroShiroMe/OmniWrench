@@ -65,3 +65,19 @@ gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip dist\OmniWrench-X.Y.Z-win64.z
 ```
 
 Der Selbst-Updater wählt automatisch: die EXE lädt `…-win64.zip`, ein Start aus dem Quellcode `….zip`.
+
+## NetProbe-Leitungstest-Mini-Tool (linkagent)
+
+`scripts/build_exe.py` baut zusätzlich das eigenständige Leitungstest-Mini-Tool und legt
+`linkagent.exe` in den Programmordner (neben `OmniWrench.exe`). Damit kann der Mini-Tool-Export in
+NetProbe eine fertige `.exe` ausliefern, die auf der Gegenstelle **ohne Python** startet.
+
+Einzeln bauen:
+
+```powershell
+.\.venv\Scripts\python scripts\build_linkagent.py     # dist\linkagent.exe (bzw. dist/linkagent unter Linux)
+```
+
+Quelle ist `tools/netprobe/linkagent.py` (nur Standardbibliothek, Server + Client + CLI). Beim
+Tag-Release lädt der Workflow `linkagent.exe` auch als eigenständiges Asset hoch. Die Datei wird aktuell
+nicht separat signiert.

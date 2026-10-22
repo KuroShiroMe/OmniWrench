@@ -87,3 +87,27 @@ def install_from_catalog(entry: CatalogEntry, manager: ToolManager, progress: Ca
     with tempfile.TemporaryDirectory(prefix="omniwrench_dl_") as tmp:
         zip_path = net.download(entry.download_url, Path(tmp) / "package.zip")
         manager.install_zip(zip_path, progress, expected_sha256=entry.manifest.sha256)
+
+
+def update_tools(entries: list[CatalogEntry], manager: ToolManager,
+                 progress: Callable[[str], None]) -> tuple[list[str], list[str]]:
+    """Installiert mehrere Updates nacheinander. Ein Fehler bricht die übrigen nicht ab.
+
+    Rückgabe: (aktualisierte Namen, fehlgeschlagene "Name: Fehler").
+    """
+    updated, failed = [], []
+    for i, entry in enumerate(entries, 1):
+        m = entry.manifest
+        tool = manager.get(m.id)
+        old = tool.manifest.version if tool else "-"
+        progress(("\n" if i > 1 else "") + f"[{i}/{len(entries)}] "
+                 + tr("updates.item", name=m.display_name, old=old, new=m.version))
+        try:
+            install_from_catalog(entry, manager, progress)
+        except Exception as exc:  # noqa: BLE001 - nächstes Tool trotzdem aktualisieren
+            log.warning("Update von %s fehlgeschlagen: %s", m.id, exc)
+            progress(tr("task.error", error=exc))
+            failed.append(f"{m.display_name}: {exc}")
+        else:
+            updated.append(m.display_name)
+    return updated, failed

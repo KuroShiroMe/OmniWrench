@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -13,7 +14,7 @@ from omniwrench.core.i18n import tr
 from omniwrench.core.repository import CatalogEntry
 from omniwrench.core.versioning import is_newer
 
-from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tool_icon
+from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tag_links, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -51,6 +52,11 @@ class StoreCard(QFrame):
         meta += " · " + tr("store.source", name=entry.repo_name)
         info.addWidget(label(meta, "CardMeta", wrap=True))
         info.addWidget(label(m.display_long_description, "CardDesc", wrap=True))
+        if m.tags:  # Klick auf ein Tag sucht danach
+            tags = label(tr("store.tags", items=tag_links(m.tags)), "CardMeta", wrap=True)
+            tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            tags.linkActivated.connect(lambda tag: host.store_page.search.setText(unquote(tag)))
+            info.addWidget(tags)
         reqs = m.requirements.summary()
         if reqs:
             info.addWidget(label(breakable(tr("store.requirements", items=", ".join(reqs))), "CardMeta", wrap=True))
@@ -95,6 +101,9 @@ class StorePage(QWidget):
         self.search.setMaximumWidth(320)
         self.search.textChanged.connect(self._render)
         controls.addWidget(self.search, 1)
+        self.update_all_btn = make_button(tr("updates.update_all"), primary=True, on_click=host.update_all_tools)
+        self.update_all_btn.hide()
+        controls.addWidget(self.update_all_btn)
         self.refresh_btn = make_button(tr("store.refresh"), on_click=host.reload_catalog)
         controls.addWidget(self.refresh_btn)
         root.addWidget(ResponsiveRow(titles, controls))
@@ -146,6 +155,8 @@ class StorePage(QWidget):
         self.tree.blockSignals(True)
         self.tree.clear()
         n_upd = len(self.host.tool_updates)
+        self.update_all_btn.setText(tr("updates.update_all_count", count=n_upd))
+        self.update_all_btn.setVisible(n_upd > 0)
         for text, key in ((tr("store.filter_all"), FILTER_ALL),
                           (tr("store.filter_updates", count=n_upd), FILTER_UPDATES),
                           (tr("store.filter_installed"), FILTER_INSTALLED)):
