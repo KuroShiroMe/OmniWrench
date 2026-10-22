@@ -349,3 +349,11 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   expandable relationship rows (▸/▾, double-click, arrow keys) with both servers below, server options show only the
   selected server's own options (missing ones stay as findings; "Anzeigen" jumps to the server that has it), Alpha
   tag/note removed at Stef's request. Fixed: findings list row heights computed while page hidden (giant rows).
+
+## 2026-10-22 Aufräumen + Testliste (Stef: "alle Threads abschließen, Repo aufräumen, Testliste für main")
+- Merged in order after #49 (DHCP 1.2.0): #45 -> #46 -> #47 -> #48, each with main merged in (conflicts only in docs/ai/*,
+  store/index.json): kept both sides in docs; store conflicts solved by rebuilding only the affected tool.
+  MS DHCP Extended -> category `network` + curated tags, 1.2.1 (on #45). OmniVault 1.1.2 was bumped by #45 and #47
+  independently -> 1.1.3 (on #47). Other tools' ZIPs restored from the branch (build_store ZIPs are not byte-stable).
+- New docs/TESTLISTE.md: all open Windows tests (threads, issues #17-#23, backlog) grouped by tool; backlog points to it.
+- Branch deletion is blocked from the cloud session (git push --delete denied, no MCP tool) -> left to Stef.

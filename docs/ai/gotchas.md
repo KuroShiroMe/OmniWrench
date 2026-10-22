@@ -115,3 +115,8 @@
   all widgets and re-adds only visible ones.
 - QTableWidget.resizeRowsToContents on a hidden/narrow page wraps text into huge rows -> redo it on
   header sectionResized (debounced, FindingsView).
+- build_store.py rebuilds ALL tool ZIPs and they are not byte-identical (timestamps) -> after a merge, restore the ZIPs
+  and index entries of tools whose version did not change, otherwise check_store/CI report sha256 mismatches or the
+  diff churns. Two branches bumping the same tool to the same version -> bump once more after merging.
+- Cloud sessions can push to other `claude/*` branches but cannot delete remote branches (git push --delete is denied,
+  GitHub MCP has no delete-branch tool) -> Stef deletes them or enables auto-delete of head branches.
