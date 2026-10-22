@@ -1,7 +1,7 @@
-# CLAUDE.md – OmniWrench (DarkMatter)
+# CLAUDE.md – OmniWrench (KuroShiro)
 
 Modular admin toolbox for Windows clients and Linux (since 0.7.0). Python 3.14 + PySide6 + QtAds. Repo: github.com/KuroShiroMe/OmniWrench (public).
-User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: DarkMatter. Product: OmniWrench.
+User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: KuroShiro (until 2026-10-22: DarkMatter). Product: OmniWrench. Domain: kuroshiro.me.
 
 ## Read this first (AI memory)
 Detailed project memory lives in `docs/ai/`. Read selectively — do NOT load everything:
@@ -40,6 +40,9 @@ git tag vX.Y.Z; git push origin vX.Y.Z               # CI (Build) creates the Gi
 - Every user-visible string via `tr("key")` (app) or `self.context.tr("key")` (tools); add keys to ALL app locale files (`omniwrench/locales/*.json`, 23 incl. dialects), then run check_locales. Missing keys only fall back (dialect → base → en), they do not fail CI.
 - Tool packages: `tools/<name>/` with tool.json, config.json, install.py, tool.py, locales/. Bump version → rebuild store → commit store/.
 - Commit messages German, end with `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`. Bump `omniwrench/__init__.py` version for app releases.
+- Landing page kuroshiro.me (`site/`, deployed by `.github/workflows/pages.yml`): at the end of EVERY task check whether
+  something belongs on it and add it (Stef 2026-10-22). Tool list is generated from store/index.json by
+  `scripts/build_site.py` (run it after store changes); new main features, platforms, screenshots, install info → edit `site/index.html`.
 - Verify UI visually: render with real fonts + `WA_DontShowOnScreen` and `grab()` (see gotchas).
 
 ## Wiki & tool template (since 2026-10-22)

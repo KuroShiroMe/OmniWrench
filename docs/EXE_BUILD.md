@@ -19,7 +19,7 @@ Signieren (Zertifikatsoptionen, lokal und in GitHub): siehe [EXE_SIGNIEREN.md](E
 
 Der Ordner `dist\OmniWrench` ist die **portable Version** (`--zip` packt ihn als
 `OmniWrench-X.Y.Z-win64.zip`). Einstellungen, Tresor und installierte Tools liegen im Benutzerprofil
-(`%APPDATA%` bzw. `%LOCALAPPDATA%\DarkMatter\OmniWrench`), außer neben der EXE liegt ein Ordner
+(`%APPDATA%` bzw. `%LOCALAPPDATA%\KuroShiro\OmniWrench`), außer neben der EXE liegt ein Ordner
 `portable-data` oder `OMNIWRENCH_HOME` ist gesetzt.
 
 Unter Linux baut dasselbe Skript `dist/OmniWrench/OmniWrench`; `--zip` erzeugt dort
@@ -38,8 +38,8 @@ Zum Bauen und Starten braucht Linux die Qt-Systembibliotheken
   Gewählt statt MSI/WiX oder MSIX: ein einzelnes Setup-Programm mit Assistent und Sprachauswahl, stille
   Installation für Softwareverteilung (`/VERYSILENT`), Updates über dieselbe `AppId`, frei und ohne
   Zertifikatszwang (MSIX ließe sich unsigniert gar nicht installieren). Installiert per UAC nach
-  `C:\Program Files\DarkMatter\OmniWrench`, Startmenü, optionale Desktop-Verknüpfung, Deinstallation unter
-  *Apps*. Ein laufendes OmniWrench erkennt das Setup am Mutex `DarkMatter.OmniWrench` (`APP_MUTEX`).
+  `C:\Program Files\KuroShiro\OmniWrench`, Startmenü, optionale Desktop-Verknüpfung, Deinstallation unter
+  *Apps*. Ein laufendes OmniWrench erkennt das Setup am Mutex `KuroShiro.OmniWrench` (`APP_MUTEX`).
   Benutzerdaten bleiben bei der Deinstallation erhalten.
 * **Linux: Debian-Paket** (`python scripts/build_installer.py` unter Linux -> `dist/omniwrench_X.Y.Z_amd64.deb`,
   braucht `dpkg-deb`). Programm nach `/opt/omniwrench`, Befehl `/usr/bin/omniwrench`, Startmenü-Eintrag
@@ -61,7 +61,7 @@ Windows startet das Setup still mit UAC-Abfrage, Linux installiert das neue Pake
   `OmniWrench.exe --pip install …` in den `_lib`-Ordner des Tools. Pakete ohne fertiges Wheel
   (nur Quellcode) lassen sich so nicht bauen.
 * Neben der EXE: `README.md` und `LICENSE`. Hilfe und Entwicklerdoku öffnet das Menü *Hilfe* im GitHub-Wiki.
-* Windows-Versionsinfo (Hersteller DarkMatter, Version aus `omniwrench/__init__.py`) und Programmsymbol
+* Windows-Versionsinfo (Hersteller KuroShiro, Version aus `omniwrench/__init__.py`) und Programmsymbol
   aus `resources/app.svg`.
 
 Der lokale Entwicklungs-Store (`store\`) wird nicht mitgeliefert; die EXE nutzt nur den offiziellen Store.

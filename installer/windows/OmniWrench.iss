@@ -2,14 +2,14 @@
 ; Nicht direkt kompilieren, sondern über scripts/build_installer.py: das Skript übergibt Version,
 ; Programmordner (dist\OmniWrench aus scripts/build_exe.py), Symbol und Installationsmarker.
 ;
-; Installiert nach C:\Program Files\DarkMatter\OmniWrench (UAC), legt Startmenü-Eintrag, optional
+; Installiert nach C:\Program Files\KuroShiro\OmniWrench (UAC), legt Startmenü-Eintrag, optional
 ; Desktop-Verknüpfung und den Eintrag unter "Apps & Features" an. Benutzerdaten (Einstellungen,
 ; Tresor, Tools) liegen im Benutzerprofil und bleiben bei Updates und Deinstallation erhalten.
 ;
 ; Stille Installation (Softwareverteilung, Intune, SCCM):
 ;   OmniWrench-X.Y.Z-win64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART [/TASKS="desktopicon"]
 ; Stille Deinstallation:
-;   "C:\Program Files\DarkMatter\OmniWrench\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+;   "C:\Program Files\KuroShiro\OmniWrench\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
 ; Selbst-Update aus OmniWrench (core/app_updater.py): /SILENT /SUPPRESSMSGBOXES /NORESTART /SP- /restart=1
 
 #ifndef AppVersion
@@ -29,11 +29,14 @@
 #endif
 
 #define AppName "OmniWrench"
-#define AppPublisher "DarkMatter"
+#define AppPublisher "KuroShiro"
 #define AppExe "OmniWrench.exe"
 #define AppUrl "https://github.com/KuroShiroMe/OmniWrench"
-; muss zu APP_MUTEX in omniwrench/__init__.py passen
-#define AppMutexName "DarkMatter.OmniWrench"
+; muss zu APP_MUTEX in omniwrench/__init__.py passen; dahinter die Mutexe früherer Versionen
+; (bis 0.7.0 DarkMatter.OmniWrench), damit auch deren Selbst-Update auf das Beenden wartet
+#define AppMutexName "KuroShiro.OmniWrench,DarkMatter.OmniWrench"
+; Standardordner früherer Versionen (Hersteller DarkMatter bis 0.7.0), wird beim Update umgezogen
+#define LegacyDir "{autopf}\DarkMatter\" + AppName
 
 [Setup]
 ; AppId nie ändern: daran erkennt Windows Updates einer bestehenden Installation
@@ -176,6 +179,35 @@ end;
 function InitializeSetup: Boolean;
 begin
   Result := AppClosed(WizardSilent);
+end;
+
+var
+  LegacyAppDir: String;
+
+// Bestehende Installation im früheren Standardordner (DarkMatter) in den neuen Ordner umziehen.
+// Ein selbst gewählter Ordner bleibt unverändert.
+procedure InitializeWizard;
+var
+  Legacy: String;
+begin
+  Legacy := ExpandConstant('{#LegacyDir}');
+  if CompareText(RemoveBackslashUnlessRoot(WizardForm.DirEdit.Text), Legacy) = 0 then
+  begin
+    LegacyAppDir := Legacy;
+    WizardForm.DirEdit.Text := ExpandConstant('{autopf}\{#AppPublisher}\{#AppName}');
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep = ssPostInstall) and (LegacyAppDir <> '') and DirExists(LegacyAppDir) then
+  begin
+    if DelTree(LegacyAppDir, True, True, True) then
+      Log('Alter Programmordner entfernt: ' + LegacyAppDir)
+    else
+      Log('Alter Programmordner konnte nicht entfernt werden: ' + LegacyAppDir);
+    RemoveDir(ExtractFileDir(LegacyAppDir));  // leerer Herstellerordner
+  end;
 end;
 
 function InitializeUninstall: Boolean;

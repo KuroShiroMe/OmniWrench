@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 from typing import Any
 
-from omniwrench import GITHUB_REPO, OFFICIAL_STORE_URL, VENDOR
+from omniwrench import GITHUB_REPO, LEGACY_VENDORS, OFFICIAL_STORE_URL, VENDOR
 
 from .jsonio import read_json, write_json
 from .paths import APP_DIR, SETTINGS_FILE
@@ -55,6 +55,11 @@ def _migrate_repo_name(data: dict) -> bool:
             if f"/{old}/" in url:
                 repo["url"] = url.replace(f"/{old}/", f"/{GITHUB_REPO}/")
                 changed = True
+    # Früherer Herstellername im Namen des offiziellen Stores
+    for repo in data.get("repositories") or []:
+        if isinstance(repo, dict) and repo.get("name") in {f"{v} Store" for v in LEGACY_VENDORS}:
+            repo["name"] = f"{VENDOR} Store"
+            changed = True
     return changed
 
 

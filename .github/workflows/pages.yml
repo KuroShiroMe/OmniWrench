@@ -1,13 +1,14 @@
 # Veröffentlicht die Landing Page (Ordner site/) über GitHub Pages unter https://kuroshiro.me.
-# Läuft bei Änderungen an site/ auf main und manuell. Die Domain wird in den Repository-Einstellungen
-# (Settings › Pages › Custom domain) eingetragen, nicht über eine CNAME-Datei.
+# Läuft bei Änderungen an site/ oder am Store-Katalog auf main und manuell. Vorher füllt
+# scripts/build_site.py die Tool-Liste aus store/index.json, neue Tools erscheinen also automatisch.
+# Die Domain steht in den Repository-Einstellungen (Settings › Pages › Custom domain), nicht in einer CNAME-Datei.
 name: Pages
 
 on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ["site/**", ".github/workflows/pages.yml"]
+    paths: ["site/**", "store/index.json", "scripts/build_site.py", "omniwrench/locales/de.json", ".github/workflows/pages.yml"]
 
 permissions:
   contents: read
@@ -27,6 +28,11 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Tool-Liste aus dem Store-Katalog
+        run: python scripts/build_site.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

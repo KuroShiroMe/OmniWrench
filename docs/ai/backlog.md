@@ -3,8 +3,7 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- Landing page kuroshiro.me (site/, PR): Stef must set Pages source = GitHub Actions, custom domain kuroshiro.me,
-  DNS A/AAAA at registrar, verify domain, enforce HTTPS. Re-render site/img screenshots after KuroShiro rename.
+- Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
 as the single test list: add new test points there, tick/remove them when Stef reports results. Below only notes
@@ -27,6 +26,9 @@ that are not plain test steps.
 - [ ] Only Stef: CI checks as required in branch protection (#24); project settings in claude.ai still list
       `Steffi-Tech/OmniWrench` -> switch to `KuroShiroMe/OmniWrench`; delete merged `claude/*` branches (cloud
       sessions cannot delete branches) or enable "Automatically delete head branches".
+- [ ] Vendor rename KuroShiro (2026-10-22): data-dir migration and setup move from C:\Program Files\DarkMatter only
+      take effect with the next release (0.8.0); test per TESTLISTE. README screenshots: re-render when the UI changes
+      (pattern in history.md, 2026-10-22).
 - [x] Merged 2026-10-22: #45 categories one level + tags, #46 tool updates, #47 master password reset, #48 rename
       KuroShiroMe, #49 DHCP 1.2.0. UAC prerequisites (#10) tested OK 2026-10-16.
 
@@ -45,7 +47,7 @@ that are not plain test steps.
   arm64 Linux build; Windows per-user install option (no UAC) if needed.
 - [ ] Linux follow-ups: AD User Lookup via LDAP (ldap3) would make it Linux-capable; DHCP tool stays Windows-only
       (dhcpsapi.dll). Vault recovery on Linux uses a key file (no Secret Service/keyring integration yet).
-- Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
+- Move repo to a GitHub org "KuroShiro" if user creates one (then update GITHUB_REPO).
 - Languages: it, nl, pl, pt, cs, sv, tr, uk + dialects swg/sxu/nds/gsw/ksh/wien DONE 2026-10-16 (app only).
   Still open: ja, zh-Hans (font/width tests); RTL (ar, he) needs layout work; tool locales for the new languages
   (optional, fallback works); German UI texts are long in some languages (pl, nl) -> check widths on Windows.
