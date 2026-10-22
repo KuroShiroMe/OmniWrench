@@ -75,3 +75,5 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
   like jsDelivr; blocked in some networks, so not used yet).
 - Categories (done 2026-10-17, #32): dialect translations of category names are the base-language text (no dialect
   flavour yet); native-speaker review together with #25.
+  2026-10-20: reduced to one level + tags. ScopeKeeper (PR #43) still says `network/ip_dns_dhcp` -> works (sub ignored),
+  but should switch to `network` + tags (DHCP, Failover, …) when that PR is next touched.

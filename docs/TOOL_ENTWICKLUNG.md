@@ -30,46 +30,51 @@ falls eine Übersetzung fehlt.
 | `description` | | Kurzbeschreibung (Kachel) |
 | `long_description` | | Ausführliche Beschreibung (Store, Tooltip) |
 | `author` | | |
-| `category` | | `<bereich>/<unterkategorie>` als IDs, z. B. `identity/active_directory`, siehe [Kategorien](#kategorien) |
+| `category` | | Bereich als ID, z. B. `identity`, siehe [Kategorien](#kategorien) |
 | `category_area` | | Nur für einen eigenen, neuen Bereich: Anzeigename (übersetzbar) |
-| `subcategory` | | Nur für eine eigene Unterkategorie: Anzeigename (übersetzbar) |
 | `icon` | | Symbol, siehe [Symbole](#symbole) |
 | `icon_text` | | Eigenes Kürzel für das erzeugte Symbol (max. 4 Zeichen), z. B. `"EXO"` |
 | `color` | | Hintergrundfarbe des erzeugten Symbols, z. B. `#0ea5e9` |
 | `entry` | | `"<modul>:<Klasse>"`, Standard `tool:Tool` |
 | `min_app_version` | | Mindestversion des Hauptprogramms |
 | `platforms` | | Standard `["windows"]` |
-| `tags` | | Suchbegriffe (Suche in Home, Seitenleiste und Store); auch für Querbezüge zu anderen Bereichen, z. B. `servicedesk` |
+| `tags` | | Schlagwörter zur feineren Einordnung, siehe [Tags](#tags); sichtbar in Details und Store, durchsuchbar |
 | `single_instance` | | `true` = nur ein Tab gleichzeitig |
 | `hooks` | | Einstiegspunkte ohne geöffneten Tab, z. B. `{"startup": "modul:funktion"}` (siehe [Eigene Passwortmanager-Anbieter](#eigene-passwortmanager-anbieter)) |
 | `requirements` | | Voraussetzungen, siehe unten |
 
 ### Kategorien
-Die oberste Ebene sind feste **Service-Bereiche** einer IT-Abteilung, darunter eine **Unterkategorie** (Technologie
-oder Aufgabe). Höchstens zwei Ebenen. Das Hauptprogramm übersetzt Bereiche und die folgenden Unterkategorien selbst
-(`omniwrench/core/categories.py`, Schlüssel `category.area.<id>` / `category.sub.<id>`).
+Es gibt nur eine Ebene: feste **Service-Bereiche** einer IT-Abteilung. Das Hauptprogramm übersetzt sie selbst
+(`omniwrench/core/categories.py`, Schlüssel `category.area.<id>`). Die feinere Einordnung übernehmen die [Tags](#tags).
 
-| Bereich | Anzeige (de) | Unterkategorien |
+| Bereich | Anzeige (de) | Typische Inhalte |
 |---|---|---|
-| `workplace` | Arbeitsplatz & Endgeräte | `windows_client` (Windows-Client), `software_deployment` (Softwareverteilung), `printing` (Drucker & Scanner), `mobile_devices` (Mobile Geräte), `peripherals` (Peripherie) |
-| `identity` | Identität & Zugriff | `active_directory` (Active Directory), `entra_id` (Entra ID), `groups_permissions` (Gruppen & Berechtigungen), `mfa_smartcard` (MFA & Smartcard) |
-| `network` | Netzwerk & Konnektivität | `ip_dns_dhcp` (IP-Adressen, DNS & DHCP), `lan_wlan` (LAN & WLAN), `vpn_remote_access` (VPN & Fernzugriff), `firewall` (Firewall), `diagnostics` (Diagnose) |
-| `infrastructure` | Server & Rechenzentrum | `virtualization` (Virtualisierung), `storage` (Speicher), `backup_recovery` (Backup & Wiederherstellung), `server_operations` (Serverbetrieb) |
-| `cloud` | Cloud & Microsoft 365 | `exchange_email` (Exchange & E-Mail), `teams` (Teams), `sharepoint_onedrive` (SharePoint & OneDrive), `azure` (Azure), `licensing` (Lizenzen) |
-| `security` | Informationssicherheit | `passwords_secrets` (Passwörter & Geheimnisse), `certificates_pki` (Zertifikate & PKI), `encryption` (Verschlüsselung), `vulnerabilities` (Schwachstellen) |
-| `applications` | Anwendungen & Datenbanken | `sql_server` (SQL Server), `webserver_iis` (Webserver & IIS), `business_applications` (Fachanwendungen) |
-| `operations` | Betrieb & Überwachung | `event_logs` (Ereignisprotokolle), `monitoring` (Monitoring), `inventory_cmdb` (Inventar & CMDB), `performance` (Leistung) |
-| `servicedesk` | Service Desk & Support | `remote_support` (Fernwartung), `user_help` (Benutzerhilfe), `ticket_tools` (Ticket-Hilfsmittel) |
-| `automation` | Automatisierung & Entwicklung | `powershell_scripts` (PowerShell & Skripte), `api` (Schnittstellen (API)), `converters` (Konverter) |
-| `documentation` | Dokumentation & Design | `icons` (Icons), `diagrams` (Diagramme), `templates` (Vorlagen) |
+| `workplace` | Arbeitsplatz & Endgeräte | Windows-Client, Softwareverteilung, Drucker, Mobilgeräte, Peripherie |
+| `identity` | Identität & Zugriff | Active Directory, Entra ID, Gruppen & Berechtigungen, MFA |
+| `network` | Netzwerk & Konnektivität | IP, DNS, DHCP, LAN/WLAN, VPN, Firewall, Diagnose |
+| `infrastructure` | Server & Rechenzentrum | Virtualisierung, Speicher, Backup, Serverbetrieb |
+| `cloud` | Cloud & Microsoft 365 | Exchange, Teams, SharePoint/OneDrive, Azure, Lizenzen |
+| `security` | Informationssicherheit | Passwörter, Zertifikate/PKI, Verschlüsselung, Schwachstellen |
+| `applications` | Anwendungen & Datenbanken | SQL Server, IIS, Fachanwendungen |
+| `operations` | Betrieb & Überwachung | Ereignisprotokolle, Monitoring, Inventar, Leistung |
+| `servicedesk` | Service Desk & Support | Fernwartung, Benutzerhilfe, Ticket-Hilfsmittel |
+| `automation` | Automatisierung & Entwicklung | PowerShell, APIs, Konverter |
+| `documentation` | Dokumentation & Design | Icons, Diagramme, Vorlagen |
 
 Regeln:
-- Passende vorhandene IDs verwenden, z. B. `"category": "network/diagnostics"`. Ohne Angabe landet das Tool unter „Sonstiges“ (`other`).
-- **Eigene Unterkategorie:** beliebige ID, z. B. `"category": "cloud/intune"`, Anzeigename über `subcategory` bzw. `"tool.subcategory"` in den Sprachdateien.
-- **Neuer Bereich:** eigene ID, z. B. `"category": "medical/pacs"`, Anzeigename über `category_area` / `"tool.category_area"` (und ggf. `subcategory`). Wird ein Bereich von mehreren Tools gebraucht, kommt er in die feste Liste des Hauptprogramms.
+- Vorhandene ID verwenden, z. B. `"category": "network"`. Ohne Angabe landet das Tool unter „Sonstiges“ (`other`).
+- **Neuer Bereich:** eigene ID, z. B. `"category": "medical"`, Anzeigename über `category_area` / `"tool.category_area"`. Wird ein Bereich von mehreren Tools gebraucht, kommt er in die feste Liste des Hauptprogramms.
 - Ein Tool steht in genau einem Bereich; Bezüge zu weiteren Bereichen über `tags`.
-- `"tool.category"` in den Sprachdateien enthält den ausgeschriebenen Pfad (z. B. `"Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"`). Das aktuelle Hauptprogramm nutzt ihn nur als Rückfall, ältere Versionen (bis 0.6.x) zeigen ihn an. Kein `/` innerhalb eines Namens.
-- Alte Freitext-Pfade (`Network/IP Tools`, `MS Server Tools/…`, `Security/…`, `Design/…`) werden automatisch einem Bereich zugeordnet.
+- `"tool.category"` in den Sprachdateien enthält den ausgeschriebenen Bereich (z. B. `"Netzwerk & Konnektivität"`). Das aktuelle Hauptprogramm nutzt ihn nur als Rückfall, ältere Versionen (bis 0.6.x) zeigen ihn an.
+- Ältere Angaben mit Unterkategorie (`network/diagnostics`) und alte Freitext-Pfade (`Network/IP Tools`, `MS Server Tools/…`, `Security/…`, `Design/…`) werden automatisch auf den Bereich reduziert.
+
+### Tags
+`tags` ordnen ein Tool feiner ein (Technologie, Protokoll, Produkt, Aufgabe). Sie stehen in den Details auf der
+Startseite und auf der Store-Karte; ein Klick auf ein Tag sucht nach allen Tools mit diesem Begriff.
+- 4 bis 12 aussagekräftige Begriffe, sprachneutral: Produkt- und Protokollnamen (`Active Directory`, `DNS`,
+  `KeePass`), sonst Englisch (`Port Scan`, `User Accounts`). Schreibweise wie sie angezeigt werden soll.
+- Keine Synonyme oder Übersetzungen als Tags; deutsche Suchbegriffe findet die Suche über die übersetzte Beschreibung.
+- Bezug zu einem weiteren Bereich als Tag, z. B. `Service Desk` bei der AD-Benutzerabfrage.
 
 ### Symbole
 
@@ -321,7 +326,7 @@ Platzhalter stehen in `{geschweiften Klammern}`.
   "tool.name": "Subnetzrechner",
   "tool.description": "IPv4/IPv6-Netze berechnen …",
   "tool.long_description": "…",
-  "tool.category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP",
+  "tool.category": "Netzwerk & Konnektivität",
 
   "settings.export_dir.label": "Export-Ordner",
   "settings.export_dir.description": "Standardordner für den CSV-Export.",
@@ -334,7 +339,7 @@ Platzhalter stehen in `{geschweiften Klammern}`.
 
 | Schlüssel | Wirkung |
 |---|---|
-| `tool.name`, `tool.description`, `tool.long_description`, `tool.category`, `tool.category_area`, `tool.subcategory` | Anzeige in Home, Seitenleiste und Store (`scripts/build_store.py` übernimmt sie in die index.json) |
+| `tool.name`, `tool.description`, `tool.long_description`, `tool.category`, `tool.category_area` | Anzeige in Home, Seitenleiste und Store (`scripts/build_store.py` übernimmt sie in die index.json) |
 | `settings.<key>.label` / `.description` / `.placeholder` | Texte im Einstellungsdialog (Ersatz für die Texte aus config.json) |
 | `settings.<key>.option.<wert>` | Anzeigetext einer `choice`-Option |
 | `settings.group.<gruppe>` | Tab-Titel einer Einstellungsgruppe |

@@ -1,16 +1,16 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-20T14:23:06+00:00",
+  "generated": "2026-10-22T09:18:34+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.2",
+      "version": "1.3.3",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "DarkMatter",
-      "category": "identity/active_directory",
+      "category": "identity",
       "icon": "user-search",
       "color": "#8b5cf6",
       "entry": "tool:AdUserLookup",
@@ -19,12 +19,12 @@
         "windows"
       ],
       "tags": [
-        "servicedesk",
-        "active directory",
-        "ad",
-        "user",
-        "benutzer",
-        "rsat"
+        "Active Directory",
+        "RSAT",
+        "User Accounts",
+        "Groups",
+        "Account Lockout",
+        "Service Desk"
       ],
       "requirements": {
         "windows_capabilities": [
@@ -36,27 +36,27 @@
           "name": "AD Benutzerabfrage",
           "description": "Benutzer im Active Directory suchen und Details anzeigen.",
           "long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
-          "category": "Identität & Zugriff/Active Directory"
+          "category": "Identität & Zugriff"
         },
         "en": {
           "name": "AD User Lookup",
           "description": "Search users in Active Directory and show their details.",
           "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
-          "category": "Identity & Access/Active Directory"
+          "category": "Identity & Access"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.2.zip",
-      "sha256": "02cdaf18a36d0fdc71f41ebee87043a1117749cf46add278594c58827ce39356",
-      "size": 6031
+      "download_url": "packages/ms.ad-user-lookup-1.3.3.zip",
+      "sha256": "39d19a0e4a2e766a3821b35a63482060b8a1e30be2814081db404af52d27b94d",
+      "size": 6024
     },
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.2",
+      "version": "1.1.3",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "DarkMatter",
-      "category": "documentation/icons",
+      "category": "documentation",
       "icon": "pen-tool",
       "color": "#ec4899",
       "entry": "tool:IconForge",
@@ -65,19 +65,16 @@
         "windows"
       ],
       "tags": [
-        "design",
-        "icons",
-        "symbole",
-        "visio",
-        "svg",
-        "png",
-        "pictogram",
-        "piktogramm",
-        "lucide",
-        "tabler",
-        "material",
-        "fluent",
-        "font awesome"
+        "Icons",
+        "SVG",
+        "PNG",
+        "ICO",
+        "Visio",
+        "Lucide",
+        "Tabler",
+        "Material",
+        "Fluent",
+        "Font Awesome"
       ],
       "single_instance": false,
       "requirements": {},
@@ -86,27 +83,27 @@
           "name": "IconForge",
           "description": "Symbole und Piktogramme aus vielen freien Bibliotheken - suchen, anpassen und exportieren, z. B. für Visio.",
           "long_description": "Durchsuchbares Raster mit über 100.000 Symbolen aus mehr als 25 freien Bibliotheken (Lucide eingebaut, Tabler, Phosphor, Material, Fluent, Font Awesome u. a. werden bei Bedarf geladen). Zeigt Lizenz und erlaubte Nutzung je Symbol, passt Farbe, Strichstärke und Hintergrund an und exportiert als SVG, PNG, ICO, PDF oder JPG in mehreren Größen.",
-          "category": "Dokumentation & Design/Icons"
+          "category": "Dokumentation & Design"
         },
         "en": {
           "name": "IconForge",
           "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
           "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
-          "category": "Documentation & Design/Icons"
+          "category": "Documentation & Design"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.2.zip",
-      "sha256": "d93c317cf6219208a71d3cb4044ebe5a05b72d69cd12efac9c3a2b35f1b9abe6",
-      "size": 29583
+      "download_url": "packages/gfx.iconforge-1.1.3.zip",
+      "sha256": "26913616394b3ac11cafb100bfe4adfdd642e13e72a8e848c9190c1eb093ead4",
+      "size": 29550
     },
     {
       "id": "net.ms-dhcp-extended",
       "name": "MS DHCP Extended Management",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "description": "Manage Microsoft DHCP servers: scopes, options, reservations, failover and a full configuration check.",
       "long_description": "Connects to a Microsoft DHCP server (IPv4) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address ranges, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings. Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
       "author": "DarkMatter",
-      "category": "network/ip_dns_dhcp",
+      "category": "network",
       "icon": "server-cog",
       "color": "#0ea5e9",
       "entry": "tool:MsDhcpExtended",
@@ -115,18 +112,14 @@
         "windows"
       ],
       "tags": [
-        "dhcp",
-        "scope",
-        "bereich",
-        "failover",
-        "reservation",
-        "reservierung",
-        "lease",
-        "option",
-        "microsoft",
-        "rsat",
-        "network",
-        "netzwerk"
+        "DHCP",
+        "Scopes",
+        "Failover",
+        "Reservations",
+        "Leases",
+        "DHCP Options",
+        "RSAT",
+        "Microsoft"
       ],
       "single_instance": false,
       "requirements": {
@@ -139,27 +132,27 @@
           "name": "MS DHCP Extended Management",
           "description": "Microsoft-DHCP-Server verwalten: Scopes, Optionen, Reservierungen, Failover und eine vollständige Konfigurationsprüfung.",
           "long_description": "Verbindet sich mit einem Microsoft-DHCP-Server (IPv4) über das angemeldete Konto, gespeicherte oder abweichende Anmeldedaten und behält die Failover-Partner im Blick. Jeder Scope öffnet sich in einem eigenen Tab mit Allgemein, Adressbereichen, Optionen, Reservierungen, Ausschlüssen, Leases und Failover-Status; Befunde (Fehler, Warnungen, Best Practice) entstehen schon während der Eingabe und markieren die betroffenen Felder. Neue Scopes entstehen aus einem Entwurf oder als Duplikat eines vorhandenen Scopes, Adressen werden dabei auf das neue Netz umgerechnet. Änderungen an Failover-Scopes lassen sich automatisch auf den Partner replizieren (auch wenn der Partner nur per RPC erreichbar ist, wie bei der DHCP-Konsole). Weitere Seiten: Server-Optionen jedes Failover-Servers mit Abgleichstatus, Failover-Beziehungen (aufklappbar auf beide Server) mit allen Scopes je Server, Optionsdefinitionen (Expertenmodus, standardmäßig gesperrt) und eine serverweite Prüfung mit Verteilung der Befunde. Erkennt reinen Lesezugriff (DHCP-Benutzer) und blendet Änderungsfunktionen dann aus. Spricht den Server direkt über die DHCP-Schnittstelle von Windows (RPC) an – ohne PowerShell oder WinRM. Die Replikation auf den Partner nutzt netsh dhcp aus den RSAT-DHCP-Tools (werden bei der Installation automatisch hinzugefügt).",
-          "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
+          "category": "Netzwerk & Konnektivität"
         },
         "en": {
           "name": "MS DHCP Extended Management",
           "description": "Manage Microsoft DHCP servers: scopes, options, reservations, failover and a full configuration check.",
           "long_description": "Connects to a Microsoft DHCP server (IPv4) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address ranges, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings. Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
-          "category": "Network & Connectivity/IP addresses, DNS & DHCP"
+          "category": "Network & Connectivity"
         }
       },
-      "download_url": "packages/net.ms-dhcp-extended-1.2.0.zip",
-      "sha256": "ac5eea8d048424d5567ca453b81adca680a2394e9245c58627f969f7c077a7d3",
-      "size": 166239
+      "download_url": "packages/net.ms-dhcp-extended-1.2.1.zip",
+      "sha256": "17ddf902db3ae6f9a6ddf085bc6a86a17949d88ce3e8e7db03b099e2882c3c2a",
+      "size": 166193
     },
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.1",
+      "version": "1.2.2",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
       "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "DarkMatter",
-      "category": "network/diagnostics",
+      "category": "network",
       "icon": "radar",
       "color": "#0ea5e9",
       "entry": "tool:NetProbe",
@@ -168,32 +161,20 @@
         "windows"
       ],
       "tags": [
-        "network",
-        "netzwerk",
-        "ping",
-        "traceroute",
-        "portscan",
-        "port",
-        "dns",
-        "tls",
-        "ssl",
-        "smb",
-        "rdp",
-        "ntp",
-        "scanner",
-        "diagnose",
-        "diagnostics",
-        "latency",
-        "subnet",
-        "leitungstest",
-        "linktest",
-        "throughput",
-        "durchsatz",
-        "bandwidth",
-        "bandbreite",
-        "lasttest",
-        "loadtest",
-        "iperf"
+        "Ping",
+        "Traceroute",
+        "Port Scan",
+        "Subnet Scan",
+        "DNS",
+        "DNSSEC",
+        "HTTP",
+        "TLS",
+        "SMB",
+        "RDP",
+        "NTP",
+        "Link Test",
+        "Throughput",
+        "Load Test"
       ],
       "single_instance": false,
       "requirements": {
@@ -206,27 +187,27 @@
           "name": "NetProbe",
           "description": "Umfassendes Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS, Leitungstest zu einer Gegenstelle und eine Befundliste je Ziel.",
           "long_description": "Eingabe einer IP-Adresse, eines DNS-Namens, eines Netzes (CIDR) oder Bereichs samt Auswahl eines Testprofils. Einzeladressen landen direkt in der Liste, Netze werden abgescannt. Für jedes Ziel führt NetProbe zahlreiche Tests aus, die sich nach Kategorie ein- und ausschalten lassen: Ping mit Laufzeit, Jitter und TTL, parallel ausgeführtes Traceroute mit Analyse jedes Sprungpunkts, TCP-Portscan mit einer Bibliothek von über 130 Diensten samt typischen Einsatzszenarien, HTTP- und TLS-Prüfung, SMB/RDP/NTP sowie eine vollständige DNS-Diagnose für Namen (Einträge, Nameserver, SPF/DKIM/DMARC, DNSSEC). Der Leitungstest misst die echte Qualität der Verbindung zu einer Gegenstelle (wahre Latenz, Durchsatz in beide Richtungen, ein Lasttest und ein Pfad-Portscan) – gegen ein zweites NetProbe oder ein winziges exportiertes Mini-Tool. Jedes Ziel öffnet einen eigenen, frei anordenbaren Tab mit Ergebnissen je Kategorie und einem Tab „Befunde“ mit Fehlern, Warnungen und Best-Practice-Hinweisen. Keine Administratorrechte nötig.",
-          "category": "Netzwerk & Konnektivität/Diagnose"
+          "category": "Netzwerk & Konnektivität"
         },
         "en": {
           "name": "NetProbe",
           "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
           "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile. Single addresses go straight into the list, networks are scanned. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter and TTL, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names. The link test measures the real quality of the connection to a counterpart (true latency, throughput both ways, a load test and a path port scan) against another NetProbe or a tiny exported mini tool. Each target opens its own dockable tab with results per category plus a Findings tab. No admin rights required.",
-          "category": "Network & Connectivity/Diagnostics"
+          "category": "Network & Connectivity"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.1.zip",
-      "sha256": "61602979d0a65c57470746618e1fbeabdd97e0a92d325af22714a271f9aa1750",
-      "size": 83452
+      "download_url": "packages/net.netprobe-1.2.2.zip",
+      "sha256": "b7cc3acdc7a760be92f9532e1c9e5c020b2888a3e932098df234f336f606401c",
+      "size": 83382
     },
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "DarkMatter",
-      "category": "security/passwords_secrets",
+      "category": "security",
       "icon": "vault",
       "color": "#f59e0b",
       "entry": "tool:OmniVault",
@@ -235,19 +216,16 @@
         "windows"
       ],
       "tags": [
-        "security",
-        "password",
-        "passwort",
-        "keepass",
-        "secretmanagement",
-        "netwrix",
-        "credentials",
-        "vault",
-        "bitwarden",
-        "vaultwarden",
-        "1password",
-        "hashicorp",
-        "openbao"
+        "Passwords",
+        "Credentials",
+        "SecretManagement",
+        "KeePass",
+        "Netwrix",
+        "Bitwarden",
+        "Vaultwarden",
+        "1Password",
+        "HashiCorp Vault",
+        "OpenBao"
       ],
       "single_instance": true,
       "hooks": {
@@ -263,63 +241,63 @@
           "name": "OmniVault",
           "description": "Eingebauter Passwortmanager mit Konnektoren zu externen Passwortmanagern.",
           "long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
-          "category": "Informationssicherheit/Passwörter & Geheimnisse"
+          "category": "Informationssicherheit"
         },
         "de_bad": {
           "name": "OmniVault",
           "description": "Igebauter Passwortmanager mit Aaschlüss an fremdi Passwortmanager.",
           "long_description": "Speichert Zuegangsdate im igebaute OmniWrench-Passwortmanager un hängt fremdi Manager aa (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). D Zuegangsdate-Uswahl in OmniWrench durchsuecht denn alli verbundene Manager. Passwörter vu fremde Manager wäre erscht abgholt, wenn mer sie brucht, un bliibe numme fir d laufendi Sitzung im Arbeitsspeicher.",
-          "category": "Informationssicherheit/Passwörter & Geheimnisse"
+          "category": "Informationssicherheit"
         },
         "de_by": {
           "name": "OmniVault",
           "description": "Eibauter Passwortmanager mit Oschlüss an fremde Passwortmanager.",
           "long_description": "Speichert Zuagangsdatn im eibautn OmniWrench-Passwortmanager und hängt fremde Manager o (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). De Zuagangsdatn-Auswahl in OmniWrench duachsuacht dann olle verbundnen Manager. Passwörter vo fremde Manager wern erst gholt, wenn ma s braucht, und bleim bloß für de laufende Sitzung im Arbeitsspeicher.",
-          "category": "Informationssicherheit/Passwörter & Geheimnisse"
+          "category": "Informationssicherheit"
         },
         "en": {
           "name": "OmniVault",
           "description": "Built-in password manager with connectors to external password managers.",
           "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
-          "category": "Information Security/Passwords & Secrets"
+          "category": "Information Security"
         },
         "en_posh": {
           "name": "OmniVault",
           "description": "A distinguished built-in password manager, with connectors to external password managers.",
           "long_description": "Keeps one's credentials in the built-in OmniWrench password manager and receives external managers most cordially (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Thereafter every credential picker in OmniWrench consults all connected managers at once. Passwords from external managers are fetched only when required and kept in memory for the present session alone, as is proper.",
-          "category": "Information Security/Passwords & Secrets"
+          "category": "Information Security"
         },
         "en_sco": {
           "name": "OmniVault",
           "description": "Built-in passwird keeper wi connectors tae ither passwird keepers.",
           "long_description": "Keeps yer credentials in the built-in OmniWrench passwird keeper an hooks up ither keepers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Syne the credential picker in OmniWrench raiks through aw the connected keepers at yince. Passwirds fae ither keepers are only fetched when needit an held in memory for this session alane.",
-          "category": "Information Security/Passwirds & Secrets"
+          "category": "Information Security"
         },
         "es": {
           "name": "OmniVault",
           "description": "Gestor de contraseñas integrado con conectores a gestores externos.",
           "long_description": "Gestiona credenciales en el gestor de contraseñas integrado de OmniWrench y conecta gestores externos (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Después, la selección de credenciales de OmniWrench busca en todos los gestores conectados. Las contraseñas de gestores externos solo se obtienen cuando se necesitan y se mantienen en memoria únicamente durante la sesión actual.",
-          "category": "Seguridad de la información/Contraseñas y secretos"
+          "category": "Seguridad de la información"
         },
         "fr": {
           "name": "OmniVault",
           "description": "Gestionnaire de mots de passe intégré avec connecteurs vers des gestionnaires externes.",
           "long_description": "Gère les identifiants dans le gestionnaire de mots de passe intégré d'OmniWrench et connecte des gestionnaires externes (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). La sélection d'identifiants d'OmniWrench recherche ensuite dans tous les gestionnaires connectés. Les mots de passe des gestionnaires externes ne sont récupérés qu'en cas de besoin et conservés en mémoire uniquement pour la session en cours.",
-          "category": "Sécurité de l'information/Mots de passe et secrets"
+          "category": "Sécurité de l'information"
         }
       },
-      "download_url": "packages/sec.omnivault-1.1.1.zip",
-      "sha256": "aeb2cdac15ca2037967ef66798c9ba2b982196a4014d5ca9fc1dad7007b34896",
-      "size": 35598
+      "download_url": "packages/sec.omnivault-1.1.2.zip",
+      "sha256": "d316fd201e18cceaece084f432bd48371e0c52ff15c387c22d8e731e2f9bc899",
+      "size": 35497
     },
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "DarkMatter",
-      "category": "network/ip_dns_dhcp",
+      "category": "network",
       "icon": "network",
       "color": "#0ea5e9",
       "entry": "tool:SubnetCalculator",
@@ -328,13 +306,12 @@
         "windows"
       ],
       "tags": [
-        "ip",
-        "subnet",
-        "cidr",
-        "ipv4",
-        "ipv6",
-        "netmask",
-        "netzmaske"
+        "IPv4",
+        "IPv6",
+        "CIDR",
+        "Subnetting",
+        "Netmask",
+        "CSV"
       ],
       "single_instance": false,
       "requirements": {},
@@ -343,24 +320,24 @@
           "name": "Subnetzrechner",
           "description": "IPv4/IPv6-Netze berechnen und in Subnetze aufteilen.",
           "long_description": "Berechnet Netzadresse, Broadcast, Netzmaske, Wildcard, Hostbereich und Anzahl der Hosts. Teilt Netze in gleich große Subnetze auf und exportiert die Liste als CSV.",
-          "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
+          "category": "Netzwerk & Konnektivität"
         },
         "de_bad": {
           "name": "Netzle-Rechner",
           "description": "IPv4/IPv6-Netzle usrechne un in kleineri Stückle verteile.",
           "long_description": "Rechnet Netzadress, Broadcast, Netzmask, Wildcard, Hostbereich un wie viel Hosts nei bassed. Verteilt Netze in gliich großi Stückle un schreibt d Lischt als CSV raus.",
-          "category": "Netzwerk & Konnektivität/IP-Adressen, DNS & DHCP"
+          "category": "Netzwerk & Konnektivität"
         },
         "en": {
           "name": "Subnet Calculator",
           "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
           "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-          "category": "Network & Connectivity/IP Addresses, DNS & DHCP"
+          "category": "Network & Connectivity"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.2.2.zip",
-      "sha256": "c899d5e95071a7fe47198b46cdf9fc191028eb475bcf3beb3e0ecaec9abd12d0",
-      "size": 7585
+      "download_url": "packages/net.subnet-calculator-1.2.3.zip",
+      "sha256": "f1af2639707c1f5bb6cf2a10cb4737614cffb8edece450ddc0c627bf09be3ec8",
+      "size": 7523
     }
   ]
 }

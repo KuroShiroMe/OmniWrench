@@ -1,11 +1,11 @@
 {
   "id": "net.ms-dhcp-extended",
   "name": "MS DHCP Extended Management",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Manage Microsoft DHCP servers: scopes, options, reservations, failover and a full configuration check.",
   "long_description": "Connects to a Microsoft DHCP server (IPv4) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address ranges, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings. Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
   "author": "DarkMatter",
-  "category": "network/ip_dns_dhcp",
+  "category": "network",
   "icon": "server-cog",
   "color": "#0ea5e9",
   "entry": "tool:MsDhcpExtended",
@@ -13,20 +13,7 @@
   "platforms": [
     "windows"
   ],
-  "tags": [
-    "dhcp",
-    "scope",
-    "bereich",
-    "failover",
-    "reservation",
-    "reservierung",
-    "lease",
-    "option",
-    "microsoft",
-    "rsat",
-    "network",
-    "netzwerk"
-  ],
+  "tags": ["DHCP", "Scopes", "Failover", "Reservations", "Leases", "DHCP Options", "RSAT", "Microsoft"],
   "single_instance": false,
   "requirements": {
     "windows_capabilities": [

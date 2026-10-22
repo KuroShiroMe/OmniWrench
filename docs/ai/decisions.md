@@ -14,10 +14,12 @@
 ## UI (user requests)
 - Tabs on top; Home tab always open (not closable); Store tab openable; each tool opens in own tab; tabs dockable side-by-side/stacked/floating (QtAds).
 - Left sidebar: installed tools tree by category. Double-click category → Home with category filter.
-- Categories (Stef 2026-10-17): service-oriented, "large IT department with many expert teams, dozens of tools".
+- Categories (Stef 2026-10-17, simplified 2026-10-20): service-oriented, "large IT department with many expert teams".
   11 fixed areas (workplace, identity, network, infrastructure, cloud, security, applications, operations,
-  servicedesk, automation, documentation) + other; max 2 levels; must stay extensible (tools may bring own
-  sub/area). List + rules: core/categories.py, docs/TOOL_ENTWICKLUNG.md#kategorien.
+  servicedesk, automation, documentation) + other; **only one level** (Stef 2026-10-20: "nur noch Hauptkategorien,
+  alle Tools kriegen sinnvolle Tags"). Finer grouping via visible, clickable `tags` (language-neutral tech/product
+  names, else English). Tools may still bring an own area. List + rules: core/categories.py,
+  docs/TOOL_ENTWICKLUNG.md#kategorien / #tags.
 - Home: compact tiles (icon + name only). Single click → right details panel (metadata, actions). Double click → open. Right click → menu (Open, Settings, Update, Check, Repair, Folder, Uninstall).
 - Tile names: shrink font first (down to 8.5pt), then wrap (spaces/after hyphens) into 2 lines, then elide.
 - Home has "Filter" button (categories) + filter chip.

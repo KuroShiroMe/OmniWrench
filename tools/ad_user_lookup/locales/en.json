@@ -6,7 +6,7 @@
   "tool.name": "AD User Lookup",
   "tool.description": "Search users in Active Directory and show their details.",
   "tool.long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
-  "tool.category": "Identity & Access/Active Directory",
+  "tool.category": "Identity & Access",
   "settings.group.Connection": "Connection",
   "settings.group.Login": "Login",
   "settings.server.label": "Domain controller / domain",

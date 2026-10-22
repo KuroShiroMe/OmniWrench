@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -13,7 +14,7 @@ from omniwrench.core.i18n import tr
 from omniwrench.core.repository import CatalogEntry
 from omniwrench.core.versioning import is_newer
 
-from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tool_icon
+from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tag_links, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -51,6 +52,11 @@ class StoreCard(QFrame):
         meta += " · " + tr("store.source", name=entry.repo_name)
         info.addWidget(label(meta, "CardMeta", wrap=True))
         info.addWidget(label(m.display_long_description, "CardDesc", wrap=True))
+        if m.tags:  # Klick auf ein Tag sucht danach
+            tags = label(tr("store.tags", items=tag_links(m.tags)), "CardMeta", wrap=True)
+            tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            tags.linkActivated.connect(lambda tag: host.store_page.search.setText(unquote(tag)))
+            info.addWidget(tags)
         reqs = m.requirements.summary()
         if reqs:
             info.addWidget(label(breakable(tr("store.requirements", items=", ".join(reqs))), "CardMeta", wrap=True))

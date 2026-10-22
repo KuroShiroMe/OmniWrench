@@ -273,6 +273,20 @@ Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Pytho
   serve/probe des Binaries, Offscreen-Render des Export-Bereichs (beide Knöpfe, .exe-Knopf aktiv), check_store.
   Windows-.exe-Build selbst läuft in CI (hier nur Linux-Binary gebaut).
 
+## 2026-10-20 Kategorien nur noch eine Ebene + Tags (Stef)
+- Stef: "Kategorien nur noch auf die Hauptkategorien reduzieren, alle Tools kriegen sinnvolle Tags". Weicht von der
+  2-Ebenen-Entscheidung vom 2026-10-17 ab -> decisions.md angepasst.
+- core/categories.py: AREAS nur noch IDs, SUBCATEGORIES/category.sub.* entfernt (43 Schlüssel x 23 Sprachen),
+  category_id() statt category_ids(); "bereich/unterkategorie" und Freitext-Pfade werden auf den Bereich reduziert
+  (Rückwärtskompatibel, z. B. ScopeKeeper PR #43). manifest: Feld `subcategory` entfernt (unbekannte Felder werden ignoriert).
+- Tags sichtbar: Details auf Home (Zeile "Tags") und Store-Karte ("Tags: …"), Klick sucht danach (widgets.tag_links).
+  Neue Schlüssel details.tags, store.tags in allen 23 App-Sprachen.
+- Alle 5 Tools: category = Bereich, neu kuratierte Tags (sprachneutral/Englisch), tool.category in Tool-Sprachdateien
+  nur noch Bereich, Patch-Version +1 (NetProbe nach Merge mit main 1.2.2), Store neu gebaut (alte ZIPs entfernt).
+- TOOL_ENTWICKLUNG.md: Kategorien-Abschnitt auf eine Ebene, neuer Abschnitt "Tags".
+- Geprüft: check_locales, check_store, smoke_test (Linux offscreen), Render Home-Details/Suche/Store.
+- 2026-10-22 nach Merge mit main (#49): MS DHCP Extended ebenfalls auf Bereich `network` + kuratierte Tags, 1.2.1.
+
 ## 2026-10-19 — ScopeKeeper: DHCP-Verwaltung neu gebaut (thread "DHCP Management Tool")
 Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept neu als OmniWrench-Tool, keine Kopie.
 - Neues Tool net.scopekeeper 1.0.0 (Alpha): Anmeldung (SSO/Tresor/manuell, Server-MRU, „Aus AD laden“), Übersicht,
