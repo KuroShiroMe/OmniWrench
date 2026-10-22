@@ -81,7 +81,7 @@ jobs:
           certificate-profile-name: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
           files: ${{ github.workspace }}\dist\OmniWrench\OmniWrench.exe
           description: OmniWrench
-          description-url: https://github.com/Steffi-Tech/OmniWrench
+          description-url: https://github.com/KuroShiroMe/OmniWrench
 
       # SignPath (für Open-Source-Projekte kostenlos über die SignPath Foundation)
       - name: Unsignierten Programmordner für SignPath hochladen

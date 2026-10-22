@@ -1,7 +1,7 @@
 # CLAUDE.md – OmniWrench (DarkMatter)
 
-Modular Windows admin toolbox. Python 3.14 + PySide6 + QtAds. Repo: github.com/Steffi-Tech/OmniWrench (public).
-User = "Steffi-Tech" (sysadmin, writes German, wants German replies). Vendor brand: DarkMatter. Product: OmniWrench.
+Modular Windows admin toolbox. Python 3.14 + PySide6 + QtAds. Repo: github.com/KuroShiroMe/OmniWrench (public).
+User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: DarkMatter. Product: OmniWrench.
 
 ## Read this first (AI memory)
 Detailed project memory lives in `docs/ai/`. Read selectively — do NOT load everything:

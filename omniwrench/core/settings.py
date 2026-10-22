@@ -36,12 +36,31 @@ DEFAULTS: dict[str, Any] = {
     "restore_layout": True,
 }
 
+# Frühere GitHub-Namen des Repositorys; gespeicherte Einstellungen werden beim Laden umgeschrieben
+_OLD_GITHUB_REPOS = ("Steffi-Tech/OmniWrench",)
+
+
+def _migrate_repo_name(data: dict) -> bool:
+    changed = False
+    for old in _OLD_GITHUB_REPOS:
+        if data.get("app_update_repo", "").lower() == old.lower():
+            data["app_update_repo"] = GITHUB_REPO
+            changed = True
+        for repo in data.get("repositories") or []:
+            url = repo.get("url", "") if isinstance(repo, dict) else ""
+            if f"/{old}/" in url:
+                repo["url"] = url.replace(f"/{old}/", f"/{GITHUB_REPO}/")
+                changed = True
+    return changed
+
 
 class AppSettings:
     def __init__(self):
         stored = read_json(SETTINGS_FILE, default={}) or {}
         self._data = copy.deepcopy(DEFAULTS)
         self._data.update(stored)
+        if stored and _migrate_repo_name(self._data):
+            self.save()
 
     def get(self, key: str, default: Any = None) -> Any:
         return self._data.get(key, default)
