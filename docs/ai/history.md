@@ -388,3 +388,10 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - README rewritten for end users: description of the main program with screenshots (.github/readme/*.png, rendered
   offscreen on Linux with a patched ToolManager so Windows tools install), installation, data locations, wiki link.
   Dev sections (start from source, structure, publishing, signing) removed -> wiki/CLAUDE.md/docs.
+
+## 2026-10-22 Landing Page kuroshiro.me
+- Stef: brand renamed DarkMatter -> KuroShiro (separate thread), domain kuroshiro.me should get a landing page.
+- Built static page in `site/` (index.html, style.css, script.js, img/): hero + 6 feature cards, store tool list,
+  2 screenshots, download cards (Windows setup/zip, Linux deb/tar.gz). script.js swaps links to latest release via
+  GitHub API, falls back to hard-coded v0.7.0 links. Screenshots rendered from the real app (offscreen, de, dark).
+- Deploy: `.github/workflows/pages.yml` (Actions Pages, on push to main touching site/). Domain set in repo settings.

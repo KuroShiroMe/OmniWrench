@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KuroShiro – OmniWrench</title>
+  <meta name="description" content="OmniWrench von KuroShiro: das modulare Universalwerkzeug für Administratoren unter Windows und Linux. Tools wie aus einem App-Store, eingebauter Passwort-Tresor, frei anordenbare Tabs.">
+  <meta property="og:title" content="OmniWrench – das Universalwerkzeug für Administratoren">
+  <meta property="og:description" content="Modulare Admin-Toolbox für Windows und Linux, von KuroShiro.">
+  <meta property="og:image" content="https://kuroshiro.me/img/home.webp">
+  <meta property="og:url" content="https://kuroshiro.me/">
+  <meta name="theme-color" content="#0b0c10">
+  <link rel="icon" href="img/kuroshiro.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="KuroShiro">
+      <img src="img/kuroshiro.svg" alt="" width="28" height="28">
+      <span>Kuro<b>Shiro</b></span>
+    </a>
+    <nav>
+      <a href="#funktionen">Funktionen</a>
+      <a href="#bilder">Bilder</a>
+      <a href="#download">Download</a>
+      <a href="https://github.com/KuroShiroMe/OmniWrench/wiki">Wiki</a>
+      <a class="gh" href="https://github.com/KuroShiroMe/OmniWrench" aria-label="GitHub">
+        <svg viewBox="0 0 16 16" width="20" height="20" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      </a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-text">
+        <img class="app-icon" src="img/omniwrench.svg" alt="" width="72" height="72">
+        <h1>OmniWrench</h1>
+        <p class="claim">Das Universalwerkzeug für Administratoren.</p>
+        <p class="lead">
+          Alle Admin-Werkzeuge in einem Fenster: Tools wie aus einem App-Store installieren,
+          Zugangsdaten sicher im eingebauten Tresor ablegen und beliebig viele Tools nebeneinander
+          oder in eigenen Fenstern anordnen. Für Windows 10/11 und Linux.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="#download" id="hero-download">Herunterladen</a>
+          <a class="btn" href="https://github.com/KuroShiroMe/OmniWrench">Quellcode auf GitHub</a>
+        </div>
+        <p class="meta"><span id="version-label">Version 0.7.0</span> · Open Source (MIT) · kostenlos</p>
+      </div>
+      <figure class="hero-shot">
+        <img src="img/home.webp" width="1500" height="900"
+             alt="OmniWrench-Hauptfenster mit installierten Tools nach Kategorien und Detailansicht von NetProbe">
+      </figure>
+    </section>
+
+    <section id="funktionen" class="features">
+      <h2>Was OmniWrench kann</h2>
+      <div class="grid">
+        <article>
+          <h3>Tool-Store</h3>
+          <p>Tools werden mit einem Klick aus GitHub-Repositories installiert und aktualisiert, samt ihrer
+            Voraussetzungen wie RSAT, PowerShell-Module oder Python-Pakete. Eigene Repositories lassen sich ergänzen.</p>
+        </article>
+        <article>
+          <h3>Tresor für Zugangsdaten</h3>
+          <p>Passwörter liegen verschlüsselt im Tresor (Argon2id und AES-256-GCM), entsperrt per Masterpasswort
+            oder Smartcard. Tools holen sich Zugangsdaten nur bei Bedarf und nur für die Sitzung.</p>
+        </article>
+        <article>
+          <h3>Tabs nach Wunsch</h3>
+          <p>Jedes Tool öffnet sich in einem eigenen Tab. Tabs lassen sich nebeneinander, übereinander oder als
+            eigenes Fenster anordnen, das Layout bleibt beim nächsten Start erhalten.</p>
+        </article>
+        <article>
+          <h3>Ordnung nach Service-Bereichen</h3>
+          <p>Tools sind nach den Bereichen einer IT-Abteilung sortiert, von Netzwerk über Identität bis
+            Service Desk, und über anklickbare Tags schnell zu finden.</p>
+        </article>
+        <article>
+          <h3>Updates automatisch</h3>
+          <p>OmniWrench meldet neue Versionen von Programm und Tools und aktualisiert auf Wunsch im Hintergrund.
+            Einstellungen und Tresor bleiben dabei erhalten.</p>
+        </article>
+        <article>
+          <h3>23 Sprachen</h3>
+          <p>Deutsch, Englisch, Französisch, Spanisch und viele weitere, dazu Dialekte von Bayrisch bis Kölsch.
+            Jedes Tool kann eine eigene Sprache verwenden.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="tools">
+      <h2>Tools im offiziellen Store</h2>
+      <ul class="tool-list">
+        <li><b>NetProbe</b><span>Netzwerk-Diagnose: Ping, Traceroute, Portscan, DNS, TLS und Leitungstest mit Befunden</span><em>Windows · Linux</em></li>
+        <li><b>MS DHCP Extended Management</b><span>Microsoft-DHCP-Server samt Failover-Partnern verwalten, ohne PowerShell</span><em>Windows</em></li>
+        <li><b>OmniVault</b><span>Passwortmanager mit Konnektoren zu KeePass, Bitwarden, 1Password, HashiCorp Vault u. a.</span><em>Windows · Linux</em></li>
+        <li><b>IconForge</b><span>Über 100.000 freie Symbole durchsuchen und als SVG, PNG, ICO oder PDF exportieren</span><em>Windows · Linux</em></li>
+        <li><b>Subnetzrechner</b><span>IPv4 und IPv6 berechnen, Netze aufteilen, CSV-Export</span><em>Windows · Linux</em></li>
+        <li><b>AD Benutzerabfrage</b><span>Benutzerkonten im Active Directory suchen, Status und Gruppen anzeigen</span><em>Windows</em></li>
+      </ul>
+    </section>
+
+    <section id="bilder" class="gallery">
+      <h2>Einblicke</h2>
+      <div class="shots">
+        <figure>
+          <a href="img/store.webp"><img src="img/store.webp" width="1500" height="900" loading="lazy"
+             alt="Store mit Kategorien, Tags und Installationsstatus"></a>
+          <figcaption>Store: Tools aus einem oder mehreren Repositories installieren</figcaption>
+        </figure>
+        <figure>
+          <a href="img/subnetzrechner.webp"><img src="img/subnetzrechner.webp" width="1500" height="900" loading="lazy"
+             alt="Subnetzrechner in einem eigenen Tab"></a>
+          <figcaption>Jedes Tool in einem eigenen Tab, hier der Subnetzrechner</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="download" class="download">
+      <h2>Download</h2>
+      <p class="sub">Python muss nicht installiert sein, alles Nötige ist enthalten.
+        <span id="release-info">Aktuelle Version: 0.7.0</span></p>
+      <div class="dl-grid">
+        <div class="dl-card">
+          <h3>Windows 10/11</h3>
+          <a class="btn primary" data-asset="win64-setup.exe"
+             href="https://github.com/KuroShiroMe/OmniWrench/releases/download/v0.7.0/OmniWrench-0.7.0-win64-setup.exe">Installationsprogramm</a>
+          <a class="btn" data-asset="win64.zip"
+             href="https://github.com/KuroShiroMe/OmniWrench/releases/download/v0.7.0/OmniWrench-0.7.0-win64.zip">Portable Version (ZIP)</a>
+          <p class="hint">Stille Installation: <code>/VERYSILENT /SUPPRESSMSGBOXES /NORESTART</code>.
+            Die Dateien sind noch nicht signiert, SmartScreen kann beim ersten Start warnen.</p>
+        </div>
+        <div class="dl-card">
+          <h3>Linux (x86_64)</h3>
+          <a class="btn primary" data-asset="_amd64.deb"
+             href="https://github.com/KuroShiroMe/OmniWrench/releases/download/v0.7.0/omniwrench_0.7.0_amd64.deb">Paket für Debian/Ubuntu (.deb)</a>
+          <a class="btn" data-asset="linux-x86_64.tar.gz"
+             href="https://github.com/KuroShiroMe/OmniWrench/releases/download/v0.7.0/OmniWrench-0.7.0-linux-x86_64.tar.gz">Portable Version (tar.gz)</a>
+          <p class="hint">Installation: <code>sudo apt install ./omniwrench_*_amd64.deb</code>.
+            Benötigt glibc 2.35 oder neuer.</p>
+        </div>
+      </div>
+      <p class="more">
+        <a href="https://github.com/KuroShiroMe/OmniWrench/releases">Alle Versionen und Änderungen</a> ·
+        <a href="https://github.com/KuroShiroMe/OmniWrench/wiki">Ausführliche Anleitung im Wiki</a>
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-brand">
+      <img src="img/kuroshiro.svg" alt="" width="22" height="22">
+      <span>Kuro<b>Shiro</b></span>
+    </div>
+    <p>OmniWrench ist Open Source unter der
+      <a href="https://github.com/KuroShiroMe/OmniWrench/blob/main/LICENSE">MIT-Lizenz</a>.
+      Symbole von <a href="https://lucide.dev">Lucide</a> (ISC).</p>
+    <p><a href="https://github.com/KuroShiroMe">GitHub</a> ·
+      <a href="https://github.com/KuroShiroMe/OmniWrench/issues">Fehler melden</a> ·
+      <a href="https://github.com/KuroShiroMe/OmniWrench/wiki">Wiki</a></p>
+  </footer>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

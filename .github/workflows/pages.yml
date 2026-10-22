@@ -1,0 +1,35 @@
+# Veröffentlicht die Landing Page (Ordner site/) über GitHub Pages unter https://kuroshiro.me.
+# Läuft bei Änderungen an site/ auf main und manuell. Die Domain wird in den Repository-Einstellungen
+# (Settings › Pages › Custom domain) eingetragen, nicht über eine CNAME-Datei.
+name: Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Landing Page veröffentlichen
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
