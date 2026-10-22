@@ -5,7 +5,7 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
 ## Open / to verify with user
 - Landing page kuroshiro.me (site/, PR): Stef must set Pages source = GitHub Actions, custom domain kuroshiro.me,
   DNS A/AAAA at registrar, verify domain, enforce HTTPS. Re-render site/img screenshots after KuroShiro rename.
-  Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs her address).
+  Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
 as the single test list: add new test points there, tick/remove them when Stef reports results. Below only notes
 that are not plain test steps.
