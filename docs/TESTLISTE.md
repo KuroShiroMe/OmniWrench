@@ -4,8 +4,8 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.3, IconForge 1.1.4, MS DHCP Extended Management 1.2.1,
-NetProbe 1.2.3, Subnetzrechner 1.2.4, OmniVault 1.1.4. App-Version 0.7.0.
+Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.2.2,
+NetProbe 1.2.4, Subnetzrechner 1.2.5, OmniVault 1.1.5. App-Version 0.7.0.
 
 ## 0. Vorbereitung
 
@@ -20,9 +20,18 @@ git pull
   also gibt es echte Updates.
 - Für Abschnitt 3 (Passwort zurücksetzen) besser einen **Testordner** verwenden, damit der echte Tresor unberührt
   bleibt: `$env:OMNIWRENCH_HOME = "$env:TEMP\OmniWrench-Test"` (gilt nur für dieses PowerShell-Fenster).
-- Logs: Unterordner `logs` im Testordner bzw. `%LOCALAPPDATA%\DarkMatter\OmniWrench\logs`.
+- Logs: Unterordner `logs` im Testordner bzw. `%LOCALAPPDATA%\KuroShiro\OmniWrench\logs`.
 
 ## 1. Hauptprogramm
+
+**Neuer Herstellername KuroShiro (vorher DarkMatter)**
+- [ ] Erster Start aus `main`: `%APPDATA%\DarkMatter\OmniWrench` und `%LOCALAPPDATA%\DarkMatter\OmniWrench` sind nach
+      `…\KuroShiro\OmniWrench` verschoben, der leere Ordner `DarkMatter` ist weg. Anmeldung mit dem bisherigen Tresor
+      klappt, installierte Tools, Einstellungen und Layout sind da. Das Log nennt „Daten übernommen: …“.
+- [ ] Store-Quelle heißt „KuroShiro Store“, Info-Dialog und Anmeldefenster zeigen „KuroShiro“.
+- [ ] Nach dem nächsten Release: Update einer Installation aus `C:\Program Files\DarkMatter\OmniWrench` über
+      *Nach Updates suchen*. Danach liegt das Programm in `C:\Program Files\KuroShiro\OmniWrench`, der alte Ordner
+      ist weg, Startmenü-Eintrag und Deinstallation unter *Apps* zeigen auf den neuen Ort.
 
 **Neuer GitHub-Name (PR #48)**
 - [ ] Nach dem ersten Start: Einstellungen › Updates bzw. Store-Quellen zeigen `KuroShiroMe/OmniWrench`
@@ -74,7 +83,7 @@ git pull
 Dateien aus dem Release 0.7.0. Die CI installiert das Setup bereits still, startet und deinstalliert es;
 offen sind der Assistent, die Verknüpfungen und das Update mit echter UAC-Abfrage.
 - [ ] `OmniWrench-0.7.0-win64-setup.exe`: Assistent auf Deutsch, UAC-Abfrage, Ziel
-      `C:\Program Files\DarkMatter\OmniWrench`, Startmenü-Eintrag, optional Desktop-Verknüpfung, Start am Ende.
+      `C:\Program Files\KuroShiro\OmniWrench`, Startmenü-Eintrag, optional Desktop-Verknüpfung, Start am Ende.
 - [ ] Nach der Installation: Einstellungen, Tresor und Tools der bisherigen portablen Version sind da
       (gleiche Daten in `%APPDATA%`/`%LOCALAPPDATA%`). Taskleisten-Symbol und Anheften passen.
 - [ ] Setup erneut starten, während OmniWrench läuft: Meldung „wird noch ausgeführt“ mit Wiederholen/Abbrechen.

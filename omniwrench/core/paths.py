@@ -3,10 +3,13 @@
 Programmdateien und Benutzerdaten sind getrennt. Das Programm (APP_DIR) kann schreibgeschützt
 im Programmordner liegen (Installation), alle Daten liegen im Benutzerverzeichnis:
 
-    Windows  Roaming  %APPDATA%\\DarkMatter\\OmniWrench              -> Einstellungen, Tresor, Tool-Einstellungen
-             Lokal    %LOCALAPPDATA%\\DarkMatter\\OmniWrench         -> installierte Tools, Tool-Daten, Cache, Logs
-    Linux    Konfig.  $XDG_CONFIG_HOME/DarkMatter/OmniWrench        (Standard ~/.config/…)
-             Daten    $XDG_DATA_HOME/DarkMatter/OmniWrench          (Standard ~/.local/share/…)
+    Windows  Roaming  %APPDATA%\\KuroShiro\\OmniWrench               -> Einstellungen, Tresor, Tool-Einstellungen
+             Lokal    %LOCALAPPDATA%\\KuroShiro\\OmniWrench          -> installierte Tools, Tool-Daten, Cache, Logs
+    Linux    Konfig.  $XDG_CONFIG_HOME/KuroShiro/OmniWrench         (Standard ~/.config/…)
+             Daten    $XDG_DATA_HOME/KuroShiro/OmniWrench           (Standard ~/.local/share/…)
+
+Daten an früheren Orten (Herstellername DarkMatter bis 0.7.0, unter Linux bis 0.6.0 ~/AppData/…)
+werden beim ersten Start übernommen, siehe _migrate().
 
 Abweichend davon liegt alles in einem Ordner, wenn
   * die Umgebungsvariable OMNIWRENCH_HOME gesetzt ist (Tests, Sonderfälle) oder
@@ -19,13 +22,14 @@ programme legen dazu die Datei omniwrench-install.json neben das Programm.
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 import shutil
 import sys
 from pathlib import Path
 
-from omniwrench import APP_ID, VENDOR
+from omniwrench import APP_ID, LEGACY_VENDORS, VENDOR
 
 # Installationsverzeichnis des Hauptprogramms (Quellordner bzw. Ordner der EXE)
 if getattr(sys, "frozen", False):
@@ -52,15 +56,81 @@ def _install_kind() -> str:
 INSTALL_KIND = _install_kind()
 
 
-def _user_dirs() -> tuple[Path, Path]:
-    """Benutzerverzeichnisse (Konfiguration, lokale Daten) nach den Regeln des Betriebssystems."""
+def _os_dirs() -> tuple[Path, Path]:
+    """Basisordner für Konfiguration und lokale Daten nach den Regeln des Betriebssystems."""
     if sys.platform == "win32":
         roaming = Path(os.environ.get("APPDATA") or Path.home() / "AppData" / "Roaming")
         local = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
     else:
         roaming = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
         local = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
-    return roaming / VENDOR / APP_ID, local / VENDOR / APP_ID
+    return roaming, local
+
+
+def _legacy_dirs() -> tuple[list[Path], list[Path]]:
+    """Frühere Datenorte (Konfiguration, lokale Daten), neueste zuerst.
+
+    Bis 0.7.0 hieß der Hersteller DarkMatter. Bis 0.6.0 gab es nur Windows-Pfade; außerhalb von
+    Windows landeten die Daten deshalb in ~/AppData/Roaming bzw. ~/AppData/Local.
+    """
+    roaming, local = _os_dirs()
+    config = [roaming / v / APP_ID for v in LEGACY_VENDORS]
+    data = [local / v / APP_ID for v in LEGACY_VENDORS]
+    if sys.platform != "win32":
+        old = Path.home() / "AppData"
+        config += [old / "Roaming" / v / APP_ID for v in LEGACY_VENDORS]
+        data += [old / "Local" / v / APP_ID for v in LEGACY_VENDORS]
+    return config, data
+
+
+# Meldungen der Datenübernahme beim Start (werden nach dem Einrichten des Loggings geschrieben)
+MIGRATION_LOG: list[str] = []
+
+
+def _has_content(path: Path) -> bool:
+    try:
+        return path.is_dir() and any(path.iterdir())
+    except OSError:
+        return False
+
+
+def _remove_empty_parents(path: Path, levels: int) -> None:
+    for parent in list(path.parents)[:levels]:
+        try:
+            parent.rmdir()
+        except OSError:
+            break
+
+
+def _migrate(new: Path, candidates: list[Path]) -> Path:
+    """Verschiebt Daten von einem früheren Ort nach new, solange dort noch nichts liegt.
+
+    Gelingt das Verschieben nicht (z. B. Datei gesperrt), bleibt der alte Ort in Gebrauch, damit
+    Einstellungen, Tresor und Tools nicht verloren scheinen. Gibt den zu verwendenden Ordner zurück.
+    """
+    if _has_content(new):
+        return new
+    for old in candidates:
+        if not _has_content(old):
+            continue
+        try:
+            new.parent.mkdir(parents=True, exist_ok=True)
+            if new.exists():
+                new.rmdir()
+            try:
+                os.rename(old, new)  # in einem Schritt: gesperrte Dateien lassen alles am alten Ort
+            except OSError as exc:
+                if exc.errno != errno.EXDEV:
+                    raise
+                shutil.move(str(old), str(new))  # anderes Dateisystem
+        except OSError as exc:
+            MIGRATION_LOG.append(f"Daten aus {old} konnten nicht nach {new} übernommen werden, "
+                                 f"der bisherige Ort bleibt in Gebrauch: {exc}")
+            return old
+        MIGRATION_LOG.append(f"Daten übernommen: {old} -> {new}")
+        _remove_empty_parents(old, 3)  # leere Herstellerordner (DarkMatter, AppData-Reste)
+        return new
+    return new
 
 
 def _base_dirs() -> tuple[Path, Path]:
@@ -70,7 +140,11 @@ def _base_dirs() -> tuple[Path, Path]:
         return base / "config", base / "local"
     if PORTABLE_DATA_DIR.is_dir():
         return PORTABLE_DATA_DIR / "config", PORTABLE_DATA_DIR / "local"
-    return _user_dirs()
+    roaming, local = _os_dirs()
+    old_config, old_local = _legacy_dirs()
+    # Beim Import, weil andere Module die Pfade direkt als Konstanten übernehmen
+    return (_migrate(roaming / VENDOR / APP_ID, old_config),
+            _migrate(local / VENDOR / APP_ID, old_local))
 
 
 CONFIG_DIR, LOCAL_DIR = _base_dirs()
@@ -85,44 +159,7 @@ TOOL_DATA_DIR = LOCAL_DIR / "tool_data"
 CACHE_DIR = LOCAL_DIR / "cache"
 LOG_DIR = LOCAL_DIR / "logs"
 
-# Meldungen der Datenübernahme beim Start (werden nach dem Einrichten des Loggings geschrieben)
-MIGRATION_LOG: list[str] = []
-
-
-def _legacy_dirs() -> list[tuple[Path, Path]]:
-    """Frühere Datenorte, die beim ersten Start an den aktuellen Ort übernommen werden.
-
-    Bis 0.6.0 gab es nur Windows-Pfade; außerhalb von Windows landeten die Daten deshalb in
-    ~/AppData/Roaming bzw. ~/AppData/Local (fehlende Umgebungsvariablen APPDATA/LOCALAPPDATA).
-    """
-    if sys.platform == "win32" or os.environ.get("OMNIWRENCH_HOME") or PORTABLE_DATA_DIR.is_dir():
-        return []
-    old = Path.home() / "AppData"
-    return [(old / "Roaming" / VENDOR / APP_ID, CONFIG_DIR), (old / "Local" / VENDOR / APP_ID, LOCAL_DIR)]
-
-
-def migrate_legacy_data() -> None:
-    """Verschiebt Daten von einem früheren Ort, solange am neuen Ort noch nichts liegt."""
-    for old, new in _legacy_dirs():
-        if not old.is_dir() or (new.exists() and any(new.iterdir())):
-            continue
-        try:
-            new.parent.mkdir(parents=True, exist_ok=True)
-            if new.exists():
-                new.rmdir()
-            shutil.move(str(old), str(new))
-            MIGRATION_LOG.append(f"Daten übernommen: {old} -> {new}")
-            for parent in (old.parent, old.parent.parent, old.parent.parent.parent):  # leere AppData-Reste
-                try:
-                    parent.rmdir()
-                except OSError:
-                    break
-        except OSError as exc:
-            MIGRATION_LOG.append(f"Daten aus {old} konnten nicht nach {new} übernommen werden: {exc}")
-
-
 def ensure_dirs() -> None:
-    migrate_legacy_data()
     for d in (CONFIG_DIR, LOCAL_DIR, TOOL_SETTINGS_DIR, TOOLS_DIR, TOOL_DATA_DIR, CACHE_DIR, LOG_DIR):
         d.mkdir(parents=True, exist_ok=True)
 

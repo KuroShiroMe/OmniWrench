@@ -1,10 +1,11 @@
 {
   "id": "net.subnet-calculator",
   "name": "Subnet Calculator",
-  "version": "1.2.4",
+  "version": "1.2.5",
   "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
   "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-  "author": "DarkMatter",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Subnetzrechner",
   "category": "network",
   "icon": "network",
   "color": "#0ea5e9",

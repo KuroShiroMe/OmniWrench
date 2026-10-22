@@ -131,3 +131,7 @@
 - Testing a "wait for PID" helper with a child process as stand-in: reap it (zombie keeps `kill -0` true).
 - Linux tar.gz instead of zip for the portable build (zipfile drops the executable bit).
 - `set -e` in bash ignores `! cmd` -> use `if cmd; then exit 1; fi` in workflow checks.
+- README screenshots on Linux: install Windows-only tools by patching `ToolManager._load_installer` (stub module) and
+  `_install_prerequisites` (system=False) plus `system.supports_platform`; grab() with offscreen + screen.json.
+- Vendor name is part of data paths, setup dir and mutex: never change VENDOR without LEGACY_VENDORS + setup mutex list;
+  the DPAPI entropy string must never change.

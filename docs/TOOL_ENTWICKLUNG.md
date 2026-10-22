@@ -222,13 +222,13 @@ Pro geöffnetem Tab gibt es eine eigene Instanz. `self.context` (`ToolContext`) 
 | `secrets.get/set/delete(key)` | freier, verschlüsselter Speicher des Tools |
 | `secrets.is_lost(key)` | `True`, wenn der Wert beim Zurücksetzen des Masterpassworts verworfen und noch nicht neu gesetzt wurde (dann z. B. ❗ anzeigen) |
 | `tr(key, default=None, **platzhalter)` / `language` | Übersetzung aus `locales/` bzw. aktive Sprache |
-| `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\DarkMatter\OmniWrench\tool_data\<id>`) |
+| `data_dir` | eigener Datenordner (`%LOCALAPPDATA%\KuroShiro\OmniWrench\tool_data\<id>`) |
 | `tool_dir` | Installationsordner (für mitgelieferte Dateien) |
 | `run_powershell(script, stdin=…)` / `run_powershell_json(…)` | PowerShell ausführen (UTF-8, ohne Fenster) |
 | `run_powershell_elevated(script, on_output=None)` | mit Adminrechten (UAC); `on_output(zeile)` erhält die Ausgabe live, `returncode` 1223 = UAC-Abfrage abgelehnt |
 | `notify(msg)` | Meldung in der Statusleiste |
 | `open_settings()` | Einstellungsdialog des Tools öffnen |
-| `log` | Logger (`%LOCALAPPDATA%\DarkMatter\OmniWrench\logs`) |
+| `log` | Logger (`%LOCALAPPDATA%\KuroShiro\OmniWrench\logs`) |
 
 ### Zugangsdaten und Passwortmanager
 

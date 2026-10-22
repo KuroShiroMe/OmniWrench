@@ -16,6 +16,7 @@ import base64
 import os
 import sys
 
+# Nie ändern (auch nicht beim Herstellernamen): sonst sind bestehende Wiederherstellungsdaten unlesbar
 ENTROPY = b"DarkMatter.OmniWrench.vault-recovery"
 
 

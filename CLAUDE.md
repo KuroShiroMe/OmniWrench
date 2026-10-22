@@ -1,7 +1,7 @@
-# CLAUDE.md – OmniWrench (DarkMatter)
+# CLAUDE.md – OmniWrench (KuroShiro)
 
 Modular admin toolbox for Windows clients and Linux (since 0.7.0). Python 3.14 + PySide6 + QtAds. Repo: github.com/KuroShiroMe/OmniWrench (public).
-User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: DarkMatter. Product: OmniWrench.
+User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: KuroShiro (until 2026-10-22: DarkMatter). Product: OmniWrench. Domain: kuroshiro.me.
 
 ## Read this first (AI memory)
 Detailed project memory lives in `docs/ai/`. Read selectively — do NOT load everything:
