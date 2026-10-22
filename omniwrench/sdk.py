@@ -118,6 +118,10 @@ class SecretStore:
     def delete(self, key: str) -> None:
         self._vault.delete(self._prefix + key)
 
+    def is_lost(self, key: str) -> bool:
+        """True, wenn der Wert beim Zurücksetzen des Masterpassworts verworfen und noch nicht neu gesetzt wurde."""
+        return self._vault.is_lost(self._prefix + key)
+
 
 class _ContextBase:
     def __init__(self, manifest: "ToolManifest", tool_dir: Path, data_dir: Path,

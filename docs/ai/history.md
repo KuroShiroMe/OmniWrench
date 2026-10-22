@@ -256,6 +256,16 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
 - OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
   0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
 
+## 2026-10-20 — Masterpasswort zurücksetzen (verlorenes Passwort)
+Stef: Passwort zurücksetzen können, wenn es verloren geht; dabei nur Passwörter löschen (auch Vault-Konnektoren),
+alle Einträge bleiben mit ❗ beim Passwort und funktionieren erst nach Neusetzen.
+- core/dpapi.py (neu), Vault.recovery + reset() + Verlustliste, Credential.missing, is_missing(), SecretStore.is_lost,
+  ToolSettingsStore.is_lost. Login: Link „Passwort vergessen?“ -> ResetDialog (neues Passwort, Bestätigungs-Haken).
+- ❗-Markierung: Passwortmanager-Liste, Auswahl, credential-Felder (neuer ✎-Knopf zum Nachtragen), geheime
+  Tool-Einstellungen, GitHub-Token, OmniVault-Konnektorliste (OmniVault 1.1.1 -> 1.1.2; nach Merge mit #45/#46 1.1.3).
+- 12 neue App-Schlüssel in allen 23 Sprachen. Geprüft: Reset-Ablauf per Skript (Linux, Schema "plain"), Renders,
+  smoke_test, check_locales, check_store. DPAPI selbst nur unter Windows prüfbar.
+
 ## 2026-10-20 — NetProbe 1.2.1: Mini-Tool als eigenständige .exe (ohne Python)
 Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Python startbar sein.
 - Neues scripts/build_linkagent.py: baut tools/netprobe/linkagent.py mit PyInstaller als Einzeldatei
@@ -280,3 +290,62 @@ LICENSE (Copyright war der GitHub-Name), CLAUDE.md, decisions.md, EXE_SIGNIEREN.
 - Neu: `core/settings.py` schreibt in gespeicherten Einstellungen `app_update_repo` und Store-URLs mit dem alten
   Namen beim Laden auf den neuen um (alte Installationen hängen sonst an der GitHub-Weiterleitung).
 - Geprüft: grep ohne Rest-Treffer (außer Historie), Migration per Python-Test.
+
+## 2026-10-20 Tool-Updates: Startmeldung, Alle aktualisieren, Auto-Update (Thread „Tool-Updates“)
+- Stef: Meldung beim Start bei Tool-Updates (alle aktualisieren oder verschieben), Haken „Dieses Fenster nach Abschluss
+  schließen“ in Update-Fenstern (gemerkt), „Alle aktualisieren“ in Store und Optionen, Option für automatische
+  Hintergrund-Updates. (Kategorien/Tags und Passwort-Zurücksetzen laufen in eigenen Threads.)
+- Gebaut: repository.update_tools, MainWindow._show_tool_update_prompt/update_all_tools/update_tools_in_background,
+  TaskDialog auto_close, Store-Button, Optionen › Updates (Auto-Update, Fenster-Haken, „Alle aktualisieren (n)“),
+  Settings auto_update_tools/close_update_window, 20 neue Schlüssel in allen 23 Sprachen, README-Datenschutz ergänzt.
+- Geprüft (Linux offscreen): Testskript mit Fake-Store (2 Tools hochversioniert): Startmeldung, Alle aktualisieren
+  inkl. geöffnetem Tool, Haken gemerkt + Einzel-Update schließt sich selbst, Auto-Update ohne Meldung; smoke_test
+  (23 Sprachen), check_locales, check_store. Windows-Test durch Stef offen.
+
+## 2026-10-20 Kategorien nur noch eine Ebene + Tags (Stef)
+- Stef: "Kategorien nur noch auf die Hauptkategorien reduzieren, alle Tools kriegen sinnvolle Tags". Weicht von der
+  2-Ebenen-Entscheidung vom 2026-10-17 ab -> decisions.md angepasst.
+- core/categories.py: AREAS nur noch IDs, SUBCATEGORIES/category.sub.* entfernt (43 Schlüssel x 23 Sprachen),
+  category_id() statt category_ids(); "bereich/unterkategorie" und Freitext-Pfade werden auf den Bereich reduziert
+  (Rückwärtskompatibel, z. B. ScopeKeeper PR #43). manifest: Feld `subcategory` entfernt (unbekannte Felder werden ignoriert).
+- Tags sichtbar: Details auf Home (Zeile "Tags") und Store-Karte ("Tags: …"), Klick sucht danach (widgets.tag_links).
+  Neue Schlüssel details.tags, store.tags in allen 23 App-Sprachen.
+- Alle 5 Tools: category = Bereich, neu kuratierte Tags (sprachneutral/Englisch), tool.category in Tool-Sprachdateien
+  nur noch Bereich, Patch-Version +1 (NetProbe nach Merge mit main 1.2.2), Store neu gebaut (alte ZIPs entfernt).
+- TOOL_ENTWICKLUNG.md: Kategorien-Abschnitt auf eine Ebene, neuer Abschnitt "Tags".
+- Geprüft: check_locales, check_store, smoke_test (Linux offscreen), Render Home-Details/Suche/Store.
+- 2026-10-22 nach Merge mit main (#49): MS DHCP Extended ebenfalls auf Bereich `network` + kuratierte Tags, 1.2.1.
+
+## 2026-10-19 — ScopeKeeper: DHCP-Verwaltung neu gebaut (thread "DHCP Management Tool")
+Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept neu als OmniWrench-Tool, keine Kopie.
+- Neues Tool net.scopekeeper 1.0.0 (Alpha): Anmeldung (SSO/Tresor/manuell, Server-MRU, „Aus AD laden“), Übersicht,
+  Scope-Tabs mit Live-Befunden + Korrekturen, Entwurf/Duplikat mit Netzumrechnung, Server-Optionen, Failover-Seite
+  (anlegen/ändern/Scopes/Vergleich/Rohdaten/löschen), Definitionen, serverweite Prüfung, Zwischenablage, Replikation
+  auf den Partner (netsh, auch ohne WinRM), Protokoll. 947 Texte de/en.
+- Mit Fake-Backend durchgespielt (Login, Replikation, Vergleich, Speichern, Entwurf anlegen inkl. Failover, Status,
+  Löschen); dabei behoben: Endlosschleife in der Optionstabelle des Entwurfs, Signal-Argumentfehler LeaseEdit,
+  tr(key=) Konflikt beim Vergleich, Knopfzeilen umbrachen senkrecht, „&“ im Tab-Titel, leere Fehlerliste beim
+  Übertragen. Screenshots in /mnt/project-files/scopekeeper/.
+- Checks grün: compileall, pyflakes, check_locales, check_store (nur scopekeeper-zip + Index-Eintrag), smoke_test.
+- 2026-10-20 Stef-Test: „Aus AD laden“ und Login scheiterten mit "'list' object has no attribute 'get'". Ursache:
+  `items = , $x` in Hashtables von host.ps1 verschachtelte alle Listen. Behoben in 1.0.1, mit echtem pwsh + Stub-Cmdlets
+  nachgestellt und geprüft.
+- 2026-10-20 Stef-Wunsch (1.1.0): Umbenennung in „MS DHCP Extended Management“; Prüfung parallel (RunspacePool
+  cim_many, 8 Threads, zweiter PowerShell-Prozess, UI bleibt bedienbar, abbrechbar, Scope-Ergebnisse laufen live ein);
+  Opt-out „Server direkt nach der Anmeldung prüfen“; Ladeansicht beim Anmelden (bei Fehler zurück); Verbindungsaufbau
+  als Schritte statt Fehlermeldung; Hinweistexte -> ?-Icons. Mit Fake-Backend + pwsh-Stubs getestet (10 Abfragen à
+  300 ms in 0,7 s).
+- 2026-10-20 Stef: interne Kennung auch ändern (neues Tool net.ms-dhcp-extended, Ordner ms_dhcp_extended) und
+  „möglichst alles in Python“. DHCP-Zugriff komplett neu über dhcpsapi.dll (ctypes, backend.py/dhcpapi.py),
+  PowerShell-Host (host.ps1/pshost.py) entfernt, netsh direkt aus Python. Strukturen gegen Win32-Metadaten geprüft,
+  Abläufe mit Fake-DLL unter Linux getestet. Inventar der übrigen PowerShell-Nutzung in backlog.md.
+
+- 2026-10-22 Stef tested 1.0.0 and asked for 6 changes -> 1.1.0: movable overview columns (new default order), failover
+  view with one row per server + all scopes of the selected server (split detection), check page with distribution
+  bars/top scopes and segmented switch, server options per failover server with sync state + per-option transfer +
+  opt-out partner checkbox, definitions behind expert mode + unlock, rights detection (read-only hides edits).
+  Fixed on the way: QMessageBox checkbox segfault, FlowLayout wrapping with hidden buttons. Fake-DLL/fake-backend tests.
+- 2026-10-22 Stef (after 1.1.0 merge) -> 1.2.0: check column "Höchster Befund" (was "Bewertung"), failover list as
+  expandable relationship rows (▸/▾, double-click, arrow keys) with both servers below, server options show only the
+  selected server's own options (missing ones stay as findings; "Anzeigen" jumps to the server that has it), Alpha
+  tag/note removed at Stef's request. Fixed: findings list row heights computed while page hidden (giant rows).

@@ -133,6 +133,7 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 This program will not transfer any information to other networked systems unless
 specifically requested by the user or the person installing or operating it. Abgerufen werden nur der
 Tool-Store und die Release-Liste von GitHub (`raw.githubusercontent.com`, `api.github.com`); die Prüfung beim
-Start lässt sich unter *Einstellungen › Updates* abschalten. Verbindungen zu Active Directory,
+Start lässt sich unter *Einstellungen › Updates* abschalten. Tool-Pakete werden nur auf Anforderung
+heruntergeladen oder, wenn dort ausdrücklich eingeschaltet, beim Start automatisch aktualisiert (Standard: aus). Verbindungen zu Active Directory,
 Passwort-Managern oder anderen Systemen stellen nur die Tools her, die der Benutzer installiert und
 einrichtet.

@@ -14,8 +14,8 @@ import PySide6QtAds as ads
 from PySide6.QtCore import QEvent, QObject, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QDesktopServices, QFont, QIcon, QKeySequence
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QFileDialog, QMainWindow, QMenu, QMessageBox, QPushButton, QSplitter, QVBoxLayout,
-    QWidget,
+    QApplication, QCheckBox, QDialog, QFileDialog, QHBoxLayout, QMainWindow, QMenu, QMessageBox, QPushButton,
+    QSplitter, QVBoxLayout, QWidget,
 )
 
 from omniwrench import APP_NAME, GITHUB_REPO, VENDOR, __version__
@@ -37,7 +37,7 @@ from .sidebar import Sidebar
 from .store_page import StorePage
 from .credentials import PasswordManagerDialog
 from .icon_browser import IconBrowserDialog
-from .widgets import TaskDialog, library_icon, tool_icon
+from .widgets import TaskDialog, label, library_icon, make_button, tool_icon
 from .workers import run_async
 
 log = logging.getLogger(__name__)
@@ -80,6 +80,7 @@ class MainWindow(QMainWindow):
         self.catalog: Catalog | None = None
         self.tool_updates: dict[str, CatalogEntry] = {}
         self.app_release: app_updater.AppRelease | None = None
+        self.updating_in_background: set[str] = set()   # Tool-IDs, die gerade im Hintergrund aktualisiert werden
         self.open_tools: dict[str, OpenTool] = {}
         self._locked = False
         self._force_quit = False
@@ -250,7 +251,7 @@ class MainWindow(QMainWindow):
 
     def open_tool(self, tool_id: str, dock_name: str | None = None, focus: bool = True) -> None:
         tool = self.manager.get(tool_id)
-        if tool is None:
+        if tool is None or self._busy_updating(tool_id):
             return
         if tool.manifest.single_instance:
             existing = [o for o in self.open_tools.values() if o.tool_id == tool_id]
@@ -374,6 +375,8 @@ class MainWindow(QMainWindow):
             return
         tool_id = entry.manifest.id
         name = entry.manifest.display_name
+        if self._busy_updating(tool_id):
+            return
         if any(o.tool_id == tool_id for o in self.open_tools.values()):
             if QMessageBox.question(self, tr("install.tool_open_title"), tr("install.tool_open", name=name)) \
                     != QMessageBox.StandardButton.Yes:
@@ -389,7 +392,7 @@ class MainWindow(QMainWindow):
         key = "install.updating" if self.manager.get(tool_id) else "install.installing"
         TaskDialog(self, tr(key, name=name),
                    lambda progress: repository.install_from_catalog(entry, self.manager, progress),
-                   on_success=lambda _: self._after_install()).exec()
+                   on_success=lambda _: self._after_install(), auto_close=self._auto_close).exec()
 
     def _after_install(self) -> None:
         if self.catalog:
@@ -413,7 +416,7 @@ class MainWindow(QMainWindow):
 
     def uninstall_tool(self, tool_id: str) -> None:
         tool = self.manager.get(tool_id)
-        if tool is None:
+        if tool is None or self._busy_updating(tool_id):
             return
         name = tool.manifest.display_name
         box = QMessageBox(QMessageBox.Icon.Question, tr("uninstall.title"), tr("uninstall.confirm", name=name),
@@ -444,6 +447,8 @@ class MainWindow(QMainWindow):
 
     def repair_tool(self, tool_id: str) -> None:
         tool = self.manager.get(tool_id)
+        if self._busy_updating(tool_id):
+            return
         TaskDialog(self, tr("repair.running", name=tool.manifest.display_name),
                    lambda progress: self.manager.repair(tool_id, progress)).exec()
 
@@ -464,14 +469,19 @@ class MainWindow(QMainWindow):
                   lambda err: (self.store_page.set_loading(False), self.notify(tr("store.error", error=err))))
 
     def check_updates(self, manual: bool) -> None:
-        if not manual and not self.settings.get("check_updates_on_start", True):
+        auto = self.settings.get("auto_update_tools", False)
+        if not manual and not (self.settings.get("check_updates_on_start", True) or auto):
             return
         self.notify(tr("updates.searching"))
 
         def tools_done():
+            n = len(self.tool_updates)
             if manual:
-                n = len(self.tool_updates)
                 self.notify(tr("updates.tools_available", count=n) if n else tr("updates.tools_current"))
+            elif n and auto:
+                self.update_tools_in_background()
+            elif n:
+                self._show_tool_update_prompt()
 
         self.reload_catalog(on_done=tools_done)
         repo = self.settings.get("app_update_repo", "")
@@ -491,6 +501,119 @@ class MainWindow(QMainWindow):
         run_async(lambda: app_updater.check_for_update(repo, prerelease), app_done,
                   lambda err: manual and QMessageBox.warning(self, tr("updates.title"),
                                                              tr("updates.check_failed", error=err)))
+
+    @property
+    def _auto_close(self) -> tuple[AppSettings, str]:
+        return self.settings, "close_update_window"
+
+    def _busy_updating(self, tool_id: str) -> bool:
+        if tool_id not in self.updating_in_background:
+            return False
+        tool = self.manager.get(tool_id)
+        self.notify(tr("updates.tool_busy", name=tool.manifest.display_name if tool else tool_id))
+        return True
+
+    def _show_tool_update_prompt(self) -> None:
+        """Startmeldung: Tool-Updates verfügbar -> alle aktualisieren oder später."""
+        entries = sorted(self.tool_updates.values(), key=lambda e: e.manifest.display_name.lower())
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("updates.prompt_title"))
+        lay = QVBoxLayout(dlg)
+        lay.addWidget(label(tr("updates.prompt_text", count=len(entries)), "CardTitle", wrap=True))
+        lines = []
+        for e in entries:
+            tool = self.manager.get(e.manifest.id)
+            lines.append("•  " + tr("updates.item", name=e.manifest.display_name,
+                                     old=tool.manifest.version if tool else "-", new=e.manifest.version))
+        lay.addWidget(label("\n".join(lines), wrap=True))
+        where = " › ".join(tr(k).replace("&", "").replace("…", "").strip()
+                           for k in ("menu.extras", "menu.settings", "appsettings.tab_updates"))
+        lay.addWidget(label(tr("updates.prompt_hint", path=where), "Muted", wrap=True))
+        row = QHBoxLayout()
+        row.addStretch()
+        later = make_button(tr("updates.later"), on_click=dlg.reject)
+        update = make_button(tr("updates.update_all"), primary=True, on_click=dlg.accept)
+        update.setDefault(True)
+        row.addWidget(later)
+        row.addWidget(update)
+        lay.addLayout(row)
+        dlg.accepted.connect(self.update_all_tools)
+        dlg.finished.connect(dlg.deleteLater)
+        dlg.open()  # nicht blockierend - das Hauptfenster baut sich währenddessen fertig auf
+
+    def update_all_tools(self) -> None:
+        """Alle verfügbaren Tool-Updates in einem Fenster installieren (Store, Optionen, Startmeldung)."""
+        if self.updating_in_background:
+            self.notify(tr("updates.background_running", count=len(self.updating_in_background)))
+            return
+        entries = sorted(self.tool_updates.values(), key=lambda e: e.manifest.display_name.lower())
+        if not entries:
+            self.notify(tr("updates.tools_current"))
+            return
+        open_ids = {o.tool_id for o in self.open_tools.values()}
+        open_names = [e.manifest.display_name for e in entries if e.manifest.id in open_ids]
+        if open_names:
+            if QMessageBox.question(self, tr("install.tool_open_title"),
+                                    tr("updates.close_open_tools", items="\n- ".join(open_names))) \
+                    != QMessageBox.StandardButton.Yes:
+                return
+            # Tools, die das Schließen ablehnen (z. B. laufende Aufgabe), werden übersprungen
+            skipped = [e for e in entries if e.manifest.id in open_ids and not self.close_tool_instances(e.manifest.id)]
+            entries = [e for e in entries if e not in skipped]
+            if skipped:
+                self.notify(tr("updates.skipped_open", items=", ".join(e.manifest.display_name for e in skipped)))
+            if not entries:
+                return
+
+        def task(progress):
+            updated, failed = repository.update_tools(entries, self.manager, progress)
+            progress("\n" + tr("updates.done", count=len(updated)))
+            if failed:
+                raise RuntimeError(tr("updates.failed", items="\n- ".join(failed)))
+
+        TaskDialog(self, tr("updates.all_title", count=len(entries)), task, auto_close=self._auto_close).exec()
+        self._after_install()
+
+    def update_tools_in_background(self) -> None:
+        """Automatische Updates: ohne Fenster, nur Statusleiste und Log.
+
+        Übersprungen (bleiben als Update angezeigt): geöffnete Tools und Updates mit geänderten
+        Voraussetzungen - diese können Administratorrechte (UAC) brauchen und sollen nicht unbemerkt laufen.
+        """
+        if self.updating_in_background:
+            return
+        open_ids = {o.tool_id for o in self.open_tools.values()}
+        entries = []
+        for e in self.tool_updates.values():
+            tool = self.manager.get(e.manifest.id)
+            if tool is None or e.manifest.id in open_ids:
+                continue
+            if e.manifest.requirements.summary() != tool.manifest.requirements.summary():
+                continue
+            entries.append(e)
+        if not entries:
+            self._show_tool_update_prompt()
+            return
+        self.updating_in_background = {e.manifest.id for e in entries}
+        self.notify(tr("updates.background_running", count=len(entries)), 0)
+
+        def done(result):
+            updated, failed = result
+            self.updating_in_background = set()
+            self._after_install()
+            if failed:
+                log.warning("Hintergrund-Updates fehlgeschlagen: %s", "; ".join(failed))
+                self.notify(tr("updates.background_failed", items="; ".join(failed)), 15000)
+            else:
+                self.notify(tr("updates.background_done", count=len(updated)), 10000)
+
+        def failed(err):
+            self.updating_in_background = set()
+            self._after_install()
+            self.notify(tr("updates.background_failed", items=err), 15000)
+
+        run_async(lambda progress: repository.update_tools(entries, self.manager, progress), done, failed,
+                  on_progress=lambda text: log.info("Auto-Update: %s", text.strip()))
 
     def _update_status_button(self) -> None:
         parts = []
@@ -528,7 +651,7 @@ class MainWindow(QMainWindow):
                 progress(tr("updates.restarting"))
                 return path
 
-            dlg = TaskDialog(self, tr("updates.app_title"), task)
+            dlg = TaskDialog(self, tr("updates.app_title"), task, auto_close=self._auto_close)
             dlg.exec()
             if dlg.success and dlg.result_value:
                 app_updater.apply_update(dlg.result_value)
@@ -578,7 +701,8 @@ class MainWindow(QMainWindow):
     # ======================================================= Einstellungen
     def open_app_settings(self) -> None:
         old_repos = self.settings.get("repositories")
-        dlg = AppSettingsDialog(self.settings, self.vault, self)
+        dlg = AppSettingsDialog(self.settings, self.vault, self, tool_updates=lambda: len(self.tool_updates),
+                                update_all=self.update_all_tools)
         if not dlg.exec():
             return
         theme.apply_theme(QApplication.instance(), self.settings.get("theme", "dark"))

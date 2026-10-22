@@ -9,21 +9,24 @@ omniwrench/sdk.py             PUBLIC API for tools: ToolBase, ToolContext, Insta
                               pick_credential, CredentialField, PSResult, ps_quote
 omniwrench/core/              (Qt-free except tool_manager QObject)
   paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
-  vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>"
+  vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>";
+                              reset(new_pw) from DPAPI recovery copy, is_lost()/lost_keys() ("app:lost_secrets")
+  dpapi.py                    protect/unprotect via CryptProtectData (CurrentUser); "plain" fallback off Windows
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
   powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
   system.py                   is_windows_server() (registry InstallationType, cached)
   elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
-  categories.py               AREAS {area: (subs)}, LEGACY_AREAS, category_path(manifest) -> [area, sub] localized
-  manifest.py                 ToolManifest (id,name,version,category,icon,icon_text,icon_data,entry,requirements,
+  categories.py               AREAS (ids, one level), LEGACY_AREAS, category_id(), category_path(manifest) -> [area] localized
+  manifest.py                 ToolManifest (id,name,version,category,tags,icon,icon_text,icon_data,entry,requirements,
                               translations…), SettingDef, validate_package, localized()/display_name/category_path
   tool_settings.py            ToolSettingsStore: JSON for normal, vault for secret/credential types; listeners
   tool_manager.py             ToolManager(QObject): refresh, create_instance, install_zip/dir (backup+rollback),
                               _install_prerequisites (check() first), uninstall, repair; module prefix omniwrench_tool_<id>
   prerequisites.py            pip (_lib), elevated capabilities/features (##OW markers -> localized progress,
                               restart notice, WSUS/FoD hint on 0x800f0954 etc.), PS modules, winget
-  repository.py               load_catalog(repos), available_updates, install_from_catalog
+  repository.py               load_catalog(repos), available_updates, install_from_catalog, update_tools (batch,
+                              continues on errors -> (updated, failed))
   app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
   net.py                      urllib + truststore SSL, github_token header
   i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language,
@@ -34,12 +37,15 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               (register/unregister[_owner], search -> SearchResult(items, errors, auth_needed),
                               resolve(ref) w/ auth_handler retry + session cache, clear_session), normalize_value,
                               resolve_item, generate_password; init()/manager()
-  settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes)
+  settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes,
+                              auto_update_tools, close_update_window)
 omniwrench/ui/
   main_window.py              QtAds dock manager; home/store docks; open_tool/close_tool/reload_tool_tabs;
-                              tool menu; install/uninstall/check/repair; updates; lock; layout save/restore
+                              tool menu; install/uninstall/check/repair; updates (startup dialog
+                              _show_tool_update_prompt, update_all_tools, update_tools_in_background with
+                              updating_in_background guard); lock; layout save/restore
   home_page.py                ToolTile (FitLabel), DetailsPanel, HomePage (filter, select_tool)
-  store_page.py               StoreCard, StorePage (category tree, filters)
+  store_page.py               StoreCard (clickable tags -> search), StorePage (category tree, filters)
   sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
   settings_dialogs.py         _Field/build_settings_form (schema -> widgets, translated via tool locale),
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
@@ -50,7 +56,8 @@ omniwrench/ui/
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
   widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog,
-                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable
+                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable;
+                              TaskDialog(auto_close=(settings, key)) = remembered "close when done" checkbox
   scaling.py                  ui_scale -> QT_SCALE_FACTOR (before QApplication), device_pixel_ratio, fit_to_screen,
                               fit_min_width, window_size, restart_application
   theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly
@@ -58,7 +65,7 @@ omniwrench/ui/
 omniwrench/locales/*.json     8 languages, ~280 keys
 omniwrench/resources/icons/lucide/  SVGs + LICENSE + VERSION
 tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user_lookup (ms.ad-user-lookup),
-                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe) - see below
+                              omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe), ms_dhcp_extended (net.ms-dhcp-extended) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
                               smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
@@ -136,3 +143,71 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   Tabs: "profile" (Steckbrief: identity + findings strip + open-ports line) and "connectivity" (ping/MTU/route summary)
   replace the old "general" tab. PDF export via pdfreport.py (QPdfWriter + QTextDocument from HTML, no extra dependency).
   TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.
+
+## Vault reset (lost master password, 2026-10-20)
+- Every Vault._save() also writes `recovery` = dpapi.protect(json({key: redact(key, value)})). redact(): app:credentials
+  entries and credential-field items ({"items": [...]}) without "password" (+ "missing": true if one was set); refs kept;
+  app:lost_secrets kept; every other key -> None (fully secret). Vaults without `recovery` get one on next unlock.
+- Vault.reset(): backup file, new DEK + password unlocker only, data = non-None skeleton values, None keys go into
+  "app:lost_secrets". Vault.set(key, value) removes key from that list; delete_prefix() too.
+- Markers: Credential.missing (LocalProvider; resolve() returns None while missing, update() with a password clears it),
+  credentials.is_missing(item) (manual item or local ref), resolve_item() -> None. UI: ui/credentials.missing_icon()
+  (Lucide circle-alert, warning colour) in manager list, picker, CredentialField (+ new ✎ edit button for manual items
+  and local refs); secret settings fields and GitHub token show ❗ + placeholder (ToolSettingsStore.is_lost,
+  build_settings_form(lost=...)); OmniVault source list via ctx.secrets.is_lost("conn:<id>") (SDK SecretStore.is_lost).
+- Login: LoginDialog link "Passwort vergessen?" -> ResetDialog (login_dialog.py).
+
+## MS DHCP Extended Management (net.ms-dhcp-extended, folder tools/ms_dhcp_extended, class MsDhcpExtended) – Microsoft DHCP manager
+  (Alpha until 1.2.0, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1; was net.scopekeeper/ScopeKeeper until 2026-10-20)
+- Layers: `ipcalc` (IPv4 math, ScopeModel, range/exclusion conversion, address translation between networks),
+  `optcodec` (option value parse/format/compare per definition type, STD_OPTION_IDS), `checks` (Checker -> Finding
+  level error/warning/bestpractice/info + category + obj + targets["Field:Name", "Range:n", "Option:003", ...] + fix id;
+  scope_findings/server_findings/draft), `netshdump` (parse `netsh dhcp server \\x dump`, build netsh commands,
+  `sync_plan` = replication diff), `service.DhcpService` (all server access, normalises cmdlet output n_scope/n_opt/...,
+  partner handling, replication, failover, scan), UI modules (tool, pages, page_scope, page_draft, editors, dialogs,
+  ui_base, runner).
+- Backend (no PowerShell since 2026-10-20): `backend.ApiBackend.call(cmd, args, on_progress)` with hello, connect,
+  set_cred, disconnect, cim, cim_many, dhcp_in_dc, resolve, fo_api, netsh. `dhcpapi.py` = ctypes on dhcpsapi.dll
+  (DHCP Server Management API over RPC, like the MMC); `dhcpapi.CMDLETS` maps the old cmdlet names to API calls and
+  returns cmdlet-shaped dicts (ScopeId, StartRange, LeaseDuration in s …) so service.py normalisers stay unchanged.
+  Alt. creds = LogonUser(NEW_CREDENTIALS) + ImpersonateLoggedOnUser per call/thread (runas /netonly). Lease time =
+  option 51 (DWord), DNS settings = option 81 bit flags (DNS_FLAG_*), reservation names = client records
+  (DhcpGetClientInfoV4/SetClientInfoV4); reservation UID may carry subnet(LE)+0x01 prefix -> stripped. netsh: Python
+  writes a .cmd batch with ##BEGIN/##RC markers, runs it hidden (CreateProcessWithLogonW netcredentials-only if creds),
+  polls the output file. Errors `@ERR:key:..` / `@RPC:op:server:code:text` -> `DhcpService.host_text`.
+- Struct layouts verified against the official Win32 metadata (windows-sys 0.52 Dhcp/mod.rs) with
+  scripts/dhcp_api_check/verify_api.py; logic tested on Linux with a fake dhcpsapi (fake_dhcpsapi.c, same layouts)
+  via test_api.py (`dhcpapi.setup(ctypes.CDLL(...))`). Re-run both after touching dhcpapi.py.
+- Partner access: DHCP API first (partner_via "Cim" = API, label "verbunden"), else netsh path ("Rpc"). `partner_mode` Auto (login checks all partners, dialog
+  retry/other creds/primary only) / Lazy / Off. Replication always reads the partner via netsh dump and writes netsh
+  commands (works without WinRM); custom classes/definitions are created on the partner first. Server options are
+  never auto-replicated ("Copy to partner" button).
+- Flow runner: UI actions are generators yielding `runner.Job(fn, status, cancellable)`; `Runner` runs fn via
+  run_async, sends the result back (or throws), shows status/progress/cancel. One flow at a time, `MsDhcpExtended.run`
+  queues. UserError -> error box, others -> box with traceback.
+- UI: login page -> main page with own QtAds CDockManager: fixed docks Übersicht/Server-Optionen/Failover/Definitionen/
+  Prüfung + one closable dock per scope (`ScopeTab`: Allgemein+Bereiche, Optionen, Reservierungen, Ausschlüsse, Leases,
+  Failover, Befunde) or draft (`DraftTab`: new/duplicate with octet edits, conversion of ranges/options). Findings are
+  recomputed on every edit (`recheck`), mark fields (Markers "?" buttons, row tints, tab icons); double-click applies
+  the fix. Clipboard MIME application/x-omniwrench-ms-dhcp-extended+json for options/reservations/exclusions with network
+  conversion.
+- Test hook: `MsDhcpExtended.backend_factory` replaces ApiBackend (fake backend for screenshots/flow tests; not in repo).
+- Fast scan: `scanner.Scanner` (QObject, own thread, own ApiBackend) -> `DhcpService.clone_for(backend)` + `attach()`
+  (re-login with in-memory secrets, partners via set_cred) -> `fast_scan`: phase 1 = one `cim_many` with all
+  server-level Gets, phase 2 = per-scope Gets (options, reservations, DNS, opt. leases) in parallel; results land in
+  `svc.prefetch` (key = json [name, server, params]) so the normal `cim()`/load/check code is reused unchanged.
+  `cim_many` = ThreadPoolExecutor (1..16, THREADS=8), only Get-*, each result streamed as progress {key, items|error};
+  DhcpApi itself parallelises per-subnet work of "all scopes" queries. Each scope is evaluated once its keys are in
+  -> `scope_done` signal -> CheckPage refresh coalesced by a 300 ms timer. Cancel = `ApiBackend.kill()` (stops
+  waiting, pending calls cancelled); partial result has partial=True.
+- Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
+- 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
+  5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;
+  every page has `apply_rights()` (hide write buttons/actions, read-only editors); `MsDhcpExtended.apply_rights()` after
+  refresh. Partner view: `svc.load_peer(pn)` -> `svc.peer[pn]` {fo, scopes, options, errors} (API or netsh dump),
+  `ctl.load_peer_flow`. FailoverPage: expandable head row per relationship (key "rel|*", `_open` set, rows hidden via setRowHidden) + one row per server (key "rel|server", real name in `_srv`), lower grid = ALL scopes of
+  the selected server with membership. ServerOptionsPage: server grid (primary + partners), `compare()` gives sync
+  state per option, only own options (1.2.0, no ghost rows), `_only_on` lets a finding jump to the server that has the option, transfer per option only. CheckPage: `DistBars`
+  (stacked bars per category) + top scopes + segmented buttons/QStackedWidget instead of tabs. DefsPage: lock banner,
+  writes only after unlock; dock shown only with setting expert_mode. Grid.enable_layout(settings,key) = movable/
+  hideable columns stored {"order","hidden"}; overview + failover use it.

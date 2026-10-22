@@ -13,11 +13,13 @@ from PySide6.QtWidgets import (
 )
 
 from omniwrench.core import credentials as core_credentials
+from omniwrench.core.i18n import tr as app_tr
 from omniwrench.sdk import ToolBase, run_async
 # Erstanbieter-Tool: nutzt Bausteine des Hauptprogramms direkt
 from omniwrench.ui.credentials import (
     PasswordEdit, PasswordManagerWidget, ask_provider_login, copy_secret, resolve_async,
 )
+from omniwrench.ui import theme
 from omniwrench.ui.widgets import clear_layout, library_icon
 
 from .connectors import (
@@ -395,7 +397,11 @@ class OmniVault(ToolBase):
             label = conn.name + ("" if conn.enabled else f"  ({tr('ui.disabled')})")
             entries.append(("conn", conn.id, label, icon))
         for kind, cid, label, icon in entries:
-            item = QListWidgetItem(library_icon(icon, 18), label)
+            lost = kind == "conn" and self.store.secrets_lost(self.store.get(cid))
+            qicon = library_icon("circle-alert", 18, theme.current["warning"]) if lost else library_icon(icon, 18)
+            item = QListWidgetItem(qicon, label)
+            if lost:
+                item.setToolTip(app_tr("vault.missing"))
             item.setData(ROLE_KIND, kind)
             item.setData(ROLE_ID, cid)
             self.sources.addItem(item)

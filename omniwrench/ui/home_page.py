@@ -7,6 +7,7 @@ ein Doppelklick startet das Tool, ein Rechtsklick öffnet das Kontextmenü.
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from urllib.parse import unquote
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
@@ -18,7 +19,7 @@ from omniwrench.core.system import is_windows_server
 from omniwrench.core.tool_manager import InstalledTool
 
 from .scaling import clamp
-from .widgets import FitLabel, FlowLayout, ResponsiveRow, breakable, clear_layout, label, library_icon, make_button, tool_icon
+from .widgets import FitLabel, FlowLayout, ResponsiveRow, breakable, clear_layout, label, library_icon, make_button, tag_links, tool_icon
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -152,6 +153,11 @@ class DetailsPanel(QFrame):
             val.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
             val.setOpenExternalLinks(True)
             form.addRow(label(key, "Muted"), val)
+        if m.tags:  # Klick auf ein Tag sucht danach
+            tags = label(tag_links(m.tags), wrap=True)
+            tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
+            tags.linkActivated.connect(lambda tag: self.page.search.setText(unquote(tag)))
+            form.insertRow(2, label(tr("details.tags"), "Muted"), tags)
         self.lay.addLayout(form)
 
         self.lay.addStretch()
@@ -257,7 +263,7 @@ class HomePage(QWidget):
 
     # ------------------------------------------------------------ Filter
     def set_category_filter(self, path: tuple[str, ...] | list[str]) -> None:
-        """Zeigt nur Tools dieser Kategorie (inkl. Unterkategorien); () = alle."""
+        """Zeigt nur Tools dieser Kategorie; () = alle."""
         self.category_filter = tuple(path)
         if self.category_filter:
             self.filter_chip.setText(" › ".join(self.category_filter) + "   ✕")

@@ -4,7 +4,7 @@
   "tool.name": "Subnet Calculator",
   "tool.description": "Calculate IPv4/IPv6 networks and split them into subnets.",
   "tool.long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-  "tool.category": "Network & Connectivity/IP Addresses, DNS & DHCP",
+  "tool.category": "Network & Connectivity",
 
   "settings.default_network.label": "Default network at startup",
   "settings.default_network.placeholder": "e.g. 10.0.0.0/16",

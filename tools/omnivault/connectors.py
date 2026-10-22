@@ -113,6 +113,12 @@ class ConnectorStore:
         stored = (self.ctx.secrets.get(f"conn:{conn.id}") or {}) if conn.save_auth else {}
         return {**stored, **_session_auth.get(conn.id, {})}
 
+    def secrets_lost(self, conn: ConnectorConfig | None) -> bool:
+        """Gespeicherte Zugangsdaten gingen beim Zurücksetzen des Masterpassworts verloren."""
+        is_lost = getattr(self.ctx.secrets, "is_lost", None)   # erst ab OmniWrench 0.6.x vorhanden
+        return bool(conn and conn.save_auth and is_lost and is_lost(f"conn:{conn.id}")
+                    and conn.id not in _session_auth)
+
     def set_secrets(self, conn: ConnectorConfig, values: dict[str, str], save: bool | None = None) -> None:
         save = conn.save_auth if save is None else save
         _session_auth[conn.id] = {**_session_auth.get(conn.id, {}), **values}

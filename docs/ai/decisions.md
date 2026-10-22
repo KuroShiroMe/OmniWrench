@@ -15,10 +15,12 @@
 ## UI (user requests)
 - Tabs on top; Home tab always open (not closable); Store tab openable; each tool opens in own tab; tabs dockable side-by-side/stacked/floating (QtAds).
 - Left sidebar: installed tools tree by category. Double-click category → Home with category filter.
-- Categories (Stef 2026-10-17): service-oriented, "large IT department with many expert teams, dozens of tools".
+- Categories (Stef 2026-10-17, simplified 2026-10-20): service-oriented, "large IT department with many expert teams".
   11 fixed areas (workplace, identity, network, infrastructure, cloud, security, applications, operations,
-  servicedesk, automation, documentation) + other; max 2 levels; must stay extensible (tools may bring own
-  sub/area). List + rules: core/categories.py, docs/TOOL_ENTWICKLUNG.md#kategorien.
+  servicedesk, automation, documentation) + other; **only one level** (Stef 2026-10-20: "nur noch Hauptkategorien,
+  alle Tools kriegen sinnvolle Tags"). Finer grouping via visible, clickable `tags` (language-neutral tech/product
+  names, else English). Tools may still bring an own area. List + rules: core/categories.py,
+  docs/TOOL_ENTWICKLUNG.md#kategorien / #tags.
 - Home: compact tiles (icon + name only). Single click → right details panel (metadata, actions). Double click → open. Right click → menu (Open, Settings, Update, Check, Repair, Folder, Uninstall).
 - Tile names: shrink font first (down to 8.5pt), then wrap (spaces/after hyphens) into 2 lines, then elide.
 - Home has "Filter" button (categories) + filter chip.
@@ -35,6 +37,12 @@
 - Master password and/or user certificate (smart card). Envelope encryption: random DEK, wrapped by Argon2id(password) AES-GCM and/or RSA-OAEP(cert). User asked for "hash compare"; explained current design is equivalent/better (no hash stored, verify by AEAD decrypt, DEK kept in session). User accepted ("wir machen das so").
 - Signing-only certs (Intune device certs) are filtered out.
 - Built-in password manager in main app (local provider in vault). Credential picker = simple full-text search.
+- Lost master password (Stef 2026-10-20): "Passwort vergessen?" on the login resets the vault. Reset = ALL stored
+  secrets gone (incl. password-manager connector credentials, GitHub token, cert unlockers); every entry stays, its
+  password marked with ❗ and the entry simply doesn't work until a new password is set. Only passwords are deleted.
+  My choices: entries survive via a secret-free recovery copy in vault.json, protected with DPAPI (CurrentUser, so only
+  the same Windows account can reset with data); without readable copy the reset still works but the manager is empty.
+  Old vault file kept as `vault.before-reset-<ts>.json`. Reset asks for a new password + "delete permanently" checkbox.
 
 ## i18n
 - Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), de_hes (Hessisch, added 2026-10-16 on Stef's request), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
@@ -123,3 +131,47 @@
 - Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
   file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.
+
+## Tool updates (Stef 2026-10-20; details my choices)
+- Startup: if tool updates exist -> non-blocking dialog listing "Name: old → new" with "Alle aktualisieren" / "Später"
+  (Später = status-bar button stays). Shown only when the startup check runs (check_updates_on_start or auto update).
+- "Alle aktualisieren": button in Store header (only visible with updates, shows count) and in Settings › Updates;
+  one TaskDialog for all tools, one failing tool does not stop the others; open tools are closed after one question,
+  tools refusing to close are skipped.
+- Install/update windows (store install/update, update all, app update) show checkbox "Dieses Fenster nach Abschluss
+  schließen"; setting `close_update_window` is saved immediately when toggled, also in Settings › Updates.
+  Window closes itself only on success; on errors it stays open.
+- Setting `auto_update_tools` (default off): at startup updates install silently in the background (status bar + log
+  only). Skipped and still offered: tools open in a tab, and updates whose requirements changed (may need UAC; should
+  not appear unannounced). If everything was skipped, the normal startup dialog appears instead. Opening/updating/
+  uninstalling a tool while it is updated in the background is refused with a status message.
+
+## MS DHCP Extended Management, formerly ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
+- Stef wanted the full concept rebuilt as OmniWrench tool, not a copy. Name ScopeKeeper, id net.scopekeeper, category
+  network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it (removed 2026-10-22, 1.2.0).
+- Requirement RSAT DHCP tools (windows_capabilities Rsat.DHCP.Tools); uninstall keeps RSAT.
+- Defaults: connect failover partners at login = on, auto replication = on (both switchable in settings/main page).
+- Partner fallback chain kept from the script: CIM/WinRM -> RPC (failover API + netsh dump/commands).
+- Server options are never replicated automatically; deleting scopes needs the typed word (ov.delete_word).
+- Passwords never on a command line or in logs (only in memory; passed to LogonUser/CreateProcessWithLogonW).
+- 2026-10-20 (Stef): display name "MS DHCP Extended Management" (tool.json name + tool.name). Same day (Stef): internal id
+  changed too -> net.ms-dhcp-extended (new tool, must be installed fresh; no migration from net.scopekeeper). Check runs in the background, never freezes the UI; login checkbox "Server direkt nach
+  der Anmeldung prüfen" (setting auto_scan, default on). Login shows a loading view, on failure back to the login form.
+  Connection steps are logged calmly ("Verbinde … per RPC …"), never styled as errors.
+  Long hint labels replaced by "?" help icons with tooltip (ui_base.help_icon).
+- Scan backend gets the login password in memory (DhcpService.secrets) to log in a second time; never written to
+  disk/settings, cleared on reset/logout.
+- 2026-10-20 (Stef, binding for all work): "möglichst alles in Python, PowerShell nur wenn unbedingt nötig".
+  DHCP tool therefore uses dhcpsapi.dll via ctypes (no WinRM/CIM/DhcpServer module); RSAT stays only for netsh dhcp
+  (replication). Other PowerShell uses in the app: see backlog (inventory 2026-10-20).
+- 2026-10-22 (Stef): overview columns freely movable, default order Name, Beschreibung, Scope ID, Präfix, Status,
+  Freie Adressen, Belegt %, Lease-Dauer, Befunde, Failover (my reading of "Verteilbar (Freie Adressen)": free count;
+  "Verteilbar" + "Bereiche" kept as hidden optional columns). Failover: every server of a relationship as own row,
+  click shows all scopes of that server. Check page: distribution shown, no level dot on the tabs, prominent
+  segmented switch. Server options: list of all failover servers, sync state per option, opt-out checkbox
+  "Auf Partner übertragen" on add/edit, transfer only per option (no "all" button). Definitions: BOTH expert mode
+  setting (dock hidden otherwise, default off) and unlock button with expert warning (my choice: Stef offered either).
+  Rights: UI adapts to read-only (DHCP Users) - write controls hidden, not just disabled.
+- 2026-10-22 (Stef, 1.2.0): failover list = expandable relationship row, children = the two servers (collapsed by
+  default). Server options list only the selected server's options (no rows for options that exist only on the
+  partner). Alpha note removed although the rights probe is still untested on real servers (Stef's call).
