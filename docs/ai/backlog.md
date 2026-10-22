@@ -47,6 +47,8 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
 - [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
 - [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
 
+- [ ] Tool updates (startup dialog, update all, auto update, close-window checkbox; 2026-10-20): verify on Windows,
+      esp. auto update with a tool that has a startup hook (OmniVault) and the status bar messages.
 - [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
       (Settings > Branches) - only the user can do that.
 

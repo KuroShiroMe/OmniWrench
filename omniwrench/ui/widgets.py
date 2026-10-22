@@ -9,11 +9,11 @@ from pathlib import Path
 from typing import Callable
 from urllib.parse import quote
 
-from PySide6.QtCore import QByteArray, QPoint, QRect, QRectF, QSize, Qt
+from PySide6.QtCore import QByteArray, QPoint, QRect, QRectF, QSize, Qt, QTimer
 from PySide6.QtGui import QColor, QFont, QFontMetrics, QIcon, QPainter, QPixmap
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import (
-    QBoxLayout, QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
+    QBoxLayout, QCheckBox, QDialog, QHBoxLayout, QLabel, QLayout, QPlainTextEdit, QProgressBar, QPushButton, QVBoxLayout, QWidget,
 )
 
 from omniwrench.core import icons
@@ -434,7 +434,9 @@ class TaskDialog(QDialog):
     """Führt eine längere Aufgabe im Hintergrund aus und zeigt deren Protokoll."""
 
     def __init__(self, parent: QWidget | None, title: str, task: Callable[[Callable[[str], None]], object],
-                 on_success: Callable[[object], None] | None = None):
+                 on_success: Callable[[object], None] | None = None, auto_close=None):
+        """auto_close = (AppSettings, Schlüssel): zeigt den Haken "Dieses Fenster nach Abschluss schließen",
+        merkt ihn in den Einstellungen und schließt das Fenster nach erfolgreichem Abschluss selbst."""
         super().__init__(parent)
         self.setWindowTitle(title)
         fit_to_screen(self, 620, 380)
@@ -454,6 +456,13 @@ class TaskDialog(QDialog):
         self.log.setFont(QFont("Consolas", 9))
         lay.addWidget(self.log, 1)
         row = QHBoxLayout()
+        self.auto_close = None
+        if auto_close is not None:
+            settings, key = auto_close
+            self.auto_close = QCheckBox(tr("task.close_when_done"))
+            self.auto_close.setChecked(bool(settings.get(key, False)))
+            self.auto_close.toggled.connect(lambda on: settings.set(key, on))
+            row.addWidget(self.auto_close)
         row.addStretch()
         self.close_btn = make_button(tr("common.close"), on_click=self.accept)
         self.close_btn.setEnabled(False)
@@ -474,6 +483,8 @@ class TaskDialog(QDialog):
         self.close_btn.setEnabled(True)
         if self._on_success:
             self._on_success(result)
+        if self.auto_close is not None and self.auto_close.isChecked():
+            QTimer.singleShot(600, self.accept)  # kurz "abgeschlossen" zeigen; bei Fehlern bleibt es offen
 
     def _failed(self, error: str) -> None:
         self.bar.setRange(0, 1)

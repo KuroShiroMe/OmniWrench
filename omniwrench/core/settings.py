@@ -25,6 +25,10 @@ DEFAULTS: dict[str, Any] = {
     "app_update_repo": GITHUB_REPO,
     "check_updates_on_start": True,
     "include_prereleases": False,
+    # Tool-Updates beim Start ohne Rückfrage im Hintergrund installieren
+    "auto_update_tools": False,
+    # Installations-/Update-Fenster nach erfolgreichem Abschluss selbst schließen (Haken im Fenster)
+    "close_update_window": False,
     # Tool-Repositories: Liste von index.json-URLs (https://, file:// oder lokaler Pfad)
     "repositories": _default_repositories(),
     "theme": "dark",

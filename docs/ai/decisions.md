@@ -125,6 +125,20 @@
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per
   file (de_bad: noch/vu/sälwer/hät, de_by: nomoi/sejba/omeidn) and may stay playful/informal.
 
+## Tool updates (Stef 2026-10-20; details my choices)
+- Startup: if tool updates exist -> non-blocking dialog listing "Name: old → new" with "Alle aktualisieren" / "Später"
+  (Später = status-bar button stays). Shown only when the startup check runs (check_updates_on_start or auto update).
+- "Alle aktualisieren": button in Store header (only visible with updates, shows count) and in Settings › Updates;
+  one TaskDialog for all tools, one failing tool does not stop the others; open tools are closed after one question,
+  tools refusing to close are skipped.
+- Install/update windows (store install/update, update all, app update) show checkbox "Dieses Fenster nach Abschluss
+  schließen"; setting `close_update_window` is saved immediately when toggled, also in Settings › Updates.
+  Window closes itself only on success; on errors it stays open.
+- Setting `auto_update_tools` (default off): at startup updates install silently in the background (status bar + log
+  only). Skipped and still offered: tools open in a tab, and updates whose requirements changed (may need UAC; should
+  not appear unannounced). If everything was skipped, the normal startup dialog appears instead. Opening/updating/
+  uninstalling a tool while it is updated in the background is refused with a status message.
+
 ## MS DHCP Extended Management, formerly ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
 - Stef wanted the full concept rebuilt as OmniWrench tool, not a copy. Name ScopeKeeper, id net.scopekeeper, category
   network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it (removed 2026-10-22, 1.2.0).

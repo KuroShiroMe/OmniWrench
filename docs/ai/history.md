@@ -273,6 +273,17 @@ Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Pytho
   serve/probe des Binaries, Offscreen-Render des Export-Bereichs (beide Knöpfe, .exe-Knopf aktiv), check_store.
   Windows-.exe-Build selbst läuft in CI (hier nur Linux-Binary gebaut).
 
+## 2026-10-20 Tool-Updates: Startmeldung, Alle aktualisieren, Auto-Update (Thread „Tool-Updates“)
+- Stef: Meldung beim Start bei Tool-Updates (alle aktualisieren oder verschieben), Haken „Dieses Fenster nach Abschluss
+  schließen“ in Update-Fenstern (gemerkt), „Alle aktualisieren“ in Store und Optionen, Option für automatische
+  Hintergrund-Updates. (Kategorien/Tags und Passwort-Zurücksetzen laufen in eigenen Threads.)
+- Gebaut: repository.update_tools, MainWindow._show_tool_update_prompt/update_all_tools/update_tools_in_background,
+  TaskDialog auto_close, Store-Button, Optionen › Updates (Auto-Update, Fenster-Haken, „Alle aktualisieren (n)“),
+  Settings auto_update_tools/close_update_window, 20 neue Schlüssel in allen 23 Sprachen, README-Datenschutz ergänzt.
+- Geprüft (Linux offscreen): Testskript mit Fake-Store (2 Tools hochversioniert): Startmeldung, Alle aktualisieren
+  inkl. geöffnetem Tool, Haken gemerkt + Einzel-Update schließt sich selbst, Auto-Update ohne Meldung; smoke_test
+  (23 Sprachen), check_locales, check_store. Windows-Test durch Stef offen.
+
 ## 2026-10-20 Kategorien nur noch eine Ebene + Tags (Stef)
 - Stef: "Kategorien nur noch auf die Hauptkategorien reduzieren, alle Tools kriegen sinnvolle Tags". Weicht von der
   2-Ebenen-Entscheidung vom 2026-10-17 ab -> decisions.md angepasst.

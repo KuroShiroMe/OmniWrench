@@ -23,7 +23,8 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               _install_prerequisites (check() first), uninstall, repair; module prefix omniwrench_tool_<id>
   prerequisites.py            pip (_lib), elevated capabilities/features (##OW markers -> localized progress,
                               restart notice, WSUS/FoD hint on 0x800f0954 etc.), PS modules, winget
-  repository.py               load_catalog(repos), available_updates, install_from_catalog
+  repository.py               load_catalog(repos), available_updates, install_from_catalog, update_tools (batch,
+                              continues on errors -> (updated, failed))
   app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
   net.py                      urllib + truststore SSL, github_token header
   i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language,
@@ -34,10 +35,13 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               (register/unregister[_owner], search -> SearchResult(items, errors, auth_needed),
                               resolve(ref) w/ auth_handler retry + session cache, clear_session), normalize_value,
                               resolve_item, generate_password; init()/manager()
-  settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes)
+  settings.py                 AppSettings (DEFAULTS incl. repositories, language, theme, auto_lock_minutes,
+                              auto_update_tools, close_update_window)
 omniwrench/ui/
   main_window.py              QtAds dock manager; home/store docks; open_tool/close_tool/reload_tool_tabs;
-                              tool menu; install/uninstall/check/repair; updates; lock; layout save/restore
+                              tool menu; install/uninstall/check/repair; updates (startup dialog
+                              _show_tool_update_prompt, update_all_tools, update_tools_in_background with
+                              updating_in_background guard); lock; layout save/restore
   home_page.py                ToolTile (FitLabel), DetailsPanel, HomePage (filter, select_tool)
   store_page.py               StoreCard (clickable tags -> search), StorePage (category tree, filters)
   sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
@@ -50,7 +54,8 @@ omniwrench/ui/
   login_dialog.py             setup/unlock, CertificateCombo
   icon_browser.py             Extras › icon library dialog (simple)
   widgets.py                  tool_icon (file/data/library/text), library_icon, FitLabel, FlowLayout, TaskDialog,
-                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable
+                              ResponsiveRow (wraps right part below), ColumnFlowLayout (n columns by width), breakable;
+                              TaskDialog(auto_close=(settings, key)) = remembered "close when done" checkbox
   scaling.py                  ui_scale -> QT_SCALE_FACTOR (before QApplication), device_pixel_ratio, fit_to_screen,
                               fit_min_width, window_size, restart_application
   theme.py                    palettes + stylesheet; ads_stylesheet() must be set on CDockManager directly

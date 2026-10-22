@@ -101,6 +101,9 @@ class StorePage(QWidget):
         self.search.setMaximumWidth(320)
         self.search.textChanged.connect(self._render)
         controls.addWidget(self.search, 1)
+        self.update_all_btn = make_button(tr("updates.update_all"), primary=True, on_click=host.update_all_tools)
+        self.update_all_btn.hide()
+        controls.addWidget(self.update_all_btn)
         self.refresh_btn = make_button(tr("store.refresh"), on_click=host.reload_catalog)
         controls.addWidget(self.refresh_btn)
         root.addWidget(ResponsiveRow(titles, controls))
@@ -152,6 +155,8 @@ class StorePage(QWidget):
         self.tree.blockSignals(True)
         self.tree.clear()
         n_upd = len(self.host.tool_updates)
+        self.update_all_btn.setText(tr("updates.update_all_count", count=n_upd))
+        self.update_all_btn.setVisible(n_upd > 0)
         for text, key in ((tr("store.filter_all"), FILTER_ALL),
                           (tr("store.filter_updates", count=n_upd), FILTER_UPDATES),
                           (tr("store.filter_installed"), FILTER_INSTALLED)):
