@@ -1,5 +1,9 @@
 # Tool-Entwicklung
 
+> Für Tool-Entwickler gibt es die ausführliche Anleitung im Wiki:
+> [Entwicklung](https://github.com/KuroShiroMe/OmniWrench/wiki/Entwicklung). Diese Datei ist die interne technische
+> Referenz; bei Änderungen am Paketformat oder SDK beide aktualisieren.
+
 Ein Tool ist ein Ordner mit festem Aufbau. Fertige Beispiele:
 [tools/subnet_calculator](../tools/subnet_calculator) (ohne Voraussetzungen) und
 [tools/ad_user_lookup](../tools/ad_user_lookup) (mit RSAT-Voraussetzung und Anmeldedaten).

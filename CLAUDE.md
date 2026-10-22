@@ -44,3 +44,8 @@ git tag vX.Y.Z; git push origin vX.Y.Z               # CI (Build) creates the Gi
   something belongs on it and add it (Stef 2026-10-22). Tool list is generated from store/index.json by
   `scripts/build_site.py` (run it after store changes); new main features, platforms, screenshots, install info → edit `site/index.html`.
 - Verify UI visually: render with real fonts + `WA_DontShowOnScreen` and `grab()` (see gotchas).
+
+## Wiki & tool template (since 2026-10-22)
+- User/developer docs live in the GitHub Wiki. Source = `wiki/` (German), mirrored by `.github/workflows/wiki.yml` on push to main. Never edit in the wiki editor. Rules: `wiki/Entwicklung-Wiki-Seiten.md`.
+- **Every tool gets a full wiki page** `wiki/Tool-<Display-Name>.md` per `wiki/Vorlage-Tool-Seite.md`, in the same PR as the tool/feature; `homepage` in tool.json points to it; add to Tools.md, _Sidebar.md, Home.md. Check whether site/ (landing page) needs an update.
+- `docs/` = internal only (Stef + Claude), `docs/README.md` points to the wiki. `templates/tool-repo/` = source of the GitHub template repo `KuroShiroMe/OmniWrench-Tool-Template` (see `templates/README.md`).

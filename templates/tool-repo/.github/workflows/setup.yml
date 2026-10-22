@@ -1,0 +1,47 @@
+# Läuft einmal nach „Use this template“: ersetzt Platzhalter, legt das erste Tool an, baut den Store.
+# Danach fehlt .github/template-setup.json und der Workflow tut nichts mehr.
+name: Vorlage einrichten
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Schon eingerichtet?
+        id: marker
+        run: |
+          if [ -f .github/template-setup.json ] && ! grep -qi '"${{ github.repository }}"' .github/template-setup.json; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nichts zu tun."
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.marker.outputs.run == 'true'
+        with:
+          python-version: "3.14"
+      - uses: actions/checkout@v4
+        if: steps.marker.outputs.run == 'true'
+        with:
+          repository: KuroShiroMe/OmniWrench
+          path: .omniwrench
+      - name: Repository einrichten und Store bauen
+        if: steps.marker.outputs.run == 'true'
+        run: |
+          python scripts/setup_repo.py --owner "${{ github.repository_owner }}" --repo "${{ github.event.repository.name }}"
+          python scripts/store.py build --name "${{ github.event.repository.name }} Store"
+      - name: Committen
+        if: steps.marker.outputs.run == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A -- . ':!.omniwrench'
+          git commit -m "Repository aus der OmniWrench-Vorlage eingerichtet"
+          git push

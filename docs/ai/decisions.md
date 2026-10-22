@@ -209,3 +209,20 @@
   click on a tool opens its wiki page (`homepage` from tool.json, else `wiki/Tool-<German name>`). Generated from
   store/index.json by `scripts/build_site.py` (also runs in the Pages workflow, so new tools appear automatically).
 - Rule (Stef 2026-10-22): every thread checks whether its work adds something relevant for the landing page and adds it.
+
+## Wiki and developer docs (2026-10-22)
+- Stef: GitHub Wiki for all user/developer docs. Home page presents the main program, sub pages per area
+  (Installation, Einstellungen, Tresor, Passwortmanager, Store, Datenablage, Fehlerbehebung …), one detailed page per
+  tool (all functions), developer area (build tools, own repository, template repo, integrate repositories).
+- Standardized structure: `wiki/Vorlage-Tool-Seite.md` (tool pages: Kurz, Steckbrief, Inhalt, Wofür, Installation,
+  Erste Schritte, Funktionen im Detail, Einstellungen, Sicherheit, Grenzen, Fehlerbehebung, Versionen, Siehe auch)
+  and `wiki/Vorlage-Bereichsseite.md`. Every future tool MUST get a full page in the same PR (Stef's rule).
+- Wiki source lives in the repo (`wiki/`), synced by workflow (my choice: reviewable via PR, cloud can't push to the
+  wiki repo directly). Page names: `Tool-<display name, spaces as hyphens>` (matches landing page fallback).
+- `docs/` only for Stef + Claude; third-party developer docs only in the wiki.
+- Template repo: GitHub "Template repository" `KuroShiroMe/OmniWrench-Tool-Template`, content from
+  `templates/tool-repo/`. Self-setup workflow on first push (placeholders, first tool, store), store workflow with
+  version guard (changed tool without version bump fails). Template keeps `.github/workflows/setup.yml` after setup
+  (GITHUB_TOKEN may not modify workflows), only the marker `.github/template-setup.json` is deleted.
+- Help menu: "Online-Hilfe (Wiki)" (F1) opens the wiki, "Tool-Entwicklung" opens wiki/Entwicklung; docs/ no longer
+  shipped next to the EXE.

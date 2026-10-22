@@ -1,0 +1,20 @@
+{
+  "_meta": {"name": "English", "native": "English"},
+
+  "tool.name": "__TOOL_NAME__",
+  "tool.description": "Short description shown on the tile and in the store.",
+  "tool.long_description": "Longer description for the store card and the details panel.",
+
+  "settings.default_host.label": "Default host",
+  "settings.default_host.placeholder": "e.g. server01.contoso.local",
+  "settings.max_results.label": "Max. results",
+
+  "ui.host_placeholder": "Host name",
+  "ui.run": "Resolve",
+  "ui.running": "Resolving …",
+  "ui.found": "{count} address(es)",
+  "ui.error": "Error: {error}",
+
+  "install.ready": "Installed.",
+  "install.update": "Updated from {old}."
+}

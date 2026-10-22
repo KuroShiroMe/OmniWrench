@@ -22,7 +22,7 @@ from omniwrench import APP_NAME, GITHUB_REPO, VENDOR, __version__
 from omniwrench.core import app_updater, credentials, elevation, repository
 from omniwrench.core.i18n import tr
 from omniwrench.core.jsonio import read_json, write_json
-from omniwrench.core.paths import APP_DIR, LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
+from omniwrench.core.paths import LAYOUT_FILE, LOG_DIR, RESOURCES_DIR
 from omniwrench.core.repository import Catalog, CatalogEntry
 from omniwrench.core.settings import AppSettings
 from omniwrench.core.tool_manager import ToolManager
@@ -43,6 +43,7 @@ from .workers import run_async
 log = logging.getLogger(__name__)
 CF = ads.CDockManager.eConfigFlag
 DWF = ads.CDockWidget.DockWidgetFeature
+WIKI_URL = f"https://github.com/{GITHUB_REPO}/wiki"
 
 
 @dataclass
@@ -177,7 +178,8 @@ class MainWindow(QMainWindow):
         m.addAction(tr("menu.settings"), QKeySequence("Ctrl+,"), self.open_app_settings)
 
         m = mb.addMenu(tr("menu.help"))
-        m.addAction(tr("menu.dev_docs"), lambda: self._open_path(APP_DIR / "docs" / "TOOL_ENTWICKLUNG.md"))
+        m.addAction(tr("menu.wiki"), QKeySequence("F1"), lambda: self._open_url(WIKI_URL))
+        m.addAction(tr("menu.dev_docs"), lambda: self._open_url(f"{WIKI_URL}/Entwicklung"))
         m.addAction(tr("menu.log_folder"), lambda: self._open_path(LOG_DIR))
         m.addSeparator()
         m.addAction(tr("menu.about"), self._about)
@@ -781,6 +783,9 @@ class MainWindow(QMainWindow):
         self.show_home()
 
     # ========================================================== Sonstiges
+    def _open_url(self, url: str) -> None:
+        QDesktopServices.openUrl(QUrl(url))
+
     def _open_path(self, path: Path) -> None:
         if path.exists():
             os.startfile(str(path))  # noqa: S606 - Windows Explorer / Standardprogramm
