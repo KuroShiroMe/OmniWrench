@@ -9,13 +9,24 @@ Aufbau (Envelope-Verschlüsselung):
       Ändern des Passworts erfordert kein Neuverschlüsseln aller Daten.
 
 Schlüssel im Tresor sind frei wählbar, Konvention: "app:<name>" bzw. "tool:<tool-id>:<key>".
+
+Zurücksetzen bei verlorenem Masterpasswort (reset()):
+    * Bei jedem Speichern wird zusätzlich eine Wiederherstellungskopie OHNE Geheimnisse
+      abgelegt ("recovery", per DPAPI an das Windows-Konto gebunden): Einträge des
+      eingebauten Managers und credential-Felder ohne Passwort, von allen anderen
+      Schlüsseln nur der Name.
+    * reset() legt daraus einen neuen Tresor mit neuem Passwort an. Einträge bleiben
+      erhalten und sind als "missing" markiert, komplett geheime Werte (Tokens, Zugangsdaten
+      von Passwortmanagern …) fehlen und stehen in der Liste LOST_KEY, bis sie neu gesetzt werden.
 """
 
 from __future__ import annotations
 
 import base64
 import json
+import logging
 import os
+import shutil
 import time
 from pathlib import Path
 from typing import Any
@@ -24,12 +35,16 @@ from cryptography.exceptions import InvalidTag
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.argon2 import Argon2id
 
-from . import certificates
+from . import certificates, dpapi
 from .i18n import tr
 from .jsonio import read_json, write_json
 
 VAULT_FORMAT = 1
 ARGON2_PARAMS = {"iterations": 3, "lanes": 4, "memory_cost": 64 * 1024}  # 64 MiB
+CREDENTIALS_KEY = "app:credentials"       # eingebauter Passwortmanager (siehe credentials.LocalProvider)
+LOST_KEY = "app:lost_secrets"             # nach reset() fehlende Geheimnisse (Liste von Schlüsseln)
+
+log = logging.getLogger(__name__)
 
 
 class VaultError(Exception):
@@ -69,6 +84,26 @@ def _open(key: bytes, blob: str, aad: bytes) -> bytes:
     return AESGCM(key).decrypt(raw[:12], raw[12:], aad)
 
 
+def _strip_password(entry: dict) -> dict:
+    """Kopie ohne Passwort; "missing" merkt sich, dass vorher eines gesetzt war."""
+    out = {k: v for k, v in entry.items() if k != "password"}
+    if entry.get("password") or entry.get("missing"):
+        out["missing"] = True
+    return out
+
+
+def redact(key: str, value: Any) -> Any:
+    """Nicht geheimer Teil eines Tresorwerts für die Wiederherstellung - None = komplett geheim."""
+    if key == LOST_KEY:
+        return value
+    if key == CREDENTIALS_KEY and isinstance(value, dict):
+        return {cid: _strip_password(e) for cid, e in value.items() if isinstance(e, dict)}
+    if isinstance(value, dict) and isinstance(value.get("items"), list):   # credential-Feld
+        return {**value, "items": [_strip_password(i) if isinstance(i, dict) and "ref" not in i else i
+                                   for i in value["items"]]}
+    return None
+
+
 class Vault:
     def __init__(self, path: Path):
         self.path = path
@@ -94,6 +129,11 @@ class Vault:
 
     def has_unlocker(self, kind: str) -> bool:
         return any(u["type"] == kind for u in self._file.get("unlockers", []))
+
+    @property
+    def has_recovery(self) -> bool:
+        """True, wenn eine Wiederherstellungskopie (ohne Geheimnisse) vorliegt."""
+        return bool(self._file.get("recovery"))
 
     # ------------------------------------------------------------- Einrichtung
     def create(self, password: str | None = None, cert_thumbprint: str | None = None) -> None:
@@ -176,6 +216,8 @@ class Vault:
         except InvalidTag:
             raise WrongCredentials(tr("err.vault_decrypt")) from None
         self._dek = dek
+        if not self.has_recovery:   # Tresore von vor der Zurücksetzen-Funktion nachrüsten
+            self._save()
 
     def lock(self) -> None:
         self._dek = None
@@ -207,6 +249,53 @@ class Vault:
         self._file["unlockers"] = remaining
         self._save()
 
+    # ------------------------------------------------------------ Zurücksetzen
+    def reset(self, new_password: str) -> int:
+        """Neuer Tresor mit neuem Passwort - für ein verlorenes Masterpasswort.
+
+        Alle Geheimnisse gehen verloren, Einträge bleiben (ohne Passwort) erhalten, sofern eine
+        Wiederherstellungskopie lesbar ist. Die alte Datei wird daneben gesichert. Liefert die
+        Zahl der übernommenen Einträge bzw. Werte.
+        """
+        if not new_password:
+            raise VaultError(tr("err.vault_need_method"))
+        skeleton: dict[str, Any] = {}
+        if self.has_recovery:
+            try:
+                skeleton = json.loads(dpapi.unprotect(self._file["recovery"]))
+            except Exception:  # noqa: BLE001 - anderes Windows-Konto, beschädigt …
+                log.exception("Wiederherstellungskopie des Tresors nicht lesbar")
+        if self.path.exists():
+            backup = self.path.with_name(f"{self.path.stem}.before-reset-{time.strftime('%Y%m%d-%H%M%S')}.json")
+            shutil.copy2(self.path, backup)
+        data: dict[str, Any] = {}
+        lost = set(skeleton.get(LOST_KEY) or [])
+        for key, value in skeleton.items():
+            if key == LOST_KEY:
+                continue
+            if value is None:
+                lost.add(key)
+            else:
+                data[key] = value
+        if lost:
+            data[LOST_KEY] = sorted(lost)
+        self._dek = AESGCM.generate_key(bit_length=256)
+        self._data = data
+        self._file = {"format": VAULT_FORMAT, "created": int(time.time()), "reset": int(time.time()),
+                      "unlockers": []}
+        self._add_password_unlocker(new_password)
+        self._save()
+        restored = len(data.get(CREDENTIALS_KEY, {})) + len([k for k in data if k not in (CREDENTIALS_KEY, LOST_KEY)])
+        log.warning("Tresor zurückgesetzt: %d Einträge übernommen, %d Geheimnisse verworfen", restored, len(lost))
+        return restored
+
+    def is_lost(self, key: str) -> bool:
+        """True, wenn das Geheimnis beim Zurücksetzen verloren ging und noch nicht neu gesetzt wurde."""
+        return self.is_unlocked and key in (self._data.get(LOST_KEY) or [])
+
+    def lost_keys(self, prefix: str = "") -> list[str]:
+        return [k for k in (self._data.get(LOST_KEY) or []) if k.startswith(prefix)] if self.is_unlocked else []
+
     # --------------------------------------------------------------- Daten
     def get(self, key: str, default: Any = None) -> Any:
         self._require_unlocked()
@@ -218,7 +307,16 @@ class Vault:
             self._data.pop(key, None)
         else:
             self._data[key] = value
+            self._drop_lost(lambda k: k == key)
         self._save()
+
+    def _drop_lost(self, match) -> None:
+        """Entfernt Markierungen verlorener Geheimnisse (neu gesetzt bzw. gelöscht)."""
+        lost = [k for k in self._data.get(LOST_KEY) or [] if not match(k)]
+        if lost:
+            self._data[LOST_KEY] = lost
+        else:
+            self._data.pop(LOST_KEY, None)
 
     def delete(self, key: str) -> None:
         self.set(key, None)
@@ -227,6 +325,7 @@ class Vault:
         self._require_unlocked()
         for k in [k for k in self._data if k.startswith(prefix)]:
             del self._data[k]
+        self._drop_lost(lambda k: k.startswith(prefix))
         self._save()
 
     def keys(self, prefix: str = "") -> list[str]:
@@ -235,4 +334,9 @@ class Vault:
 
     def _save(self) -> None:
         self._file["data"] = _seal(self._dek, json.dumps(self._data).encode("utf-8"), b"data")
+        try:
+            skeleton = {k: redact(k, v) for k, v in self._data.items()}
+            self._file["recovery"] = dpapi.protect(json.dumps(skeleton).encode("utf-8"))
+        except Exception:  # noqa: BLE001 - Speichern der eigentlichen Daten nie verhindern
+            log.exception("Wiederherstellungskopie des Tresors nicht geschrieben")
         write_json(self.path, self._file)

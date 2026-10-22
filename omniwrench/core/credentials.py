@@ -25,7 +25,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from typing import Callable
 
-from .vault import Vault
+from .vault import CREDENTIALS_KEY, Vault
 
 log = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ class Credential:
     provider: str = "local"
     source: str = ""                 # Anzeigename des Anbieters
     changed: int = field(default_factory=lambda: int(time.time()))
+    missing: bool = False            # Passwort ging beim Zurücksetzen des Tresors verloren
 
     @property
     def ref(self) -> str:
@@ -95,7 +96,7 @@ class LocalProvider(CredentialProvider):
     id = "local"
     name = "OmniWrench"
     writable = True
-    VAULT_KEY = "app:credentials"
+    VAULT_KEY = CREDENTIALS_KEY
 
     def __init__(self, vault: Vault):
         self.vault = vault
@@ -133,6 +134,8 @@ class LocalProvider(CredentialProvider):
 
     def update(self, cred: Credential) -> None:
         cred.changed = int(time.time())
+        if cred.password:
+            cred.missing = False
         data = self._load()
         data[cred.id] = asdict(cred)
         self._save(data)
@@ -233,8 +236,8 @@ class CredentialManager:
                 if interactive and self.auth_handler and self.auth_handler(provider):
                     continue  # neue Zugangsdaten eingegeben -> erneut versuchen
                 return None
-            if cred is None:
-                return None
+            if cred is None or cred.missing:
+                return None   # Passwort nach dem Zurücksetzen noch nicht neu gesetzt
             cred.provider, cred.source = provider.id, cred.source or provider.name
             if provider is not self.local and session == self._session:
                 self._cache[ref] = cred
@@ -268,6 +271,9 @@ def normalize_value(value: dict | None) -> dict:
                   | {"name", "username", "password"} ],   # manuell eingegeben
          "selected": <index>}
 
+    Nach dem Zurücksetzen des Tresors fehlt bei manuellen Einträgen "password", dafür ist
+    "missing": true gesetzt, bis das Passwort neu eingegeben wird.
+
     Ältere Werte ({"username", "password"[, "ref"]}) werden umgewandelt.
     """
     value = value or {}
@@ -285,11 +291,24 @@ def normalize_value(value: dict | None) -> dict:
     return {"items": [], "selected": 0}
 
 
+def is_missing(item: dict) -> bool:
+    """True, wenn das Passwort eines credential-Eintrags nach dem Zurücksetzen fehlt (auch über Verweis)."""
+    if item.get("ref"):
+        provider_id, _, cred_id = item["ref"].partition(":")
+        if provider_id == LocalProvider.id:
+            cred = manager().local.get(cred_id)
+            return bool(cred and cred.missing)
+        return False
+    return bool(item.get("missing"))
+
+
 def resolve_item(item: dict, interactive: bool = True) -> tuple[str, str] | None:
     """(Benutzer, Passwort) eines Eintrags aus einem credential-Feld. Darf im Hintergrund laufen."""
     if item.get("ref"):
         cred = manager().resolve(item["ref"], interactive=interactive)
         return (cred.username, cred.password) if cred else None
+    if item.get("missing"):
+        return None   # Passwort nach dem Zurücksetzen noch nicht neu gesetzt
     if item.get("username"):
         return item.get("username", ""), item.get("password", "")
     return None

@@ -22,6 +22,7 @@ from omniwrench.core import credentials
 from omniwrench.core.credentials import Credential, CredentialProvider
 from omniwrench.core.i18n import tr
 
+from . import theme
 from .scaling import fit_min_width, fit_to_screen
 from .widgets import ResponsiveRow, label, library_icon, make_button
 from .workers import call_in_gui, run_async
@@ -38,6 +39,15 @@ def copy_secret(text: str, notify=None) -> None:
                       lambda: clipboard.text() == text and clipboard.clear())
     if notify:
         notify(tr("pwm.copied", seconds=CLIPBOARD_CLEAR_SECONDS))
+
+
+def missing_icon(size: int = 16):
+    """Ausrufezeichen für Einträge, deren Passwort beim Zurücksetzen des Tresors verloren ging."""
+    return library_icon("circle-alert", size, theme.current["warning"])
+
+
+def credential_icon(cred: Credential, size: int = 16):
+    return missing_icon(size) if cred.missing else library_icon("key-round", size)
 
 
 def _table(headers: list[str]) -> QTableWidget:
@@ -115,6 +125,9 @@ class CredentialEditDialog(QDialog):
         form.addRow(tr("pwm.username"), self.user)
         form.addRow(tr("pwm.password"), self.pw)
         lay.addLayout(form)
+        if cred and cred.missing:
+            self.pw.edit.setPlaceholderText(tr("vault.lost_placeholder"))
+            lay.addWidget(label("❗ " + tr("vault.missing"), "Muted", wrap=True))
         self.store_check = QCheckBox(tr("pwm.also_store"))
         self.store_check.setVisible(offer_store)
         lay.addWidget(self.store_check)
@@ -172,7 +185,9 @@ class PasswordManagerWidget(QWidget):
         for r, c in enumerate(items):
             name = QTableWidgetItem(c.name)
             name.setData(Qt.ItemDataRole.UserRole, c.id)
-            name.setIcon(library_icon("key-round", 16))
+            name.setIcon(credential_icon(c))
+            if c.missing:
+                name.setToolTip(tr("vault.missing"))
             self.table.setItem(r, 0, name)
             self.table.setItem(r, 1, QTableWidgetItem(c.username))
 
@@ -330,7 +345,9 @@ class CredentialPickerDialog(QDialog):
         self.table.setRowCount(len(items))
         for r, c in enumerate(items):
             name = QTableWidgetItem(c.name)
-            name.setIcon(library_icon("key-round", 16))
+            name.setIcon(credential_icon(c))
+            if c.missing:
+                name.setToolTip(tr("vault.missing"))
             self.table.setItem(r, 0, name)
             self.table.setItem(r, 1, QTableWidgetItem(c.username))
             self.table.setItem(r, 2, QTableWidgetItem(c.source))
@@ -373,7 +390,7 @@ def pick_credential(parent: QWidget | None = None) -> Credential | None:
 class CredentialField(QWidget):
     """Mehrere hinterlegte Zugangsdaten mit Auswahlliste.
 
-    [ Domänen-Admin Contoso — CONTOSO\\admin  ▼ ] [🔑] [+] [🗑]
+    [ Domänen-Admin Contoso — CONTOSO\\admin  ▼ ] [🔑] [+] [✎] [🗑]
       Quelle: Netwrix Password Secure
 
     * 🔑 übernimmt einen Eintrag aus einem Manager (gespeichert wird nur der Verweis)
@@ -399,14 +416,17 @@ class CredentialField(QWidget):
         row.addWidget(self.combo, 1)
         for icon, tip, slot in (("key-round", tr("pwm.pick_button"), self._pick),
                                 ("plus", tr("pwm.add_manual"), self._add_manual),
+                                ("pencil", tr("pwm.edit_entry"), self._edit),
                                 ("trash-2", tr("pwm.remove_entry"), self._remove)):
             btn = make_button("", on_click=slot)
             btn.setIcon(library_icon(icon, 16))
             btn.setToolTip(tip)
             btn.setFixedWidth(34)
             row.addWidget(btn)
+            if slot == self._edit:
+                self.edit_btn = btn
         lay.addLayout(row)
-        self.info = label("", "Muted")
+        self.info = label("", "Muted", wrap=True)
         lay.addWidget(self.info)
         self._items: list[dict] = []
         self.set_value(value)
@@ -441,7 +461,9 @@ class CredentialField(QWidget):
             text = item.get("name") or item.get("username") or "?"
             if item.get("username") and item.get("username") != text:
                 text += f"  —  {item['username']}"
-            self.combo.addItem(library_icon("key-round" if item.get("ref") else "pencil", 16), text)
+            icon = missing_icon() if credentials.is_missing(item) else \
+                library_icon("key-round" if item.get("ref") else "pencil", 16)
+            self.combo.addItem(icon, text)
         if not self._items:
             self.combo.addItem(tr("pwm.none_selected"))
             self.combo.setEnabled(False)
@@ -453,8 +475,11 @@ class CredentialField(QWidget):
 
     def _update_info(self) -> None:
         item = self.selected_item()
+        self.edit_btn.setEnabled(self._editable(item))
         if not item:
             self.info.setText("")
+        elif credentials.is_missing(item):
+            self.info.setText("❗ " + tr("vault.missing"))
         elif item.get("ref"):
             provider = credentials.manager().provider(item["ref"].partition(":")[0])
             self.info.setText("🔗 " + tr("pwm.from_source", source=provider.name if provider else item["ref"]))
@@ -495,6 +520,40 @@ class CredentialField(QWidget):
             self._append({"name": c.name, "username": c.username, "ref": c.ref})
         else:
             self._append({"name": c.name, "username": c.username, "password": c.password})
+
+    @staticmethod
+    def _editable(item: dict | None) -> bool:
+        """Manuelle Einträge und Verweise auf den eingebauten Manager lassen sich hier bearbeiten."""
+        if not item:
+            return False
+        return not item.get("ref") or item["ref"].partition(":")[0] == credentials.LocalProvider.id
+
+    def _edit(self) -> None:
+        item = self.selected_item()
+        if not self._editable(item):
+            return
+        idx = self.combo.currentIndex()
+        if item.get("ref"):
+            local = credentials.manager().local
+            cred = local.get(item["ref"].partition(":")[2])
+            if cred and CredentialEditDialog(self, cred).exec():
+                item.update(name=cred.name, username=cred.username)
+                self._fill(idx)
+                self._emit()
+            return
+        cred = Credential("", item.get("name", ""), item.get("username", ""), item.get("password", ""),
+                          provider="", missing=bool(item.get("missing")))
+        dlg = CredentialEditDialog(self, cred, store=False)
+        if not dlg.exec():
+            return
+        c = dlg.cred
+        new = {"name": c.name, "username": c.username, "password": c.password}
+        if not c.password and item.get("missing"):
+            del new["password"]
+            new["missing"] = True
+        self._items[idx] = new
+        self._fill(idx)
+        self._emit()
 
     def _remove(self) -> None:
         idx = self.combo.currentIndex()

@@ -9,7 +9,9 @@ omniwrench/sdk.py             PUBLIC API for tools: ToolBase, ToolContext, Insta
                               pick_credential, CredentialField, PSResult, ps_quote
 omniwrench/core/              (Qt-free except tool_manager QObject)
   paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
-  vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>"
+  vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>";
+                              reset(new_pw) from DPAPI recovery copy, is_lost()/lost_keys() ("app:lost_secrets")
+  dpapi.py                    protect/unprotect via CryptProtectData (CurrentUser); "plain" fallback off Windows
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
   powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
@@ -141,6 +143,19 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   Tabs: "profile" (Steckbrief: identity + findings strip + open-ports line) and "connectivity" (ping/MTU/route summary)
   replace the old "general" tab. PDF export via pdfreport.py (QPdfWriter + QTextDocument from HTML, no extra dependency).
   TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.
+
+## Vault reset (lost master password, 2026-10-20)
+- Every Vault._save() also writes `recovery` = dpapi.protect(json({key: redact(key, value)})). redact(): app:credentials
+  entries and credential-field items ({"items": [...]}) without "password" (+ "missing": true if one was set); refs kept;
+  app:lost_secrets kept; every other key -> None (fully secret). Vaults without `recovery` get one on next unlock.
+- Vault.reset(): backup file, new DEK + password unlocker only, data = non-None skeleton values, None keys go into
+  "app:lost_secrets". Vault.set(key, value) removes key from that list; delete_prefix() too.
+- Markers: Credential.missing (LocalProvider; resolve() returns None while missing, update() with a password clears it),
+  credentials.is_missing(item) (manual item or local ref), resolve_item() -> None. UI: ui/credentials.missing_icon()
+  (Lucide circle-alert, warning colour) in manager list, picker, CredentialField (+ new ✎ edit button for manual items
+  and local refs); secret settings fields and GitHub token show ❗ + placeholder (ToolSettingsStore.is_lost,
+  build_settings_form(lost=...)); OmniVault source list via ctx.secrets.is_lost("conn:<id>") (SDK SecretStore.is_lost).
+- Login: LoginDialog link "Passwort vergessen?" -> ResetDialog (login_dialog.py).
 
 ## MS DHCP Extended Management (net.ms-dhcp-extended, folder tools/ms_dhcp_extended, class MsDhcpExtended) – Microsoft DHCP manager
   (Alpha until 1.2.0, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1; was net.scopekeeper/ScopeKeeper until 2026-10-20)

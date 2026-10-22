@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QCheckBox, QComboBox, QDialog, QFrame, QHBoxLayout, QLineEdit, QVBoxLayout, QWidget,
+    QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFrame, QHBoxLayout, QLineEdit, QMessageBox, QVBoxLayout, QWidget,
 )
 
 from omniwrench import APP_NAME, VENDOR, __version__
@@ -170,8 +170,15 @@ class LoginDialog(QDialog):
                               date=u.get("not_after", "?")))
             self.cert_buttons.append(btn)
             self.lay.addWidget(btn)
+        self.forgot = label(f"<a href='reset'>{tr('login.forgot')}</a>", "Muted")
+        self.forgot.linkActivated.connect(lambda _link: self._reset())
+        self.lay.addWidget(self.forgot)
         if self.pw1:
             self.pw1.setFocus()
+
+    def _reset(self) -> None:
+        if ResetDialog(self.vault, self).exec():
+            self.accept()
 
     def _unlock_password(self) -> None:
         if not self.pw1.text():
@@ -212,4 +219,68 @@ class LoginDialog(QDialog):
         self.error.show()
 
 
-__all__ = ["LoginDialog", "CertificateCombo", "VaultError"]
+class ResetDialog(QDialog):
+    """Verlorenes Masterpasswort: neuer Tresor, alle Geheimnisse weg, Einträge bleiben (markiert)."""
+
+    def __init__(self, vault: Vault, parent: QWidget | None = None):
+        super().__init__(parent)
+        self.vault = vault
+        self.setWindowTitle(tr("reset.title"))
+        self.setWindowFlag(Qt.WindowType.WindowContextHelpButtonHint, False)
+        fit_min_width(self, 480)
+        lay = QVBoxLayout(self)
+        lay.setSpacing(10)
+        lay.addWidget(label(tr("reset.title"), "CardTitle"))
+        lay.addWidget(label(tr("reset.warning"), "Notice", wrap=True))
+        lay.addWidget(label(tr("reset.keeps") if vault.has_recovery else tr("reset.no_recovery"), wrap=True))
+        self.pw1 = QLineEdit(placeholderText=tr("login.password_min", min=MIN_PASSWORD_LENGTH))
+        self.pw1.setEchoMode(QLineEdit.EchoMode.Password)
+        self.pw2 = QLineEdit(placeholderText=tr("login.password_repeat"))
+        self.pw2.setEchoMode(QLineEdit.EchoMode.Password)
+        lay.addWidget(self.pw1)
+        lay.addWidget(self.pw2)
+        self.confirm = QCheckBox(tr("reset.confirm"))
+        lay.addWidget(self.confirm)
+        self.error = label("", "ErrorLabel", wrap=True)
+        self.error.hide()
+        lay.addWidget(self.error)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
+        buttons.rejected.connect(self.reject)
+        self.cancel = buttons.button(QDialogButtonBox.StandardButton.Cancel)
+        self.submit = make_button(tr("reset.button"), danger=True, on_click=self._do_reset)
+        self.submit.setEnabled(False)
+        self.confirm.toggled.connect(self.submit.setEnabled)
+        buttons.addButton(self.submit, QDialogButtonBox.ButtonRole.ActionRole)
+        lay.addWidget(buttons)
+        self.pw1.setFocus()
+
+    def _do_reset(self) -> None:
+        password = self.pw1.text()
+        if len(password) < MIN_PASSWORD_LENGTH:
+            return self._show_error(tr("login.err_short", min=MIN_PASSWORD_LENGTH))
+        if password != self.pw2.text():
+            return self._show_error(tr("login.err_mismatch"))
+        for w in (self.pw1, self.pw2, self.confirm, self.submit, self.cancel):
+            w.setEnabled(False)
+        self.error.setStyleSheet(f"color: {theme.current['muted']}")
+        self.error.setText(tr("reset.busy"))
+        self.error.show()
+        run_async(lambda: self.vault.reset(password), self._done, self._failed)
+
+    def _done(self, count: int) -> None:
+        QMessageBox.information(self, tr("reset.title"), tr("reset.done", count=count))
+        self.accept()
+
+    def _failed(self, error: str) -> None:
+        for w in (self.pw1, self.pw2, self.confirm, self.cancel):
+            w.setEnabled(True)
+        self.submit.setEnabled(self.confirm.isChecked())
+        self._show_error(error)
+
+    def _show_error(self, text: str) -> None:
+        self.error.setStyleSheet("")
+        self.error.setText(text)
+        self.error.show()
+
+
+__all__ = ["LoginDialog", "ResetDialog", "CertificateCombo", "VaultError"]

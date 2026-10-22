@@ -36,6 +36,12 @@
 - Master password and/or user certificate (smart card). Envelope encryption: random DEK, wrapped by Argon2id(password) AES-GCM and/or RSA-OAEP(cert). User asked for "hash compare"; explained current design is equivalent/better (no hash stored, verify by AEAD decrypt, DEK kept in session). User accepted ("wir machen das so").
 - Signing-only certs (Intune device certs) are filtered out.
 - Built-in password manager in main app (local provider in vault). Credential picker = simple full-text search.
+- Lost master password (Stef 2026-10-20): "Passwort vergessen?" on the login resets the vault. Reset = ALL stored
+  secrets gone (incl. password-manager connector credentials, GitHub token, cert unlockers); every entry stays, its
+  password marked with ❗ and the entry simply doesn't work until a new password is set. Only passwords are deleted.
+  My choices: entries survive via a secret-free recovery copy in vault.json, protected with DPAPI (CurrentUser, so only
+  the same Windows account can reset with data); without readable copy the reset still works but the manager is empty.
+  Old vault file kept as `vault.before-reset-<ts>.json`. Reset asks for a new password + "delete permanently" checkbox.
 
 ## i18n
 - Languages: de, en, fr, es + fun: de_bad (Badisch), de_by (Bayrisch), de_hes (Hessisch, added 2026-10-16 on Stef's request), en_sco (Scots), en_posh (Posh English). Files flat JSON with `_meta.fallback`.
