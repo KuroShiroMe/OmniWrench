@@ -50,7 +50,7 @@ class _Bridge(QObject):
 
 
 class MsDhcpExtended(ToolBase):
-    backend_factory = None     # für Tests/Screenshots: Ersatz für den PowerShell-Host
+    backend_factory = None     # für Tests/Screenshots: Ersatz für das DHCP-API-Backend
 
     # --- Aufbau --------------------------------------------------------------------------------------
     def create_widget(self, parent=None) -> QWidget:
@@ -279,6 +279,7 @@ class MsDhcpExtended(ToolBase):
                 self.dm.addDockWidgetTabToArea(d, self.area)
             self.fixed_docks.append(d)
         self.fixed_docks[0].setAsCurrentTab()
+        self.apply_expert_mode()
         split.addWidget(host)
         logw = QWidget()
         ll = QVBoxLayout(logw)
@@ -432,6 +433,8 @@ class MsDhcpExtended(ToolBase):
         if self.auto_partner.isChecked():
             svc.partner_mode = "Auto"
             yield from self.partner_login_flow()
+            # Sicht der direkt erreichbaren Partner gleich mitladen (schnell); netsh-Partner erst bei Bedarf
+            yield from self.load_peer_flow([pn for pn in svc.partners() if svc.partner_via.get(pn) == "Cim"], refresh=False)
         self.login_status.setText("")
         self._classes = None
         self.scan = None
@@ -489,6 +492,8 @@ class MsDhcpExtended(ToolBase):
             self.close_tab(w, force=True)
         self.scanner.reset()
         yield Job(self.svc.disconnect, tr("status.disconnecting"))
+        self.defs_page.lock()
+        self.srv_opts.current = None
         self.stack.setCurrentIndex(0)
 
     def remember_server(self, server: str) -> None:
@@ -512,17 +517,50 @@ class MsDhcpExtended(ToolBase):
         self.overview.set_data(self.svc, self.scan)
         self.fo_page.refresh()
         self.defs_page.refresh()
-        self.srv_opts.set_options(self._server_option_list())
+        self.srv_opts.refresh()
+        self.apply_expert_mode()
+        self.apply_rights()
+
+    def apply_rights(self) -> None:
+        """Oberfläche an die Rechte anpassen: ohne Schreibrecht nur Ansicht (Schaltflächen ausgeblendet)."""
+        svc = self.svc
+        self.overview.apply_rights(svc.can_write(None))
+        self.fo_page.apply_rights()
+        self.srv_opts.apply_rights()
+        self.defs_page.apply_rights()
+        for w in self.tabs:
+            if isinstance(w, ScopeTab):
+                w.apply_rights()
+        self.auto_repl.setVisible(svc.can_write(None) and bool(svc.partners()))
         self.update_conn_info()
 
-    def _server_option_list(self) -> list[dict]:
-        return list(self.svc.server_option_rows)
+    def apply_expert_mode(self) -> None:
+        """Die Seite Definitionen gibt es nur im Expertenmodus (Einstellungen)."""
+        on = bool(self.settings.get("expert_mode", False))
+        d = self.fixed_docks[3]
+        if d.isClosed() == on:
+            d.toggleView(on)
+        if not on:
+            self.defs_page.lock()
+
+    def load_peer_flow(self, partners: list[str], refresh: bool = True):
+        """Sicht der Partner laden (Failover-Beziehungen, Scopes, Server-Optionen)."""
+        for pn in partners:
+            if self.svc.partner_mode == "Off":
+                break
+            yield Job(lambda pn=pn: self.svc.load_peer(pn), self.tr("status.peer", partner=pn))
+        if refresh:
+            self.fo_page.refresh()
+            self.srv_opts.refresh()
+            self.apply_rights()
 
     def update_conn_info(self) -> None:
         tr, svc = self.tr, self.svc
         parts = [f"<b>{html.escape(svc.server or '')}</b>", html.escape(svc.user or tr("ui.sso")),
                  html.escape(tr("conn.protocol", proto=svc.protocol or "–"))]
-        warn_state = svc.partner_mode == "Off" or bool(svc.partner_fail) or bool(svc.netsh_fail)
+        if not svc.can_write(None):
+            parts.append(f"<b>{html.escape(tr('conn.read_only_long'))}</b>")
+        warn_state = svc.partner_mode == "Off" or bool(svc.partner_fail) or bool(svc.netsh_fail) or not svc.can_write(None)
         for pn in svc.partners():
             parts.append(html.escape(f"{tr('conn.partner')} {pn}: {svc.partner_state(pn)}"))
         if svc.partner_mode == "Off":
@@ -572,6 +610,8 @@ class MsDhcpExtended(ToolBase):
     def _ov_action(self, a: str) -> None:
         g = self.overview.grid
         ids = [r["id"] for r in g.selected_rows()]
+        if a in ("New", "Duplicate", "Activate", "Deactivate", "Remove") and not self.svc.can_write(None):
+            return
         if a == "Refresh":
             self.run(self.reload_all_flow())
         elif a == "New":
@@ -833,6 +873,8 @@ class MsDhcpExtended(ToolBase):
             self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
         if "auto_scan" in changed_keys:
             self.auto_scan.setChecked(bool(self.settings.get("auto_scan", True)))
+        if "expert_mode" in changed_keys:
+            self.apply_expert_mode()
 
     def can_close(self) -> bool:
         dirty = [w for w in getattr(self, "tabs", {}) if isinstance(w, ScopeTab) and w.is_dirty()]

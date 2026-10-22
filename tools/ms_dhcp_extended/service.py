@@ -18,6 +18,7 @@ import time
 from typing import Callable
 
 from . import checks as ck
+from . import dhcpapi as api
 from . import ipcalc as ip
 from . import netshdump as nd
 from . import optcodec as oc
@@ -171,6 +172,8 @@ class DhcpService:
         self.scope_fo: dict[str, dict] = {}
         self.secrets: dict[str, tuple[str, str]] = {}   # nur im Speicher: "*" = Primärserver, sonst Partner (für die Prüfung)
         self.prefetch: dict[str, object] | None = None   # Ergebnisse von cim_many (schnelle Prüfung)
+        self.rights: dict[str, str] = {}     # "*" = Primärserver, sonst Partner -> admin | read | unknown
+        self.peer: dict[str, dict] = {}      # Sicht der Partner: Failover-Beziehungen, Scopes, Server-Optionen
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -265,7 +268,31 @@ class DhcpService:
         self.secrets = {"*": (user, password)} if user else {}
         self.protocol = (data or {}).get("protocol", "")
         self.log(self.tr("log.connected", server=server, user=user or self.tr("ui.sso"), proto=self.protocol))
+        self.check_access()
         return self.protocol
+
+    # --- Rechte -------------------------------------------------------------------------------------
+    def is_local(self, server: str | None) -> bool:
+        return not server or server.lower() == (self.server or "").lower()
+
+    def check_access(self, server: str | None = None) -> str:
+        """Schreibrecht ermitteln (DHCP-Administratoren/Administratoren = admin, DHCP-Benutzer = read)."""
+        key = "*" if self.is_local(server) else server
+        try:
+            r = str(self.call("access", {"server": server or self.server}))
+        except UserError:
+            r = "unknown"
+        if r not in ("admin", "read"):
+            r = "unknown"
+        self.rights[key] = r
+        if r == "read":
+            self.log(self.tr("log.read_only", server=server or self.server), True)
+        return r
+
+    def can_write(self, server: str | None = None) -> bool:
+        """Unbekannt zählt als erlaubt - dann lehnt notfalls der Server ab."""
+        key = "*" if self.is_local(server) else server
+        return self.rights.get(key, "unknown") != "read"
 
     def disconnect(self) -> None:
         if self.server:
@@ -302,6 +329,7 @@ class DhcpService:
             self.partner_fail.pop(pn, None)
             self.log(self.tr("log.partner_connected", partner=pn, proto=(data or {}).get("protocol", ""),
                              user=user or self.user or self.tr("ui.sso")))
+            self.check_access(pn)
             try:
                 self.test_netsh(pn)
             except UserError as e:
@@ -326,6 +354,7 @@ class DhcpService:
             self.test_netsh(pn)
             self.partner_via[pn] = "Rpc"
             self.log(self.tr("log.conn_rpc_ok", server=pn))
+            self.check_access(pn)
             return True
         except UserError as e:
             self.netsh_fail[pn] = str(e)
@@ -337,10 +366,11 @@ class DhcpService:
         who = f" ({self.partner_user[pn]})" if pn in self.partner_user else ""
         if self.partner_mode == "Off":
             return tr("conn.partner_off")
+        ro = (" · " + tr("conn.read_only")) if self.rights.get(pn) == "read" else ""
         if self.partner_via.get(pn) == "Cim":
-            return tr("conn.partner_cim") + who
+            return tr("conn.partner_cim") + who + ro
         if self.partner_via.get(pn) == "Rpc":
-            return tr("conn.partner_rpc") + who
+            return tr("conn.partner_rpc") + who + ro
         if pn in self.partner_fail:
             return tr("conn.partner_unreachable")
         return tr("conn.partner_lazy")
@@ -356,6 +386,7 @@ class DhcpService:
                 self.call("connect", {"server": pn, "reuse": True}, self._conn_steps(pn, True))
                 self.partner_via[pn] = "Cim"
                 self.log(self.tr("log.partner_connected", partner=pn, proto="", user=self.user or self.tr("ui.sso")))
+                self.check_access(pn)
                 return "Cim"
             except UserError as e:
                 last = [x for x in str(e).splitlines() if x.strip()]
@@ -392,6 +423,11 @@ class DhcpService:
             return [n_res(x) for x in self.cim("Get-DhcpServerv4Reservation", pn, ScopeId=scope)]
         if kind == "options":
             return self.options(scope, pn)
+        if kind == "scopes":
+            return [n_scope(x) for x in self.cim("Get-DhcpServerv4Scope", pn)]
+        if kind == "opt_remove":
+            self.opt_remove(scope, kw["id"], kw.get("vendor", ""), kw.get("user", ""), pn)
+            return True
         if kind == "defs":
             return self.list_defs(pn)
         if kind == "def_add":
@@ -416,6 +452,12 @@ class DhcpService:
             return s[kind]
         if kind == "options":
             return self.netsh_parsed(pn, "")["options"]
+        if kind == "scopes":
+            return [dict(x) for x in self.netsh_parsed(pn, "")["scopes"].values() if x.get("mask")]
+        if kind == "opt_remove":
+            cmd = f"delete optionvalue {int(kw['id'])}{nd.class_args(kw.get('vendor', ''), kw.get('user', ''))}"
+            self.netsh_write(pn, f"scope {scope} {cmd}" if scope else cmd)
+            return True
         if kind == "defs":
             return self.netsh_parsed(pn, "")["defs"]
         if kind == "def_add":
@@ -632,9 +674,50 @@ class DhcpService:
         self.cim("Set-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id),
                  Value=[str(v) for v in values], VendorClass=vendor or None, UserClass=user or None, Force=True)
 
-    def opt_remove(self, sid: str | None, opt_id: int, vendor: str = "", user: str = "") -> None:
-        self.cim("Remove-DhcpServerv4OptionValue", ScopeId=sid or None, OptionId=int(opt_id), VendorClass=vendor or None,
+    def opt_remove(self, sid: str | None, opt_id: int, vendor: str = "", user: str = "", server: str | None = None) -> None:
+        self.cim("Remove-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id), VendorClass=vendor or None,
                  UserClass=user or None)
+
+    # --- Server-Optionen auf einem beliebigen Server der Failover-Gruppe ----------------------------------
+    def srv_options(self, server: str | None) -> list[dict]:
+        if self.is_local(server):
+            return self.load_server_options()
+        return sorted(self.partner(server, "options"), key=lambda o: (o.get("vendor") or "", o.get("user") or "", int(o["id"])))
+
+    def srv_opt_set(self, server: str | None, opt_id: int, values: list[str], vendor: str = "", user: str = "") -> None:
+        if self.is_local(server):
+            self.opt_set(None, opt_id, values, vendor, user)
+        else:
+            self.partner(server, "opt_set", scope=None, id=int(opt_id), values=list(values), vendor=vendor, user=user)
+
+    def srv_opt_remove(self, server: str | None, opt_id: int, vendor: str = "", user: str = "") -> None:
+        if self.is_local(server):
+            self.opt_remove(None, opt_id, vendor, user)
+        else:
+            self.partner(server, "opt_remove", scope=None, id=int(opt_id), vendor=vendor, user=user)
+
+    def load_peer(self, pn: str) -> dict:
+        """Sicht eines Partners: seine Failover-Beziehungen (auch zu dritten Servern), Scopes und Server-Optionen."""
+        d: dict = {"fo": None, "scopes": None, "options": None, "errors": {}, "time": time.strftime("%H:%M:%S")}
+        self.peer[pn] = d
+        try:
+            self._ensure_partner(pn)
+        except UserError as e:
+            d["errors"]["conn"] = str(e)
+            return d
+        try:
+            d["fo"] = sorted((n_fo(api.fo_cmdlet_row(r)) for r in self.fo_api(pn, "enum")), key=lambda r: r["name"].lower())
+        except UserError as e:
+            d["errors"]["fo"] = str(e)
+        try:
+            d["scopes"] = sorted(self.partner(pn, "scopes"), key=lambda x: ip.ip_sort_key(x["id"]))
+        except UserError as e:
+            d["errors"]["scopes"] = str(e)
+        try:
+            d["options"] = self.srv_options(pn)
+        except UserError as e:
+            d["errors"]["options"] = str(e)
+        return d
 
     def res_add(self, sid: str, r: dict) -> None:
         self.cim("Add-DhcpServerv4Reservation", ScopeId=sid, IPAddress=r["ip"], ClientId=r["cid"], Name=r.get("name") or None,
@@ -1328,6 +1411,7 @@ class DhcpService:
         c.netsh_ok = set(self.netsh_ok)
         c.netsh_fail = dict(self.netsh_fail)
         c.secrets = dict(self.secrets)
+        c.rights = dict(self.rights)
         return c
 
     def attach(self) -> None:

@@ -732,7 +732,9 @@ class Checker:
                 for k in sorted(set(lo) | set(ro)):
                     va, vb = lo.get(k, "–"), ro.get(k, "–")
                     if va != vb:
-                        add(WARN, "server_options", tr("chk.srv_partner_opt", tag=f"{k:03d}", partner=pn, a=va, b=vb),
+                        key = "chk.srv_partner_opt_only" if k not in lo else "chk.srv_partner_opt_missing" if k not in ro \
+                            else "chk.srv_partner_opt"
+                        add(WARN, "server_options", tr(key, tag=f"{k:03d}", partner=pn, a=va, b=vb),
                             tr("obj.server_option", tag=f"{k:03d}"))
             if pc.get("defs_error"):
                 add(INFO, "scan", tr("chk.srv_partner_defs_err", partner=pn, error=pc["defs_error"]), tr("obj.partner", name=pn))

@@ -202,6 +202,10 @@ class ApiBackend:
         dhcp = api.DhcpApi(server, self._ident(server))       # Partner auch ohne vorheriges connect erreichbar
         return dhcp.fo_call(str(a.get("op")), a.get("rel"), a.get("name"), int(a.get("flags") or 0))
 
+    def _cmd_access(self, a, prog):
+        server = str(a["server"])
+        return api.DhcpApi(server, self._ident(server)).access()
+
     def _cmd_netsh(self, a, prog):
         server = str(a["server"])
         lines = [str(x) for x in a.get("lines") or []]

@@ -141,3 +141,11 @@
 - 2026-10-20 (Stef, binding for all work): "möglichst alles in Python, PowerShell nur wenn unbedingt nötig".
   DHCP tool therefore uses dhcpsapi.dll via ctypes (no WinRM/CIM/DhcpServer module); RSAT stays only for netsh dhcp
   (replication). Other PowerShell uses in the app: see backlog (inventory 2026-10-20).
+- 2026-10-22 (Stef): overview columns freely movable, default order Name, Beschreibung, Scope ID, Präfix, Status,
+  Freie Adressen, Belegt %, Lease-Dauer, Befunde, Failover (my reading of "Verteilbar (Freie Adressen)": free count;
+  "Verteilbar" + "Bereiche" kept as hidden optional columns). Failover: every server of a relationship as own row,
+  click shows all scopes of that server. Check page: distribution shown, no level dot on the tabs, prominent
+  segmented switch. Server options: list of all failover servers, sync state per option, opt-out checkbox
+  "Auf Partner übertragen" on add/edit, transfer only per option (no "all" button). Definitions: BOTH expert mode
+  setting (dock hidden otherwise, default off) and unlock button with expert warning (my choice: Stef offered either).
+  Rights: UI adapts to read-only (DHCP Users) - write controls hidden, not just disabled.

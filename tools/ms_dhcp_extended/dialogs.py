@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 
-from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QCheckBox, QMessageBox
 
 from . import checks as ck
 from . import ipcalc as ip
@@ -18,8 +18,9 @@ def _opt_id(v) -> int | None:
 
 
 def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None = None, model: ip.ScopeModel | None = None,
-                  vendors: list[str] = (), users: list[str] = (), title: str = "") -> dict | None:
-    """Option anlegen/bearbeiten. Ergebnis: {"id", "values", "vendor", "user", "undefined"}."""
+                  vendors: list[str] = (), users: list[str] = (), title: str = "", partner_check: str = "") -> dict | None:
+    """Option anlegen/bearbeiten. Ergebnis: {"id", "values", "vendor", "user", "undefined", "partner"}.
+    partner_check: Beschriftung des Hakens „Auf Partner übertragen“ (Opt-out, vorausgewählt); leer = kein Haken."""
     std = sorted((d for (v, _i), d in defs.items() if not v), key=lambda d: d["id"])
     items = [(d["id"], f"{d['id']:03d} – {d['name']}") for d in std]
     edit = opt is not None
@@ -34,6 +35,8 @@ def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None 
          "value": (opt or {}).get("user", ""), "readonly": edit},
         {"key": "values", "label": tr("opt.f.values"), "type": "multiline", "value": "\n".join((opt or {}).get("values") or [])},
     ]
+    if partner_check:
+        fields.append({"key": "partner", "label": partner_check, "type": "check", "value": True})
     state: dict = {}
 
     def validate(v: dict) -> str | None:
@@ -64,7 +67,23 @@ def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None 
     if res is None:
         return None
     return {"id": state["id"], "values": state["values"], "vendor": res["vendor"] or "", "user": res["user"] or "",
-            "undefined": state.get("undefined", False)}
+            "undefined": state.get("undefined", False), "partner": bool(res.get("partner"))}
+
+
+def confirm_check(parent, title: str, text: str, check_label: str = "", checked: bool = True) -> tuple[bool, bool]:
+    """Ja/Nein-Rückfrage mit optionalem Haken (z. B. „Auch auf dem Partner entfernen“). Ergebnis: (ja, Haken)."""
+    b = QMessageBox.StandardButton
+    box = QMessageBox(QMessageBox.Icon.Question, title, text, b.Yes | b.No, parent)
+    box.setDefaultButton(b.No)
+    cb = None
+    if check_label:
+        cb = QCheckBox(check_label, box)     # Elternteil box: sonst gibt Python den Haken frei, solange box ihn noch hält
+        cb.setChecked(checked)
+        box.setCheckBox(cb)
+    ok = box.exec() == b.Yes
+    on = bool(ok and cb is not None and cb.isChecked())
+    box.deleteLater()
+    return ok, on
 
 
 def guess_type(values: list[str]) -> str:

@@ -73,8 +73,7 @@ class RangeEditor(QWidget):
         self.table.verticalHeader().setVisible(False)
         self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.EditKeyPressed
-                                   | QAbstractItemView.EditTrigger.AnyKeyPressed)
+        self.set_editable(True)
         self.table.setMinimumHeight(130)
         self.table.itemChanged.connect(self._item_changed)
         lay.addWidget(self.table)
@@ -89,6 +88,10 @@ class RangeEditor(QWidget):
         lay.addLayout(row)
         self._updating = False
         self.confirm_whole = None   # Rückfrage vor "Ganzes Netz" bei mehreren Bereichen
+
+    def set_editable(self, on: bool) -> None:
+        t = QAbstractItemView.EditTrigger
+        self.table.setEditTriggers(t.DoubleClicked | t.EditKeyPressed | t.AnyKeyPressed if on else t.NoEditTriggers)
 
     # ----------------------------------------------------------------------------------------------
     def _item_changed(self, it: QTableWidgetItem) -> None:
@@ -228,46 +231,85 @@ def opt_row_key(r: dict) -> str:
 
 
 class OptionsPanel(QWidget):
-    """Optionswerte eines Scopes oder des Servers mit Schaltflächen; Aktionen gehen als Signal an den Besitzer."""
+    """Optionswerte eines Scopes oder des Servers mit Schaltflächen; Aktionen gehen als Signal an den Besitzer.
+    Auf Serverebene zusätzlich die Spalte „Abgleich“ (Stand gegenüber dem Failover-Partner) und „Auf Partner
+    übertragen“ – bewusst nur für einen einzelnen Optionswert."""
 
     action = Signal(str)
 
     def __init__(self, tr, server_level: bool = False, parent=None):
         super().__init__(parent)
         self.tr = tr
+        self.server_level = server_level
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
         acts = [("Add", tr("opt.add"), "Ins"), ("Edit", tr("opt.edit"), "F2"), ("Remove", tr("opt.remove"), "Del"), "-",
                 ("Copy", tr("ui.copy"), "Ctrl+C"), ("Paste", tr("ui.paste"), "Ctrl+V"), ("CopyCell", tr("ui.copy_cell"), "")]
         if server_level:
-            acts += ["-", ("ToPartner", tr("opt.to_partner"), "")]
-        self.grid = Grid([("id", tr("opt.col.id"), "opt"), ("name", tr("opt.col.name"), "text"),
-                          ("value", tr("opt.col.value"), "text"), ("vendor", tr("opt.col.vendor"), "text"),
-                          ("user", tr("opt.col.user"), "text")], key_fn=opt_row_key, actions=acts, default_action="Edit",
-                         stretch="value")
+            acts += ["-", ("ToPartner", tr("opt.to_partner_one"), "")]
+        cols = [("id", tr("opt.col.id"), "opt"), ("name", tr("opt.col.name"), "text"), ("value", tr("opt.col.value"), "text"),
+                ("vendor", tr("opt.col.vendor"), "text"), ("user", tr("opt.col.user"), "text")]
+        if server_level:
+            cols.append(("sync_t", tr("opt.col.sync"), "text"))
+        self.grid = Grid(cols, key_fn=opt_row_key, actions=acts, default_action="Edit", stretch="value")
         self.grid.action.connect(self.action.emit)
         lay.addWidget(self.grid, 1)
         btns = [("Add", tr("opt.add")), ("Edit", tr("opt.edit")), ("Remove", tr("opt.remove")), ("Copy", tr("ui.copy")),
                 ("Paste", tr("ui.paste"))]
         if server_level:
-            btns.append(("ToPartner", tr("opt.to_partner")))
+            btns.append(("ToPartner", tr("opt.to_partner_one")))
         self.bar = ButtonBar(btns)
         self.bar.action.connect(self.action.emit)
         self.bar.add_widget(help_icon(tr("opt.server_note") if server_level else tr("opt.scope_note")))
         lay.addWidget(self.bar)
+        if server_level:
+            self.grid.itemSelectionChanged.connect(self._sel_changed)
+            self._sel_changed()
+
+    def _sel_changed(self) -> None:
+        rows = self.grid.selected_rows()
+        one = len(rows) == 1 and not rows[0].get("ghost")
+        self.bar.buttons["ToPartner"].setEnabled(one and self.grid.has_action("ToPartner"))
 
     def set_options(self, options: list[dict], defs: dict) -> None:
-        self.grid.set_rows(option_rows(options, defs))
+        self.set_rows(option_rows(options, defs))
+
+    def set_rows(self, rows: list[dict]) -> None:
+        self.grid.set_rows(rows)
         self.grid.setColumnWidth(0, 70)
         self.grid.setColumnWidth(1, 220)
+        for c in (3, 4):
+            self.grid.resizeColumnToContents(c)
+        if self.server_level:
+            c = theme.current
+            for r in rows:
+                k = opt_row_key(r)
+                col = {"sync": c["success"], "diff": c["danger"], "missing": c["warning"], "ghost": c["warning"]}.get(r.get("sync"))
+                if col:
+                    self.grid.style_cell(k, "sync_t", fore=col, bold=r.get("sync") != "sync")
+                if r.get("ghost"):
+                    for ck_ in ("id", "name", "value", "vendor", "user"):
+                        self.grid.style_cell(k, ck_, fore=c["muted"])
+            self._sel_changed()
 
     def mark(self, index: dict[str, list[ck.Finding]], flt) -> None:
         for r in self.grid.rows:
             k = opt_row_key(r)
             fs = [f for f in index.get(k, []) if flt.marker(f)]
             lvl = ck.worst(fs)
-            self.grid.style_row(k, tint(level_color(lvl), 60) if lvl else None, None, False,
-                                "\n".join(f.text for f in fs) if fs else "")
+            self.grid.style_row(k, tint(level_color(lvl), 60) if lvl else None,
+                                theme.current["muted"] if r.get("ghost") else None, False,
+                                "\n".join(f.text for f in fs) if fs else "",
+                                col_keys=["id", "name", "value", "vendor", "user"])
+
+    def apply_rights(self, rw: bool, to_partner: bool) -> None:
+        for aid in ("Add", "Edit", "Remove", "Paste"):
+            self.bar.set_visible(aid, rw)
+            self.grid.set_action_visible(aid, rw)
+        if self.server_level:
+            self.bar.set_visible("ToPartner", to_partner)
+            self.grid.set_action_visible("ToPartner", to_partner)
+            self._sel_changed()
 
 
 def muted(text: str) -> QLabel:

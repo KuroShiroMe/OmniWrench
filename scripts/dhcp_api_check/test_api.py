@@ -78,3 +78,5 @@ try:
     svc.res_remove("10.1.0.0", "10.1.0.99")
 except S.UserError as e:
     print("missing ->", e)
+# Rechte: Schreibprobe ohne Änderung (FieldsToSet = 0)
+print("access", b.call("access", {"server": "dhcp01"}), b.call("access", {"server": "ro"}), "fields", u("cfg_fields"))

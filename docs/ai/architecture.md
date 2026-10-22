@@ -181,3 +181,13 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   -> `scope_done` signal -> CheckPage refresh coalesced by a 300 ms timer. Cancel = `ApiBackend.kill()` (stops
   waiting, pending calls cancelled); partial result has partial=True.
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
+- 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
+  5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;
+  every page has `apply_rights()` (hide write buttons/actions, read-only editors); `MsDhcpExtended.apply_rights()` after
+  refresh. Partner view: `svc.load_peer(pn)` -> `svc.peer[pn]` {fo, scopes, options, errors} (API or netsh dump),
+  `ctl.load_peer_flow`. FailoverPage: one row per server per relationship (key "rel|server"), lower grid = ALL scopes of
+  the selected server with membership. ServerOptionsPage: server grid (primary + partners), `compare()` gives sync
+  state per option, ghost rows for options only on the counterpart, transfer per option only. CheckPage: `DistBars`
+  (stacked bars per category) + top scopes + segmented buttons/QStackedWidget instead of tabs. DefsPage: lock banner,
+  writes only after unlock; dock shown only with setting expert_mode. Grid.enable_layout(settings,key) = movable/
+  hideable columns stored {"order","hidden"}; overview + failover use it.

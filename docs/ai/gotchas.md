@@ -107,3 +107,9 @@
   ("-" < "."), upload order/re-upload doesn't change it. App <=0.5.x takes the first omniwrench*.zip -> would get
   the EXE package. 0.6.0+ uses _pick_asset (by suffix), so only the 0.5.x -> 0.6.0 jump is affected.
   User decision: no rename; 0.5.x installs are updated manually once.
+
+## Qt dialogs/layouts (DHCP tool 1.1.0)
+- QMessageBox.setCheckBox: the QCheckBox must have the box as parent, else Python frees it while Qt still owns it
+  -> segfault after the dialog. Then box.deleteLater().
+- App FlowLayout counts hidden widgets in its width -> a bar with hidden buttons wraps. ButtonBar.set_visible removes
+  all widgets and re-adds only visible ones.

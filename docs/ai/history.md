@@ -296,3 +296,9 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   „möglichst alles in Python“. DHCP-Zugriff komplett neu über dhcpsapi.dll (ctypes, backend.py/dhcpapi.py),
   PowerShell-Host (host.ps1/pshost.py) entfernt, netsh direkt aus Python. Strukturen gegen Win32-Metadaten geprüft,
   Abläufe mit Fake-DLL unter Linux getestet. Inventar der übrigen PowerShell-Nutzung in backlog.md.
+
+- 2026-10-22 Stef tested 1.0.0 and asked for 6 changes -> 1.1.0: movable overview columns (new default order), failover
+  view with one row per server + all scopes of the selected server (split detection), check page with distribution
+  bars/top scopes and segmented switch, server options per failover server with sync state + per-option transfer +
+  opt-out partner checkbox, definitions behind expert mode + unlock, rights detection (read-only hides edits).
+  Fixed on the way: QMessageBox checkbox segfault, FlowLayout wrapping with hidden buttons. Fake-DLL/fake-backend tests.

@@ -81,6 +81,32 @@ class ScopeTab(QWidget):
         self.fview.activated.connect(self.on_finding)
         self.tabs.addTab(self.fview, tr("scope.page.findings"))
         ctl.flt.changed.connect(self._refresh_marks)
+        self.apply_rights()
+
+    def apply_rights(self) -> None:
+        """Ohne Schreibrecht (nur „DHCP-Benutzer“) ist der Scope nur lesbar; Partnerfunktionen brauchen dort Schreibrecht."""
+        rw = self.svc.can_write(None)
+        rel = self.rel()
+        prw = rw and (rel is None or self.svc.can_write(rel["partner"]))
+        for aid in ("Paste", "Duplicate"):
+            self.head_bar.set_visible(aid, rw)
+        self.head_bar.set_visible("Replicate", prw)
+        self.save_bar.setVisible(rw)
+        self.f_name.setReadOnly(not rw)
+        self.f_desc.setReadOnly(not rw)
+        self.f_lease.setEnabled(rw)
+        self.f_state.setEnabled(rw)
+        self.ranges.bar.setVisible(rw)
+        self.ranges.set_editable(rw)
+        self.opts.apply_rights(rw, False)
+        for grid, bar, ids in ((self.res_grid, self.res_bar, ("Add", "Edit", "Remove", "Paste")),
+                               (self.ex_grid, self.ex_bar, ("Add", "Remove", "Paste")),
+                               (self.ls_grid, self.ls_bar, ("ToReservation", "Remove"))):
+            for aid in ids:
+                bar.set_visible(aid, rw)
+                grid.set_action_visible(aid, rw)
+        for aid in ("FoAdd", "FoRemove", "FoReplicate", "FoReplicateRel"):
+            self.fo_bar.set_visible(aid, prw)
 
     # --- Aufbau ------------------------------------------------------------------------------------
     def _build_general(self) -> None:
@@ -168,8 +194,8 @@ class ScopeTab(QWidget):
         self.res_filter.textChanged.connect(self.res_grid.apply_filter)
         lay.addWidget(self.res_filter)
         lay.addWidget(self.res_grid, 1)
-        bar = ButtonBar([("Add", tr("res.add")), ("Edit", tr("res.edit")), ("Remove", tr("res.remove")),
-                         ("Copy", tr("ui.copy")), ("Paste", tr("ui.paste"))])
+        bar = self.res_bar = ButtonBar([("Add", tr("res.add")), ("Edit", tr("res.edit")), ("Remove", tr("res.remove")),
+                                        ("Copy", tr("ui.copy")), ("Paste", tr("ui.paste"))])
         bar.action.connect(self._res_action)
         lay.addWidget(bar)
         self.tabs.addTab(w, tr("scope.page.reservations"))
@@ -185,8 +211,8 @@ class ScopeTab(QWidget):
                              ("count", tr("excl.col.count"), "int")], key_fn=excl_key, actions=acts, stretch="count")
         self.ex_grid.action.connect(self._ex_action)
         lay.addWidget(self.ex_grid, 1)
-        bar = ButtonBar([("Add", tr("excl.add")), ("Remove", tr("excl.remove")), ("Copy", tr("ui.copy")),
-                         ("Paste", tr("ui.paste"))])
+        bar = self.ex_bar = ButtonBar([("Add", tr("excl.add")), ("Remove", tr("excl.remove")), ("Copy", tr("ui.copy")),
+                                       ("Paste", tr("ui.paste"))])
         bar.action.connect(self._ex_action)
         bar.add_widget(help_icon(tr("excl.note")))
         lay.addWidget(bar)
@@ -210,8 +236,8 @@ class ScopeTab(QWidget):
         self.ls_filter.textChanged.connect(self.ls_grid.apply_filter)
         lay.addWidget(self.ls_filter)
         lay.addWidget(self.ls_grid, 1)
-        bar = ButtonBar([("Refresh", tr("ui.refresh")), ("ToReservation", tr("lease.to_res")),
-                         ("Remove", tr("lease.remove")), ("CopyRes", tr("lease.copy_res"))])
+        bar = self.ls_bar = ButtonBar([("Refresh", tr("ui.refresh")), ("ToReservation", tr("lease.to_res")),
+                                       ("Remove", tr("lease.remove")), ("CopyRes", tr("lease.copy_res"))])
         bar.action.connect(self._lease_action)
         lay.addWidget(bar)
         self.tabs.addTab(w, tr("scope.page.leases"))
@@ -282,6 +308,7 @@ class ScopeTab(QWidget):
         for g in (self.res_grid, self.ls_grid, self.ex_grid):
             g.autosize()
         self._fill_failover()
+        self.apply_rights()
         self.recheck()
 
     def _dns_text(self, d: dict) -> str:

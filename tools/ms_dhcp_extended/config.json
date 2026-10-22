@@ -32,6 +32,14 @@
       "description": "After every change on a failover scope the scope is synchronised to the partner."
     },
     {
+      "key": "expert_mode",
+      "type": "bool",
+      "label": "Expert mode",
+      "default": false,
+      "group": "Advanced",
+      "description": "Shows the Definitions page (create, change and delete option definitions). Editing still has to be unlocked there."
+    },
+    {
       "key": "credential",
       "type": "credential",
       "label": "Stored credentials",

@@ -291,9 +291,10 @@ class Grid(QTableWidget):
 
     def __init__(self, cols: list[tuple[str, str, str]], key_fn: Callable[[dict], str] | None = None,
                  actions: list | None = None, default_action: str | None = None, multi: bool = True,
-                 stretch: str | None = None, parent=None):
+                 stretch: str | None = None, sortable: bool = True, parent=None):
         super().__init__(parent)
         self.cols = cols
+        self.sortable = sortable
         self.key_fn = key_fn or (lambda r: str(id(r)))
         self.rows: list[dict] = []
         self.tooltip_fn: Callable[[dict], str] | None = None
@@ -312,7 +313,7 @@ class Grid(QTableWidget):
         self.horizontalHeader().setHighlightSections(False)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.horizontalHeader().setStretchLastSection(True)
-        self.setSortingEnabled(True)
+        self.setSortingEnabled(sortable)
         self.setWordWrap(False)
         if stretch:
             for i, c in enumerate(cols):
@@ -380,7 +381,7 @@ class Grid(QTableWidget):
                 if kind in ("int", "float"):
                     it.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
                 self.setItem(r, c, it)
-        self.setSortingEnabled(True)
+        self.setSortingEnabled(self.sortable)
         if sel:
             self.select_keys(sel)
 
@@ -523,6 +524,68 @@ class Grid(QTableWidget):
             elif self.columnWidth(c) < 60:
                 self.setColumnWidth(c, 60)
 
+    # --- Aktionen ein-/ausblenden (Rechte, Sperren) ---------------------------------------------------
+    def set_action_visible(self, aid: str, on: bool) -> None:
+        a = self._qactions.get(aid)
+        if a is not None:
+            a.setVisible(on)
+            a.setEnabled(on)
+
+    def has_action(self, aid: str) -> bool:
+        a = self._qactions.get(aid)
+        return a is not None and a.isEnabled()
+
+    # --- Spalten frei anordnen und ein-/ausblenden (gespeichert in den Tool-Einstellungen) -------------
+    def enable_layout(self, settings, key: str, hidden: tuple[str, ...] = (), labels: tuple[str, str] = ("", "")) -> None:
+        """Spalten per Ziehen verschiebbar; Rechtsklick auf den Kopf blendet Spalten ein/aus.
+        Reihenfolge der cols = Standard. labels = (Menütitel "Spalten", "Standardanordnung")."""
+        self._layout = (settings, key, tuple(hidden), labels)
+        h = self.horizontalHeader()
+        h.setSectionsMovable(True)
+        h.setFirstSectionMovable(True)
+        h.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        h.customContextMenuRequested.connect(self._header_menu)
+        self._restore_layout()
+        h.sectionMoved.connect(lambda *_: self._save_layout())
+
+    def _restore_layout(self) -> None:
+        settings, key, hidden, _l = self._layout
+        saved = settings.get(key) or {}
+        keys = [c[0] for c in self.cols]
+        order = [k for k in (saved.get("order") or []) if k in keys]
+        order += [k for k in keys if k not in order]
+        h = self.horizontalHeader()
+        h.blockSignals(True)
+        for vis, k in enumerate(order):
+            h.moveSection(h.visualIndex(keys.index(k)), vis)
+        h.blockSignals(False)
+        hide = set(saved["hidden"]) if isinstance(saved.get("hidden"), list) else set(hidden)
+        for i, k in enumerate(keys):
+            self.setColumnHidden(i, k in hide)
+
+    def _save_layout(self) -> None:
+        settings, key, _h, _l = self._layout
+        h = self.horizontalHeader()
+        keys = [c[0] for c in self.cols]
+        order = [keys[h.logicalIndex(v)] for v in range(len(keys))]
+        settings.set(key, {"order": order, "hidden": [k for i, k in enumerate(keys) if self.isColumnHidden(i)]})
+
+    def _header_menu(self, pos) -> None:
+        settings, key, _h, (title, reset) = self._layout
+        m = QMenu(self)
+        if title:
+            m.addSection(title)
+        h = self.horizontalHeader()
+        for v in range(len(self.cols)):
+            i = h.logicalIndex(v)
+            a = m.addAction(self.cols[i][1])
+            a.setCheckable(True)
+            a.setChecked(not self.isColumnHidden(i))
+            a.toggled.connect(lambda on, i=i: (self.setColumnHidden(i, not on), self._save_layout()))
+        m.addSeparator()
+        m.addAction(reset, lambda: (settings.set(key, None), self._restore_layout()))
+        m.exec(h.viewport().mapToGlobal(pos))
+
 
 class ButtonBar(QWidget):
     """Schaltflächen nebeneinander (umbrechend); actions: [(id, text)] oder "|" als Abstand."""
@@ -534,14 +597,30 @@ class ButtonBar(QWidget):
         self.flow = FlowLayout(self, spacing=6)
         self.flow.setContentsMargins(0, 0, 0, 0)
         self.buttons: dict[str, QPushButton] = {}
+        self._order: list[QWidget] = []
         for spec in actions:
             aid, text = spec
             b = make_button(text, primary=aid in primary, on_click=lambda _=False, x=aid: self.action.emit(x))
             self.buttons[aid] = b
+            self._order.append(b)
             self.flow.addWidget(b)
 
     def add_widget(self, w: QWidget) -> None:
+        self._order.append(w)
         self.flow.addWidget(w)
+
+    def set_visible(self, aid: str, on: bool) -> None:
+        """Schaltfläche ein-/ausblenden; ausgeblendete kommen aus dem FlowLayout (es zählt sonst ihre Breite mit)."""
+        b = self.buttons.get(aid)
+        if b is None or b.isHidden() != on:
+            return
+        b.setVisible(on)
+        for w in self._order:
+            self.flow.removeWidget(w)
+        for w in self._order:
+            if not w.isHidden():
+                self.flow.addWidget(w)
+        self.updateGeometry()
 
     def event(self, e) -> bool:
         if e.type() == QEvent.Type.LayoutRequest:

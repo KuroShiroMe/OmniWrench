@@ -169,3 +169,6 @@ DWORD DhcpGetClientInfoV4(LPWSTR s, SEARCH* q, CL4** out) {
     c->Name = W(L"alt"); c->Comment = W(L"altkommentar"); c->Type = 3; *out = c; return 0;
 }
 DWORD DhcpSetClientInfoV4(LPWSTR s, CL4* c) { ci_ip = c->Ip; ci_hwlen = c->Hw.DataLength; wcsncpy(ci_name, c->Name, 63); wcsncpy(ci_comment, c->Comment, 63); return 0; }
+// Rechteprüfung: "ro" = nur DHCP-Benutzer (Zugriff verweigert), sonst Administrator; FieldsToSet muss 0 sein
+DWORD cfg_fields = 99;
+DWORD DhcpServerSetConfigV4(LPWSTR s, DWORD fields, void* c) { cfg_fields = fields; return wcscmp(s, L"ro") == 0 ? 5 : 0; }

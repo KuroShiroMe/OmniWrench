@@ -328,6 +328,7 @@ _PROTOS = {
     "DhcpGetMibInfo": (LPWSTR, _p(_p(DHCP_MIB_INFO))),
     "DhcpGetSuperScopeInfoV4": (LPWSTR, _p(_p(DHCP_SUPER_SCOPE_TABLE))),
     "DhcpServerGetConfigV4": (LPWSTR, _p(_p(DHCP_SERVER_CONFIG_INFO_V4))),
+    "DhcpServerSetConfigV4": (LPWSTR, DWORD, _p(DHCP_SERVER_CONFIG_INFO_V4)),
     "DhcpServerQueryAttribute": (LPWSTR, ULONG, ULONG, _p(_p(DHCP_ATTRIB))),
     "DhcpServerQueryDnsRegCredentials": (LPWSTR, ULONG, LPWSTR, ULONG, LPWSTR),
     "DhcpGetServerBindingInfo": (LPWSTR, ULONG, _p(_p(DHCP_BIND_ELEMENT_ARRAY))),
@@ -681,6 +682,18 @@ class DhcpApi:
         ma, mi = DWORD(0), DWORD(0)
         self.rpc("connect", "DhcpGetVersion", byref(ma), byref(mi))
         return {"MajorVersion": int(ma.value), "MinorVersion": int(mi.value)}
+
+    def access(self) -> str:
+        """Schreibrecht prüfen, ohne etwas zu ändern: DhcpServerSetConfigV4 mit FieldsToSet = 0.
+        Der Server prüft vor allem anderen die Berechtigung (DHCP-Administratoren bzw. lokale Administratoren);
+        Mitglieder von „DHCP-Benutzer“ bekommen ERROR_ACCESS_DENIED (5). Ergebnis: admin | read | unknown."""
+        f = getattr(_dll(), "DhcpServerSetConfigV4", None)
+        if f is None:
+            return "unknown"
+        cfg = DHCP_SERVER_CONFIG_INFO_V4()
+        with _Impersonate(self.ident):
+            rc = int(f(self.server, 0, byref(cfg)))
+        return "admin" if rc == 0 else "read" if rc == 5 else "unknown"
 
     def config(self) -> dict | None:
         p = POINTER(DHCP_SERVER_CONFIG_INFO_V4)()
@@ -1096,22 +1109,7 @@ class DhcpApi:
         return out
 
     def failover(self) -> list[dict]:
-        out = []
-        for r in self.fo_enum():
-            primary = r["server_type"] == 0
-            partner = (r["secondary_name"] or r["secondary_ip"]) if primary else (r["primary_name"] or r["primary_ip"])
-            pct = int(r["percentage"])
-            hs = r["mode"] == 1
-            sp = int(r["safe_period"])
-            st = int(r["state"])
-            out.append({"Name": r["name"], "PartnerServer": partner, "Mode": "HotStandby" if hs else "LoadBalance",
-                        "ServerRole": ("Active" if primary else "Standby") if hs else "",
-                        "LoadBalancePercent": None if hs else (pct if primary else 100 - pct),
-                        "ReservePercent": pct if hs else None, "MaxClientLeadTime": int(r["mclt"]),
-                        "AutoStateTransition": sp not in (0, UNLIMITED), "StateSwitchInterval": 0 if sp == UNLIMITED else sp,
-                        "State": FO_STATES[st] if 0 <= st < len(FO_STATES) else str(st), "ScopeId": r["scopes"],
-                        "EnableAuth": bool(r["secret"])})
-        return out
+        return [fo_cmdlet_row(r) for r in self.fo_enum()]
 
     def fo_call(self, op: str, rel: dict | None = None, name: str | None = None, flags: int = 0):
         if op == "enum":
@@ -1379,6 +1377,23 @@ class DhcpApi:
         vendor = p.get("VendorClass") or ""
         self.rpc("write", "DhcpRemoveOptionV5", FLAG_VENDOR if vendor else 0, int(p["OptionId"]), None, vendor or None)
         self.definitions(True)
+
+
+def fo_cmdlet_row(r: dict) -> dict:
+    """Rohdaten einer Failover-Beziehung (Sicht des abgefragten Servers) wie Get-DhcpServerv4Failover."""
+    primary = r["server_type"] == 0
+    partner = (r["secondary_name"] or r["secondary_ip"]) if primary else (r["primary_name"] or r["primary_ip"])
+    pct = int(r["percentage"])
+    hs = r["mode"] == 1
+    sp = int(r["safe_period"])
+    st = int(r["state"])
+    return {"Name": r["name"], "PartnerServer": partner, "Mode": "HotStandby" if hs else "LoadBalance",
+            "ServerRole": ("Active" if primary else "Standby") if hs else "",
+            "LoadBalancePercent": None if hs else (pct if primary else 100 - pct),
+            "ReservePercent": pct if hs else None, "MaxClientLeadTime": int(r["mclt"]),
+            "AutoStateTransition": sp not in (0, UNLIMITED), "StateSwitchInterval": 0 if sp == UNLIMITED else sp,
+            "State": FO_STATES[st] if 0 <= st < len(FO_STATES) else str(st), "ScopeId": r["scopes"],
+            "EnableAuth": bool(r["secret"])}
 
 
 def _fo_read(s: DHCP_FAILOVER_RELATIONSHIP) -> dict:
