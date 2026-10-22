@@ -12,6 +12,7 @@ Detailed project memory lives in `docs/ai/`. Read selectively — do NOT load ev
 | How the code is built, where things are | `docs/ai/architecture.md` |
 | What was asked & done, in order | `docs/ai/history.md` |
 | Open tasks, next steps, ideas | `docs/ai/backlog.md` |
+| Open Windows tests for Stef (German) | `docs/TESTLISTE.md` |
 | Environment traps & fixes (PowerShell, TLS, Qt …) | `docs/ai/gotchas.md` |
 | claude.ai project setup + per-component chat starters | `docs/ai/claude-project/` |
 

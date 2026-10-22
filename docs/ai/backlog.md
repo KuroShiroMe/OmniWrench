@@ -3,57 +3,29 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.2.0, Alpha tag removed 2026-10-22; was net.scopekeeper): Stef tests on Windows against
-      real DHCP servers. Backend is new (DHCP API via ctypes, no PowerShell) - only tested with a fake DLL on Linux.
-      Check: login SSO/vault/manual (runas-netonly creds), overview/stats, scope tab (ranges, options incl. binary/
-      vendor, reservations names/types/MAC format, leases states/expiry, DNS settings = option 81), save/range change,
-      new/duplicate scope, failover create/edit/remove (role/LB mirroring), replication via netsh, server check speed,
-      cancel, auto check after login. 1.1.0: rights probe (DHCP Users account -> read-only UI; untested on real
-      servers), partner scopes/options view, per-option transfer, failover rows per server. THREADS=8 may need tuning. Old net.scopekeeper installs must be removed by hand.
-      Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
+**All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
+as the single test list: add new test points there, tick/remove them when Stef reports results. Below only notes
+that are not plain test steps.
+
+- [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.2.1, Alpha removed 2026-10-22): backend (DHCP API via
+      ctypes) only tested with a fake DLL. THREADS=8 may need tuning. Old net.scopekeeper installs must be removed by
+      hand. Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
 - [ ] PowerShell -> Python inventory (2026-10-20, Stef wants PowerShell only where unavoidable): core/prerequisites
       (Windows capabilities/winget/PS modules, elevated - DISM API/`dism.exe` possible), core/certificates (cert store
       list/sign/decrypt via .NET - Python needs CryptoAPI/NCrypt via ctypes for smartcards), core/app_updater
       (apply_update.ps1 after exit - could be a .cmd + tar.exe), ad_user_lookup (ActiveDirectory module - LDAP via
       ldap3/ctypes ADSI possible), omnivault PowerShellConnector + SecretManagement (by design PowerShell, stays).
-- [ ] NetProbe (net.netprobe 1.1.0): Verify on Windows: IcmpSendEcho ping incl. new warm-up + 2 s timeout (Stef saw
-      loss that CMD didn't – likely the old 1 s timeout), persistent list + expandable network groups (x/y hosts),
-      re-test-in-place, context menu/buttons (repeat/delete/PDF export), test-template dropdown, Steckbrief/Konnektivität
-      tabs, DNS best-practice findings (CAA/MTA-STS/TLS-RPT), PDF export (QPdfWriter). DNS checks need real DNS
-      (sandbox proxy only answers A/AAAA). Ideas later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, scheduled re-scan.
-- [x] NetProbe Leitungstest/Remote-Agent (net.netprobe 1.2.0, eigener PR 2026-10-19): echte Latenz, Durchsatz,
-      Lasttest, Pfad-Portscan via Mini-Tool `linkagent.py` (stdlib-only, Win+Linux) ODER NetProbe↔NetProbe.
-      Export-Button + „Als Gegenstelle dienen“ im Optionsfenster, ❗ beim Profil „Leitungstest“. Token-Pflicht (Last nur
-      gegen einwilligende Gegenstelle). Auf Windows zu prüfen: Server-Bind auf 0.0.0.0, Firewall-Freigabe für den Port,
-      echte Durchsatz-/Latenzwerte über eine reale Strecke zwischen zwei Rechnern.
 - [ ] NetProbe weitere MX-Toolbox-Funktionen (nächster Schritt, von Stef gewünscht): DNSBL-Blacklist-Prüfung,
-      SMTP-Open-Relay-Test.
-- [ ] 0.6.0 released (tag v0.6.0, release built by CI); user still tests on Windows (source + EXE).
-      0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
-- [ ] Netwrix connector: scripts now follow the official PsrApi docs; still untested against a real server.
-      Marked `stage: alpha` (OmniVault 1.0.1) - user has no Enterprise Pro licence to test; remove the tag once
-      someone with Netwrix Enterprise Pro confirms it works.
-      Open questions: password-auth field keys in DynamicFillableAuthentication.Fields, PsrContainer.Name vs. Info for
-      display name, whether SDK DLL loads in PowerShell 5.1 (default: pwsh 7).
-- [ ] Bitwarden, 1Password, HashiCorp Vault connectors (OmniVault 1.1.0, stage alpha): only tested against fake
-      bw/op CLIs and a fake Vault HTTP server on Linux. To verify live: bw login/unlock with Vaultwarden + bitwarden.com,
-      op with service account and desktop app (does `item get --format json` return concealed values without
-      --reveal on current op versions?), Vault token/userpass/LDAP/AppRole, winget install path detection.
-      Remove alpha tag per connector once confirmed.
-- [ ] SecretManagement connector: live test (module not installed on dev machine).
-- [ ] KeePass connector: user will test in next round (no KeePass installed yet; pykeepass needs no KeePass).
-- [x] UAC prerequisites (ShellExecuteExW, PR #10) merged; Stef tested on Windows 2026-10-16: OK.
-      Windows Server: not a target (Stef 2026-10-16); Home shows a notice that functions are limited.
-- [ ] Scaling restart (QProcess.startDetached) only tested on Linux renders - verify on Windows (source + EXE).
-- [ ] IconForge 1.1.1 (narrow header, PR): user check on Windows at small window width / 150-200 % scaling.
-
-- [ ] Master password reset (PR 2026-10-20): verify on Windows that DPAPI protect/unprotect works (recovery
-      copy written on unlock, reset keeps entries); in a cloud/Linux run only the "plain" fallback was tested.
-
-- [ ] Tool updates (startup dialog, update all, auto update, close-window checkbox; 2026-10-20): verify on Windows,
-      esp. auto update with a tool that has a startup hook (OmniVault) and the status bar messages.
-- [ ] CI (ci.yml + build-exe.yml on every PR): mark checks as required in GitHub branch protection for main
-      (Settings > Branches) - only the user can do that.
+      SMTP-Open-Relay-Test. Ideas later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, scheduled re-scan.
+- [ ] Netwrix connector (#22, blocked): untested, needs Enterprise Pro. Open questions: password-auth field keys in
+      DynamicFillableAuthentication.Fields, PsrContainer.Name vs. Info, SDK DLL in PowerShell 5.1 (default: pwsh 7).
+- [ ] Alpha tags of Bitwarden/1Password/HashiCorp Vault connectors: remove per connector once Stef confirms (#19-#21).
+- [ ] 0.5.x installs: update manually to 0.6.0 once (self-update would fetch the -win64 zip, see gotchas).
+- [ ] Only Stef: CI checks as required in branch protection (#24); project settings in claude.ai still list
+      `Steffi-Tech/OmniWrench` -> switch to `KuroShiroMe/OmniWrench`; delete merged `claude/*` branches (cloud
+      sessions cannot delete branches) or enable "Automatically delete head branches".
+- [x] Merged 2026-10-22: #45 categories one level + tags, #46 tool updates, #47 master password reset, #48 rename
+      KuroShiroMe, #49 DHCP 1.2.0. UAC prerequisites (#10) tested OK 2026-10-16.
 
 ## Later (mentioned by user or proposed)
 - More password-manager connectors (Bitwarden, 1Password, HashiCorp Vault done in 1.1.0): KeePassXC (browser protocol),
@@ -80,5 +52,4 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
   like jsDelivr; blocked in some networks, so not used yet).
 - Categories (done 2026-10-17, #32): dialect translations of category names are the base-language text (no dialect
   flavour yet); native-speaker review together with #25.
-  2026-10-20: reduced to one level + tags. ScopeKeeper (PR #43) still says `network/ip_dns_dhcp` -> works (sub ignored),
-  but should switch to `network` + tags (DHCP, Failover, …) when that PR is next touched.
+  2026-10-20: reduced to one level + tags (all tools incl. MS DHCP Extended 1.2.1 since 2026-10-22).
