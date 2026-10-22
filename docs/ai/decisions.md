@@ -125,7 +125,7 @@
 
 ## MS DHCP Extended Management, formerly ScopeKeeper (2026-10-19, rebuilt from Stef's DhcpScopeManager.ps1, my choices)
 - Stef wanted the full concept rebuilt as OmniWrench tool, not a copy. Name ScopeKeeper, id net.scopekeeper, category
-  network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it.
+  network/ip_dns_dhcp, IPv4 only (like the script). Tag "alpha" + Alpha note in the description until Stef tested it (removed 2026-10-22, 1.2.0).
 - Requirement RSAT DHCP tools (windows_capabilities Rsat.DHCP.Tools); uninstall keeps RSAT.
 - Defaults: connect failover partners at login = on, auto replication = on (both switchable in settings/main page).
 - Partner fallback chain kept from the script: CIM/WinRM -> RPC (failover API + netsh dump/commands).
@@ -149,3 +149,6 @@
   "Auf Partner übertragen" on add/edit, transfer only per option (no "all" button). Definitions: BOTH expert mode
   setting (dock hidden otherwise, default off) and unlock button with expert warning (my choice: Stef offered either).
   Rights: UI adapts to read-only (DHCP Users) - write controls hidden, not just disabled.
+- 2026-10-22 (Stef, 1.2.0): failover list = expandable relationship row, children = the two servers (collapsed by
+  default). Server options list only the selected server's options (no rows for options that exist only on the
+  partner). Alpha note removed although the rights probe is still untested on real servers (Stef's call).

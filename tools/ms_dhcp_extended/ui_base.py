@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from typing import Callable
 
-from PySide6.QtCore import QEvent, QObject, QSize, Qt, Signal
+from PySide6.QtCore import QEvent, QObject, QSize, Qt, QTimer, Signal
 from PySide6.QtGui import QAction, QBrush, QColor, QFont, QIcon, QKeySequence, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QAbstractItemView, QApplication, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFormLayout, QHBoxLayout,
@@ -717,6 +717,12 @@ class FindingsView(QWidget):
             self.table.setColumnWidth(2, 110)
         self.table.setColumnWidth(self.text_col - 1, 170)
         self.table.setColumnWidth(self.text_col + 1, 190)
+        # Zeilenhöhen nach jeder Breitenänderung neu (beim ersten Füllen ist die Seite oft noch schmal/verborgen)
+        self._rows_timer = QTimer(self)
+        self._rows_timer.setSingleShot(True)
+        self._rows_timer.setInterval(50)
+        self._rows_timer.timeout.connect(self.table.resizeRowsToContents)
+        h.sectionResized.connect(lambda *_: self._rows_timer.start())
         self.table.cellDoubleClicked.connect(lambda r, _c: self._act(r, "Default"))
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.table.customContextMenuRequested.connect(self._menu)

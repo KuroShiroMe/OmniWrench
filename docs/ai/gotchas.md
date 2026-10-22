@@ -113,3 +113,5 @@
   -> segfault after the dialog. Then box.deleteLater().
 - App FlowLayout counts hidden widgets in its width -> a bar with hidden buttons wraps. ButtonBar.set_visible removes
   all widgets and re-adds only visible ones.
+- QTableWidget.resizeRowsToContents on a hidden/narrow page wraps text into huge rows -> redo it on
+  header sectionResized (debounced, FindingsView).

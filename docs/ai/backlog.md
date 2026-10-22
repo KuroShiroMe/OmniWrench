@@ -3,7 +3,7 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.1.0, Alpha; was net.scopekeeper): Stef tests on Windows against
+- [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.2.0, Alpha tag removed 2026-10-22; was net.scopekeeper): Stef tests on Windows against
       real DHCP servers. Backend is new (DHCP API via ctypes, no PowerShell) - only tested with a fake DLL on Linux.
       Check: login SSO/vault/manual (runas-netonly creds), overview/stats, scope tab (ranges, options incl. binary/
       vendor, reservations names/types/MAC format, leases states/expiry, DNS settings = option 81), save/range change,

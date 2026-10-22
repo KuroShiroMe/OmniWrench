@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import html
 
-from PySide6.QtCore import QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QPainter
+from PySide6.QtCore import QEvent, QRectF, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QCursor, QPainter
 from PySide6.QtWidgets import (
     QButtonGroup, QCheckBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QProgressBar, QPushButton, QSplitter,
     QStackedWidget, QToolTip, QVBoxLayout, QWidget,
@@ -272,19 +272,10 @@ class ServerOptionsPage(QWidget):
         self.opt_title.setText(tr("srvopt.options_of", server=srv))
         cmp = self.compare(srv)
         rows = option_rows(opts or [], self.svc.defs)
-        ghosts: dict[str, dict] = {}
-        for k, lst in cmp.items():
-            for other, st, b in lst:
-                if st == "only" and k not in ghosts:
-                    g = option_rows([b], self.svc.defs)[0]
-                    g.update(value="–", ghost=True, source=other)
-                    ghosts[k] = g
-        rows += list(ghosts.values())
+        # nur die Optionen dieses Servers; was nur auf dem Gegenüber existiert, steht dort als „Fehlt auf …“
         for r in rows:
             lst = cmp.get(opt_row_key(r))
-            if r.get("ghost"):
-                r["sync"], r["sync_t"] = "ghost", tr("srvopt.sync.only", server=", ".join(o for o, st, _b in lst if st == "only"))
-            elif not self.targets(srv):
+            if not self.targets(srv):
                 r["sync"], r["sync_t"] = "", ""
             elif lst is None:
                 skip = not r["vendor"] and not r["user"] and r["id"] in SKIP_SYNC
@@ -315,6 +306,7 @@ class ServerOptionsPage(QWidget):
             fs.append(ck.Finding(ck.WARN, "server_options", tr("chk.srv_o3"), [ck.option_key(3)],
                                  tr("obj.server_option", tag="003")))
         mine = {opt_row_key(o): o for o in opts}
+        self._only_on: dict[str, str] = {}      # Option fehlt hier -> „Anzeigen“ springt zum Server, der sie hat
         for k, lst in cmp.items():
             for other, st, b in lst:
                 if st == "same":
@@ -324,6 +316,8 @@ class ServerOptionsPage(QWidget):
                 a_t = ", ".join(mine[k]["values"]) if k in mine else "–"
                 b_t = ", ".join(b["values"]) if b else "–"
                 key = {"diff": "chk.srv_partner_opt", "missing": "chk.srv_partner_opt_missing"}.get(st, "chk.srv_partner_opt_only")
+                if st == "only":
+                    self._only_on.setdefault(k, other)
                 fs.append(ck.Finding(ck.WARN, "server_options", tr(key, tag=tag, partner=other, a=a_t, b=b_t),
                                      [k], tr("obj.server_option", tag=tag)))
         self.findings = ck.sort_findings(fs)
@@ -343,7 +337,12 @@ class ServerOptionsPage(QWidget):
     # --- Abläufe --------------------------------------------------------------------------------------
     def _finding(self, f, _mode) -> None:
         if f.targets:
-            self.panel.grid.select_key(f.targets[0])
+            k = f.targets[0]
+            other = getattr(self, "_only_on", {}).get(k)
+            if other and not self.panel.grid.select_key(k):
+                self.srv_grid.select_key(other)
+                self.panel.grid.select_key(k)
+                return
             if f.fix == "new_def":
                 self.ctl.run(self._after(self.ctl.new_definition_flow({"id": f.fix_arg["id"], "vendor": f.fix_arg["vendor"]}),
                                          [self.svc.server]))
@@ -508,9 +507,9 @@ class ServerOptionsPage(QWidget):
 # --- Failover --------------------------------------------------------------------------------------------
 
 class FailoverPage(QWidget):
-    """Eine Failover-Beziehung besteht immer aus genau zwei Servern. Oben stehen beide Server jeder Beziehung
-    untereinander (jeweils aus ihrer eigenen Sicht), unten alle Scopes des gewählten Servers – auch die, die
-    in keiner oder einer anderen Beziehung sind."""
+    """Eine Failover-Beziehung besteht immer aus genau zwei Servern. Oben steht je Beziehung eine aufklappbare
+    Zeile, darunter ihre beiden Server (jeweils aus ihrer eigenen Sicht); unten alle Scopes des gewählten
+    Servers – auch die, die in keiner oder einer anderen Beziehung sind."""
 
     def __init__(self, ctl, parent=None):
         super().__init__(parent)
@@ -519,6 +518,7 @@ class FailoverPage(QWidget):
         self.svc = ctl.svc
         self.compare: dict[str, dict[str, tuple[str, str]]] = {}
         self._cur_key: str | None = None
+        self._open: set[str] = set()      # aufgeklappte Beziehungen (Name klein)
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 8, 8, 8)
         sp = QSplitter(Qt.Orientation.Vertical)
@@ -533,15 +533,18 @@ class FailoverPage(QWidget):
         acts = [("Edit", tr("fo.edit"), "F2"), ("AddScopes", tr("fo.add_scopes"), ""), ("Replicate", tr("fo.replicate"), ""),
                 ("Compare", tr("fo.compare"), ""), ("ApiRaw", tr("fo.raw"), ""), ("LoadPeer", tr("fo.load_peer"), ""), "-",
                 ("Remove", tr("fo.remove"), "Del"), "-", ("CopyCell", tr("ui.copy_cell"), "Ctrl+C")]
-        self.rel_grid = Grid([("server", tr("fo.col.server"), "text"), ("partner", tr("fo.col.partner"), "text"),
-                              ("name", tr("fo.col.name"), "text"), ("mode_t", tr("fo.col.mode"), "text"),
+        self.rel_grid = Grid([("name", tr("fo.col.name"), "text"), ("server", tr("fo.col.server"), "text"),
+                              ("partner", tr("fo.col.partner"), "text"), ("mode_t", tr("fo.col.mode"), "text"),
                               ("role_t", tr("fo.col.role"), "text"), ("state_t", tr("fo.col.state"), "text"),
                               ("share", tr("fo.col.share"), "text"), ("mclt_t", tr("fo.col.mclt"), "text"),
                               ("auto_t", tr("fo.col.auto"), "text"), ("count", tr("fo.col.scopes"), "int"),
                               ("auth_t", tr("fo.col.auth"), "text")], key_fn=lambda r: r["key"], actions=acts,
-                             default_action="Edit", multi=False, sortable=False)
+                             multi=False, sortable=False)
         self.rel_grid.setAlternatingRowColors(False)
-        self.rel_grid.enable_layout(ctl.settings, "failover_columns", labels=(tr("ui.columns"), tr("ui.columns_reset")))
+        self.rel_grid.cellClicked.connect(self._cell_clicked)
+        self.rel_grid.cellDoubleClicked.connect(self._cell_double)
+        self.rel_grid.installEventFilter(self)
+        self.rel_grid.enable_layout(ctl.settings, "failover_tree_columns", labels=(tr("ui.columns"), tr("ui.columns_reset")))
         self.rel_grid.action.connect(self._rel_action)
         self.rel_grid.itemSelectionChanged.connect(self._row_changed)
         tl.addWidget(self.rel_grid, 1)
@@ -629,10 +632,25 @@ class FailoverPage(QWidget):
             auth_t = tr("ui.on") if d.get("auth") else tr("ui.off")
             count = len(d.get("scopes") or [])
         partner = rel["partner"] if local else (d.get("partner") or self.svc.server)
-        return {"key": f"{rel['name']}|{server.lower()}", "server": server, "partner": partner, "name": rel["name"],
+        return {"key": f"{rel['name']}|{server.lower()}", "server": "      " + server, "_srv": server, "partner": partner, "name": "",
                 "mode_t": mode_t, "role_t": role_t, "state_t": state_t, "share": share, "mclt_t": mclt_t, "auto_t": auto_t,
                 "count": count, "auth_t": auth_t, "_rel": rel, "_data": data, "_view": view, "_mm": mm,
                 "_state": d.get("state", "")}
+
+    def _rel_row(self, rel: dict, prel: dict | None, mm: list[str]) -> dict:
+        """Kopfzeile einer Beziehung: Werte, die für beide Server gelten (bei Abweichung beide Sichten)."""
+        tr = self.tr
+        r = self._row(rel, self.svc.server, rel, "rel", mm)
+        is_open = rel["name"].lower() in self._open
+        r.update(key=f"{rel['name']}|*", name=("▾ " if is_open else "▸ ") + rel["name"],
+                 server=f"{self.svc.server} ↔ {rel['partner']}", partner="", role_t="")
+        if rel.get("mode") == "LoadBalance":
+            if prel and prel.get("lb") is not None:
+                r["share"] = f"{rel.get('lb')} / {prel.get('lb')} %"
+        if prel and prel.get("state") and prel.get("state") != rel.get("state"):
+            r["state_t"] = f"{ck.fo_state(rel.get('state', ''), tr)} / {ck.fo_state(prel['state'], tr)}"
+            r["_state"] = "mixed"
+        return r
 
     def refresh(self) -> None:
         tr = self.tr
@@ -641,29 +659,28 @@ class FailoverPage(QWidget):
         for rel in svc.failovers:
             prel, loaded = self.peer_rel(rel)
             mm = self._mismatch(rel, prel) if prel else []
+            rows.append(self._rel_row(rel, prel, mm))
             rows.append(self._row(rel, svc.server, rel, "local", mm))
             rows.append(self._row(rel, rel["partner"], prel, "peer" if prel else "missing" if loaded else "assumed", mm))
         self.rel_grid.set_rows(rows)
         c = theme.current
         for i, r in enumerate(rows):
             k = r["key"]
-            if (i // 2) % 2:
-                self.rel_grid.style_row(k, back=tint(c["muted"], 22))
-            if r["_view"] == "local":
-                self.rel_grid.style_cell(k, "name", bold=True, back=tint(c["muted"], 22) if (i // 2) % 2 else None)
-            if r["_data"] is None:
-                self.rel_grid.style_cell(k, "state_t", fore=c["danger"] if r["_view"] == "missing" else c["muted"],
-                                         back=tint(c["muted"], 22) if (i // 2) % 2 else None)
-            else:
+            head = r["_view"] == "rel"
+            back = tint(c["muted"], 30) if head else None
+            if head:
+                self.rel_grid.style_row(k, back=back, bold=True)
+            elif r["_data"] is None:
+                self.rel_grid.style_cell(k, "state_t", fore=c["danger"] if r["_view"] == "missing" else c["muted"])
+            if r["_data"] is not None:
                 ok = r["_state"] == "Normal"
-                self.rel_grid.style_cell(k, "state_t", fore=c["success"] if ok else c["danger"], bold=not ok,
-                                         back=tint(c["muted"], 22) if (i // 2) % 2 else None)
+                self.rel_grid.style_cell(k, "state_t", fore=c["success"] if ok else c["danger"], bold=head or not ok, back=back)
             if r["_mm"]:
-                self.rel_grid.style_cell(k, "server", fore=c["danger"], bold=True,
-                                         back=tint(c["muted"], 22) if (i // 2) % 2 else None)
+                self.rel_grid.style_cell(k, "name" if head else "server", fore=c["danger"], bold=True, back=back)
         self.rel_grid.set_tooltips(self._tip)
-        self.rel_grid.autosize(260)
-        if rows and (self._cur_key is None or not self.rel_grid.select_key(self._cur_key)):
+        self.rel_grid.autosize(300)       # vor dem Zuklappen, sonst zählen die Serverzeilen nicht mit
+        self._apply_open()
+        if rows and (self._cur_key is None or not self._select(self._cur_key)):
             self.rel_grid.selectRow(0)
         no_fo = [s["id"] for s in svc.scopes if s["id"] not in svc.scope_fo]
         parts = [tr("fo.info_count", n=len(svc.failovers), m=len(svc.scopes) - len(no_fo), total=len(svc.scopes))]
@@ -673,13 +690,97 @@ class FailoverPage(QWidget):
         self._fill_scopes()
         self.apply_rights()
 
+    # --- Auf-/Zuklappen -------------------------------------------------------------------------------
+    def _apply_open(self) -> None:
+        for v in range(self.rel_grid.rowCount()):
+            r = self.rel_grid.row_at(v)
+            if r is not None and r["_view"] != "rel":
+                self.rel_grid.setRowHidden(v, r["_rel"]["name"].lower() not in self._open)
+
+    def _select(self, key: str) -> bool:
+        """Zeile wählen; ein Server einer zugeklappten Beziehung klappt sie auf."""
+        name = key.rsplit("|", 1)[0].lower()
+        if not key.endswith("|*") and name not in self._open:
+            self._open.add(name)
+            self._set_head_text(name)
+            self._apply_open()
+        return self.rel_grid.select_key(key)
+
+    def _set_head_text(self, name: str) -> None:
+        for v in range(self.rel_grid.rowCount()):
+            r = self.rel_grid.row_at(v)
+            if r is not None and r["_view"] == "rel" and r["_rel"]["name"].lower() == name:
+                r["name"] = ("▾ " if name in self._open else "▸ ") + r["_rel"]["name"]
+                col = next(i for i, x in enumerate(self.rel_grid.cols) if x[0] == "name")
+                it = self.rel_grid.item(v, col)
+                if it is not None:
+                    it.setText(r["name"])
+
+    def toggle(self, r: dict | None = None, on: bool | None = None) -> None:
+        r = r or self.current_row()
+        if not r:
+            return
+        name = r["_rel"]["name"].lower()
+        on = (name not in self._open) if on is None else on
+        if on == (name in self._open):
+            return
+        if on:
+            self._open.add(name)
+        else:
+            self._open.discard(name)
+        self._set_head_text(name)
+        self._apply_open()
+        if not on and r["_view"] != "rel":
+            self.rel_grid.select_key(f"{r['_rel']['name']}|*")
+
+    def _cell_clicked(self, v: int, col: int) -> None:
+        r = self.rel_grid.row_at(v)
+        if r is None or r["_view"] != "rel" or self.rel_grid.cols[col][0] != "name":
+            return
+        rect = self.rel_grid.visualItemRect(self.rel_grid.item(v, col))
+        x = self.rel_grid.viewport().mapFromGlobal(QCursor.pos()).x()
+        if x - rect.left() < 24:
+            self.toggle(r)
+
+    def _cell_double(self, v: int, _col: int) -> None:
+        r = self.rel_grid.row_at(v)
+        if r is None:
+            return
+        if r["_view"] == "rel":
+            self.toggle(r)
+        else:
+            self._rel_action("Edit")
+
+    def eventFilter(self, obj, e) -> bool:  # noqa: N802
+        if obj is self.rel_grid and e.type() == QEvent.Type.KeyPress:
+            r = self.current_row()
+            k = e.key()
+            if r and k in (Qt.Key.Key_Right, Qt.Key.Key_Plus):
+                self.toggle(r, True)
+                return True
+            if r and k in (Qt.Key.Key_Left, Qt.Key.Key_Minus):
+                self.toggle(r, False)
+                return True
+            if r and k in (Qt.Key.Key_Space, Qt.Key.Key_Return, Qt.Key.Key_Enter):
+                if r["_view"] == "rel":
+                    self.toggle(r)
+                else:
+                    self._rel_action("Edit")
+                return True
+        return super().eventFilter(obj, e)
+
     def _tip(self, r: dict) -> str:
         tr = self.tr
-        lines = [tr("fo.tip_view", server=r["server"], name=r["name"])]
+        if r["_view"] == "rel":
+            lines = [tr("fo.tip_rel", name=r["_rel"]["name"])]
+            if r["_mm"]:
+                lines += ["", tr("fo.tip_mismatch")] + ["• " + x for x in r["_mm"]]
+            return "\n".join(lines)
+        lines = [tr("fo.tip_view", server=r["_srv"], name=r["_rel"]["name"])]
         if r["_view"] == "assumed":
             lines.append(tr("fo.tip_not_loaded"))
         elif r["_view"] == "missing":
-            lines.append(tr("fo.tip_missing", server=r["server"]))
+            lines.append(tr("fo.tip_missing", server=r["_srv"]))
         if r["_mm"]:
             lines.append("")
             lines.append(tr("fo.tip_mismatch"))
@@ -691,14 +792,15 @@ class FailoverPage(QWidget):
 
     def current_rel(self) -> dict | None:
         r = self.rel_grid.current()
-        return next((x for x in self.svc.failovers if x["name"] == r["name"]), None) if r else None
+        return next((x for x in self.svc.failovers if x["name"] == r["_rel"]["name"]), None) if r else None
 
     def _row_changed(self) -> None:
         r = self.current_row()
         self._cur_key = r["key"] if r else None
         self._fill_scopes()
-        if r and r["_view"] != "local" and self.svc.partner_mode != "Off" and r["server"] not in self.svc.peer:
-            self.ctl.run(self.ctl.load_peer_flow([r["server"]]))
+        pn = None if not r or r["_view"] == "local" else r["_rel"]["partner"] if r["_view"] == "rel" else r["_srv"]
+        if pn and self.svc.partner_mode != "Off" and pn not in self.svc.peer:
+            self.ctl.run(self.ctl.load_peer_flow([pn]))
 
     def _fill_scopes(self) -> None:
         tr, svc = self.tr, self.svc
@@ -709,8 +811,9 @@ class FailoverPage(QWidget):
             self.sc_title.setText(tr("fo.scopes"))
             self.sc_sum.setText("")
             return
-        rel, srv = r["_rel"], r["server"]
-        local = r["_view"] == "local"
+        rel, srv = r["_rel"], r["_srv"]
+        local = r["_view"] in ("local", "rel")
+        srv = svc.server if local else srv
         other = rel["partner"] if local else svc.server
         self.sc_grid.horizontalHeaderItem(4).setText(tr("fo.col.on_other", server=other))
         self.sc_title.setText(tr("fo.scopes_on", server=srv))
@@ -882,7 +985,7 @@ class FailoverPage(QWidget):
         self.ctl.remember_server(spec["partner"])
         if warns:
             warn(self, tr("fo.new"), tr("scope.fo.add_warn", list=short_list(warns, 10)))
-        self._cur_key = f"{spec['name']}|{(svc.server or '').lower()}"
+        self._cur_key = f"{spec['name']}|*"
         yield from self._reload()
 
     def edit_flow(self, rel):
@@ -924,7 +1027,7 @@ class FailoverPage(QWidget):
         res = yield Job(lambda: svc.compare_relationship(rel, ids), tr("status.comparing_rel", name=rel["name"]), cancellable=True)
         self.compare.setdefault(rel["name"], {}).update(res)
         self._fill_scopes()
-        self.rel_grid.select_key(f"{rel['name']}|{(svc.server or '').lower()}")
+        self._select(self._cur_key or f"{rel['name']}|*")
         bad = [k for k, v in res.items() if v[0] != "sync"]
         svc.log(tr("log.compare_done", name=rel["name"], n=len(res), bad=len(bad)), bool(bad))
         for sid, v in res.items():
