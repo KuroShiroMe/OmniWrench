@@ -1,186 +1,160 @@
-# OmniWrench
+<h1 align="center">OmniWrench</h1>
 
-*Das Universalwerkzeug für Administratoren, von **DarkMatter**.*
+<p align="center">
+  <em>Das Universalwerkzeug für Administratoren – von <strong>KuroShiro</strong>.</em>
+</p>
 
-Modulare Toolsammlung für Administratoren. Tools werden wie aus einem App-Store aus GitHub-Repositories
-installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, winget-Pakete, Python-Pakete).
-Läuft unter Windows 10/11 (Clients) und Linux (Debian/Ubuntu und andere Distributionen mit glibc 2.35 oder neuer).
+<p align="center">
+  <a href="https://github.com/KuroShiroMe/OmniWrench/releases/latest"><img alt="Neueste Version" src="https://img.shields.io/github/v/release/KuroShiroMe/OmniWrench?label=Version"></a>
+  <img alt="Windows 10/11 und Linux" src="https://img.shields.io/badge/Windows%2010%2F11%20%C2%B7%20Linux-64%20Bit-2b7de9">
+  <a href="LICENSE"><img alt="MIT-Lizenz" src="https://img.shields.io/badge/Lizenz-MIT-22c55e"></a>
+  <a href="https://github.com/KuroShiroMe/OmniWrench/wiki"><img alt="Wiki" src="https://img.shields.io/badge/Doku-Wiki-8b5cf6"></a>
+</p>
+
+<p align="center">
+  <img src=".github/readme/home.png" alt="OmniWrench: Startseite mit den installierten Tools" width="900">
+</p>
+
+Jeder Admin kennt das: ein Ordner voller Skripte, fünf Konsolen, drei Passwortlisten und für jede Aufgabe ein
+anderes Werkzeug. **OmniWrench** bringt das alles in ein Programm. Es ist ein Werkzeugkasten, der genau die Tools
+enthält, die gebraucht werden: aus einem Store installiert, in Tabs nebeneinander geöffnet und mit einem gemeinsamen,
+verschlüsselten Tresor für alle Zugangsdaten.
+
+## Was OmniWrench ausmacht
+
+### Tools wie aus dem App-Store
+
+Im **Store** stehen alle verfügbaren Tools mit Beschreibung, Kategorie und Schlagwörtern. Ein Klick installiert ein
+Tool **samt seiner Voraussetzungen**: RSAT-Funktionen, PowerShell-Module, winget- und Python-Pakete richtet
+OmniWrench selbst ein, bei Bedarf mit einer einzigen Abfrage der Benutzerkontensteuerung. Neue Versionen erkennt der
+Store von allein und spielt sie auf Wunsch gleich beim Start ein. Neben dem offiziellen Store lassen sich weitere
+Repositories einbinden, etwa mit eigenen Tools für das eigene Team.
+
+<p align="center">
+  <img src=".github/readme/store.png" alt="Store mit Kategorien, Beschreibungen und Schlagwörtern" width="900">
+</p>
+
+### Alles im Blick auf der Startseite
+
+Die **Startseite** zeigt die installierten Tools als Kacheln, nach Service-Bereichen geordnet (Netzwerk, Identität,
+Sicherheit …), mit Suche und Filter. Ein Klick öffnet die Detailleiste mit Beschreibung, Version und Link zur
+Anleitung, ein Doppelklick startet das Tool. Die Seitenleiste (`Strg+B`) führt alle Tools im Kategoriebaum, ein
+Rechtsklick bietet Einstellungen, Aktualisieren, Voraussetzungen prüfen, Reparieren und Deinstallieren.
+
+<p align="center">
+  <img src=".github/readme/home-details.png" alt="Startseite mit Detailleiste eines Tools" width="900">
+</p>
+
+### Eine Arbeitsfläche nach Maß
+
+Jedes Tool öffnet sich in einem eigenen **Tab**. Tabs lassen sich per Drag & Drop nebeneinander oder übereinander
+anordnen, auf einen zweiten Bildschirm ausklinken und mehrfach öffnen, etwa zwei Netzwerktests gleichzeitig.
+Beim Beenden merkt sich OmniWrench das Layout und stellt es beim nächsten Start wieder her.
+
+<p align="center">
+  <img src=".github/readme/workspace.png" alt="Subnetzrechner und IconForge nebeneinander angeordnet" width="900">
+</p>
+
+### Ein Tresor für alle Zugangsdaten
+
+Passwörter liegen nie im Klartext auf der Platte. Der **Tresor** ist mit einem Masterpasswort (Argon2id und
+AES-256-GCM) und/oder unter Windows mit einem Benutzerzertifikat bzw. einer Smartcard geschützt. Der eingebaute
+**Passwortmanager** hält Zugangsdaten bereit, die jedes Tool über die Schlüssel-Schaltfläche übernimmt; gespeichert
+wird nur ein Verweis, das Passwort wird erst beim Gebrauch abgerufen. Mit dem Tool OmniVault kommen bei Bedarf
+externe Passwortmanager wie KeePass, Bitwarden oder 1Password dazu. `Strg+L` sperrt OmniWrench sofort, auf Wunsch
+auch automatisch nach einer Weile ohne Eingabe.
+
+<p align="center">
+  <img src=".github/readme/login.png" alt="Anmeldung am Tresor" width="420">
+  &nbsp;
+  <img src=".github/readme/passwords.png" alt="Eingebauter Passwortmanager" width="460">
+</p>
+
+### Und außerdem
+
+* **Immer aktuell:** Das Programm meldet neue Versionen und aktualisiert sich selbst, passend zur Installationsart.
+  Einstellungen, Tresor und Tools bleiben dabei erhalten.
+* **In 23 Sprachen:** Deutsch, Englisch, Französisch, Spanisch, Italienisch, Niederländisch, Polnisch,
+  Portugiesisch, Tschechisch, Schwedisch, Türkisch, Ukrainisch und, für den Feierabend, Dialekte von Badisch bis
+  Wienerisch. Tools übernehmen die Sprache des Programms.
+* **Durchdachte Einstellungen:** Jedes Tool bringt seinen eigenen Einstellungsdialog mit, inklusive Zugangsdaten
+  aus dem Tresor. Oberfläche hell oder dunkel und frei skalierbar, auch auf 4K-Bildschirmen.
+* **Zurückhaltend im Netz:** OmniWrench fragt nur den Tool-Store und die Release-Liste auf GitHub ab, und die
+  Update-Prüfung lässt sich abschalten. Verbindungen zu Active Directory, DHCP-Servern oder Passwortmanagern
+  stellen nur die Tools her, die installiert und eingerichtet wurden.
+
+> Welche Tools es gibt und was sie im Einzelnen können, steht im [Wiki](https://github.com/KuroShiroMe/OmniWrench/wiki).
 
 ## Installation
 
-Alle Dateien gibt es unter [Releases](https://github.com/KuroShiroMe/OmniWrench/releases/latest).
-Python muss nicht installiert sein, alles Nötige ist enthalten.
+Alle Pakete gibt es unter [Releases](https://github.com/KuroShiroMe/OmniWrench/releases/latest). Python muss nicht
+installiert sein, alles Nötige ist enthalten. Systemvoraussetzung: Windows 10/11 (64 Bit, Clients; Windows Server
+wird nicht unterstützt) oder Linux x86_64 mit glibc 2.35 oder neuer (z. B. Ubuntu 22.04, Debian 12).
 
 | System | Installationsprogramm (empfohlen) | Portable Version (ohne Installation) |
 |---|---|---|
-| Windows 10/11 (64 Bit) | `OmniWrench-X.Y.Z-win64-setup.exe` | `OmniWrench-X.Y.Z-win64.zip` |
-| Linux (x86_64) | `omniwrench_X.Y.Z_amd64.deb` (Debian, Ubuntu, Mint …) | `OmniWrench-X.Y.Z-linux-x86_64.tar.gz` |
+| Windows 10/11 | `OmniWrench-X.Y.Z-win64-setup.exe` | `OmniWrench-X.Y.Z-win64.zip` |
+| Linux | `omniwrench_X.Y.Z_amd64.deb` (Debian, Ubuntu, Mint …) | `OmniWrench-X.Y.Z-linux-x86_64.tar.gz` |
 
 ### Windows
-* **Installationsprogramm:** `OmniWrench-X.Y.Z-win64-setup.exe` ausführen und die Abfrage der Benutzerkontensteuerung
-  bestätigen. OmniWrench wird nach `C:\Program Files\DarkMatter\OmniWrench` installiert, mit Eintrag im Startmenü,
-  optionaler Desktop-Verknüpfung und Deinstallation über *Einstellungen › Apps*.
-  Stille Installation für Softwareverteilung (Intune, SCCM …):
-  `OmniWrench-X.Y.Z-win64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART` (Desktop-Verknüpfung zusätzlich mit
-  `/TASKS="desktopicon"`), stille Deinstallation:
-  `"C:\Program Files\DarkMatter\OmniWrench\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`.
-* **Portable Version:** ZIP entpacken (z. B. nach `C:\Tools`) und `OmniWrench\OmniWrench.exe` starten.
-* Die Programmdateien sind noch nicht signiert. Windows SmartScreen kann deshalb beim ersten Start warnen
-  („Weitere Informationen › Trotzdem ausführen“).
+
+1. `OmniWrench-X.Y.Z-win64-setup.exe` herunterladen und ausführen, die Abfrage der Benutzerkontensteuerung
+   bestätigen. OmniWrench landet in `C:\Program Files\KuroShiro\OmniWrench`, mit Startmenü-Eintrag, optionaler
+   Desktop-Verknüpfung und Deinstallation unter *Einstellungen › Apps*.
+2. Beim ersten Start den Tresor einrichten: Masterpasswort festlegen und/oder ein Zertifikat bzw. eine Smartcard
+   wählen.
+3. Im Store die gewünschten Tools installieren.
+
+Die Programmdateien sind noch nicht signiert. Windows SmartScreen kann deshalb beim ersten Start warnen;
+*Weitere Informationen › Trotzdem ausführen* startet das Setup.
+
+**Softwareverteilung** (Intune, SCCM …), stille Installation und Deinstallation:
+
+```bat
+OmniWrench-X.Y.Z-win64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+"C:\Program Files\KuroShiro\OmniWrench\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART
+```
+
+Eine Desktop-Verknüpfung legt die Installation mit dem zusätzlichen Schalter `/TASKS="desktopicon"` an.
+
+**Portabel:** ZIP entpacken (z. B. nach `C:\Tools`) und `OmniWrench\OmniWrench.exe` starten.
 
 ### Linux
-* **Installationspaket:** `sudo apt install ./omniwrench_X.Y.Z_amd64.deb` installiert OmniWrench nach `/opt/omniwrench`
-  mit allen benötigten Systembibliotheken, dem Befehl `omniwrench` und einem Eintrag im Anwendungsmenü.
-  Entfernen: `sudo apt remove omniwrench`.
-* **Portable Version:** `tar -xzf OmniWrench-X.Y.Z-linux-x86_64.tar.gz` und `OmniWrench/OmniWrench` starten.
-  Benötigt die Qt-Systembibliotheken (Debian/Ubuntu: `sudo apt install libegl1 libxkbcommon-x11-0 libxcb-cursor0`).
-* Unter Linux laufen nur Tools, die Linux unterstützen (Subnetzrechner, IconForge, NetProbe, OmniVault);
-  der Store kennzeichnet die übrigen mit „Läuft nur unter Windows“. Die Anmeldung per Zertifikat/Smartcard
-  gibt es nur unter Windows, unter Linux dient das Masterpasswort.
 
-### Updates
-OmniWrench meldet neue Versionen beim Start bzw. unter *Extras › Nach Updates suchen* und lädt automatisch das
-passende Paket: Eine installierte Version aktualisiert sich über das Installationsprogramm (Windows mit
-UAC-Abfrage, Linux mit Passwortabfrage über `pkexec`), die portable Version ersetzt ihre Dateien selbst.
-Einstellungen, Tresor und installierte Tools bleiben bei Updates und bei der Deinstallation erhalten.
-
-## Funktionen
-
-* **Home-Tab** (immer geöffnet): installierte Tools als Kacheln (Symbol + Name), nach Kategorien gruppiert,
-  mit Suche und Kategorie-Filter. Ein Klick zeigt eine Detail-Leiste, ein Doppelklick öffnet das Tool.
-  Ein Doppelklick auf eine Kategorie in der Seitenleiste setzt den Filter.
-* **Symbol-Bibliothek**: rund 2.100 Symbole von [Lucide](https://lucide.dev) (ISC-Lizenz) für Tool-Kacheln,
-  alternativ eigene Bilddatei oder Kürzel
-* **Passwortmanager**: Zugangsdaten verschlüsselt im Tresor; überall, wo Tools Anmeldedaten brauchen,
-  per Schlüssel-Button übernehmbar. Mehrere Zugangsdaten je Feld (Auswahlliste); gespeichert werden nur Verweise,
-  Passwörter werden erst beim Gebrauch abgerufen und nur für die Sitzung im Speicher gehalten.
-
-## Mitgelieferte Tools (Store)
-
-| Tool | Zweck |
-|---|---|
-| Subnetzrechner | IPv4/IPv6 berechnen, Subnetze aufteilen, CSV-Export |
-| AD Benutzerabfrage | AD-Benutzer suchen (RSAT), mit Zugangsdaten-Auswahl |
-| OmniVault | Eingebauter Passwortmanager + Konnektoren: Microsoft SecretManagement, KeePass (.kdbx), Netwrix Password Secure (SDK `PsrApi.dll` nötig), Bitwarden/Vaultwarden (Bitwarden-CLI), 1Password (1Password-CLI), HashiCorp Vault/OpenBao (KV) – die letzten vier als Alpha |
-| IconForge | Über 100.000 Symbole aus 26 freien Bibliotheken (Lucide eingebaut, weitere werden bei Bedarf geladen), Lizenz-Checkliste je Symbol, Export als SVG/PNG/ICO/PDF/JPG oder direkt in Visio einfügen |
-* **Store-Tab**: Tools aus einem oder mehreren Repositories, Kategoriebaum, Installieren und Aktualisieren
-* **Tool-Tabs**: Jedes Tool öffnet sich in einem eigenen Tab. Tabs lassen sich per Drag & Drop nebeneinander
-  oder übereinander anordnen und als eigenes Fenster ausklinken (Qt Advanced Docking System).
-  Das Layout wird beim Beenden gespeichert.
-* **Seitenleiste** mit allen installierten Tools im Kategoriebaum (`Strg+B` blendet sie ein und aus)
-* **Kontextmenü** (Rechtsklick auf Kachel oder Eintrag in der Seitenleiste): Öffnen, Einstellungen, Aktualisieren,
-  Voraussetzungen prüfen, Reparieren, Deinstallieren
-* **Tool-Einstellungen** werden aus der `config.json` des Tools automatisch als Dialog erzeugt
-  (Pfade, Zugangsdaten, Zertifikate …)
-* **Tresor**: Masterpasswort (Argon2id + AES-256-GCM) und/oder Benutzerzertifikat bzw. Smartcard (RSA-OAEP).
-  Alle Passwörter der Tools werden darin verschlüsselt gespeichert. Sperren mit `Strg+L`, optional automatisch.
-* **Updates**: Das Hauptprogramm prüft GitHub Releases, die Tools werden per Versionsvergleich mit dem Store-Katalog
-  aktualisiert.
-* **Mehrsprachig**: Deutsch, Englisch, Französisch, Spanisch, Italienisch, Niederländisch, Polnisch, Portugiesisch (Brasilien),
-  Tschechisch, Schwedisch, Türkisch, Ukrainisch sowie die Dialekte Badisch, Bayrisch, Hessisch, Kölsch, Plattdeutsch,
-  Sächsisch, Schwäbisch, Schwiizerdütsch, Wienerisch, Scots und Posh English.
-  Die Sprachdateien liegen in `omniwrench/locales/` und in `<tool>/locales/`. Jedes Tool übernimmt automatisch die
-  Programmsprache, falls es sie mitbringt, sonst Englisch. In den Tool-Einstellungen lässt sich die Sprache pro Tool
-  festlegen. Eine neue Sprache ergänzt man, indem man `en.json` kopiert, übersetzt und `_meta` anpasst;
-  `python scripts/check_locales.py` zeigt fehlende Texte.
-
-## Start (Entwicklung)
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\pip install -r requirements.txt
-.\.venv\Scripts\python main.py
+```bash
+sudo apt install ./omniwrench_X.Y.Z_amd64.deb
 ```
 
-Beim ersten Start wird der Tresor eingerichtet. Danach lassen sich im Store die beiden Beispiel-Tools aus dem
-lokalen Entwicklungs-Store (`store/`) installieren.
+Das Paket installiert OmniWrench nach `/opt/omniwrench` mit allen nötigen Systembibliotheken, dem Befehl
+`omniwrench` und einem Eintrag im Anwendungsmenü. Entfernen mit `sudo apt remove omniwrench`.
 
-## Projektstruktur
+**Portabel:** `tar -xzf OmniWrench-X.Y.Z-linux-x86_64.tar.gz` und `OmniWrench/OmniWrench` starten. Dafür werden die
+Qt-Systembibliotheken gebraucht, unter Debian/Ubuntu `sudo apt install libegl1 libxkbcommon-x11-0 libxcb-cursor0`.
 
-```
-main.py                     Startpunkt
-omniwrench/
-  sdk.py                    Öffentliche API für Tools (ToolBase, ToolContext, InstallContext)
-  core/                     Logik ohne Oberfläche
-    vault.py                Verschlüsselter Tresor (Passwort-/Zertifikat-Anmeldung)
-    certificates.py         Windows-Zertifikatspeicher, Smartcard
-    tool_manager.py         Tools laden, installieren, deinstallieren
-    prerequisites.py        RSAT, Features, PS-Module, winget, pip
-    repository.py           Store-Katalog (index.json)
-    app_updater.py          Update des Hauptprogramms über GitHub Releases
-    manifest.py             Paketformat (tool.json / config.json)
-    i18n.py                 Mehrsprachigkeit (Sprachdateien, Fallback-Ketten)
-  locales/                  Sprachdateien des Hauptprogramms (<code>.json)
-  ui/                       PySide6-Oberfläche
-tools/                      Quellcode der Tools (je ein Ordner)
-store/                      Generierter Store (index.json + ZIP-Pakete)
-scripts/build_store.py      Baut store/ aus tools/
-scripts/check_locales.py    Prüft Sprachdateien auf fehlende Texte
-scripts/update_icons.py     Aktualisiert die Symbol-Bibliothek (Lucide)
-docs/TOOL_ENTWICKLUNG.md    Anleitung für neue Tools
-```
+Unter Linux laufen die Tools, die Linux unterstützen; der Store kennzeichnet die übrigen mit „Läuft nur unter
+Windows“. Die Anmeldung per Zertifikat oder Smartcard gibt es nur unter Windows.
 
-## Datenablage
+### Updates und Daten
 
-Programmdateien und Benutzerdaten sind getrennt. Der Programmordner wird nur bei Installation und Update
-geändert; alle Daten liegen pro Benutzer im Benutzerverzeichnis:
+OmniWrench meldet neue Versionen beim Start und unter *Extras › Nach Updates suchen* und installiert sie mit einem
+Klick. Einstellungen, Tresor und installierte Tools liegen getrennt vom Programm im Benutzerprofil und bleiben bei
+Updates und bei der Deinstallation erhalten:
 
-| System | Pfad | Inhalt |
+| System | Einstellungen und Tresor | Tools, Tool-Daten, Logs |
 |---|---|---|
-| Windows | `%APPDATA%\DarkMatter\OmniWrench\` | `settings.json`, `vault.json` (verschlüsselt), `tool_settings\`, `layout.json` |
-| Windows | `%LOCALAPPDATA%\DarkMatter\OmniWrench\` | `tools\` (installierte Tools), `tool_data\`, `logs\` |
-| Linux | `~/.config/DarkMatter/OmniWrench/` | Einstellungen, Tresor, Tool-Einstellungen, Layout |
-| Linux | `~/.local/share/DarkMatter/OmniWrench/` | installierte Tools, Tool-Daten, Logs |
+| Windows | `%APPDATA%\KuroShiro\OmniWrench` | `%LOCALAPPDATA%\KuroShiro\OmniWrench` |
+| Linux | `~/.config/KuroShiro/OmniWrench` | `~/.local/share/KuroShiro/OmniWrench` |
 
-Unter Linux gelten `XDG_CONFIG_HOME`/`XDG_DATA_HOME`. Daten aus älteren Versionen (unter Linux bisher
-`~/AppData/…`) werden beim ersten Start automatisch übernommen; unter Windows bleiben die Orte unverändert.
+Für einen USB-Stick neben dem Programm einen Ordner `portable-data` anlegen: Dann bleiben alle Daten dort.
+Die ausführliche Anleitung steht im Wiki unter [Installation](https://github.com/KuroShiroMe/OmniWrench/wiki/Installation).
 
-Alles in einem Ordner statt im Benutzerverzeichnis:
-* **Portable Version mit Daten** (z. B. USB-Stick): neben dem Programm einen Ordner `portable-data` anlegen.
-* **Umgebungsvariable** `OMNIWRENCH_HOME` (Tests, Sonderfälle).
+## Dokumentation
 
-## Veröffentlichen
-
-Repository: [github.com/KuroShiroMe/OmniWrench](https://github.com/KuroShiroMe/OmniWrench). Das Programm ist
-standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
-
-* **Tools aktualisieren:** `version` in der `tool.json` erhöhen, `python scripts/build_store.py` ausführen,
-  `store/` committen und pushen. Der offizielle Store
-  (`https://raw.githubusercontent.com/KuroShiroMe/OmniWrench/main/store/index.json`) zeigt das Update sofort an.
-* **Hauptprogramm veröffentlichen:** Version in `omniwrench/__init__.py` erhöhen, optional Release-Notizen in
-  `.github/release-notes/vX.Y.Z.md` ablegen, committen und den Tag pushen:
-
-  ```powershell
-  git tag vX.Y.Z
-  git push origin vX.Y.Z
-  ```
-
-  Der Workflow **Build** (`.github/workflows/build.yml`) baut und testet alle Pakete (Windows-Installationsprogramm
-  und ZIP, Linux-Paket und tar.gz, Quellcode) und legt das GitHub-Release an. Installierte Programme finden es über
-  *Extras › Nach Updates suchen* bzw. beim Start.
-* **Pakete lokal bauen:** `python scripts/build_exe.py --zip` (Programmordner + portable Version), danach
-  `python scripts/build_installer.py` (Windows: Inno Setup 6 nötig, Linux: `dpkg-deb`). Anleitung:
-  [docs/EXE_BUILD.md](docs/EXE_BUILD.md).
-* **Private Repositories** brauchen ein GitHub-Token (*Einstellungen › Updates*). Es wird im Tresor gespeichert.
+Bedienung, Einstellungen, Tresor, alle Tools im Detail und die Anleitung für eigene Tools:
+**[OmniWrench-Wiki](https://github.com/KuroShiroMe/OmniWrench/wiki)**.
+Fehler und Wünsche bitte als [Issue](https://github.com/KuroShiroMe/OmniWrench/issues) melden.
 
 ## Lizenz
 
 OmniWrench steht unter der [MIT-Lizenz](LICENSE). Mitgelieferte Bibliotheken behalten ihre eigenen Lizenzen
-(u. a. Lucide: ISC, PySide6/Qt: LGPL).
-
-## Signierung
-
-Die Programmdateien werden derzeit **nicht signiert**. Ein Antrag bei der SignPath Foundation wurde abgelehnt;
-die Vorbereitung für eine spätere Signierung (eigenes Zertifikat, Azure, SignPath) liegt in
-[docs/EXE_SIGNIEREN.md](docs/EXE_SIGNIEREN.md). Alle Pakete werden automatisch aus diesem Repository mit
-GitHub Actions gebaut.
-
-## Datenschutz
-
-This program will not transfer any information to other networked systems unless
-specifically requested by the user or the person installing or operating it. Abgerufen werden nur der
-Tool-Store und die Release-Liste von GitHub (`raw.githubusercontent.com`, `api.github.com`); die Prüfung beim
-Start lässt sich unter *Einstellungen › Updates* abschalten. Tool-Pakete werden nur auf Anforderung
-heruntergeladen oder, wenn dort ausdrücklich eingeschaltet, beim Start automatisch aktualisiert (Standard: aus). Verbindungen zu Active Directory,
-Passwort-Managern oder anderen Systemen stellen nur die Tools her, die der Benutzer installiert und
-einrichtet.
+(u. a. PySide6/Qt: LGPL, Lucide-Symbole: ISC).

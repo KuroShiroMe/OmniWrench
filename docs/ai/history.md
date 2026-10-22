@@ -374,3 +374,17 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - Tested locally (Linux container): PyInstaller build, .deb install/start/apt remove, XDG migration, portable tar.gz
   self-update incl. restart, deb update script (fake pkexec), smoke test. Windows parts only via CI.
 - Version 0.7.0, release notes .github/release-notes/v0.7.0.md. Tag v0.7.0 must be pushed by Stef.
+
+## 2026-10-22 Hersteller KuroShiro + neues README (thread "KuroShiro und neues README")
+- Stef: vendor "DarkMatter" -> "KuroShiro" everywhere (GitHub user had to be KuroShiroMe; domain kuroshiro.me points
+  to the repo for now, landing page in a parallel thread). Wiki + tool template in thread "Wiki und Tool-Vorlage".
+- VENDOR/APP_MUTEX -> KuroShiro, LEGACY_VENDORS=("DarkMatter",). core/paths.py moves old data dirs at import
+  (os.rename, shutil.move only across file systems; on failure the old dir stays in use). Settings rename stored
+  "DarkMatter Store" -> "KuroShiro Store". DPAPI entropy deliberately unchanged.
+- Setup: publisher KuroShiro, default dir {autopf}\KuroShiro\OmniWrench; installs in the old default dir are moved
+  (InitializeWizard swaps DirEdit, ssPostInstall DelTree old dir); mutex check covers old + new name. CI install test
+  path updated. Upgrade path itself untested (Windows) -> TESTLISTE.
+- All 6 tools patch-bumped: author KuroShiro + "homepage" = wiki page (Tool-<Name>). LICENSE holder KuroShiro.
+- README rewritten for end users: description of the main program with screenshots (.github/readme/*.png, rendered
+  offscreen on Linux with a patched ToolManager so Windows tools install), installation, data locations, wiki link.
+  Dev sections (start from source, structure, publishing, signing) removed -> wiki/CLAUDE.md/docs.

@@ -1,12 +1,15 @@
 # Decisions & user preferences (binding)
 
 ## Product / branding
-- Name: **OmniWrench** (Ratchet & Clank reference), vendor **DarkMatter** (imaginary). Python package `omniwrench`.
+- Name: **OmniWrench** (Ratchet & Clank reference), vendor **KuroShiro** (Stef 2026-10-22; was DarkMatter, imaginary).
+  Python package `omniwrench`. Domain kuroshiro.me (landing page). `LEGACY_VENDORS` in `omniwrench/__init__.py` lists old
+  vendor names; DPAPI entropy in `core/dpapi.py` keeps "DarkMatter…" forever (else recovery data unreadable).
 - GitHub: `KuroShiroMe/OmniWrench`, **public** (owner renamed from `Steffi-Tech` on 2026-10-22; GitHub redirects old URLs,
   app migrates stored update/store URLs in `core/settings.py`). No GitHub org (gh can't create orgs); could move later.
-- Data dirs: `%APPDATA%\DarkMatter\OmniWrench` (settings, vault, tool_settings, layout), `%LOCALAPPDATA%\DarkMatter\OmniWrench` (tools, tool_data, logs). Override: `OMNIWRENCH_HOME`.
-  Linux (2026-10-22): `$XDG_CONFIG_HOME/DarkMatter/OmniWrench` (config) + `$XDG_DATA_HOME/DarkMatter/OmniWrench` (local);
-  old Linux data in `~/AppData/...` is moved on first start. Optional `portable-data/` folder next to the program
+- Data dirs: `%APPDATA%\KuroShiro\OmniWrench` (settings, vault, tool_settings, layout), `%LOCALAPPDATA%\KuroShiro\OmniWrench` (tools, tool_data, logs). Override: `OMNIWRENCH_HOME`.
+  Linux (2026-10-22): `$XDG_CONFIG_HOME/KuroShiro/OmniWrench` (config) + `$XDG_DATA_HOME/KuroShiro/OmniWrench` (local).
+  Old locations (`DarkMatter` vendor dirs, Linux `~/AppData/...`) are moved at import of `core/paths.py` if the new dir
+  is empty; if the move fails the old dir stays in use (no apparent data loss). Optional `portable-data/` folder next to the program
   = all data there (my addition for USB-stick use; default for portable stays the user profile).
 
 ## Platforms & installation (Stef 2026-10-22, CHANGED: before "Windows clients only")
@@ -20,7 +23,8 @@
   Program files in the program folder, config/vaults/tools in the user profile.
 - My choices: Windows = **Inno Setup 6** (single setup.exe, wizard + /VERYSILENT for Intune/SCCM, upgrades via
   fixed AppId, no signing requirement; MSI/WiX more complex, MSIX needs a signature). Per-machine install to
-  `{autopf}\DarkMatter\OmniWrench` (UAC), start menu, optional desktop icon (unchecked). Linux = **.deb**
+  `{autopf}\KuroShiro\OmniWrench` (UAC; setup moves installs from the old default `{autopf}\DarkMatter\OmniWrench`,
+  custom dirs stay; mutex check covers `KuroShiro.OmniWrench` and old `DarkMatter.OmniWrench`), start menu, optional desktop icon (unchecked). Linux = **.deb**
   (/opt/omniwrench, /usr/bin/omniwrench, .desktop, apt resolves Qt system libs), built on Ubuntu 22.04 (glibc 2.35).
   No rpm/AppImage yet (offered as follow-up). Portable: Windows ZIP (name unchanged), Linux tar.gz.
 - Uninstall keeps user data (vault!). Self-update follows the install kind (setup -> silent setup with UAC,

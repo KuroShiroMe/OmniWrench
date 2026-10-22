@@ -1,4 +1,4 @@
-# Claude-Projekt „OmniWrench (DarkMatter)“ einrichten
+# Claude-Projekt „OmniWrench (KuroShiro)“ einrichten
 
 Die AI-Dokumentation bleibt im Repository (Quelle der Wahrheit). Das claude.ai-Projekt bindet sie nur ein.
 
@@ -6,7 +6,7 @@ Die AI-Dokumentation bleibt im Repository (Quelle der Wahrheit). Das claude.ai-P
 
 claude.ai › **Projects** › **Create project**
 
-- **Name:** `OmniWrench (DarkMatter)`
+- **Name:** `OmniWrench (KuroShiro)`
 - **Description:** `Modulare Windows-Admin-Toolbox (Python/PySide6) – Hauptprogramm und Tools`
 
 ## 2. Projektanweisungen (Custom instructions)
@@ -14,7 +14,7 @@ claude.ai › **Projects** › **Create project**
 Folgenden Text in *Set project instructions* einfügen:
 
 ```text
-Projekt: OmniWrench von DarkMatter – modulare Windows-Admin-Toolbox (Python 3.14, PySide6, QtAds).
+Projekt: OmniWrench von KuroShiro – modulare Windows-Admin-Toolbox (Python 3.14, PySide6, QtAds).
 Repository: github.com/KuroShiroMe/OmniWrench (öffentlich). Antworte auf Deutsch.
 
 Die Projektdateien sind das Projektgedächtnis:

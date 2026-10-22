@@ -146,7 +146,7 @@ def report_html(results: list, tr, lang: str) -> str:
     body = "".join(_target_section(r, tr, lang) for r in results)
     heading = _esc(results[0].label) if len(results) == 1 else f"{len(results)} {_esc(tr('list.target'))}"
     return (f"<html><head><style>{css}</style></head><body>"
-            f"<h1>NetProbe · {heading}</h1><div class='sub'>DarkMatter OmniWrench · {when}</div>"
+            f"<h1>NetProbe · {heading}</h1><div class='sub'>KuroShiro OmniWrench · {when}</div>"
             f"{body}</body></html>")
 
 

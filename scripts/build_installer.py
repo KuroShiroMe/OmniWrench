@@ -167,10 +167,10 @@ def build_deb() -> Path:
         "Priority: optional\n"
         "Homepage: https://github.com/KuroShiroMe/OmniWrench\n"
         f"Description: {APP_NAME} - modular toolbox for administrators\n"
-        " Modular admin toolbox by DarkMatter. Tools are installed from a store\n"
+        " Modular admin toolbox by KuroShiro. Tools are installed from a store\n"
         " (GitHub repository) and open in dockable tabs. Settings, the encrypted\n"
         " vault and installed tools are stored per user in ~/.config and\n"
-        " ~/.local/share (DarkMatter/OmniWrench).\n",
+        " ~/.local/share (KuroShiro/OmniWrench).\n",
         encoding="utf-8",
     )
     out = DIST / f"{pkg}_{version}_{arch}.deb"
