@@ -256,6 +256,23 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
 - OFFEN bleibt: weitere MX-Toolbox-Funktionen (DNSBL-Blacklists, SMTP-Open-Relay). Windows-Realtest: Server-Bind auf
   0.0.0.0, Firewall-Freigabe, echte Durchsatz-/Latenzwerte über eine reale Strecke.
 
+## 2026-10-20 — NetProbe 1.2.1: Mini-Tool als eigenständige .exe (ohne Python)
+Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Python startbar sein.
+- Neues scripts/build_linkagent.py: baut tools/netprobe/linkagent.py mit PyInstaller als Einzeldatei
+  (dist/linkagent.exe bzw. dist/linkagent, nur stdlib, ~8 MB, Windows-Versionsinfo). Auf Linux gebaut und
+  getestet (serve+probe laufen ohne Python).
+- build_exe.py baut das Mini-Tool mit und legt linkagent.exe in den Programmordner (APP_DIR) neben
+  OmniWrench.exe; landet damit automatisch im -win64-Zip und beim Selbst-Update. --sign signiert es mit.
+- build-exe.yml: Schritt „Mini-Tool (linkagent) prüfen“ (--help), und beim Tag-Release wird linkagent.exe
+  zusätzlich als eigenständiges Asset hochgeladen.
+- Export im Optionsdialog jetzt zwei Knöpfe: „Mini-Tool (.exe)“ (kopiert die gebaute Datei, über
+  _LinkControl.agent_binary() aus APP_DIR bzw. APP_DIR/dist gefunden; deaktiviert mit Hinweis, wenn aus dem
+  Quellcode keine Binärdatei vorliegt) und „Als Skript (.py)“ (wie bisher). Neue Texte link.export_exe/
+  export_script/export_exe_missing/export_no_binary/export_done_exe.
+- tool.json 1.2.0 → 1.2.1, Store neu gebaut. Geprüft: compileall, check_locales, de⊆en-Parität, Linux-Build +
+  serve/probe des Binaries, Offscreen-Render des Export-Bereichs (beide Knöpfe, .exe-Knopf aktiv), check_store.
+  Windows-.exe-Build selbst läuft in CI (hier nur Linux-Binary gebaut).
+
 ## 2026-10-20 Kategorien nur noch eine Ebene + Tags (Stef)
 - Stef: "Kategorien nur noch auf die Hauptkategorien reduzieren, alle Tools kriegen sinnvolle Tags". Weicht von der
   2-Ebenen-Entscheidung vom 2026-10-17 ab -> decisions.md angepasst.
@@ -265,6 +282,6 @@ Stefs gewünschter Folge-PR: echte Leitungsqualität zu einer Gegenstelle messen
 - Tags sichtbar: Details auf Home (Zeile "Tags") und Store-Karte ("Tags: …"), Klick sucht danach (widgets.tag_links).
   Neue Schlüssel details.tags, store.tags in allen 23 App-Sprachen.
 - Alle 5 Tools: category = Bereich, neu kuratierte Tags (sprachneutral/Englisch), tool.category in Tool-Sprachdateien
-  nur noch Bereich, Patch-Version +1, Store neu gebaut (alte ZIPs entfernt).
+  nur noch Bereich, Patch-Version +1 (NetProbe nach Merge mit main 1.2.2), Store neu gebaut (alte ZIPs entfernt).
 - TOOL_ENTWICKLUNG.md: Kategorien-Abschnitt auf eine Ebene, neuer Abschnitt "Tags".
 - Geprüft: check_locales, check_store, smoke_test (Linux offscreen), Render Home-Details/Suche/Store.

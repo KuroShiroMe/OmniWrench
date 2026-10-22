@@ -168,6 +168,24 @@ def copy_extras(app_dir: Path) -> None:
     shutil.copy2(ROOT / "LICENSE", app_dir / "LICENSE")
 
 
+def build_linkagent(app_dir: Path) -> None:
+    """Baut das NetProbe-Leitungstest-Mini-Tool als Einzeldatei und legt es neben die EXE.
+
+    So kann der Mini-Tool-Export (tools/netprobe) eine fertige linkagent.exe ausliefern, die auf der
+    Gegenstelle ohne Python-Installation startet. Eigener Prozess, damit sich die beiden PyInstaller-Läufe
+    (OmniWrench onedir + linkagent onefile) nicht in die Quere kommen.
+    """
+    import subprocess
+
+    name = "linkagent.exe" if sys.platform == "win32" else "linkagent"
+    out = DIST / name
+    subprocess.run([sys.executable, str(ROOT / "scripts" / "build_linkagent.py")], check=True)
+    if not out.is_file():
+        sys.exit(f"linkagent-Build fehlgeschlagen: {out} nicht gefunden")
+    shutil.copy2(out, app_dir / name)
+    print(f"Mini-Tool beigelegt: {app_dir / name}")
+
+
 def make_zip(app_dir: Path) -> Path:
     suffix = "win64" if sys.platform == "win32" else sys.platform
     out = DIST / f"{APP_NAME}-{__version__}-{suffix}.zip"
@@ -201,15 +219,18 @@ def main() -> None:
             sys.exit("PyInstaller fehlt: python -m pip install pyinstaller")
         pyinstaller.run(pyinstaller_args(opts.console))
         copy_extras(app_dir)
+        build_linkagent(app_dir)
     if opts.sign:
         import sign_exe
 
+        agent = app_dir / ("linkagent.exe" if sys.platform == "win32" else "linkagent")
+        sign_targets = [exe] + ([agent] if agent.is_file() else [])
         if sign_exe.configured():
             try:
-                sign_exe.sign_files([exe])
+                sign_exe.sign_files(sign_targets)
             except sign_exe.SignError as exc:
                 sys.exit(str(exc))
-            print(f"Signiert: {exe.relative_to(ROOT)}")
+            print("Signiert: " + ", ".join(str(f.relative_to(ROOT)) for f in sign_targets))
         else:
             print("Kein Zertifikat angegeben (SIGN_CERT_SHA1/SIGN_PFX_*), EXE bleibt unsigniert.")
     size = sum(f.stat().st_size for f in app_dir.rglob("*") if f.is_file()) // (1024 * 1024)
