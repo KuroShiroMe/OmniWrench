@@ -302,3 +302,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   bars/top scopes and segmented switch, server options per failover server with sync state + per-option transfer +
   opt-out partner checkbox, definitions behind expert mode + unlock, rights detection (read-only hides edits).
   Fixed on the way: QMessageBox checkbox segfault, FlowLayout wrapping with hidden buttons. Fake-DLL/fake-backend tests.
+- 2026-10-22 Stef (after 1.1.0 merge) -> 1.2.0: check column "Höchster Befund" (was "Bewertung"), failover list as
+  expandable relationship rows (▸/▾, double-click, arrow keys) with both servers below, server options show only the
+  selected server's own options (missing ones stay as findings; "Anzeigen" jumps to the server that has it), Alpha
+  tag/note removed at Stef's request. Fixed: findings list row heights computed while page hidden (giant rows).

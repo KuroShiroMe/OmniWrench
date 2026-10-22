@@ -138,7 +138,7 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   TODO (own PR): line test / remote agent (true latency, throughput, load, path port scan) + more MX-Toolbox checks.
 
 ## MS DHCP Extended Management (net.ms-dhcp-extended, folder tools/ms_dhcp_extended, class MsDhcpExtended) – Microsoft DHCP manager
-  (Alpha, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1; was net.scopekeeper/ScopeKeeper until 2026-10-20)
+  (Alpha until 1.2.0, rebuilt from Stef's DhcpScopeManager.ps1 v2.3.1; was net.scopekeeper/ScopeKeeper until 2026-10-20)
 - Layers: `ipcalc` (IPv4 math, ScopeModel, range/exclusion conversion, address translation between networks),
   `optcodec` (option value parse/format/compare per definition type, STD_OPTION_IDS), `checks` (Checker -> Finding
   level error/warning/bestpractice/info + category + obj + targets["Field:Name", "Range:n", "Option:003", ...] + fix id;
@@ -185,9 +185,9 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;
   every page has `apply_rights()` (hide write buttons/actions, read-only editors); `MsDhcpExtended.apply_rights()` after
   refresh. Partner view: `svc.load_peer(pn)` -> `svc.peer[pn]` {fo, scopes, options, errors} (API or netsh dump),
-  `ctl.load_peer_flow`. FailoverPage: one row per server per relationship (key "rel|server"), lower grid = ALL scopes of
+  `ctl.load_peer_flow`. FailoverPage: expandable head row per relationship (key "rel|*", `_open` set, rows hidden via setRowHidden) + one row per server (key "rel|server", real name in `_srv`), lower grid = ALL scopes of
   the selected server with membership. ServerOptionsPage: server grid (primary + partners), `compare()` gives sync
-  state per option, ghost rows for options only on the counterpart, transfer per option only. CheckPage: `DistBars`
+  state per option, only own options (1.2.0, no ghost rows), `_only_on` lets a finding jump to the server that has the option, transfer per option only. CheckPage: `DistBars`
   (stacked bars per category) + top scopes + segmented buttons/QStackedWidget instead of tabs. DefsPage: lock banner,
   writes only after unlock; dock shown only with setting expert_mode. Grid.enable_layout(settings,key) = movable/
   hideable columns stored {"order","hidden"}; overview + failover use it.
