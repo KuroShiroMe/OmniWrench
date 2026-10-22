@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import base64
 import json
+import sys
 import warnings
 from dataclasses import dataclass
 
@@ -75,7 +76,14 @@ ConvertTo-Json -InputObject @($certs) -Compress
 """
 
 
+def supported() -> bool:
+    """Zertifikatsanmeldung nutzt den Windows-Zertifikatspeicher (auch Smartcards) - nur unter Windows."""
+    return sys.platform == "win32"
+
+
 def list_certificates(only_usable_for_encryption: bool = False) -> list[CertInfo]:
+    if not supported():
+        return []
     data = run_ps_json(_LIST_SCRIPT, timeout=60) or []
     certs = [CertInfo(**c) for c in data]
     if only_usable_for_encryption:

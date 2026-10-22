@@ -11,7 +11,7 @@ from PySide6.QtCore import QLibraryInfo, Qt, QTranslator
 from PySide6.QtGui import QIcon
 from PySide6.QtWidgets import QApplication, QMessageBox
 
-from omniwrench import APP_ID, APP_NAME, __version__
+from omniwrench import APP_ID, APP_MUTEX, APP_NAME, __version__
 from omniwrench.core import credentials, i18n, net, paths
 from omniwrench.core.i18n import tr
 from omniwrench.core.settings import AppSettings
@@ -19,6 +19,7 @@ from omniwrench.core.tool_manager import ToolManager
 from omniwrench.core.vault import Vault
 
 _qt_translator: QTranslator | None = None
+_app_mutex = None
 
 
 def _setup_logging() -> None:
@@ -59,11 +60,18 @@ def main() -> int:
     paths.ensure_dirs()
     _setup_logging()
     sys.excepthook = _excepthook
-    logging.getLogger("omniwrench").info("%s %s startet", APP_NAME, __version__)
+    log = logging.getLogger("omniwrench")
+    log.info("%s %s startet (%s, Programm: %s, Daten: %s)", APP_NAME, __version__, paths.INSTALL_KIND,
+             paths.APP_DIR, paths.CONFIG_DIR)
+    for line in paths.MIGRATION_LOG:
+        log.info(line)
 
     if sys.platform == "win32":
         import ctypes
         ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)  # eigenes Taskleisten-Icon
+        # Das Installationsprogramm wartet, solange dieser Mutex existiert (Update, Deinstallation)
+        global _app_mutex
+        _app_mutex = ctypes.windll.kernel32.CreateMutexW(None, False, APP_MUTEX)
 
     settings = AppSettings()
     from omniwrench.ui import scaling  # importiert nur Qt-Module, erzeugt noch keine QApplication
@@ -73,6 +81,7 @@ def main() -> int:
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setOrganizationName(APP_ID)
+    app.setDesktopFileName("omniwrench")  # Linux: Symbol/Gruppierung über omniwrench.desktop
     # Beenden steuert das Hauptfenster selbst (sonst würde der UI-Neuaufbau das Programm beenden)
     app.setQuitOnLastWindowClosed(False)
     app.setWindowIcon(QIcon(str(paths.RESOURCES_DIR / "app.svg")))

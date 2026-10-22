@@ -1,4 +1,4 @@
-# OmniWrench als EXE bauen
+# OmniWrench als Programm und Installationsprogramm bauen
 
 OmniWrench wird mit [PyInstaller](https://pyinstaller.org) als **Programmordner** gebaut
 (`dist\OmniWrench\OmniWrench.exe` + `_internal\`). Eine Einzel-EXE wird bewusst nicht erzeugt:
@@ -17,13 +17,39 @@ Selbst-Updater nicht ersetzen.
 
 Signieren (Zertifikatsoptionen, lokal und in GitHub): siehe [EXE_SIGNIEREN.md](EXE_SIGNIEREN.md).
 
-Der Ordner `dist\OmniWrench` kann so wie er ist kopiert oder verteilt werden (z. B. nach
-`C:\Program Files\DarkMatter\OmniWrench`). Einstellungen, Tresor und installierte Tools liegen
-weiterhin in `%APPDATA%` bzw. `%LOCALAPPDATA%\DarkMatter\OmniWrench` (oder `OMNIWRENCH_HOME`).
+Der Ordner `dist\OmniWrench` ist die **portable Version** (`--zip` packt ihn als
+`OmniWrench-X.Y.Z-win64.zip`). Einstellungen, Tresor und installierte Tools liegen im Benutzerprofil
+(`%APPDATA%` bzw. `%LOCALAPPDATA%\DarkMatter\OmniWrench`), außer neben der EXE liegt ein Ordner
+`portable-data` oder `OMNIWRENCH_HOME` ist gesetzt.
 
-Ohne Windows-Rechner baut der GitHub-Workflow **EXE-Build** (`.github/workflows/build-exe.yml`)
-die EXE: manuell über *Actions › EXE-Build › Run workflow*, automatisch bei jedem Tag `v*`.
-Das ZIP liegt danach als Artefakt am Workflow-Lauf.
+Unter Linux baut dasselbe Skript `dist/OmniWrench/OmniWrench`; `--zip` erzeugt dort
+`OmniWrench-X.Y.Z-linux-x86_64.tar.gz` (tar.gz, damit die Ausführungsrechte erhalten bleiben).
+Zum Bauen und Starten braucht Linux die Qt-Systembibliotheken
+(`libegl1 libgl1 libxkbcommon-x11-0 libxcb-cursor0 …`, Liste in `scripts/build_installer.py`).
+
+## Installationsprogramme
+
+```powershell
+.\.venv\Scripts\python scripts\build_exe.py --zip     # zuerst Programmordner + portable Version
+.\.venv\Scripts\python scripts\build_installer.py     # dist\OmniWrench-X.Y.Z-win64-setup.exe
+```
+
+* **Windows: Inno Setup 6** (`installer/windows/OmniWrench.iss`, Installation: `winget install JRSoftware.InnoSetup`).
+  Gewählt statt MSI/WiX oder MSIX: ein einzelnes Setup-Programm mit Assistent und Sprachauswahl, stille
+  Installation für Softwareverteilung (`/VERYSILENT`), Updates über dieselbe `AppId`, frei und ohne
+  Zertifikatszwang (MSIX ließe sich unsigniert gar nicht installieren). Installiert per UAC nach
+  `C:\Program Files\DarkMatter\OmniWrench`, Startmenü, optionale Desktop-Verknüpfung, Deinstallation unter
+  *Apps*. Ein laufendes OmniWrench erkennt das Setup am Mutex `DarkMatter.OmniWrench` (`APP_MUTEX`).
+  Benutzerdaten bleiben bei der Deinstallation erhalten.
+* **Linux: Debian-Paket** (`python scripts/build_installer.py` unter Linux -> `dist/omniwrench_X.Y.Z_amd64.deb`,
+  braucht `dpkg-deb`). Programm nach `/opt/omniwrench`, Befehl `/usr/bin/omniwrench`, Startmenü-Eintrag
+  (`installer/linux/omniwrench.desktop`) und Symbol; die Qt-Systembibliotheken stehen als Abhängigkeiten im
+  Paket und installiert `apt`. Gebaut wird auf Ubuntu 22.04 (glibc 2.35), damit das Paket auch auf älteren
+  Systemen läuft.
+
+Beide legen `omniwrench-install.json` neben das Programm. Daran erkennt OmniWrench die Installationsart
+(`paths.INSTALL_KIND`) und lädt beim Selbst-Update das Installationsprogramm statt der portablen Version:
+Windows startet das Setup still mit UAC-Abfrage, Linux installiert das neue Paket über `pkexec`.
 
 ## Was in der EXE steckt
 
@@ -50,21 +76,21 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-Der Workflow **EXE-Build** prüft, ob Tag und Programmversion zusammenpassen, baut beide Pakete und
-legt das GitHub-Release mit Quellpaket und EXE-Paket an.
+Der Workflow **Build** prüft, ob Tag und Programmversion zusammenpassen, baut alle Pakete und legt das
+GitHub-Release an: Quellpaket, Windows-Setup und -ZIP, Linux-Paket und -tar.gz sowie `linkagent.exe`.
 
-**Manuell:**
-
-Version in `omniwrench/__init__.py` erhöhen, committen, dann beide Pakete bauen und **zuerst das
-Quellpaket** hochladen (ältere Programmversionen nehmen das erste passende ZIP):
+**Manuell:** Version erhöhen, committen, Pakete wie oben bauen (Windows und Linux) und **zuerst das
+Quellpaket** hochladen (Programmversionen bis 0.5.x nehmen das erste passende ZIP):
 
 ```powershell
 .\.venv\Scripts\python scripts\build_release.py       # dist\OmniWrench-X.Y.Z.zip (Quellcode)
-.\.venv\Scripts\python scripts\build_exe.py --zip     # dist\OmniWrench-X.Y.Z-win64.zip (EXE)
-gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip dist\OmniWrench-X.Y.Z-win64.zip --title "OmniWrench X.Y.Z" --notes "…"
+gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip --title "OmniWrench X.Y.Z" --notes "…"
+gh release upload vX.Y.Z dist\OmniWrench-X.Y.Z-win64-setup.exe dist\OmniWrench-X.Y.Z-win64.zip <Linux-Pakete>
 ```
 
-Der Selbst-Updater wählt automatisch: die EXE lädt `…-win64.zip`, ein Start aus dem Quellcode `….zip`.
+Der Selbst-Updater wählt die Datei nach Installationsart (`core/app_updater.py`, `asset_suffix`): Setup,
+Debian-Paket, portable Version (`-win64.zip` / `-linux-x86_64.tar.gz`) oder Quellpaket. Die Dateinamen
+deshalb nicht ändern.
 
 ## NetProbe-Leitungstest-Mini-Tool (linkagent)
 

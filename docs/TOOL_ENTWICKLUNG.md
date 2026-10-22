@@ -37,11 +37,20 @@ falls eine Übersetzung fehlt.
 | `color` | | Hintergrundfarbe des erzeugten Symbols, z. B. `#0ea5e9` |
 | `entry` | | `"<modul>:<Klasse>"`, Standard `tool:Tool` |
 | `min_app_version` | | Mindestversion des Hauptprogramms |
-| `platforms` | | Standard `["windows"]` |
+| `platforms` | | Betriebssysteme, Standard `["windows"]`; `["windows", "linux"]`, wenn das Tool auch unter Linux läuft (siehe [Plattformen](#plattformen)) |
 | `tags` | | Schlagwörter zur feineren Einordnung, siehe [Tags](#tags); sichtbar in Details und Store, durchsuchbar |
 | `single_instance` | | `true` = nur ein Tab gleichzeitig |
 | `hooks` | | Einstiegspunkte ohne geöffneten Tab, z. B. `{"startup": "modul:funktion"}` (siehe [Eigene Passwortmanager-Anbieter](#eigene-passwortmanager-anbieter)) |
 | `requirements` | | Voraussetzungen, siehe unten |
+
+### Plattformen
+OmniWrench läuft unter Windows und (seit 0.7.0) unter Linux. Ein Tool läuft nur auf den Systemen aus `platforms`:
+Der Store zeigt andere Tools mit „Läuft nur unter …“ ohne Installieren-Knopf, die Installation wird abgelehnt.
+`"linux"` nur eintragen, wenn das Tool dort wirklich funktioniert: keine PowerShell, kein `ctypes.windll`/`winreg`,
+keine Windows-Voraussetzungen (`windows_capabilities`, `windows_features`, `powershell_modules`, `winget`).
+Plattformabhängige Teile mit `sys.platform == "win32"` abfragen (Beispiel: NetProbe `icmp.py`). Der Starttest
+(`scripts/smoke_test.py`, in der CI unter Windows und Linux) installiert und öffnet jedes Tool auf jedem System,
+das es angibt.
 
 ### Kategorien
 Es gibt nur eine Ebene: feste **Service-Bereiche** einer IT-Abteilung. Das Hauptprogramm übersetzt sie selbst

@@ -1,6 +1,6 @@
 # CLAUDE.md – OmniWrench (DarkMatter)
 
-Modular Windows admin toolbox. Python 3.14 + PySide6 + QtAds. Repo: github.com/KuroShiroMe/OmniWrench (public).
+Modular admin toolbox for Windows clients and Linux (since 0.7.0). Python 3.14 + PySide6 + QtAds. Repo: github.com/KuroShiroMe/OmniWrench (public).
 User = "KuroShiroMe" (GitHub, formerly Steffi-Tech until 2026-10-22) (sysadmin, writes German, wants German replies). Vendor brand: DarkMatter. Product: OmniWrench.
 
 ## Read this first (AI memory)
@@ -31,7 +31,8 @@ Rules for yourself:
 .\.venv\Scripts\python scripts\build_release.py     # dist\OmniWrench-X.Y.Z.zip from HEAD
 .\.venv\Scripts\python scripts\build_exe.py --zip   # dist\OmniWrench\OmniWrench.exe + -win64.zip (docs/EXE_BUILD.md)
 .\.venv\Scripts\python scripts\build_exe.py --sign --zip  # same, signed if SIGN_CERT_SHA1/SIGN_PFX_* set (docs/EXE_SIGNIEREN.md)
-git tag vX.Y.Z; git push origin vX.Y.Z               # CI (EXE-Build) creates the GitHub release with both zips
+.\.venv\Scripts\python scripts\build_installer.py   # after build_exe: Windows -win64-setup.exe (Inno Setup 6), Linux .deb
+git tag vX.Y.Z; git push origin vX.Y.Z               # CI (Build) creates the GitHub release: setup, zip, deb, tar.gz, source
 ```
 `gh` needs PATH refresh in PowerShell: `$env:Path = [Environment]::GetEnvironmentVariable('Path','Machine') + ';' + [Environment]::GetEnvironmentVariable('Path','User')`
 

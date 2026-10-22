@@ -5,6 +5,7 @@
     "        auth=true   -> Anmeldedaten: werden bei fehlgeschlagener Anmeldung erneut abgefragt.",
     "        type=secret -> nur verschlüsselt im Tresor (oder nur für die Sitzung).",
     "        show_if     -> Feld nur anzeigen/verwenden, wenn ein anderes Feld einen bestimmten Wert (oder einen Wert aus einer Liste) hat.",
+    "platforms: optional, Betriebssysteme des Konnektors (wie tool.json); fehlt es, überall. Andere Typen bietet der Dialog nicht an.",
     "stage: optional 'alpha' oder 'beta' -> Hinweis im Konnektor-Dialog (z. B. noch nicht mit echter Installation getestet).",
     "implementation: 'powershell' (Skripte unten), 'keepass' (Python, pykeepass), 'bitwarden' (bw-CLI), 'onepassword' (op-CLI), 'hashicorp_vault' (HTTP-API).",
     "powershell: Skripte erhalten alle Feldwerte + query/max/id als JSON auf stdin ($p).",
@@ -17,6 +18,7 @@
     "secretmanagement": {
       "name": "Microsoft SecretManagement",
       "icon": "terminal-square",
+      "platforms": ["windows"],
       "description": {
         "en": "PowerShell SecretManagement vaults (SecretStore, KeePass, Bitwarden, Azure Key Vault … extensions).",
         "de": "PowerShell-SecretManagement-Tresore (SecretStore, KeePass, Bitwarden, Azure Key Vault … Erweiterungen).",
@@ -159,6 +161,7 @@
     "netwrix": {
       "name": "Netwrix Password Secure",
       "icon": "shield-check",
+      "platforms": ["windows"],
       "stage": "alpha",
       "description": {
         "en": "Netwrix Password Secure 9 via the official SDK (PsrApi.dll from the Netwrix customer portal). Login with user name and password or with an API key.",

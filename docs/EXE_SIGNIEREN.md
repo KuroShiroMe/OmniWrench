@@ -30,7 +30,7 @@ enthält den Abschnitt „Code signing policy“.
 2. **Diesen PR mergen**, damit Lizenz und „Code signing policy“ auf `main` sichtbar sind. Das
    Antragsteam prüft die Links unten.
 3. **Release 0.6.0 veröffentlichen** (`v0.6.0` ist noch nicht getaggt): `git tag v0.6.0` und
-   `git push origin v0.6.0`, der Workflow **EXE-Build** erstellt das Release. SignPath signiert nur bereits
+   `git push origin v0.6.0`, der Workflow **Build** erstellt das Release. SignPath signiert nur bereits
    veröffentlichte Versionen, und das Formular fragt nach der Download-Seite.
 
 ### Antragsformular: Werte zum Kopieren
@@ -114,7 +114,7 @@ GitHub Actions
 
 **Workflow / build configuration** (falls gefragt)
 ```text
-https://github.com/KuroShiroMe/OmniWrench/blob/main/.github/workflows/build-exe.yml
+https://github.com/KuroShiroMe/OmniWrench/blob/main/.github/workflows/build.yml
 ```
 
 **Artifacts to sign** (falls gefragt)
@@ -167,7 +167,7 @@ Dann einen CI-Benutzer (z. B. `github-actions`) mit der Rolle *Submitter* für d
 | Variable | `SIGNPATH_ARTIFACT_CONFIGURATION_SLUG` | `omniwrench-exe` |
 | Variable | `SIGN_METHOD` | `signpath` |
 
-Ab dann: Tag `vX.Y.Z` pushen → Workflow **EXE-Build** reicht die EXE bei SignPath ein → Freigabe in
+Ab dann: Tag `vX.Y.Z` pushen → Workflow **Build** reicht die EXE bei SignPath ein → Freigabe in
 SignPath → der Workflow lädt die signierte EXE und packt das ZIP. Der Workflow wartet bis zu 10 Minuten auf
 die Freigabe, sonst den Lauf danach neu starten. Bis dahin bleibt `SIGN_METHOD` leer und die EXE unsigniert.
 
@@ -191,7 +191,7 @@ unsigniert weiter.
 
 ## In GitHub signieren
 
-Der Workflow **EXE-Build** signiert nur bei Tags `v*` und bei manuellen Läufen (*Actions › EXE-Build ›
+Der Workflow **Build** signiert nur bei Tags `v*` und bei manuellen Läufen (*Actions › Build ›
 Run workflow*); Builds für Pull Requests und `main` bleiben unsigniert. Welcher Weg genutzt wird, steht in
 der Repository-Variablen `SIGN_METHOD`. Ist sie leer, bleibt die EXE unsigniert und der Build läuft
 normal durch.

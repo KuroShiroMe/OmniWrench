@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import (
@@ -90,6 +91,9 @@ class ConnectorDialog(QDialog):
         self.ctx = tool.context
         self.is_new = conn is None
         types = tool.store.types
+        if conn is None:  # neue Konnektoren nur mit Typen, die auf diesem Betriebssystem laufen
+            here = "windows" if sys.platform == "win32" else "linux"
+            types = {k: v for k, v in types.items() if here in v.get("platforms", [here])}
         self.conn = conn or tool.store.new(next(iter(types)), "")
         tr = self.ctx.tr
         self.setWindowTitle(tr("dlg.title_new") if self.is_new else tr("dlg.title_edit"))

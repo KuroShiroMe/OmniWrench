@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=OmniWrench
+GenericName=Admin Toolbox
+GenericName[de]=Admin-Werkzeugkasten
+Comment=Modular toolbox for administrators
+Comment[de]=Modulare Toolsammlung für Administratoren
+Exec=/opt/omniwrench/OmniWrench
+Icon=omniwrench
+Terminal=false
+Categories=System;Network;Utility;
+Keywords=admin;network;dhcp;subnet;password;vault;
+StartupWMClass=OmniWrench

@@ -35,7 +35,7 @@ from PySide6.QtCore import QCoreApplication, QEventLoop  # noqa: E402
 from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: E402
 
 from omniwrench import __version__  # noqa: E402
-from omniwrench.core import credentials, i18n, paths  # noqa: E402
+from omniwrench.core import credentials, i18n, paths, system  # noqa: E402
 from omniwrench.core.manifest import validate_package  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
@@ -114,6 +114,10 @@ def main() -> int:
     sources = {validate_package(p).id: p for p in (ROOT / "tools").iterdir() if (p / "tool.json").is_file()}
     for entry in index["tools"]:
         reqs = entry.get("requirements") or {}
+        if not system.supports_platform(entry.get("platforms") or ["windows"]):
+            step(f"{entry['id']}: nur Paketprüfung (läuft nicht unter {system.platform_name(system.PLATFORM)})")
+            validate_package(sources[entry["id"]])
+            continue
         if any(reqs.get(k) for k in SYSTEM_REQS):
             step(f"{entry['id']}: nur Paketprüfung (System-Voraussetzungen werden nicht installiert)")
             validate_package(sources[entry["id"]])

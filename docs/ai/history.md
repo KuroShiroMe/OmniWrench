@@ -357,3 +357,20 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   independently -> 1.1.3 (on #47). Other tools' ZIPs restored from the branch (build_store ZIPs are not byte-stable).
 - New docs/TESTLISTE.md: all open Windows tests (threads, issues #17-#23, backlog) grouped by tool; backlog points to it.
 - Branch deletion is blocked from the cloud session (git push --delete denied, no MCP tool) -> left to Stef.
+
+## 2026-10-22 Installationsprogramme + Linux, Release 0.7.0 (thread "Installer und portable Version")
+- Stef: full installer + portable version for Windows AND Linux in the release, program files in the program folder,
+  config/vaults in the user profile; merge everything and release. decisions.md platform rule changed visibly.
+- Installers: Inno Setup (installer/windows/OmniWrench.iss) + .deb (scripts/build_installer.py). Marker
+  omniwrench-install.json -> paths.INSTALL_KIND. Linux paths = XDG + migration from ~/AppData; Windows paths unchanged.
+- Updater: per install kind (setup via UAC, deb via pkexec, portable replaces files; read-only portable folder on
+  Windows -> elevated copy + non-elevated restart). PowerShell now via -EncodedCommand (GPO AllSigned safe).
+  App creates mutex DarkMatter.OmniWrench (setup waits for it, max 60 s silent).
+- Linux support: platforms check generic (core/system.py), store marks Windows-only tools, cert login hidden,
+  DPAPI replacement "userkey". Tools 4x patch bump with platforms windows+linux (subnet 1.2.4, IconForge 1.1.4,
+  NetProbe 1.2.3, OmniVault 1.1.4; OmniVault hides SecretManagement/Netwrix connectors off Windows).
+- CI: build.yml (was build-exe.yml) with windows/linux/release jobs incl. real install/uninstall tests; ci.yml got a
+  Linux smoke test. README: install guide, data locations, honest "unsigned" section (SignPath claim removed).
+- Tested locally (Linux container): PyInstaller build, .deb install/start/apt remove, XDG migration, portable tar.gz
+  self-update incl. restart, deb update script (fake pkexec), smoke test. Windows parts only via CI.
+- Version 0.7.0, release notes .github/release-notes/v0.7.0.md. Tag v0.7.0 must be pushed by Stef.

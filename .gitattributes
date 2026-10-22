@@ -5,3 +5,5 @@
 *.ps1 text eol=crlf
 *.zip binary
 *.png binary
+*.iss text eol=crlf
+*.sh text eol=lf

@@ -125,7 +125,11 @@ class LoginDialog(QDialog):
         self.cert.setEnabled(False)
         self.use_cert.toggled.connect(self.cert.setEnabled)
         self.lay.addWidget(self.cert)
-        self.lay.addWidget(label(tr("login.both_hint"), "Muted", wrap=True))
+        hint = label(tr("login.both_hint"), "Muted", wrap=True)
+        self.lay.addWidget(hint)
+        if not certificates.supported():  # außerhalb von Windows nur Masterpasswort
+            for w in (self.use_cert, self.cert, hint):
+                w.hide()
 
         self.submit = make_button(tr("login.setup_button"), primary=True, on_click=self._do_setup)
         self.submit.setDefault(True)
