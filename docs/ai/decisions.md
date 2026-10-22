@@ -201,3 +201,7 @@
   `.github/workflows/pages.yml`). My choice: no extra repo (cloud can't create repos, downloads/screenshots stay in sync
   with the product). Can move to a `KuroShiroMe.github.io` user-site repo later if KuroShiro gets more products.
 - Page language German, dark design in app colors, no tracking, no external fonts/scripts except the GitHub API call.
+- Tool list on the page (Stef 2026-10-22): collapsible service areas like in the store (alphabetical, German names),
+  click on a tool opens its wiki page (`homepage` from tool.json, else `wiki/Tool-<German name>`). Generated from
+  store/index.json by `scripts/build_site.py` (also runs in the Pages workflow, so new tools appear automatically).
+- Rule (Stef 2026-10-22): every thread checks whether its work adds something relevant for the landing page and adds it.
