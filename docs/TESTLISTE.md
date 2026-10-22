@@ -4,8 +4,8 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.3, IconForge 1.1.3, MS DHCP Extended Management 1.2.1,
-NetProbe 1.2.2, Subnetzrechner 1.2.3, OmniVault 1.1.3. App-Version 0.6.0.
+Tool-Versionen im Store: AD User Lookup 1.3.3, IconForge 1.1.4, MS DHCP Extended Management 1.2.1,
+NetProbe 1.2.3, Subnetzrechner 1.2.4, OmniVault 1.1.4. App-Version 0.7.0.
 
 ## 0. Vorbereitung
 
@@ -62,12 +62,31 @@ git pull
 ## 4. EXE-Build (Issue #18)
 
 `.\.venv\Scripts\python scripts\build_exe.py --zip`, dann `.\dist\OmniWrench\OmniWrench.exe`
-(oder Artefakt `OmniWrench-win64` aus GitHub › Actions › EXE-Build).
+(oder Artefakt `OmniWrench-windows` aus GitHub › Actions › Build, oder die ZIP aus dem Release 0.7.0).
 - [ ] Start ohne installiertes Python, Symbol und Versionsinfo.
 - [ ] Anmeldung mit Smartcard.
 - [ ] Tool-Installation inkl. pip (OmniVault/pykeepass über `OmniWrench.exe --pip`).
 - [ ] Selbst-Update aus dem `-win64.zip`.
 - [ ] UAC-Voraussetzungen (z. B. AD User Lookup mit RSAT).
+
+## 4a. Installationsprogramm und Updates (0.7.0)
+
+Dateien aus dem Release 0.7.0. Die CI installiert das Setup bereits still, startet und deinstalliert es;
+offen sind der Assistent, die Verknüpfungen und das Update mit echter UAC-Abfrage.
+- [ ] `OmniWrench-0.7.0-win64-setup.exe`: Assistent auf Deutsch, UAC-Abfrage, Ziel
+      `C:\Program Files\DarkMatter\OmniWrench`, Startmenü-Eintrag, optional Desktop-Verknüpfung, Start am Ende.
+- [ ] Nach der Installation: Einstellungen, Tresor und Tools der bisherigen portablen Version sind da
+      (gleiche Daten in `%APPDATA%`/`%LOCALAPPDATA%`). Taskleisten-Symbol und Anheften passen.
+- [ ] Setup erneut starten, während OmniWrench läuft: Meldung „wird noch ausgeführt“ mit Wiederholen/Abbrechen.
+- [ ] Update der installierten Version (erst mit einem späteren Release möglich, z. B. 0.7.1): „Jetzt installieren“
+      zeigt die UAC-Abfrage, das Setup läuft mit Fortschrittsfenster, OmniWrench startet danach von selbst und
+      **ohne** Adminrechte.
+- [ ] Portable Version in einem schreibgeschützten Ordner (z. B. von Hand nach `C:\Program Files\…` kopiert):
+      Update fragt per UAC und startet danach neu. In einem normalen Ordner wie bisher ohne UAC.
+- [ ] Deinstallation unter *Einstellungen › Apps*: Programmordner weg, Benutzerdaten bleiben.
+- [ ] Optional: Ordner `portable-data` neben der portablen `OmniWrench.exe` anlegen -> Daten landen dort (leerer Tresor).
+- [ ] Optional Linux (Ubuntu/Debian/Mint): `sudo apt install ./omniwrench_0.7.0_amd64.deb`, Start über das Menü,
+      Tool-Store zeigt AD/DHCP mit „Läuft nur unter Windows“; portable `tar.gz` entpacken und starten.
 
 ## 5. MS DHCP Extended Management (net.ms-dhcp-extended 1.2.1)
 
@@ -87,7 +106,7 @@ dhcpsapi.dll.
       Anmeldung, Spalte „Höchster Befund“.
 - [ ] Definitionen: nur mit Expertenmodus sichtbar, Entsperren, Anlegen/Bearbeiten/Löschen.
 
-## 6. NetProbe (net.netprobe 1.2.2)
+## 6. NetProbe (net.netprobe 1.2.3)
 
 - [ ] Ping über IcmpSendEcho (Aufwärmen, 2 s Timeout): kein Paketverlust, wo CMD-Ping keinen hat.
 - [ ] Gespeicherte Liste, aufklappbare Netzgruppen (x/y Hosts), erneut testen an Ort und Stelle, Kontextmenü
@@ -97,7 +116,7 @@ dhcpsapi.dll.
 - [ ] Leitungstest zwischen zwei Rechnern (NetProbe ↔ NetProbe oder exportiertes `linkagent`): Bind auf 0.0.0.0,
       Firewall-Freigabe für den Port, echte Latenz- und Durchsatzwerte.
 
-## 7. OmniVault-Konnektoren (OmniVault 1.1.3)
+## 7. OmniVault-Konnektoren (OmniVault 1.1.4)
 
 Nur testen, was verfügbar ist. Nach bestätigtem Test wird der Alpha-Hinweis des Konnektors entfernt.
 - [ ] KeePass mit einer echten .kdbx-Datei (Issue #23).
@@ -107,7 +126,7 @@ Nur testen, was verfügbar ist. Nach bestätigtem Test wird der Alpha-Hinweis de
 - [ ] HashiCorp Vault: Token, userpass, LDAP, AppRole (Issue #21).
 - Netwrix (Issue #22) bleibt blockiert, solange keine Enterprise-Pro-Lizenz verfügbar ist.
 
-## 8. IconForge (1.1.3)
+## 8. IconForge (1.1.4)
 
 - [ ] Schmale Kopfzeile bei kleiner Fensterbreite und 150–200 % Skalierung (Issue #17).
 

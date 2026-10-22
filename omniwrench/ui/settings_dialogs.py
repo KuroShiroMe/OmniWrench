@@ -11,7 +11,7 @@ from PySide6.QtWidgets import (
     QSpinBox, QTableWidget, QTableWidgetItem, QTabWidget, QVBoxLayout, QWidget,
 )
 
-from omniwrench.core import i18n, net
+from omniwrench.core import certificates, i18n, net
 from omniwrench.core.i18n import AUTO, Translator, tr
 from omniwrench.core.manifest import SettingDef
 from omniwrench.core.settings import AppSettings
@@ -426,7 +426,8 @@ class AppSettingsDialog(QDialog):
         lay.addWidget(self.unlocker_list, 1)
         row = QHBoxLayout()
         row.addWidget(make_button(tr("appsettings.set_password"), on_click=self._change_password))
-        row.addWidget(make_button(tr("appsettings.add_cert"), on_click=self._add_certificate))
+        if certificates.supported():
+            row.addWidget(make_button(tr("appsettings.add_cert"), on_click=self._add_certificate))
         row.addWidget(make_button(tr("common.remove"), danger=True, on_click=self._remove_unlocker))
         row.addStretch()
         lay.addLayout(row)

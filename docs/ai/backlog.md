@@ -13,7 +13,7 @@ that are not plain test steps.
 - [ ] PowerShell -> Python inventory (2026-10-20, Stef wants PowerShell only where unavoidable): core/prerequisites
       (Windows capabilities/winget/PS modules, elevated - DISM API/`dism.exe` possible), core/certificates (cert store
       list/sign/decrypt via .NET - Python needs CryptoAPI/NCrypt via ctypes for smartcards), core/app_updater
-      (apply_update.ps1 after exit - could be a .cmd + tar.exe), ad_user_lookup (ActiveDirectory module - LDAP via
+      (portable update only, -EncodedCommand after exit - could be a .cmd + tar.exe; installed version uses setup.exe), ad_user_lookup (ActiveDirectory module - LDAP via
       ldap3/ctypes ADSI possible), omnivault PowerShellConnector + SecretManagement (by design PowerShell, stays).
 - [ ] NetProbe weitere MX-Toolbox-Funktionen (nächster Schritt, von Stef gewünscht): DNSBL-Blacklist-Prüfung,
       SMTP-Open-Relay-Test. Ideas later: IPv6 port scan tuning, SNMP/mDNS/LLDP discovery, scheduled re-scan.
@@ -37,7 +37,11 @@ that are not plain test steps.
 - [ ] Code signing via SignPath Foundation (docs/EXE_SIGNIEREN.md): Stef applies at signpath.org (needs GitHub
       2FA, a released version), then sets SIGN_METHOD=signpath + SIGNPATH_* vars/secret. SignPath path untested
       until approval.
-- Optional later: installer (Inno Setup/MSIX, sign it too), self-updater could verify the Authenticode signature of a downloaded -win64.zip's exe.
+- Installers DONE 2026-10-22 (Inno Setup + .deb, 0.7.0). Later: sign setup.exe/uninstaller once signing exists,
+  self-updater could verify signatures; rpm (Fedora/RHEL/openSUSE) and/or AppImage if Stef wants other distros;
+  arm64 Linux build; Windows per-user install option (no UAC) if needed.
+- [ ] Linux follow-ups: AD User Lookup via LDAP (ldap3) would make it Linux-capable; DHCP tool stays Windows-only
+      (dhcpsapi.dll). Vault recovery on Linux uses a key file (no Secret Service/keyring integration yet).
 - Move repo to a GitHub org "DarkMatter" if user creates one (then update GITHUB_REPO).
 - Languages: it, nl, pl, pt, cs, sv, tr, uk + dialects swg/sxu/nds/gsw/ksh/wien DONE 2026-10-16 (app only).
   Still open: ja, zh-Hans (font/width tests); RTL (ar, he) needs layout work; tool locales for the new languages

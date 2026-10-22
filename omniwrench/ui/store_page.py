@@ -10,6 +10,7 @@ from PySide6.QtWidgets import (
     QFrame, QHBoxLayout, QLineEdit, QScrollArea, QSplitter, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
+from omniwrench.core import system
 from omniwrench.core.i18n import tr
 from omniwrench.core.repository import CatalogEntry
 from omniwrench.core.versioning import is_newer
@@ -64,7 +65,13 @@ class StoreCard(QFrame):
 
         installed = host.manager.get(m.id)
         col = QVBoxLayout()
-        if installed is None:
+        if installed is None and not system.supports_platform(m.platforms):
+            # Tool für ein anderes Betriebssystem (z. B. nur Windows): anzeigen, aber nicht installierbar
+            platforms = ", ".join(system.platform_name(p) for p in m.platforms)
+            col.addWidget(label(tr("store.platform_only", platforms=platforms), "CardMeta"),
+                          alignment=Qt.AlignmentFlag.AlignRight)
+            btn = None
+        elif installed is None:
             btn = make_button(tr("store.install"), primary=True, on_click=lambda: host.install_entry(entry))
         elif is_newer(m.version, installed.manifest.version):
             col.addWidget(label(tr("store.installed_version", version=installed.manifest.version), "CardMeta"),
@@ -74,8 +81,9 @@ class StoreCard(QFrame):
         else:
             btn = make_button(tr("common.open"), on_click=lambda: host.open_tool(m.id))
             col.addWidget(label(tr("store.installed"), "BadgeOk"), alignment=Qt.AlignmentFlag.AlignRight)
-        btn.setMinimumWidth(130)
-        col.addWidget(btn)
+        if btn is not None:
+            btn.setMinimumWidth(130)
+            col.addWidget(btn)
         col.addStretch()
         # Schmale Karte: Status und Button rutschen unter die Beschreibung
         outer.addWidget(ResponsiveRow(lay, col, left_width=300, align=Qt.AlignmentFlag.AlignTop))

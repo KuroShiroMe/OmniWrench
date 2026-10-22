@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-22T09:27:30+00:00",
+  "generated": "2026-10-22T11:20:00+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -52,7 +52,7 @@
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.3",
+      "version": "1.1.4",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "DarkMatter",
@@ -62,7 +62,8 @@
       "entry": "tool:IconForge",
       "min_app_version": "0.5.0",
       "platforms": [
-        "windows"
+        "windows",
+        "linux"
       ],
       "tags": [
         "Icons",
@@ -92,9 +93,9 @@
           "category": "Documentation & Design"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.3.zip",
-      "sha256": "26913616394b3ac11cafb100bfe4adfdd642e13e72a8e848c9190c1eb093ead4",
-      "size": 29550
+      "download_url": "packages/gfx.iconforge-1.1.4.zip",
+      "sha256": "b4a126318a146b47d6954a0cf40f170dfa99309c9a61ad2e2b3b02d2933299a9",
+      "size": 29556
     },
     {
       "id": "net.ms-dhcp-extended",
@@ -148,7 +149,7 @@
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.2",
+      "version": "1.2.3",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
       "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "DarkMatter",
@@ -158,7 +159,8 @@
       "entry": "tool:NetProbe",
       "min_app_version": "0.6.0",
       "platforms": [
-        "windows"
+        "windows",
+        "linux"
       ],
       "tags": [
         "Ping",
@@ -196,14 +198,14 @@
           "category": "Network & Connectivity"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.2.zip",
-      "sha256": "b7cc3acdc7a760be92f9532e1c9e5c020b2888a3e932098df234f336f606401c",
-      "size": 83382
+      "download_url": "packages/net.netprobe-1.2.3.zip",
+      "sha256": "e429fd7a49198a062c0a6385a51d04d26f0650a537f16ad2dc1d04e73afd5dfb",
+      "size": 83389
     },
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.1.3",
+      "version": "1.1.4",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "DarkMatter",
@@ -213,7 +215,8 @@
       "entry": "tool:OmniVault",
       "min_app_version": "0.5.1",
       "platforms": [
-        "windows"
+        "windows",
+        "linux"
       ],
       "tags": [
         "Passwords",
@@ -286,14 +289,14 @@
           "category": "Sécurité de l'information"
         }
       },
-      "download_url": "packages/sec.omnivault-1.1.3.zip",
-      "sha256": "8b28e9ac7e7e11b3c8454a22334ad9f58e8a99a6874247403c26de02b3a6aea8",
-      "size": 35765
+      "download_url": "packages/sec.omnivault-1.1.4.zip",
+      "sha256": "57072b0ff6dda0a35b96ae975337394d7a59dbcac14859fae2444643524ccc18",
+      "size": 35964
     },
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.2.3",
+      "version": "1.2.4",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "DarkMatter",
@@ -303,7 +306,8 @@
       "entry": "tool:SubnetCalculator",
       "min_app_version": "0.3.0",
       "platforms": [
-        "windows"
+        "windows",
+        "linux"
       ],
       "tags": [
         "IPv4",
@@ -335,9 +339,9 @@
           "category": "Network & Connectivity"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.2.3.zip",
-      "sha256": "f1af2639707c1f5bb6cf2a10cb4737614cffb8edece450ddc0c627bf09be3ec8",
-      "size": 7523
+      "download_url": "packages/net.subnet-calculator-1.2.4.zip",
+      "sha256": "c4d7b53e5ba9237c59950464b7e95098216eaf9b56cb5b2e76a2ac0be4b04713",
+      "size": 7529
     }
   ]
 }

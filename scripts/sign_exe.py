@@ -17,7 +17,7 @@ Das Zertifikat kommt aus Umgebungsvariablen (nie aus dem Repository):
 
 Unter Windows wird signtool.exe (Windows SDK) genutzt, sonst osslsigncode (nur PFX).
 Azure Artifact Signing und SignPath laufen nicht über dieses Skript, sondern über ihre
-GitHub-Actions im Workflow EXE-Build (siehe docs/EXE_SIGNIEREN.md).
+GitHub-Actions im Workflow Build (siehe docs/EXE_SIGNIEREN.md).
 """
 
 from __future__ import annotations

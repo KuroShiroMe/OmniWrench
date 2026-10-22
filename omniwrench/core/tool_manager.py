@@ -21,7 +21,7 @@ from PySide6.QtCore import QObject, Signal
 from omniwrench import __version__
 from omniwrench.sdk import InstallContext, ToolBase, ToolContext
 
-from . import i18n, prerequisites
+from . import i18n, prerequisites, system
 from .i18n import tr
 from .manifest import INSTALL_FILE, ManifestError, SettingDef, ToolManifest, load_settings_schema, validate_package
 from .paths import TOOL_DATA_DIR, TOOLS_DIR
@@ -201,7 +201,7 @@ class ToolManager(QObject):
         progress(tr("prog.package_ok", name=manifest.display_name, version=manifest.version))
         if is_newer(manifest.min_app_version, __version__):
             raise ManifestError(tr("err.min_app_version", required=manifest.min_app_version, installed=__version__))
-        if "windows" not in [p.lower() for p in manifest.platforms] and sys.platform == "win32":
+        if not system.supports_platform(manifest.platforms):
             raise ManifestError(tr("err.platform"))
 
         target = TOOLS_DIR / manifest.id

@@ -5,6 +5,26 @@
 - GitHub: `KuroShiroMe/OmniWrench`, **public** (owner renamed from `Steffi-Tech` on 2026-10-22; GitHub redirects old URLs,
   app migrates stored update/store URLs in `core/settings.py`). No GitHub org (gh can't create orgs); could move later.
 - Data dirs: `%APPDATA%\DarkMatter\OmniWrench` (settings, vault, tool_settings, layout), `%LOCALAPPDATA%\DarkMatter\OmniWrench` (tools, tool_data, logs). Override: `OMNIWRENCH_HOME`.
+  Linux (2026-10-22): `$XDG_CONFIG_HOME/DarkMatter/OmniWrench` (config) + `$XDG_DATA_HOME/DarkMatter/OmniWrench` (local);
+  old Linux data in `~/AppData/...` is moved on first start. Optional `portable-data/` folder next to the program
+  = all data there (my addition for USB-stick use; default for portable stays the user profile).
+
+## Platforms & installation (Stef 2026-10-22, CHANGED: before "Windows clients only")
+- **Windows clients AND Linux** are supported platforms of the main program (Stef: "für Windows und Linux").
+  Windows Server stays unsupported (notice on Home). macOS not planned.
+- Tools declare `platforms`; Linux-capable: subnet calculator, IconForge, NetProbe, OmniVault (except SecretManagement
+  + Netwrix connectors, filtered via connector_types "platforms"). Windows-only: AD User Lookup (RSAT/PowerShell),
+  MS DHCP Extended Management (dhcpsapi.dll/RSAT). Store shows "Läuft nur unter …" without install button.
+  Certificate/smart-card login only on Windows (Linux: master password only).
+- Stef: release offers an installer AND a portable version ("Mobile Version" = portable) for Windows and Linux.
+  Program files in the program folder, config/vaults/tools in the user profile.
+- My choices: Windows = **Inno Setup 6** (single setup.exe, wizard + /VERYSILENT for Intune/SCCM, upgrades via
+  fixed AppId, no signing requirement; MSI/WiX more complex, MSIX needs a signature). Per-machine install to
+  `{autopf}\DarkMatter\OmniWrench` (UAC), start menu, optional desktop icon (unchecked). Linux = **.deb**
+  (/opt/omniwrench, /usr/bin/omniwrench, .desktop, apt resolves Qt system libs), built on Ubuntu 22.04 (glibc 2.35).
+  No rpm/AppImage yet (offered as follow-up). Portable: Windows ZIP (name unchanged), Linux tar.gz.
+- Uninstall keeps user data (vault!). Self-update follows the install kind (setup -> silent setup with UAC,
+  deb -> pkexec apt-get, portable -> replace files, elevated copy if the folder is read-only).
 
 ## Tech
 - Python + PySide6 + PySide6-QtAds (docking) — chosen by user over C#/WPF and PowerShell.
@@ -75,7 +95,7 @@
 - Release ships two assets: `OmniWrench-X.Y.Z.zip` (source) + `OmniWrench-X.Y.Z-win64.zip` (EXE); upload source first.
   (2026-10-16) GitHub sorts assets by name, so -win64 is listed first anyway; user chose to keep the names and
   update 0.5.x installs manually once instead of renaming the source zip.
-- Local dev store not shipped with the EXE. No installer yet. Code signing: see "EXE signing" below.
+- Local dev store not shipped with the EXE. Installers since 0.7.0 (see "Platforms & installation"). Code signing: see "EXE signing" below.
 
 ## Round 8 decisions (2026-10-16)
 - Tool names: **OmniVault** (not OmniKey: HID OMNIKEY trademark conflict, user agreed), **IconForge**.
@@ -118,15 +138,15 @@
 - CI signs only on tags v* and manual runs; method chosen by repo variable SIGN_METHOD (azure|signpath|certificate);
   empty -> unsigned build, no failure. PR/main builds stay unsigned.
 - Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "KuroShiroMe", formerly "Steffi-Tech").
-  README has the required "Code signing policy" section (roles: KuroShiroMe = author/reviewer/approver,
-  privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
+  2026-10-17 SignPath application REJECTED -> signing on hold. 2026-10-22: README "Code signing policy" replaced by
+  "Signierung" (honest: unsigned) + "Datenschutz" (keep it accurate when adding automatic network access).
   Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).
 
 ## UAC prerequisites (2026-10-16, my choices)
 - Elevation via ShellExecuteExW (not Start-Process -Verb RunAs); already-elevated app runs without prompt.
 - WSUS/Features-on-Demand errors: only a hint text; OmniWrench never changes policies/registry on its own.
 - Restart needed: notice in the install log only, no automatic restart.
-- Stef (2026-10-16): OmniWrench targets Windows clients, **not Windows Server**. On Server only a notice on Home
+- Stef (2026-10-16): OmniWrench targets Windows clients, **not Windows Server** (Linux added 2026-10-22, see above). On Server only a notice on Home
   ("functions limited"); no Server-specific prerequisite handling.
 - Translation style (2026-10-16, my choice, consistent with existing files): fr infinitive/impersonal + "Veuillez" for
   requests; es formal "usted" imperatives (Seleccione, Introduzca); dialects keep their own consistent spelling per

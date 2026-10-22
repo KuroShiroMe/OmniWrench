@@ -96,7 +96,7 @@
 - QSplitter shrinks the stretch child first: give a QListView grid a minimum width of one cell (+ scrollbar + frame),
   otherwise it collapses below one column while the side panel keeps its width.
 ## EXE signing
-- `secrets.*` can't be used in step `if:` -> build-exe.yml decides via repo variable SIGN_METHOD (vars.* works).
+- `secrets.*` can't be used in step `if:` -> build.yml decides via repo variable SIGN_METHOD (vars.* works).
 - Since 06/2023 OV/EV private keys live on HSM/token/cloud only -> no PFX secret for bought certs; PFX path is for
   test/company-PKI certs. Certum SimplySign needs a phone code per session -> local signing, not CI.
 - Cloud sandbox: plain-HTTP timestamp servers unreachable and osslsigncode segfaults on that ->
@@ -120,3 +120,14 @@
   diff churns. Two branches bumping the same tool to the same version -> bump once more after merging.
 - Cloud sessions can push to other `claude/*` branches but cannot delete remote branches (git push --delete is denied,
   GitHub MCP has no delete-branch tool) -> Stef deletes them or enables auto-delete of head branches.
+
+## Installers / Linux (2026-10-22)
+- Inno Setup: .iss must be UTF-8 **with BOM** (umlauts in [CustomMessages]); unprefixed custom messages apply to all
+  languages, `de.` overrides. Optional languages via `#if FileExists(CompilerPath + "Languages\X.isl")`.
+- Never change the Inno `AppId` (upgrades/uninstall entry depend on it) or the release file names (updater
+  asset_suffix and 0.6.0 clients pick by name).
+- Linux PyInstaller binary needs glibc >= build system -> build on ubuntu-22.04 (PySide6 wheels need 2.34).
+- `pkill -f <path>` in the Bash tool also kills the tool's own shell when the path appears in the command text.
+- Testing a "wait for PID" helper with a child process as stand-in: reap it (zombie keeps `kill -0` true).
+- Linux tar.gz instead of zip for the portable build (zipfile drops the executable bit).
+- `set -e` in bash ignores `! cmd` -> use `if cmd; then exit 1; fi` in workflow checks.

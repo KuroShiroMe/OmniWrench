@@ -1,8 +1,9 @@
-"""Baut OmniWrench als Windows-Programm (PyInstaller, Ordner-Variante):
+"""Baut OmniWrench als Programmordner für Windows bzw. Linux (PyInstaller, Ordner-Variante):
 
     .\\.venv\\Scripts\\python -m pip install pyinstaller
     .\\.venv\\Scripts\\python scripts\\build_exe.py            # dist\\OmniWrench\\OmniWrench.exe
     .\\.venv\\Scripts\\python scripts\\build_exe.py --zip      # zusätzlich dist\\OmniWrench-<version>-win64.zip
+    python scripts/build_exe.py --zip                       # Linux: dist/OmniWrench-<version>-linux-x86_64.tar.gz
     .\\.venv\\Scripts\\python scripts\\build_exe.py --sign --zip   # EXE vor dem Packen signieren (sign_exe.py)
 
 Ergebnis ist ein Programmordner (keine Einzel-EXE): startet schneller, wird nicht so
@@ -187,19 +188,36 @@ def build_linkagent(app_dir: Path) -> None:
 
 
 def make_zip(app_dir: Path) -> Path:
-    suffix = "win64" if sys.platform == "win32" else sys.platform
-    out = DIST / f"{APP_NAME}-{__version__}-{suffix}.zip"
+    """Portable Version: Windows ZIP (…-win64.zip), Linux tar.gz (…-linux-x86_64.tar.gz, behält die
+    Ausführungsrechte). Dateinamen müssen zu app_updater.asset_suffix passen."""
+    if sys.platform == "win32":
+        out = DIST / f"{APP_NAME}-{__version__}-win64.zip"
+        out.unlink(missing_ok=True)
+        with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
+            for file in sorted(app_dir.rglob("*")):
+                if file.is_file():
+                    zf.write(file, Path(APP_NAME) / file.relative_to(app_dir))
+        return out
+    import platform
+    import tarfile
+
+    out = DIST / f"{APP_NAME}-{__version__}-linux-{platform.machine().lower() or 'x86_64'}.tar.gz"
     out.unlink(missing_ok=True)
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as zf:
-        for file in sorted(app_dir.rglob("*")):
-            if file.is_file():
-                zf.write(file, Path(APP_NAME) / file.relative_to(app_dir))
+    with tarfile.open(out, "w:gz", compresslevel=6) as tf:
+        tf.add(app_dir, arcname=APP_NAME, filter=_anonymous)
     return out
+
+
+def _anonymous(info):
+    """Archiv ohne Benutzer/Gruppe des Build-Rechners."""
+    info.uid = info.gid = 0
+    info.uname = info.gname = ""
+    return info
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--zip", action="store_true", help="Programmordner zusätzlich als ZIP (Release-Asset) packen")
+    parser.add_argument("--zip", action="store_true", help="Programmordner zusätzlich als portable Version packen (Windows ZIP, Linux tar.gz)")
     parser.add_argument("--console", action="store_true", help="mit Konsolenfenster bauen (Fehlersuche)")
     parser.add_argument("--sign", action="store_true",
                         help="EXE signieren, falls ein Zertifikat angegeben ist (scripts/sign_exe.py)")

@@ -8,14 +8,19 @@ omniwrench/app.py             logging, language+Qt translator, theme, LoginDialo
 omniwrench/sdk.py             PUBLIC API for tools: ToolBase, ToolContext, InstallContext, run_async, LANGUAGE_KEY,
                               pick_credential, CredentialField, PSResult, ps_quote
 omniwrench/core/              (Qt-free except tool_manager QObject)
-  paths.py                    dirs (VENDOR/APP_ID), RESOURCES_DIR, APP_DIR
+  paths.py                    dirs (Windows APPDATA/LOCALAPPDATA, Linux XDG; OMNIWRENCH_HOME or APP_DIR/portable-data
+                              override), RESOURCES_DIR, APP_DIR, INSTALL_KIND (setup|deb|portable|source from
+                              omniwrench-install.json next to the program), migrate_legacy_data (Linux ~/AppData ->
+                              XDG), app_dir_writable
   vault.py                    Vault: create/unlock (password|cert)/lock, get/set keys "app:*", "tool:<id>:<key>";
                               reset(new_pw) from DPAPI recovery copy, is_lost()/lost_keys() ("app:lost_secrets")
-  dpapi.py                    protect/unprotect via CryptProtectData (CurrentUser); "plain" fallback off Windows
+  dpapi.py                    protect/unprotect via CryptProtectData (CurrentUser); off Windows "userkey" = AES-GCM with
+                              LOCAL_DIR/recovery.key (0600); legacy "plain" still readable
   certificates.py             cert list/encrypt (Python) / decrypt (PowerShell .NET, smart card ok)
   powershell.py               run_ps (EncodedCommand, UTF-8, CLIXML cleanup), run_ps_elevated (UAC via elevation.py, live log tail, on_output;
                               wrapper: script base64-embedded, lines appended to log, errors prefixed ##ERROR)
-  system.py                   is_windows_server() (registry InstallationType, cached)
+  system.py                   PLATFORM ("windows"|"linux"|"macos"), supports_platform(platforms), platform_name,
+                              is_windows_server() (registry InstallationType, cached)
   elevation.py                ShellExecuteExW runas (owner hwnd = main window, ERROR_CANCELLED 1223), is_admin/needs_uac
   categories.py               AREAS (ids, one level), LEGACY_AREAS, category_id(), category_path(manifest) -> [area] localized
   manifest.py                 ToolManifest (id,name,version,category,tags,icon,icon_text,icon_data,entry,requirements,
@@ -27,7 +32,10 @@ omniwrench/core/              (Qt-free except tool_manager QObject)
                               restart notice, WSUS/FoD hint on 0x800f0954 etc.), PS modules, winget
   repository.py               load_catalog(repos), available_updates, install_from_catalog, update_tools (batch,
                               continues on errors -> (updated, failed))
-  app_updater.py              GitHub releases check/download/apply (PS script replaces files after exit)
+  app_updater.py              GitHub releases check/download/apply; asset by INSTALL_KIND (asset_suffix): setup ->
+                              -win64-setup.exe run silently via UAC (/restart=1), deb -> sh + pkexec apt-get,
+                              portable/source -> replace files after exit (PS -EncodedCommand on Windows, elevated
+                              copy + non-elevated restarter if APP_DIR read-only; sh + tar/zipfile on Linux)
   net.py                      urllib + truststore SSL, github_token header
   i18n.py                     tr(), set_language, fallback_chain, tool_translator, resolve_tool_language,
                               language_tree (dialects indented under base language in dropdowns)
@@ -68,13 +76,18 @@ tools/<tool>/                 subnet_calculator (net.subnet-calculator), ad_user
                               omnivault (sec.omnivault), iconforge (gfx.iconforge), netprobe (net.netprobe), ms_dhcp_extended (net.ms-dhcp-extended) - see below
 store/                        index.json + packages/*.zip (generated, committed)
 scripts/                      build_store, build_release, build_exe (PyInstaller onedir), check_locales, check_store,
-                              smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env)
+                              smoke_test, update_icons, sign_exe (Authenticode via signtool/osslsigncode, cert from env),
+                              build_installer (Windows: ISCC -> -win64-setup.exe; Linux: dpkg-deb -> omniwrench_X_amd64.deb)
 .github/workflows/ci.yml      every PR + push main: compileall, check_locales (app + each tool), check_store (Linux);
-                              smoke_test.py on windows-latest (offscreen)
-.github/workflows/build-exe.yml  every PR + push main + tags v*: PyInstaller build, `--pip --version`, EXE start test
-                              (process must survive 20 s, no ERROR in log), optional signing on tags/manual runs
-                              (vars.SIGN_METHOD: azure|signpath|certificate, docs/EXE_SIGNIEREN.md), signature check,
-                              zip, artifact OmniWrench-X.Y.Z-win64.zip
+                              smoke_test.py on windows-latest and ubuntu-latest (offscreen; tools filtered by platforms)
+.github/workflows/build.yml  every PR + push main + tags v*. Job windows: PyInstaller, `--pip --version`, EXE start
+                              test, optional signing (vars.SIGN_METHOD), ZIP, Inno Setup (choco if missing),
+                              silent install to Program Files + start + uninstall test. Job linux (ubuntu-22.04):
+                              build, tar.gz, start test, .deb, apt install + start + remove test. Job release (tags):
+                              downloads artifacts, build_release.py, gh release create (source zip first) + upload.
+installer/windows/OmniWrench.iss  Inno Setup script (AppId fixed!, mutex wait via CheckForMutexes, [Run] restart
+                              check {param:restart}), compiled only via scripts/build_installer.py (/D defines)
+installer/linux/omniwrench.desktop  menu entry for the .deb
 docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in sync!)
 ```
 

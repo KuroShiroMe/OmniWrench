@@ -1,0 +1,279 @@
+# Baut die Programmpakete bei jedem PR und Push auf main, testet sie und erstellt bei Tags v* das
+# GitHub-Release mit allen Paketen:
+#   Windows  OmniWrench-X.Y.Z-win64-setup.exe  (Installationsprogramm, Inno Setup)
+#            OmniWrench-X.Y.Z-win64.zip        (portable Version)
+#   Linux    omniwrench_X.Y.Z_amd64.deb        (Installationspaket Debian/Ubuntu)
+#            OmniWrench-X.Y.Z-linux-x86_64.tar.gz (portable Version)
+#   Quellcode OmniWrench-X.Y.Z.zip, NetProbe-Mini-Tool linkagent.exe
+# Signiert wird nur bei Tags v* und manuellen Läufen, und nur wenn die Repository-Variable
+# SIGN_METHOD gesetzt ist (azure | signpath | certificate, siehe docs/EXE_SIGNIEREN.md).
+# Ohne SIGN_METHOD bleibt die EXE unsigniert, der Build läuft trotzdem durch.
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows (EXE, Setup, ZIP)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+      - name: EXE bauen
+        run: python scripts/build_exe.py
+      - name: Mini-Tool (linkagent) prüfen
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist\OmniWrench\linkagent.exe)) { throw "linkagent.exe fehlt im Programmordner" }
+          $p = Start-Process dist\OmniWrench\linkagent.exe -ArgumentList '--help' -Wait -PassThru -NoNewWindow
+          if ($p.ExitCode -ne 0) { throw "linkagent.exe --help: Exitcode $($p.ExitCode)" }
+      - name: EXE prüfen (eingebautes pip)
+        shell: pwsh
+        run: |
+          $p = Start-Process dist\OmniWrench\OmniWrench.exe -ArgumentList '--pip','--version' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "OmniWrench.exe --pip --version: Exitcode $($p.ExitCode)" }
+      - name: EXE starten (Anmeldefenster muss offen bleiben)
+        shell: pwsh
+        run: |
+          $env:OMNIWRENCH_HOME = Join-Path $env:RUNNER_TEMP 'omniwrench-exe'
+          $p = Start-Process dist\OmniWrench\OmniWrench.exe -PassThru
+          Start-Sleep -Seconds 20
+          $log = Join-Path $env:OMNIWRENCH_HOME 'local\logs\omniwrench.log'
+          if (Test-Path $log) { Get-Content $log }
+          if ($p.HasExited) { throw "OmniWrench.exe hat sich nach dem Start beendet (Exitcode $($p.ExitCode))" }
+          Stop-Process -Id $p.Id -Force
+          if ((Test-Path $log) -and (Select-String -Path $log -Pattern ' ERROR ' -Quiet)) { throw "Fehler im Log" }
+      - name: Signierung festlegen
+        id: sign
+        shell: pwsh
+        env:
+          METHOD: ${{ vars.SIGN_METHOD }}
+          RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch' }}
+        run: |
+          $m = if ($env:RELEASE -eq 'true') { "$env:METHOD".Trim().ToLower() } else { '' }
+          if ($m -and $m -notin 'azure', 'signpath', 'certificate') { throw "SIGN_METHOD '$m' unbekannt (azure, signpath, certificate)" }
+          if ($m) { "EXE wird signiert: $m" } else { 'EXE bleibt unsigniert (kein Tag/manueller Lauf oder SIGN_METHOD nicht gesetzt)' }
+          "method=$m" >> $env:GITHUB_OUTPUT
+
+      # Azure Artifact Signing (früher Trusted Signing)
+      - name: Signieren (Azure Artifact Signing)
+        if: steps.sign.outputs.method == 'azure'
+        uses: azure/artifact-signing-action@v2
+        with:
+          azure-tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          azure-client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          azure-client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          endpoint: ${{ vars.AZURE_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          certificate-profile-name: ${{ vars.AZURE_CERTIFICATE_PROFILE }}
+          files: ${{ github.workspace }}\dist\OmniWrench\OmniWrench.exe
+          description: OmniWrench
+          description-url: https://github.com/KuroShiroMe/OmniWrench
+
+      # SignPath (für Open-Source-Projekte kostenlos über die SignPath Foundation)
+      - name: Unsignierten Programmordner für SignPath hochladen
+        id: unsigned
+        if: steps.sign.outputs.method == 'signpath'
+        uses: actions/upload-artifact@v4
+        with:
+          name: OmniWrench-unsigned
+          path: dist/OmniWrench
+          if-no-files-found: error
+      - name: Signieren (SignPath)
+        if: steps.sign.outputs.method == 'signpath'
+        uses: signpath/github-action-submit-signing-request@v2
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          github-artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+          output-artifact-directory: dist/OmniWrench-signed
+      - name: Signierten Programmordner übernehmen
+        if: steps.sign.outputs.method == 'signpath'
+        shell: pwsh
+        run: |
+          Remove-Item dist\OmniWrench -Recurse -Force
+          Move-Item dist\OmniWrench-signed dist\OmniWrench
+
+      # Eigenes Zertifikat als PFX (z. B. Testzertifikat oder exportierbares Zertifikat)
+      - name: Signieren (PFX-Zertifikat)
+        if: steps.sign.outputs.method == 'certificate'
+        env:
+          SIGN_PFX_BASE64: ${{ secrets.SIGN_PFX_BASE64 }}
+          SIGN_PFX_PASSWORD: ${{ secrets.SIGN_PFX_PASSWORD }}
+          SIGN_TIMESTAMP_URL: ${{ vars.SIGN_TIMESTAMP_URL }}
+        run: python scripts/sign_exe.py
+
+      - name: Signatur prüfen
+        shell: pwsh
+        env:
+          METHOD: ${{ steps.sign.outputs.method }}
+        run: |
+          $sig = Get-AuthenticodeSignature dist\OmniWrench\OmniWrench.exe
+          "Signatur: $($sig.Status) $($sig.SignerCertificate.Subject)"
+          if ($sig.TimeStamperCertificate) { "Zeitstempel: $($sig.TimeStamperCertificate.Subject)" }
+          if ($env:METHOD -and $sig.Status -eq 'NotSigned') { throw 'OmniWrench.exe ist nicht signiert' }
+          if ($env:METHOD -and $sig.Status -ne 'Valid') { "::warning::Signatur nicht gültig: $($sig.StatusMessage)" }
+      - name: Portable Version packen (ZIP)
+        run: python scripts/build_exe.py --no-build --zip
+      - name: Inno Setup bereitstellen
+        shell: pwsh
+        run: |
+          $iscc = Join-Path ${env:ProgramFiles(x86)} 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc) -and -not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw "Inno Setup konnte nicht installiert werden" }
+          }
+      - name: Installationsprogramm bauen
+        run: python scripts/build_installer.py
+      - name: Installationsprogramm testen (still installieren, starten, deinstallieren)
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem dist\OmniWrench-*-win64-setup.exe | Select-Object -First 1
+          $p = Start-Process $setup.FullName -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART',"/LOG=$env:RUNNER_TEMP\setup.log" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content "$env:RUNNER_TEMP\setup.log"; throw "Setup: Exitcode $($p.ExitCode)" }
+          $app = Join-Path $env:ProgramFiles 'DarkMatter\OmniWrench'
+          foreach ($f in 'OmniWrench.exe', 'omniwrench-install.json', 'unins000.exe') {
+            if (-not (Test-Path (Join-Path $app $f))) { throw "$f fehlt in $app" }
+          }
+          $lnk = Join-Path $env:ProgramData 'Microsoft\Windows\Start Menu\Programs\OmniWrench.lnk'
+          if (-not (Test-Path $lnk)) { throw "Startmenü-Eintrag fehlt: $lnk" }
+          $env:OMNIWRENCH_HOME = Join-Path $env:RUNNER_TEMP 'omniwrench-setup'
+          $run = Start-Process (Join-Path $app 'OmniWrench.exe') -PassThru
+          Start-Sleep -Seconds 20
+          $log = Join-Path $env:OMNIWRENCH_HOME 'local\logs\omniwrench.log'
+          if (Test-Path $log) { Get-Content $log }
+          if ($run.HasExited) { throw "Installiertes OmniWrench hat sich beendet (Exitcode $($run.ExitCode))" }
+          Stop-Process -Id $run.Id -Force
+          Start-Sleep -Seconds 2
+          if (-not (Select-String -Path $log -Pattern '\(setup,' -Quiet)) { throw "Installationsart 'setup' nicht erkannt" }
+          if (Select-String -Path $log -Pattern ' ERROR ' -Quiet) { throw "Fehler im Log" }
+          $u = Start-Process (Join-Path $app 'unins000.exe') -ArgumentList '/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART' -Wait -PassThru
+          if ($u.ExitCode -ne 0) { throw "Deinstallation: Exitcode $($u.ExitCode)" }
+          Start-Sleep -Seconds 5  # Deinstallationsprogramm entfernt sich selbst im Hintergrund
+          if (Test-Path (Join-Path $app 'OmniWrench.exe')) { throw "OmniWrench.exe nach der Deinstallation noch vorhanden" }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OmniWrench-windows
+          path: |
+            dist/OmniWrench-*-win64.zip
+            dist/OmniWrench-*-win64-setup.exe
+            dist/linkagent.exe
+          if-no-files-found: error
+
+  linux:
+    name: Linux (deb, tar.gz)
+    # Ubuntu 22.04 (glibc 2.35): das Paket läuft damit auch auf Debian 12 und Ubuntu 22.04
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+          cache: pip
+      - name: Systembibliotheken für Qt
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q libegl1 libgl1 libfontconfig1 libdbus-1-3 libxkbcommon0 libxkbcommon-x11-0 \
+            libx11-xcb1 libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcb-xkb1 fonts-dejavu-core
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller
+      - name: Programm bauen und portable Version packen (tar.gz)
+        run: python scripts/build_exe.py --zip
+      - name: Programm prüfen (Mini-Tool, eingebautes pip, Start)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          dist/OmniWrench/linkagent --help > /dev/null
+          dist/OmniWrench/OmniWrench --pip --version
+          export OMNIWRENCH_HOME="$RUNNER_TEMP/omniwrench-portable"
+          dist/OmniWrench/OmniWrench & pid=$!
+          sleep 20
+          cat "$OMNIWRENCH_HOME/local/logs/omniwrench.log" || true
+          kill -0 $pid || { echo "OmniWrench hat sich nach dem Start beendet"; exit 1; }
+          kill $pid
+          grep -q '(portable,' "$OMNIWRENCH_HOME/local/logs/omniwrench.log"
+          if grep -q ' ERROR ' "$OMNIWRENCH_HOME/local/logs/omniwrench.log"; then echo "Fehler im Log"; exit 1; fi
+      - name: Installationspaket bauen (deb)
+        run: python scripts/build_installer.py
+      - name: Installationspaket testen (installieren, starten, entfernen)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: |
+          deb=$(ls dist/omniwrench_*.deb)
+          dpkg-deb --info "$deb"
+          sudo apt-get install -y -q "./$deb"
+          test -x /opt/omniwrench/OmniWrench
+          test -f /opt/omniwrench/omniwrench-install.json
+          test -f /usr/share/applications/omniwrench.desktop
+          export OMNIWRENCH_HOME="$RUNNER_TEMP/omniwrench-deb"
+          omniwrench & pid=$!
+          sleep 20
+          cat "$OMNIWRENCH_HOME/local/logs/omniwrench.log" || true
+          kill -0 $pid || { echo "Installiertes OmniWrench hat sich beendet"; exit 1; }
+          kill $pid
+          grep -q '(deb,' "$OMNIWRENCH_HOME/local/logs/omniwrench.log"
+          if grep -q ' ERROR ' "$OMNIWRENCH_HOME/local/logs/omniwrench.log"; then echo "Fehler im Log"; exit 1; fi
+          sudo apt-get remove -y -q omniwrench
+          test ! -e /opt/omniwrench/OmniWrench
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OmniWrench-linux
+          path: |
+            dist/OmniWrench-*-linux-*.tar.gz
+            dist/omniwrench_*.deb
+          if-no-files-found: error
+
+  release:
+    name: GitHub-Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [windows, linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Release erstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          version=$(python3 -c "import omniwrench; print(omniwrench.__version__)")
+          if [ "$TAG" != "v$version" ]; then echo "Tag $TAG passt nicht zur Programmversion $version"; exit 1; fi
+          python3 scripts/build_release.py
+          notes=".github/release-notes/$TAG.md"
+          if [ -f "$notes" ]; then note_args=(--notes-file "$notes"); else note_args=(--generate-notes); fi
+          # Quellpaket zuerst (Programmversionen <= 0.5.x nehmen das erste ZIP; ab 0.6.0 wählt der Updater am Namen)
+          gh release create "$TAG" "dist/OmniWrench-$version.zip" --title "OmniWrench $version" "${note_args[@]}"
+          gh release upload "$TAG" dist/OmniWrench-$version-win64-setup.exe dist/OmniWrench-$version-win64.zip \
+            dist/omniwrench_*.deb dist/OmniWrench-$version-linux-*.tar.gz
+          # NetProbe-Leitungstest-Mini-Tool als eigenständige Datei (ohne Python auf der Gegenstelle)
+          if [ -f dist/linkagent.exe ]; then gh release upload "$TAG" dist/linkagent.exe; fi

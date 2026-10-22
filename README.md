@@ -4,6 +4,45 @@
 
 Modulare Toolsammlung für Administratoren. Tools werden wie aus einem App-Store aus GitHub-Repositories
 installiert, einschließlich ihrer Voraussetzungen (RSAT, PowerShell-Module, winget-Pakete, Python-Pakete).
+Läuft unter Windows 10/11 (Clients) und Linux (Debian/Ubuntu und andere Distributionen mit glibc 2.35 oder neuer).
+
+## Installation
+
+Alle Dateien gibt es unter [Releases](https://github.com/KuroShiroMe/OmniWrench/releases/latest).
+Python muss nicht installiert sein, alles Nötige ist enthalten.
+
+| System | Installationsprogramm (empfohlen) | Portable Version (ohne Installation) |
+|---|---|---|
+| Windows 10/11 (64 Bit) | `OmniWrench-X.Y.Z-win64-setup.exe` | `OmniWrench-X.Y.Z-win64.zip` |
+| Linux (x86_64) | `omniwrench_X.Y.Z_amd64.deb` (Debian, Ubuntu, Mint …) | `OmniWrench-X.Y.Z-linux-x86_64.tar.gz` |
+
+### Windows
+* **Installationsprogramm:** `OmniWrench-X.Y.Z-win64-setup.exe` ausführen und die Abfrage der Benutzerkontensteuerung
+  bestätigen. OmniWrench wird nach `C:\Program Files\DarkMatter\OmniWrench` installiert, mit Eintrag im Startmenü,
+  optionaler Desktop-Verknüpfung und Deinstallation über *Einstellungen › Apps*.
+  Stille Installation für Softwareverteilung (Intune, SCCM …):
+  `OmniWrench-X.Y.Z-win64-setup.exe /VERYSILENT /SUPPRESSMSGBOXES /NORESTART` (Desktop-Verknüpfung zusätzlich mit
+  `/TASKS="desktopicon"`), stille Deinstallation:
+  `"C:\Program Files\DarkMatter\OmniWrench\unins000.exe" /VERYSILENT /SUPPRESSMSGBOXES /NORESTART`.
+* **Portable Version:** ZIP entpacken (z. B. nach `C:\Tools`) und `OmniWrench\OmniWrench.exe` starten.
+* Die Programmdateien sind noch nicht signiert. Windows SmartScreen kann deshalb beim ersten Start warnen
+  („Weitere Informationen › Trotzdem ausführen“).
+
+### Linux
+* **Installationspaket:** `sudo apt install ./omniwrench_X.Y.Z_amd64.deb` installiert OmniWrench nach `/opt/omniwrench`
+  mit allen benötigten Systembibliotheken, dem Befehl `omniwrench` und einem Eintrag im Anwendungsmenü.
+  Entfernen: `sudo apt remove omniwrench`.
+* **Portable Version:** `tar -xzf OmniWrench-X.Y.Z-linux-x86_64.tar.gz` und `OmniWrench/OmniWrench` starten.
+  Benötigt die Qt-Systembibliotheken (Debian/Ubuntu: `sudo apt install libegl1 libxkbcommon-x11-0 libxcb-cursor0`).
+* Unter Linux laufen nur Tools, die Linux unterstützen (Subnetzrechner, IconForge, NetProbe, OmniVault);
+  der Store kennzeichnet die übrigen mit „Läuft nur unter Windows“. Die Anmeldung per Zertifikat/Smartcard
+  gibt es nur unter Windows, unter Linux dient das Masterpasswort.
+
+### Updates
+OmniWrench meldet neue Versionen beim Start bzw. unter *Extras › Nach Updates suchen* und lädt automatisch das
+passende Paket: Eine installierte Version aktualisiert sich über das Installationsprogramm (Windows mit
+UAC-Abfrage, Linux mit Passwortabfrage über `pkexec`), die portable Version ersetzt ihre Dateien selbst.
+Einstellungen, Tresor und installierte Tools bleiben bei Updates und bei der Deinstallation erhalten.
 
 ## Funktionen
 
@@ -83,12 +122,22 @@ docs/TOOL_ENTWICKLUNG.md    Anleitung für neue Tools
 
 ## Datenablage
 
-| Pfad | Inhalt |
-|---|---|
-| `%APPDATA%\DarkMatter\OmniWrench\` | `settings.json`, `vault.json` (verschlüsselt), `tool_settings\`, `layout.json` |
-| `%LOCALAPPDATA%\DarkMatter\OmniWrench\` | `tools\` (installierte Tools), `tool_data\`, `logs\` |
+Programmdateien und Benutzerdaten sind getrennt. Der Programmordner wird nur bei Installation und Update
+geändert; alle Daten liegen pro Benutzer im Benutzerverzeichnis:
 
-Mit der Umgebungsvariable `OMNIWRENCH_HOME` liegt alles in einem Ordner (portabler Betrieb, Tests).
+| System | Pfad | Inhalt |
+|---|---|---|
+| Windows | `%APPDATA%\DarkMatter\OmniWrench\` | `settings.json`, `vault.json` (verschlüsselt), `tool_settings\`, `layout.json` |
+| Windows | `%LOCALAPPDATA%\DarkMatter\OmniWrench\` | `tools\` (installierte Tools), `tool_data\`, `logs\` |
+| Linux | `~/.config/DarkMatter/OmniWrench/` | Einstellungen, Tresor, Tool-Einstellungen, Layout |
+| Linux | `~/.local/share/DarkMatter/OmniWrench/` | installierte Tools, Tool-Daten, Logs |
+
+Unter Linux gelten `XDG_CONFIG_HOME`/`XDG_DATA_HOME`. Daten aus älteren Versionen (unter Linux bisher
+`~/AppData/…`) werden beim ersten Start automatisch übernommen; unter Windows bleiben die Orte unverändert.
+
+Alles in einem Ordner statt im Benutzerverzeichnis:
+* **Portable Version mit Daten** (z. B. USB-Stick): neben dem Programm einen Ordner `portable-data` anlegen.
+* **Umgebungsvariable** `OMNIWRENCH_HOME` (Tests, Sonderfälle).
 
 ## Veröffentlichen
 
@@ -98,16 +147,20 @@ standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
 * **Tools aktualisieren:** `version` in der `tool.json` erhöhen, `python scripts/build_store.py` ausführen,
   `store/` committen und pushen. Der offizielle Store
   (`https://raw.githubusercontent.com/KuroShiroMe/OmniWrench/main/store/index.json`) zeigt das Update sofort an.
-* **Hauptprogramm veröffentlichen:** Version in `omniwrench/__init__.py` erhöhen, committen, dann:
+* **Hauptprogramm veröffentlichen:** Version in `omniwrench/__init__.py` erhöhen, optional Release-Notizen in
+  `.github/release-notes/vX.Y.Z.md` ablegen, committen und den Tag pushen:
 
   ```powershell
-  python scripts/build_release.py          # erzeugt dist\OmniWrench-X.Y.Z.zip aus dem letzten Commit
-  gh release create vX.Y.Z dist\OmniWrench-X.Y.Z.zip --title "OmniWrench X.Y.Z" --notes "…"
+  git tag vX.Y.Z
+  git push origin vX.Y.Z
   ```
 
-  Installierte Programme finden das Release über *Extras › Nach Updates suchen* bzw. beim Start.
-* **EXE bauen:** `python scripts/build_exe.py --zip` erzeugt `dist\OmniWrench\OmniWrench.exe` und
-  `dist\OmniWrench-X.Y.Z-win64.zip` (Anleitung: [docs/EXE_BUILD.md](docs/EXE_BUILD.md)).
+  Der Workflow **Build** (`.github/workflows/build.yml`) baut und testet alle Pakete (Windows-Installationsprogramm
+  und ZIP, Linux-Paket und tar.gz, Quellcode) und legt das GitHub-Release an. Installierte Programme finden es über
+  *Extras › Nach Updates suchen* bzw. beim Start.
+* **Pakete lokal bauen:** `python scripts/build_exe.py --zip` (Programmordner + portable Version), danach
+  `python scripts/build_installer.py` (Windows: Inno Setup 6 nötig, Linux: `dpkg-deb`). Anleitung:
+  [docs/EXE_BUILD.md](docs/EXE_BUILD.md).
 * **Private Repositories** brauchen ein GitHub-Token (*Einstellungen › Updates*). Es wird im Tresor gespeichert.
 
 ## Lizenz
@@ -115,20 +168,14 @@ standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
 OmniWrench steht unter der [MIT-Lizenz](LICENSE). Mitgelieferte Bibliotheken behalten ihre eigenen Lizenzen
 (u. a. Lucide: ISC, PySide6/Qt: LGPL).
 
-## Code signing policy
+## Signierung
 
-Die Windows-Programmdateien (`OmniWrench.exe` im Paket `OmniWrench-X.Y.Z-win64.zip`) werden automatisch aus
-diesem Repository mit GitHub Actions gebaut und signiert.
+Die Programmdateien werden derzeit **nicht signiert**. Ein Antrag bei der SignPath Foundation wurde abgelehnt;
+die Vorbereitung für eine spätere Signierung (eigenes Zertifikat, Azure, SignPath) liegt in
+[docs/EXE_SIGNIEREN.md](docs/EXE_SIGNIEREN.md). Alle Pakete werden automatisch aus diesem Repository mit
+GitHub Actions gebaut.
 
-Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
-[SignPath Foundation](https://signpath.org).
-
-| Rolle | Mitglieder |
-|---|---|
-| Autoren (Committer) und Prüfer (Reviewer) | [KuroShiroMe](https://github.com/KuroShiroMe) |
-| Freigabe jeder Signierung (Approver) | [KuroShiroMe](https://github.com/KuroShiroMe) |
-
-### Datenschutz
+## Datenschutz
 
 This program will not transfer any information to other networked systems unless
 specifically requested by the user or the person installing or operating it. Abgerufen werden nur der

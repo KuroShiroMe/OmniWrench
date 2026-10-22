@@ -654,7 +654,14 @@ class MainWindow(QMainWindow):
             dlg = TaskDialog(self, tr("updates.app_title"), task, auto_close=self._auto_close)
             dlg.exec()
             if dlg.success and dlg.result_value:
-                app_updater.apply_update(dlg.result_value)
+                try:
+                    app_updater.apply_update(dlg.result_value)
+                except elevation.ElevationCancelled:
+                    self.notify(tr("updates.uac_cancelled"))
+                    return
+                except (app_updater.UpdateError, OSError) as exc:
+                    QMessageBox.warning(self, tr("updates.app_title"), str(exc))
+                    return
                 self._force_quit = True
                 self.close()
 
