@@ -92,12 +92,12 @@ Mit der Umgebungsvariable `OMNIWRENCH_HOME` liegt alles in einem Ordner (portabl
 
 ## Veröffentlichen
 
-Repository: [github.com/Steffi-Tech/OmniWrench](https://github.com/Steffi-Tech/OmniWrench). Das Programm ist
+Repository: [github.com/KuroShiroMe/OmniWrench](https://github.com/KuroShiroMe/OmniWrench). Das Programm ist
 standardmäßig darauf eingestellt (`GITHUB_REPO` in `omniwrench/__init__.py`).
 
 * **Tools aktualisieren:** `version` in der `tool.json` erhöhen, `python scripts/build_store.py` ausführen,
   `store/` committen und pushen. Der offizielle Store
-  (`https://raw.githubusercontent.com/Steffi-Tech/OmniWrench/main/store/index.json`) zeigt das Update sofort an.
+  (`https://raw.githubusercontent.com/KuroShiroMe/OmniWrench/main/store/index.json`) zeigt das Update sofort an.
 * **Hauptprogramm veröffentlichen:** Version in `omniwrench/__init__.py` erhöhen, committen, dann:
 
   ```powershell
@@ -125,8 +125,8 @@ Free code signing provided by [SignPath.io](https://about.signpath.io), certific
 
 | Rolle | Mitglieder |
 |---|---|
-| Autoren (Committer) und Prüfer (Reviewer) | [Steffi-Tech](https://github.com/Steffi-Tech) |
-| Freigabe jeder Signierung (Approver) | [Steffi-Tech](https://github.com/Steffi-Tech) |
+| Autoren (Committer) und Prüfer (Reviewer) | [KuroShiroMe](https://github.com/KuroShiroMe) |
+| Freigabe jeder Signierung (Approver) | [KuroShiroMe](https://github.com/KuroShiroMe) |
 
 ### Datenschutz
 

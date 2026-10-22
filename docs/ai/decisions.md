@@ -2,7 +2,8 @@
 
 ## Product / branding
 - Name: **OmniWrench** (Ratchet & Clank reference), vendor **DarkMatter** (imaginary). Python package `omniwrench`.
-- GitHub: `Steffi-Tech/OmniWrench`, **public**. No GitHub org (gh can't create orgs); could move later.
+- GitHub: `KuroShiroMe/OmniWrench`, **public** (owner renamed from `Steffi-Tech` on 2026-10-22; GitHub redirects old URLs,
+  app migrates stored update/store URLs in `core/settings.py`). No GitHub org (gh can't create orgs); could move later.
 - Data dirs: `%APPDATA%\DarkMatter\OmniWrench` (settings, vault, tool_settings, layout), `%LOCALAPPDATA%\DarkMatter\OmniWrench` (tools, tool_data, logs). Override: `OMNIWRENCH_HOME`.
 
 ## Tech
@@ -116,8 +117,8 @@
 - Secrets never in repo/chat: local signing via env (SIGN_CERT_SHA1 or SIGN_PFX_*), CI via GitHub secrets/variables.
 - CI signs only on tags v* and manual runs; method chosen by repo variable SIGN_METHOD (azure|signpath|certificate);
   empty -> unsigned build, no failure. PR/main builds stay unsigned.
-- Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "Steffi-Tech").
-  README has the required "Code signing policy" section (roles: Steffi-Tech = author/reviewer/approver,
+- Stef chose (2026-10-16): **SignPath Foundation** + repo licence **MIT** (LICENSE, copyright "KuroShiroMe", formerly "Steffi-Tech").
+  README has the required "Code signing policy" section (roles: KuroShiroMe = author/reviewer/approver,
   privacy statement). Keep it accurate: new automatic network access must be listed there (SignPath terms).
   Alternatives rejected for now: Certum OSS, company PKI, OV, Azure (EU orgs only).
 

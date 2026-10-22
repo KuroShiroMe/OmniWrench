@@ -46,27 +46,27 @@ OmniWrench
 
 **Repository URL**
 ```text
-https://github.com/Steffi-Tech/OmniWrench
+https://github.com/KuroShiroMe/OmniWrench
 ```
 
 **Homepage URL**
 ```text
-https://github.com/Steffi-Tech/OmniWrench
+https://github.com/KuroShiroMe/OmniWrench
 ```
 
 **Download URL**
 ```text
-https://github.com/Steffi-Tech/OmniWrench/releases
+https://github.com/KuroShiroMe/OmniWrench/releases
 ```
 
 **Privacy policy URL**
 ```text
-https://github.com/Steffi-Tech/OmniWrench#datenschutz
+https://github.com/KuroShiroMe/OmniWrench#datenschutz
 ```
 
 **Code signing policy URL** (falls gefragt)
 ```text
-https://github.com/Steffi-Tech/OmniWrench#code-signing-policy
+https://github.com/KuroShiroMe/OmniWrench#code-signing-policy
 ```
 
 **License**
@@ -114,7 +114,7 @@ GitHub Actions
 
 **Workflow / build configuration** (falls gefragt)
 ```text
-https://github.com/Steffi-Tech/OmniWrench/blob/main/.github/workflows/build-exe.yml
+https://github.com/KuroShiroMe/OmniWrench/blob/main/.github/workflows/build-exe.yml
 ```
 
 **Artifacts to sign** (falls gefragt)
@@ -133,9 +133,9 @@ oder Beiträge (z. B. in Foren) vor dem Antrag oder bei Rückfragen nachtragen.
 | Einstellung | Wert |
 |---|---|
 | Project slug | `omniwrench` |
-| Trusted build system | GitHub.com, Repository `Steffi-Tech/OmniWrench` |
+| Trusted build system | GitHub.com, Repository `KuroShiroMe/OmniWrench` |
 | Signing policy slug | `release-signing` |
-| Approval | manuell, Approver `Steffi-Tech` |
+| Approval | manuell, Approver `KuroShiroMe` |
 | Artifact configuration slug | `omniwrench-exe` (als Standard des Projekts markieren) |
 
 Artefakt-Konfiguration zum Einfügen:

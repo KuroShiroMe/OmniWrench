@@ -15,7 +15,7 @@ Folgenden Text in *Set project instructions* einfügen:
 
 ```text
 Projekt: OmniWrench von DarkMatter – modulare Windows-Admin-Toolbox (Python 3.14, PySide6, QtAds).
-Repository: github.com/Steffi-Tech/OmniWrench (öffentlich). Antworte auf Deutsch.
+Repository: github.com/KuroShiroMe/OmniWrench (öffentlich). Antworte auf Deutsch.
 
 Die Projektdateien sind das Projektgedächtnis:
 - CLAUDE.md: Einstieg, Konventionen, Befehle
@@ -34,7 +34,7 @@ Regeln:
 
 ## 3. Projektwissen aus GitHub einbinden
 
-Im Projekt › **Project knowledge** › **+ Add content** › **GitHub** › Repository `Steffi-Tech/OmniWrench` wählen und
+Im Projekt › **Project knowledge** › **+ Add content** › **GitHub** › Repository `KuroShiroMe/OmniWrench` wählen und
 diese Dateien/Ordner auswählen:
 
 - `CLAUDE.md`

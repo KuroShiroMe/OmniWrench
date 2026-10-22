@@ -40,7 +40,7 @@ from omniwrench import APP_NAME  # noqa: E402
 
 DEFAULT_EXE = ROOT / "dist" / APP_NAME / f"{APP_NAME}.exe"
 DEFAULT_TIMESTAMP = "http://timestamp.digicert.com"
-PROJECT_URL = "https://github.com/Steffi-Tech/OmniWrench"
+PROJECT_URL = "https://github.com/KuroShiroMe/OmniWrench"
 
 
 class SignError(RuntimeError):

@@ -283,6 +283,14 @@ Stef: das exportierte Leitungstest-Mini-Tool soll auf der Gegenstelle ohne Pytho
   serve/probe des Binaries, Offscreen-Render des Export-Bereichs (beide Knöpfe, .exe-Knopf aktiv), check_store.
   Windows-.exe-Build selbst läuft in CI (hier nur Linux-Binary gebaut).
 
+## 2026-10-22 – GitHub-Name Steffi-Tech → KuroShiroMe
+Stef hat den GitHub-Namen geändert. Alle Verweise auf `Steffi-Tech/OmniWrench` umgestellt: `omniwrench/__init__.py`
+(GITHUB_REPO → Update-Quelle und offizieller Store), build-exe.yml, sign_exe.py, README (inkl. Code-signing-Rollen),
+LICENSE (Copyright war der GitHub-Name), CLAUDE.md, decisions.md, EXE_SIGNIEREN.md, claude-project/README.md.
+- Neu: `core/settings.py` schreibt in gespeicherten Einstellungen `app_update_repo` und Store-URLs mit dem alten
+  Namen beim Laden auf den neuen um (alte Installationen hängen sonst an der GitHub-Weiterleitung).
+- Geprüft: grep ohne Rest-Treffer (außer Historie), Migration per Python-Test.
+
 ## 2026-10-20 Tool-Updates: Startmeldung, Alle aktualisieren, Auto-Update (Thread „Tool-Updates“)
 - Stef: Meldung beim Start bei Tool-Updates (alle aktualisieren oder verschieben), Haken „Dieses Fenster nach Abschluss
   schließen“ in Update-Fenstern (gemerkt), „Alle aktualisieren“ in Store und Optionen, Option für automatische
