@@ -24,6 +24,7 @@ import uuid
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 
 from . import dhcpapi as api
+from . import eventlog
 
 
 class HostError(Exception):
@@ -50,6 +51,7 @@ class ApiBackend:
         self._apis: dict[str, api.DhcpApi] = {}
         self._idents: dict[str, api.Identity] = {}     # Server -> Anmeldung ("*" = Primärserver)
         self._cancel = threading.Event()
+        self._events: eventlog.EventReader | None = None
 
     # --- Verwaltung -----------------------------------------------------------------------------------
     def close(self) -> None:
@@ -205,6 +207,17 @@ class ApiBackend:
     def _cmd_access(self, a, prog):
         server = str(a["server"])
         return api.DhcpApi(server, self._ident(server)).access()
+
+    def _cmd_events(self, a, prog):
+        """Konfigurationsereignisse seit `since` (UTC, ISO) aus dem DHCP-Ereignisprotokoll des Servers."""
+        server = str(a["server"])
+        with self._lock:
+            if self._events is None:
+                self._events = eventlog.EventReader()
+            reader = self._events
+        ident = self._ident(server)
+        login = ident.parts() if ident is not None else (None, None, None)
+        return {"items": reader.query(server, login, str(a["since"]), int(a.get("max") or 200))}
 
     def _cmd_netsh(self, a, prog):
         server = str(a["server"])

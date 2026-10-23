@@ -35,6 +35,7 @@
   - [Definitionen (Expertenmodus)](#definitionen-expertenmodus)
   - [Zwischenablage](#zwischenablage)
   - [Nur-Lese-Zugriff](#nur-lese-zugriff)
+  - [Änderungen anderer erkennen](#änderungen-anderer-erkennen)
   - [Protokoll](#protokoll)
 - [Einstellungen](#einstellungen)
 - [Sicherheit und Datenschutz](#sicherheit-und-datenschutz)
@@ -59,6 +60,9 @@
 - Auf dem DHCP-Server: Mitgliedschaft in **DHCP Administrators** zum Ändern oder **DHCP Users** zum Lesen.
 - Netzwerk: RPC zum DHCP-Server (TCP 135 und dynamische RPC-Ports), wie für die DHCP-Konsole.
 - „Aus AD laden“ liest die autorisierten DHCP-Server aus dem Active Directory.
+- Optional, für die Anzeige „wer hat geändert“: Leserecht auf das Ereignisprotokoll des DHCP-Servers (Mitglied
+  in **Ereignisprotokollleser**/*Event Log Readers* oder Administrator) und die Firewall-Regelgruppe
+  **Remote-Ereignisprotokollverwaltung** auf dem Server. Ohne das funktioniert alles andere weiter.
 
 Nur unter Windows verfügbar.
 
@@ -265,6 +269,23 @@ außerhalb des Scopes übersprungen.
 Beim Anmelden prüft das Tool ohne Änderung, ob das Konto schreiben darf. Bei reinem Lesezugriff (DHCP Users)
 werden alle Bearbeitungsfunktionen ausgeblendet und Felder schreibgeschützt.
 
+### Änderungen anderer erkennen
+Ändert jemand anderes den Server (DHCP-Konsole, PowerShell, ein zweites OmniWrench), merkt das Tool es auf drei Wegen:
+
+- **Prüfung vor dem Speichern:** Vor jedem Schreiben in einem Scope-Tab und bei Server-Optionen liest das Tool den
+  aktuellen Stand und vergleicht ihn mit dem Stand beim Laden. Gibt es Unterschiede, wird nichts geschrieben.
+  Die Meldung listet sie auf (z. B. „Option 006: 10.0.0.5 → 10.0.0.6“, „Neue Reservierung …“) und nennt laut
+  Ereignisprotokoll, wer es war. **Neu laden (Eingaben behalten)** übernimmt den Serverstand, eigene Eingaben in
+  geänderten Feldern bleiben stehen – danach prüfen und erneut speichern. **Trotzdem speichern** schreibt trotzdem.
+- **Automatisch aktualisieren** (oben rechts bzw. in den Einstellungen, Standard alle 5 Minuten): Im Hintergrund,
+  ohne die Oberfläche zu sperren, werden offene Scopes, Übersicht, Failover, Server-Optionen und Definitionen neu
+  geladen. Hat sich ein offener Scope geändert, zeigt ein Balken oben im Tab, was anders ist. Sind im Tab
+  ungespeicherte Eingaben offen, wird nicht automatisch geladen, sondern der Balken bietet **Neu laden** an.
+- **Wer war es:** Der DHCP-Server schreibt Konfigurationsänderungen mit dem ausführenden Konto in sein
+  Ereignisprotokoll (*Anwendungs- und Dienstprotokolle › Microsoft › Windows › DHCP-Server ›
+  Betriebsbereit*). Das Tool liest es mit denselben Anmeldedaten und schreibt neue Einträge ins Protokoll
+  („Änderung am Server (Zeit, Benutzer): …“). Ist das Ereignisprotokoll nicht lesbar, steht das einmal im Protokoll.
+
 ### Protokoll
 **Protokoll** zeigt alle ausgeführten Aktionen und Befehle der Sitzung (z. B. die `netsh`-Befehle der
 Replikation); **Leeren** löscht die Anzeige.
@@ -276,6 +297,7 @@ Replikation); **Leeren** löscht die Anzeige.
 | Verbindung › Letzter Server | leer | wird beim Öffnen vorgeschlagen |
 | Verbindung › Failover-Partner beim Anmelden verbinden | an | prüft direkt nach der Anmeldung den Zugriff auf alle Partner; sonst erst bei Bedarf |
 | Verbindung › Server nach der Anmeldung prüfen | an | startet die Serverprüfung im Hintergrund |
+| Verbindung › Automatisch aktualisieren | alle 5 Minuten | prüft im Hintergrund auf Änderungen anderer und lädt die Ansichten neu (aus, 1, 2, 5, 10, 15, 30 Minuten; auch oben im Hauptfenster umstellbar) |
 | Verbindung › Änderungen automatisch replizieren | an | gleicht Failover-Scopes nach jeder Änderung mit dem Partner ab |
 | Erweitert › Expertenmodus | aus | zeigt die Seite „Definitionen“ |
 | Anmeldung › Gespeicherte Anmeldedaten | – | für „Gespeicherte Anmeldedaten“ bei der Anmeldung; verschlüsselt im Tresor |
@@ -318,6 +340,8 @@ Replikation); **Leeren** löscht die Anzeige.
 | Bearbeiten-Knöpfe fehlen | Konto hat nur Lesezugriff |
 | „Der Adressbereich eines Failover-Scopes kann nicht gelöscht werden“ (0x4EA4) | trat bis 1.2.2 beim Ändern des Pools eines Failover-Scopes auf; ab 1.3.0 wird der Pool direkt angepasst |
 | „… Alle n bereits durchgeführten Änderungen wurden zurückgenommen“ | die Aktion ist an der genannten Ursache gescheitert, der vorherige Stand ist wiederhergestellt; Ursache beheben und erneut ausführen |
+| „Auf dem Server geändert“ beim Speichern | jemand anderes hat den Scope seit dem Laden geändert; „Neu laden (Eingaben behalten)“, prüfen, erneut speichern |
+| „Ereignisprotokoll des Servers nicht lesbar“ im Protokoll | Konto in „Ereignisprotokollleser“ aufnehmen und Firewall-Regel „Remote-Ereignisprotokollverwaltung“ auf dem Server freigeben; betrifft nur die Anzeige „wer“ |
 | „Beim Zurücknehmen sind n Schritte fehlgeschlagen“ | die genannten Schritte in der DHCP-Konsole prüfen bzw. von Hand nachziehen; Details im Protokoll |
 | „Eine Richtlinie im Scope nutzt einen Adressbereich außerhalb des neuen Bereichs“ (0x4E90) | zuerst den Bereich der Richtlinie (Policy) in der DHCP-Konsole anpassen, dann den Pool |
 
@@ -325,6 +349,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
+| 1.4.0 | Änderungen anderer erkennen: Prüfung vor jedem Speichern (Scope und Server-Optionen) mit Liste der Unterschiede, automatisches Aktualisieren mit einstellbarem Abstand und Hinweisbalken, „wer hat geändert“ aus dem Ereignisprotokoll des DHCP-Servers |
 | 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes; jede Aktion läuft als Transaktion und wird bei einem Fehler oder Abbruch vollständig zurückgenommen (auch beim Partner), Einfügen und Entwurf sind „alles oder nichts“ |
 | 1.2.1 | Bereich und Tags neu |
 | 1.2.0 | Prüfung mit Spalte „Höchster Befund“, Failover-Beziehungen aufklappbar mit beiden Servern, Server-Optionen je Server; Alpha-Kennzeichnung entfernt |

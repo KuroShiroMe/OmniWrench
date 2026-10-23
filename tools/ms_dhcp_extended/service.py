@@ -185,6 +185,7 @@ class DhcpService:
         self.peer: dict[str, dict] = {}      # Sicht der Partner: Failover-Beziehungen, Scopes, Server-Optionen
         self.partner_diffs: dict[str, list] = {}   # Scope -> Abweichungen zum Partner aus der letzten Prüfung
         self._tx: Tx | None = None           # laufende Transaktion (Rücknahme bei Fehlern)
+        self.events_error = ""               # Ereignisprotokoll nicht lesbar (Text, einmal gemeldet)
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -677,6 +678,85 @@ class DhcpService:
             if out["stat"]:
                 info["stat"] = out["stat"]
         return out
+
+    # --- Änderungen anderer erkennen ---------------------------------------------------------------------
+    @staticmethod
+    def config_of(data: dict) -> dict:
+        """Vergleichbarer Konfigurationsstand eines Scopes (ohne Leases und Statistik)."""
+        s = data.get("scope") or {}
+        return {"scope": {k: s.get(k) for k in ("name", "desc", "state", "start", "end", "lease", "mask")},
+                "exclusions": sorted((x["start"], x["end"]) for x in data.get("exclusions") or []),
+                "options": {(int(o["id"]), o.get("vendor") or "", o.get("user") or ""): list(o["values"])
+                            for o in data.get("options") or []},
+                "reservations": {r["ip"]: (r.get("cid") or "", r.get("name") or "", r.get("desc") or "", r.get("type") or "")
+                                 for r in data.get("reservations") or []},
+                "dns": data.get("dns")}
+
+    def diff_config(self, old: dict, new: dict) -> list[str]:
+        """Was hat sich zwischen zwei Ständen von config_of geändert? (lesbare Zeilen)"""
+        tr = self.tr
+        out = []
+        for k in ("name", "desc", "state", "start", "end", "lease", "mask"):
+            a, b = old["scope"].get(k), new["scope"].get(k)
+            if a != b:
+                if k == "lease":
+                    a, b = ck.format_lease(a, tr) if a is not None else "–", ck.format_lease(b, tr) if b is not None else "–"
+                elif k == "state":
+                    a, b = tr("state." + str(a)), tr("state." + str(b))
+                out.append(tr("conf.field", field=tr("conf.f." + k), a=a if a not in (None, "") else "–",
+                              b=b if b not in (None, "") else "–"))
+        oe, ne = set(old["exclusions"]), set(new["exclusions"])
+        out += [tr("conf.excl_new", range=f"{x[0]} – {x[1]}") for x in sorted(ne - oe)]
+        out += [tr("conf.excl_gone", range=f"{x[0]} – {x[1]}") for x in sorted(oe - ne)]
+
+        def tag(k):
+            return f"{k[0]:03d}" + (f" [{k[1]}]" if k[1] else "") + (f" [{k[2]}]" if k[2] else "")
+        oo, no = old["options"], new["options"]
+        for k in sorted(set(oo) | set(no)):
+            if k not in oo:
+                out.append(tr("conf.opt_new", tag=tag(k), b=", ".join(no[k])))
+            elif k not in no:
+                out.append(tr("conf.opt_gone", tag=tag(k)))
+            elif oo[k] != no[k]:
+                out.append(tr("conf.opt_changed", tag=tag(k), a=", ".join(oo[k]), b=", ".join(no[k])))
+        orr, nr = old["reservations"], new["reservations"]
+        for k in sorted(set(orr) | set(nr), key=lambda x: ip.ip2int(x) if ip.is_ipv4(x) else 0):
+            if k not in orr:
+                out.append(tr("conf.res_new", ip=k, mac=nr[k][0], name=nr[k][1]))
+            elif k not in nr:
+                out.append(tr("conf.res_gone", ip=k, name=orr[k][1]))
+            elif orr[k] != nr[k]:
+                out.append(tr("conf.res_changed", ip=k, name=nr[k][1]))
+        if (old.get("dns") or None) != (new.get("dns") or None):
+            out.append(tr("conf.dns"))
+        return out
+
+    def change_events(self, since_utc: str, sid: str | None = None, mask: str | None = None) -> list[dict]:
+        """Konfigurationsänderungen laut Ereignisprotokoll des Servers seit since_utc (neueste zuerst), optional nur
+        die, die den Scope bzw. eine Adresse darin nennen. Ist das Protokoll nicht lesbar: [] (einmal gemeldet)."""
+        try:
+            items = list((self.call("events", {"server": self.server, "since": since_utc}) or {}).get("items") or [])
+        except UserError as e:
+            if not self.events_error:
+                self.events_error = str(e)
+                self.log(self.tr("log.events_unavailable", error=str(e)), True)
+            return []
+        self.events_error = ""
+        return [ev for ev in items if self.change_events_match(ev, sid, mask)] if sid else items
+
+    @staticmethod
+    def change_events_match(ev: dict, sid: str, mask: str | None) -> bool:
+        """Nennt das Ereignis den Scope oder eine Adresse darin (z. B. Reservierung, Ausschluss)?"""
+        text = " ".join([ev.get("text") or ""] + [str(x) for x in ev.get("data") or []])
+        for a in re.findall(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", text):
+            if a == sid or (mask and ip.is_ipv4(a) and ip.in_subnet(a, sid, mask)):
+                return True
+        return False
+
+    def event_lines(self, events: list[dict], n: int = 8) -> str:
+        return short_list([self.tr("conf.event", time=(ev.get("time") or "")[:16],
+                                   user=ev.get("user") or "?", text=ev.get("text") or f"#{ev.get('id')}")
+                           for ev in events], n)
 
     def classes(self, server: str | None = None) -> list[dict]:
         return [n_class(x) for x in self.cim("Get-DhcpServerv4Class", server)]

@@ -4,7 +4,7 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.3.0,
+Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.4.0,
 NetProbe 1.2.4, Subnetzrechner 1.2.5, OmniVault 1.1.5. App-Version 0.7.0.
 
 ## 0. Vorbereitung
@@ -149,6 +149,24 @@ dhcpsapi.dll.
 - [ ] Während einer langen Aktion „Abbrechen“: Hinweis „Die Aktion wurde abgebrochen …“, Stand wie vorher.
 - [ ] Rücknahme nach gelöschter Failover-Beziehung: Beziehung ist wieder da; gemeinsamen Schlüssel prüfen bzw. neu
       setzen (lässt sich nicht wiederherstellen).
+
+**1.4.0: Änderungen anderer erkennen** (nur mit Fake-Daten getestet – Testumgebung mit zwei Sitzungen bzw. DHCP-Konsole)
+- [ ] Scope im Tool öffnen, in der DHCP-Konsole eine Option ändern, im Tool eine andere Option speichern:
+      Meldung „Auf dem Server geändert“ mit der Änderung aus der Konsole; nichts geschrieben.
+- [ ] Dieselbe Meldung nennt unter „Laut Ereignisprotokoll“ Uhrzeit, Konto und Text der Konsolen-Änderung.
+      Falls stattdessen „Wer … nicht bekannt“: Protokollzeile „Ereignisprotokoll … nicht lesbar“ mit Fehler melden.
+- [ ] „Neu laden (Eingaben behalten)“: Konsolen-Änderung ist sichtbar, eigene Eingabe (z. B. Name) steht noch da;
+      erneut speichern klappt ohne Meldung. „Trotzdem speichern“ schreibt; „Abbrechen“ ändert nichts.
+- [ ] Oben „Aktualisieren: jede Minute“ einstellen, in der Konsole Reservierung anlegen: spätestens nach einer
+      Minute zeigt der Scope-Tab den Balken „Auf dem Server geändert und neu geladen“, Reservierung ist da, das
+      Protokoll zeigt „Änderung am Server (…, Konto): …“. Die Oberfläche bleibt dabei bedienbar.
+- [ ] Wie oben, aber vorher im Tab den Namen ändern (nicht speichern): kein automatisches Neuladen, Balken mit
+      „Neu laden“; danach Name noch geändert, Reservierung da.
+- [ ] Übersicht/Failover/Server-Optionen: Scope in der Konsole anlegen bzw. Server-Option ändern → nach der
+      nächsten Runde sichtbar. Server-Option im Tool ändern, nachdem sie in der Konsole geändert wurde → Meldung.
+- [ ] Server kurz nicht erreichbar (Netz trennen): eine Protokollzeile „Automatische Aktualisierung fehlgeschlagen“,
+      keine wiederholten Fehlerfenster.
+- [ ] Einstellung „Automatisch aktualisieren“ in den Tool-Einstellungen und Auswahl oben bleiben synchron.
 
 ## 6. NetProbe (net.netprobe 1.2.3)
 

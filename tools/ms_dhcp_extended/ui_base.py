@@ -87,6 +87,22 @@ def confirm(parent, title: str, text: str) -> bool:
     return _box(parent, QMessageBox.Icon.Question, title, text, b.Yes | b.No, b.No) == b.Yes
 
 
+def choose(parent, title: str, text: str, buttons: list[tuple[str, str]], default: str | None = None,
+           icon=QMessageBox.Icon.Warning) -> str:
+    """Meldung mit eigenen Knöpfen [(Schlüssel, Beschriftung)]; liefert den Schlüssel (Schließen = letzter Knopf)."""
+    box = QMessageBox(icon, title, text, QMessageBox.StandardButton.NoButton, parent)
+    box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    btns = {}
+    for i, (key, label) in enumerate(buttons):
+        role = QMessageBox.ButtonRole.RejectRole if i == len(buttons) - 1 else QMessageBox.ButtonRole.AcceptRole
+        btns[box.addButton(label, role)] = key
+        if key == default:
+            box.setDefaultButton(list(btns)[-1])
+    box.setEscapeButton(list(btns)[-1])
+    box.exec()
+    return btns.get(box.clickedButton(), buttons[-1][0])
+
+
 def ask3(parent, title: str, text: str) -> str:
     b = QMessageBox.StandardButton
     r = _box(parent, QMessageBox.Icon.Question, title, text, b.Yes | b.No | b.Cancel, b.Yes)

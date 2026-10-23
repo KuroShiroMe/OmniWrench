@@ -143,3 +143,5 @@
 - DHCP tool transactions: record an undo step only after the write succeeded, otherwise a failed write produces a
   failing inverse ("partial rollback" false alarm). Inside `ctl.atomic` flows, do not catch UserError per item to
   continue - raise, so the whole action is undone. Lambdas in except blocks must bind the exception (`exc=e`).
+- DHCP tool background polling: use `Job(..., quiet=True)`; a normal Job disables the main area for every step
+  (focus loss while typing). Never poll while a modal dialog is open or the runner is busy.

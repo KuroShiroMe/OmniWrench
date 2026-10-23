@@ -10,13 +10,14 @@ Aufbau:
 
 from __future__ import annotations
 
+import datetime
 import html
 import json
 import os
 import time
 
 import PySide6QtAds as ads
-from PySide6.QtCore import QMimeData, QObject, Qt, Signal
+from PySide6.QtCore import QMimeData, QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QApplication, QButtonGroup, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -30,6 +31,7 @@ from omniwrench.ui.widgets import make_button
 
 from . import checks as ck
 from . import dialogs as dlg
+from . import eventlog
 from .page_draft import DraftTab
 from .page_scope import ScopeTab
 from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
@@ -41,6 +43,7 @@ from .ui_base import FilterState, bold_label, confirm, error, help_icon, info, l
 
 MIME = "application/x-omniwrench-ms-dhcp-extended+json"
 MAX_SERVERS = 15
+REFRESH_MINUTES = (0, 1, 2, 5, 10, 15, 30)
 
 
 class _Bridge(QObject):
@@ -73,6 +76,9 @@ class MsDhcpExtended(ToolBase):
         self.scan: dict | None = None
         self._classes: tuple[list[str], list[str]] | None = None
         self._dock_seq = 0
+        self._ev_since = ""             # Ereignisprotokoll: bis hierhin gelesen (UTC)
+        self._ev_seen: set[int] = set()  # schon gemeldete Ereignisse (EventRecordID)
+        self._poll_error = ""
 
         self.root = QWidget(parent)
         lay = QVBoxLayout(self.root)
@@ -84,6 +90,8 @@ class MsDhcpExtended(ToolBase):
         self.stack.addWidget(self._build_main())
         self.stack.addWidget(self._build_loading())
         lay.addWidget(self._build_status())
+        self.refresh_timer = QTimer(self.root)
+        self.refresh_timer.timeout.connect(self._poll_tick)
         self._shortcut = QShortcut(QKeySequence("Ctrl+W"), self.root)
         self._shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self._shortcut.activated.connect(self._close_current)
@@ -237,6 +245,15 @@ class MsDhcpExtended(ToolBase):
         self.conn_info = QLabel("")
         self.conn_info.setTextFormat(Qt.TextFormat.RichText)
         top.addWidget(self.conn_info, 1)
+        top.addWidget(QLabel(tr("main.auto_refresh")))
+        self.refresh_combo = QComboBox()
+        for m in REFRESH_MINUTES:
+            self.refresh_combo.addItem(tr("main.refresh_off") if not m else tr("main.refresh_min", n=m), m)
+        self.refresh_combo.setToolTip(tr("main.auto_refresh_tip"))
+        self.refresh_combo.setCurrentIndex(max(0, self.refresh_combo.findData(self._refresh_minutes())))
+        self.refresh_combo.currentIndexChanged.connect(
+            lambda _i: (self.settings.set("auto_refresh", self.refresh_combo.currentData()), self._apply_refresh_timer()))
+        top.addWidget(self.refresh_combo)
         self.auto_repl = QCheckBox(tr("main.auto_replicate"))
         self.auto_repl.setToolTip(tr("main.auto_replicate_tip"))
         self.auto_repl.setChecked(bool(self.settings.get("auto_replicate", True)))
@@ -465,6 +482,10 @@ class MsDhcpExtended(ToolBase):
         self.refresh_pages()
         self.stack.setCurrentIndex(1)
         self.fixed_docks[0].setAsCurrentTab()
+        self._ev_since = eventlog.iso_utc(datetime.datetime.now() - datetime.timedelta(minutes=2))
+        self._ev_seen = set()
+        self._poll_error = ""
+        self._apply_refresh_timer()
         if self.auto_scan.isChecked():
             self.start_scan()
 
@@ -511,6 +532,7 @@ class MsDhcpExtended(ToolBase):
         dirty = [w for w in self.tabs if isinstance(w, ScopeTab) and w.is_dirty()]
         if dirty and not confirm(self.root, tr("main.logout"), tr("main.confirm_logout", list=short_list([w.sid for w in dirty])) ):
             return
+        self.refresh_timer.stop()
         for w in list(self.tabs):
             self.close_tab(w, force=True)
         self.scanner.reset()
@@ -802,6 +824,76 @@ class MsDhcpExtended(ToolBase):
             if tab is not None:
                 tab.set_unreplicated(True)
 
+    # --- Änderungen anderer: Auto-Refresh ---------------------------------------------------------------
+    def _refresh_minutes(self) -> int:
+        try:
+            m = int(self.settings.get("auto_refresh", 5))
+        except (TypeError, ValueError):
+            m = 5
+        return m if m in REFRESH_MINUTES else 5
+
+    def _apply_refresh_timer(self) -> None:
+        self.refresh_timer.stop()
+        m = self._refresh_minutes()
+        if m and self.svc.server and self.stack.currentIndex() == 1:
+            self.refresh_timer.start(m * 60_000)
+
+    def _poll_tick(self) -> None:
+        # nur, wenn gerade nichts läuft und kein Dialog offen ist - sonst beim nächsten Mal
+        if self.stack.currentIndex() != 1 or self.runner.active or self.queue or QApplication.activeModalWidget():
+            return
+        self.run(self.poll_flow())
+
+    def poll_flow(self):
+        """Hintergrundprüfung (Oberfläche bleibt bedienbar): neue Änderungen laut Ereignisprotokoll melden, offene
+        Scopes, Übersicht, Failover, Server-Optionen und Definitionen neu laden, wenn sich etwas geändert hat."""
+        tr, svc = self.tr, self.svc
+        try:
+            since = self._ev_since
+            stamp = eventlog.iso_utc(datetime.datetime.now() - datetime.timedelta(minutes=2))
+            events = yield Job(lambda: svc.change_events(since), quiet=True)
+            self._ev_since = stamp
+            new = [ev for ev in events if ev.get("record") not in self._ev_seen]
+            for ev in reversed(new):
+                self._ev_seen.add(ev.get("record"))
+                svc.log(tr("log.changed_by", time=(ev.get("time") or "")[:16], user=ev.get("user") or "?",
+                           text=ev.get("text") or f"#{ev.get('id')}"))
+            for tab in [w for w in list(self.tabs) if isinstance(w, ScopeTab) and w.data]:
+                try:
+                    fresh = yield Job(lambda sid=tab.sid: svc.get_scope(sid, False), quiet=True)
+                except UserError as e:
+                    if tab in self.tabs:
+                        tab._show_banner(tr("conf.banner_error", error=str(e)), False)
+                    continue
+                if tab in self.tabs:
+                    diffs = tab.apply_remote(fresh, new)
+                    if diffs:
+                        svc.log(tr("log.remote_changed", id=tab.sid, list="; ".join(diffs[:6])), tab.is_dirty())
+            sig = self._server_sig()
+            yield Job(svc.load_overview, quiet=True)
+            yield Job(svc.load_failovers, quiet=True)
+            yield Job(svc.load_server_options, quiet=True)
+            yield Job(svc.load_defs, quiet=True)
+            self.overview.set_data(svc, self.scan)
+            if self._server_sig() != sig:
+                self.fo_page.refresh()
+                self.srv_opts.refresh()
+                self.defs_page.refresh()
+                for w in self.tabs:
+                    if isinstance(w, ScopeTab) and w.data:
+                        w._fill_failover()
+            self.update_conn_info()
+            self._poll_error = ""
+        except UserError as e:     # z. B. Server kurz nicht erreichbar: nur einmal melden, nächste Runde versucht es neu
+            if str(e) != self._poll_error:
+                self._poll_error = str(e)
+                svc.log(tr("log.poll_failed", error=str(e)), True)
+
+    def _server_sig(self) -> str:
+        svc = self.svc
+        return json.dumps([svc.failovers, svc.server_option_rows, sorted(map(str, svc.defs.items()))], sort_keys=True,
+                          default=str)
+
     def _mark_replicated(self, ok: list[str], failed: list[str]) -> None:
         for sid in ok:
             t = self.scope_tab(sid)
@@ -909,6 +1001,11 @@ class MsDhcpExtended(ToolBase):
             self.auto_scan.setChecked(bool(self.settings.get("auto_scan", True)))
         if "expert_mode" in changed_keys:
             self.apply_expert_mode()
+        if "auto_refresh" in changed_keys:
+            self.refresh_combo.blockSignals(True)
+            self.refresh_combo.setCurrentIndex(max(0, self.refresh_combo.findData(self._refresh_minutes())))
+            self.refresh_combo.blockSignals(False)
+            self._apply_refresh_timer()
 
     def can_close(self) -> bool:
         dirty = [w for w in getattr(self, "tabs", {}) if isinstance(w, ScopeTab) and w.is_dirty()]

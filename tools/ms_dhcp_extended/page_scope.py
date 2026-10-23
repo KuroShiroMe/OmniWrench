@@ -6,11 +6,12 @@ auf einen Befund springt zum Objekt oder führt die vorgeschlagene Korrektur aus
 
 from __future__ import annotations
 
+import datetime
 from dataclasses import replace
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QComboBox, QFormLayout, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QTabWidget,
+    QComboBox, QFormLayout, QFrame, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QScrollArea, QTabWidget,
     QVBoxLayout, QWidget,
 )
 
@@ -18,13 +19,14 @@ from omniwrench.ui import theme
 
 from . import checks as ck
 from . import dialogs as dlg
+from . import eventlog
 from . import ipcalc as ip
 from .editors import LeaseEdit, OptionsPanel, PoolEditor, opt_row_key
 from .runner import Job
 from .service import ReplicationError, UserError
 from .ui_base import (
-    ButtonBar, FindingsView, Grid, Markers, ask3, bold_label, confirm, finding_tip, help_icon, info, level_color, level_icon,
-    level_name, short_list, text_dialog, tint, warn,
+    ButtonBar, FindingsView, Grid, Markers, ask3, bold_label, choose, confirm, finding_tip, help_icon, info, level_color,
+    level_icon, level_name, short_list, text_dialog, tint, warn,
 )
 
 PAGES = ("General", "Options", "Reservations", "Exclusions", "Leases", "Failover", "Findings")
@@ -48,6 +50,9 @@ class ScopeTab(QWidget):
         self.index: dict[str, list[ck.Finding]] = {}
         self.dock = None
         self._loading = False
+        self.base: dict | None = None        # Konfiguration beim Laden (für „wurde auf dem Server geändert?“)
+        self.loaded_utc = ""                 # Zeitpunkt des Ladens (UTC, für das Ereignisprotokoll)
+        self.remote_data: dict | None = None  # neuerer Stand vom Server, solange eigene Eingaben offen sind
 
         root = QVBoxLayout(self)
         root.setContentsMargins(8, 8, 8, 8)
@@ -68,6 +73,19 @@ class ScopeTab(QWidget):
         self.head_bar.action.connect(self._head_action)
         head.addWidget(self.head_bar)
         root.addLayout(head)
+        self.banner = QFrame()
+        self.banner.setObjectName("remotebanner")
+        bl = QHBoxLayout(self.banner)
+        bl.setContentsMargins(10, 6, 6, 6)
+        self.banner_text = QLabel("")
+        self.banner_text.setWordWrap(True)
+        self.banner_text.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        bl.addWidget(self.banner_text, 1)
+        self.banner_bar = ButtonBar([("Reload", tr("conf.btn_reload")), ("Hide", tr("conf.btn_hide"))])
+        self.banner_bar.action.connect(self._banner_action)
+        bl.addWidget(self.banner_bar)
+        self.banner.hide()
+        root.addWidget(self.banner)
 
         self.markers = Markers(tr, ctl.flt, self.show_findings)
         self.tabs = QTabWidget()
@@ -274,19 +292,29 @@ class ScopeTab(QWidget):
 
     def set_data(self, data: dict, keep_edits: bool = False) -> None:
         tr = self.tr
+        # eigene Eingaben merken (nur die tatsächlich geänderten Felder), alles andere kommt neu vom Server
+        mine = self.general_changes() if keep_edits else {}
+        pool_mine = keep_edits and self.data is not None and self.pool_changed()
+        pool_val = self.pool.pool() if pool_mine else None
         self.data = data
+        self.base = self.svc.config_of(data)
+        self.loaded_utc = eventlog.iso_utc(datetime.datetime.now() - datetime.timedelta(minutes=2))  # Uhren-Toleranz
+        self.remote_data = None
+        self.banner.hide()
         s = data["scope"]
         self.model = ip.ScopeModel.from_scope(s["id"], s["mask"])
         self.pool.model = self.model
         self._loading = True
-        if not keep_edits:
-            self.f_id.setText(s["id"])
-            self.f_mask.setText(f"{s['mask']}  (/{ip.prefix_len(s['mask'])})")
-            self.f_name.setText(s["name"])
-            self.f_desc.setText(s["desc"])
-            self.f_lease.set_value(s["lease"])
-            self.f_state.setCurrentIndex(0 if s["state"] == "Active" else 1)
+        self.f_id.setText(s["id"])
+        self.f_mask.setText(f"{s['mask']}  (/{ip.prefix_len(s['mask'])})")
+        self.f_name.setText(mine.get("Name", s["name"]))
+        self.f_desc.setText(mine.get("Description", s["desc"]))
+        self.f_lease.set_value(mine.get("LeaseDuration", s["lease"]))
+        self.f_state.setCurrentIndex(0 if mine.get("State", s["state"]) == "Active" else 1)
+        if not pool_mine:
             self.pool.set_pool(*self.server_pool())
+        elif pool_val is not None:
+            self.pool.set_pool(*pool_val)
         st = data.get("stat")
         self.f_stats.setText(tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"],
                                 reserved=st["reserved"]) if st else "–")
@@ -569,6 +597,76 @@ class ScopeTab(QWidget):
         self.unreplicated = value
         self.recheck()
 
+    # --- Änderungen anderer --------------------------------------------------------------------------------
+    def _fresh(self, data: dict) -> dict:
+        data["leases"] = (self.data or {}).get("leases") or []
+        return data
+
+    def _who(self, events: list[dict]) -> str:
+        if events:
+            return "\n\n" + self.tr("conf.who", list=self.svc.event_lines(events))
+        return "\n\n" + self.tr("conf.who_unknown") if self.svc.events_error else ""
+
+    def guard(self):
+        """Vor dem Schreiben: Hat jemand anderes den Scope seit dem Laden geändert? Liefert True = schreiben."""
+        tr, svc, sid = self.tr, self.svc, self.sid
+        if self.base is None:
+            return True
+        fresh = yield Job(lambda: svc.get_scope(sid, False), tr("status.conflict_check", id=sid))
+        diffs = svc.diff_config(self.base, svc.config_of(fresh))
+        if not diffs:
+            return True
+        mask = self.data["scope"]["mask"]
+        events = yield Job(lambda: svc.change_events(self.loaded_utc, sid, mask), tr("status.conflict_check", id=sid))
+        svc.log(tr("log.conflict", id=sid, n=len(diffs)), True)
+        ans = choose(self, tr("conf.title"), tr("conf.conflict", id=sid, list=short_list(diffs, 12)) + self._who(events),
+                     [("reload", tr("conf.btn_reload_keep")), ("overwrite", tr("conf.btn_overwrite")),
+                      ("cancel", tr("ui.cancel"))], "reload")
+        if ans == "reload":
+            self.set_data(self._fresh(fresh), keep_edits=True)
+            svc.log(tr("log.remote_reloaded", id=sid, list="; ".join(diffs[:6])))
+        return ans == "overwrite"
+
+    def apply_remote(self, fresh: dict, events: list[dict]) -> list[str]:
+        """Ergebnis der Hintergrundprüfung: ohne eigene Eingaben neu laden, sonst Hinweis zeigen."""
+        tr = self.tr
+        if self.base is None:
+            return []
+        if fresh.get("stat"):
+            self.data["stat"] = st = fresh["stat"]
+            self.f_stats.setText(tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"],
+                                    reserved=st["reserved"]))
+        diffs = self.svc.diff_config(self.base, self.svc.config_of(fresh))
+        if not diffs:
+            return []
+        who = self._who([ev for ev in events if self._mine(ev)])
+        if self.is_dirty():
+            self.remote_data = self._fresh(fresh)
+            self._show_banner(tr("conf.banner_dirty", list=short_list(diffs, 6)) + who, True)
+        else:
+            self.set_data(self._fresh(fresh))
+            self._show_banner(tr("conf.banner_reloaded", list=short_list(diffs, 6)) + who, False)
+        return diffs
+
+    def _mine(self, ev: dict) -> bool:
+        return bool(self.svc.change_events_match(ev, self.sid, self.data["scope"]["mask"]))
+
+    def _show_banner(self, text: str, reload_btn: bool) -> None:
+        c = theme.current
+        self.banner.setStyleSheet(f"QFrame#remotebanner {{ border:1px solid {c['warning']}; border-left:4px solid {c['warning']};"
+                                  f" border-radius:6px; background:{c['surface']}; }}")
+        self.banner_text.setText(text.strip())
+        self.banner_bar.set_visible("Reload", reload_btn)
+        self.banner.show()
+
+    def _banner_action(self, a: str) -> None:
+        if a == "Reload" and self.remote_data is not None:
+            data = self.remote_data
+            self.set_data(data, keep_edits=True)
+            self.svc.log(self.tr("log.remote_reloaded", id=self.sid, list=""))
+        elif a == "Hide":
+            self.banner.hide()
+
     # --- Speichern ------------------------------------------------------------------------------------
     def save_flow(self):
         tr, svc, sid = self.tr, self.svc, self.sid
@@ -599,6 +697,9 @@ class ScopeTab(QWidget):
 
         else:
             drop = []
+
+        if not (yield from self.guard()):
+            return
 
         def work():
             # Transaktion: schlägt ein Schritt fehl, kommen entfernte Ausschlüsse und alte Werte zurück
@@ -639,6 +740,8 @@ class ScopeTab(QWidget):
             return
         if res["undefined"] and not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
             return
+        if not (yield from self.guard()):
+            return
 
         def write():
             # neue Definition und Option gehören zusammen: scheitert die Option, verschwindet auch die Definition
@@ -657,6 +760,8 @@ class ScopeTab(QWidget):
     def opt_remove_flow(self, rows: list[dict]):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("opt.remove"), tr("opt.confirm_remove", list=short_list([f"{r['id']:03d} {r['name']}" for r in rows]))):
+            return
+        if not (yield from self.guard()):
             return
 
         def write():
@@ -692,6 +797,8 @@ class ScopeTab(QWidget):
         r = dlg.reservation_dialog(self, tr, self.model, row) if preset is None else preset
         if not r:
             return
+        if not (yield from self.guard()):
+            return
         if row:
             yield Job(lambda: svc.atomic(tr("tx.res_set", ip=r["ip"]), lambda: svc.res_set(r, self.sid)), tr("status.saving"))
         else:
@@ -705,6 +812,8 @@ class ScopeTab(QWidget):
     def res_remove_flow(self, rows: list[dict]):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("res.remove"), tr("res.confirm_remove", list=short_list([f"{r['ip']}  {r['name']}" for r in rows]))):
+            return
+        if not (yield from self.guard()):
             return
 
         def write():
@@ -736,6 +845,8 @@ class ScopeTab(QWidget):
             return
         if self.is_dirty() and not confirm(self, tr("excl.title"), tr("scope.confirm_discard")):
             return
+        if not (yield from self.guard()):
+            return
         yield Job(lambda: svc.excl_add(self.sid, r[0], r[1]), tr("status.saving"))
         svc.log(tr("log.excl_added", range=f"{r[0]}-{r[1]}", id=self.sid))
         yield from self.load_flow(leases=False)
@@ -746,6 +857,8 @@ class ScopeTab(QWidget):
     def ex_remove_flow(self, rows: list[dict]):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("excl.remove"), tr("excl.confirm_remove", list=short_list([excl_key(r) for r in rows]))):
+            return
+        if not (yield from self.guard()):
             return
 
         def write():
@@ -853,6 +966,9 @@ class ScopeTab(QWidget):
                     skipped.append(f"{s}-{e}")
                     continue
                 steps.append((f"{s}-{e}", lambda s=s, e=e: svc.excl_add(sid, s, e)))
+
+        if not (yield from self.guard()):
+            return
 
         def write():
             for label, fn in steps:

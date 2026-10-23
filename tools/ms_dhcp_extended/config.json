@@ -32,6 +32,44 @@
       "description": "After every change on a failover scope the scope is synchronised to the partner."
     },
     {
+      "key": "auto_refresh",
+      "type": "choice",
+      "label": "Refresh automatically",
+      "default": 5,
+      "group": "Connection",
+      "options": [
+        {
+          "value": 0,
+          "label": "off"
+        },
+        {
+          "value": 1,
+          "label": "every minute"
+        },
+        {
+          "value": 2,
+          "label": "every 2 minutes"
+        },
+        {
+          "value": 5,
+          "label": "every 5 minutes"
+        },
+        {
+          "value": 10,
+          "label": "every 10 minutes"
+        },
+        {
+          "value": 15,
+          "label": "every 15 minutes"
+        },
+        {
+          "value": 30,
+          "label": "every 30 minutes"
+        }
+      ],
+      "description": "Checks at the chosen interval whether the server was changed (also via the DHCP console) and reloads the views. Who changed it is shown from the server's event log."
+    },
+    {
       "key": "expert_mode",
       "type": "bool",
       "label": "Expert mode",

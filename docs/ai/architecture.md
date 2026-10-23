@@ -231,6 +231,15 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   Wrap only the write part of a flow - reloads/after_change replication stay outside. Partner inverses: netsh
   (`_netsh_undo`, `_undo_partner_scope` = sync_plan back to the dump snapshot or `delete scope`), fo_api (`_fo_undo`,
   deleted relationship comes back without shared secret). Test: scripts/dhcp_api_check/test_tx.py (stateful fake).
+- Changes by others (1.4.0): `svc.config_of(data)` = comparable scope config (no leases/stats), `diff_config` ->
+  readable lines. ScopeTab keeps `base`/`loaded_utc` (set in `set_data`; keep_edits keeps only fields the user
+  actually changed). `ScopeTab.guard()` before writes, `ServerOptionsPage._guard(servers)` likewise, both use
+  `ui_base.choose`. Auto-refresh: `refresh_timer` -> `_poll_tick` (only if runner idle, no queue, no modal) ->
+  `poll_flow` with `Job(quiet=True)` (Runner then skips busy/status, UI stays usable; user flows queue behind it),
+  `ScopeTab.apply_remote` reloads or shows the banner. "Who": `eventlog.EventReader` (wevtapi EvtOpenSession with
+  the connection's credentials, channel Microsoft-Windows-Dhcp-Server/Operational, EvtFormatMessage, SID ->
+  LookupAccountSid on the server), backend cmd `events`, `svc.change_events(since, sid, mask)` filters by IPs in
+  the message text; unreadable log -> [] and one log line (`events_error`). Tests: test_conflict.py.
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
 - 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
   5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;

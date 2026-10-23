@@ -27,10 +27,11 @@ log = logging.getLogger(__name__)
 
 
 class Job:
-    def __init__(self, fn: Callable, status: str = "", cancellable: bool = False):
+    def __init__(self, fn: Callable, status: str = "", cancellable: bool = False, quiet: bool = False):
         self.fn = fn
         self.status = status
         self.cancellable = cancellable
+        self.quiet = quiet      # Hintergrundprüfung: Oberfläche bleibt bedienbar, keine Statusanzeige
 
 
 class Runner(QObject):
@@ -79,9 +80,10 @@ class Runner(QObject):
             # Generator lieferte etwas anderes: unmittelbar zurückgeben (erlaubt "yield" ohne Job)
             self._step(False, job)
             return
-        if job.status:
+        if job.status and not job.quiet:
             self.status.emit(job.status)
-        self.busy_changed.emit(True, job.cancellable)
+        if not job.quiet:
+            self.busy_changed.emit(True, job.cancellable)
 
         def work():
             try:
@@ -90,13 +92,15 @@ class Runner(QObject):
                 return (False, e)
 
         def done(res):
-            self.busy_changed.emit(False, False)
+            if not job.quiet:
+                self.busy_changed.emit(False, False)
             ok, val = res
             if self.gen is gen:
                 self._step(not ok, val)
 
         def error(text: str):
-            self.busy_changed.emit(False, False)
+            if not job.quiet:
+                self.busy_changed.emit(False, False)
             if self.gen is gen:
                 self._step(True, RuntimeError(text))
 
