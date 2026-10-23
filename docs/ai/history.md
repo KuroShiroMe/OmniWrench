@@ -434,3 +434,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   architecture "Transactions"): all UI write flows wrapped, manual rollbacks in failover code replaced, paste/draft/
   partner copies now raise instead of collecting errors. Tested with test_tx.py (rollback, nested, partial, UI flow,
   cancel) + test_api.py. Windows tests added to TESTLISTE 5 ("Automatische Rücknahme").
+- PR #56 merged on Stef's request (Stef now has a DHCP test environment).
+- Stef: detect changes by others / auto-refresh / who changed it. Built 1.4.0: conflict check before writes,
+  auto-refresh (quiet background jobs, banner in scope tab), event log reader (wevtapi via ctypes) for "who".
+  Tested on Linux only: test_conflict.py, test_tx.py, offscreen renders of banner + guard + poll_flow stub.

@@ -21,8 +21,8 @@ from .editors import OptionsPanel, opt_row_key, option_rows
 from .runner import Job
 from .service import UserError
 from .ui_base import (
-    ButtonBar, FindingsToolbar, FindingsView, Grid, bold_label, confirm, finding_tip, help_icon, hint_label, info, level_color,
-    level_name, short_list, text_dialog, tint, warn,
+    ButtonBar, FindingsToolbar, FindingsView, Grid, bold_label, choose, confirm, finding_tip, help_icon, hint_label, info,
+    level_color, level_name, short_list, text_dialog, tint, warn,
 )
 
 
@@ -392,6 +392,29 @@ class ServerOptionsPage(QWidget):
             if len(rows) == 1 and not rows[0].get("ghost"):
                 self.ctl.run(self.to_partner_flow(srv, rows[0]))
 
+    def _guard(self, servers: list[str]):
+        """Vor dem Schreiben: Hat jemand anderes die Server-Optionen seit dem Laden geändert? True = schreiben."""
+        tr, svc = self.tr, self.svc
+
+        def conf(rows):
+            return svc.config_of({"options": rows or []})
+        diffs = []
+        for srv in servers:
+            before = self.options_of(srv)
+            if before is None:
+                continue
+            fresh = yield Job(lambda srv=srv: svc.srv_options(srv), tr("status.conflict_check", id=srv))
+            diffs += [f"{srv}: {d}" for d in svc.diff_config(conf(before), conf(fresh))]
+        if not diffs:
+            return True
+        svc.log(tr("log.conflict", id=", ".join(servers), n=len(diffs)), True)
+        ans = choose(self, tr("conf.title"), tr("conf.conflict_srv", list=short_list(diffs, 12)),
+                     [("reload", tr("conf.btn_reload")), ("overwrite", tr("conf.btn_overwrite")), ("cancel", tr("ui.cancel"))],
+                     "reload")
+        if ans == "reload":
+            yield from self.reload_flow(servers=servers)
+        return ans == "overwrite"
+
     def _write_targets(self, srv: str) -> list[str]:
         return [t for t in self.targets(srv) if self.svc.can_write(t)]
 
@@ -409,6 +432,8 @@ class ServerOptionsPage(QWidget):
             return
         tag = f"{res['id']:03d}"
         done = [srv] + (targets if res.get("partner") else [])
+        if not (yield from self._guard(done)):
+            return
 
         def write():
             # Definition, Option und Partner-Kopie als Einheit: scheitert ein Teil, wird alles zurückgenommen
@@ -458,6 +483,8 @@ class ServerOptionsPage(QWidget):
                                            tr("srvopt.remove_partner", partners=", ".join(also)) if also else "")
         if not ok:
             return
+        if not (yield from self._guard([srv] + (also if on_partner else []))):
+            return
 
         def write():
             # lokal und (falls gewählt) beim Partner: alles oder nichts
@@ -492,6 +519,8 @@ class ServerOptionsPage(QWidget):
         over = [it for it in clip["Items"] if ck.option_key(it["id"], it.get("vendor"), it.get("user")) in have]
         if over and not confirm(self, tr("ui.paste"), tr("clip.overwrite_opts", list=short_list([f"{int(i['id']):03d}" for i in over]))):
             return
+        if not (yield from self._guard([srv])):
+            return
 
         def write():
             for it in clip["Items"]:
@@ -511,6 +540,8 @@ class ServerOptionsPage(QWidget):
             return
         if not confirm(self, tr("opt.to_partner"), tr("srvopt.confirm_partner", partners=", ".join(targets),
                                                      list=f"{row['id']:03d} {row['name']} = {row['value']}")):
+            return
+        if not (yield from self._guard(targets)):
             return
         try:
             yield from self.ctl.atomic(tr("tx.srvopt_partner", tag=f"{row['id']:03d}"), self._copy([row], srv, targets))

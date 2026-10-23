@@ -14,6 +14,9 @@ that are not plain test steps.
       hand. Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
 - [ ] DHCP 1.3.0 (2026-10-23): pool change on failover scopes, partner comparison and automatic rollback
       (transactions) untested on Windows (TESTLISTE 5).
+- [ ] DHCP 1.4.0: conflict check, auto-refresh and event-log reader (wevtapi, channel name, message text,
+      SID lookup) untested on Windows (TESTLISTE 5). Per-scope "who" filter matches IPs in message text
+      and EventData values.
       Ideas: compare DNS settings (option 81) and policies with the partner; "take value from partner" fix for
       single differences (replication always pushes this server's state).
 - [ ] PowerShell -> Python inventory (2026-10-20, Stef wants PowerShell only where unavoidable): core/prerequisites

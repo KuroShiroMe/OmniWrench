@@ -207,6 +207,10 @@
   tool is a transaction - on error or cancel everything it changed (server and partner) is undone automatically.
   Paste and draft creation are all-or-nothing (no "partially done" results). Final, not undoable, therefore always
   the last step: lease delete, scope delete, definition delete. Multi-scope replication is atomic per scope.
+- 2026-10-23 (Stef, 1.4.0): detect changes made by others. Conflict check before every scope/server-option write
+  (reload keeping own edits / save anyway / cancel), auto-refresh with selectable interval (default 5 min, combo in
+  the top bar + tool setting), "who" from the DHCP server's Operational event log. Stef said "kannst das dann auch
+  gleich mergen" -> merged without waiting for Windows tests.
 
 ## Landing page (2026-10-22)
 - kuroshiro.me = static landing page from `site/` in the OmniWrench repo, deployed via GitHub Pages (Actions,

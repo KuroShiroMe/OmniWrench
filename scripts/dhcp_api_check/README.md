@@ -12,4 +12,5 @@ Prüft `tools/ms_dhcp_extended/dhcpapi.py` ohne Windows:
    gcc -shared -fPIC -o libfake.so fake_dhcpsapi.c
    python3 test_api.py ./libfake.so
    python3 test_tx.py                    # Transaktionen: Fehler mitten im Ablauf, Rücknahme, Abbruch
+   python3 test_conflict.py              # Änderungen anderer: Ereignis-XML, Vergleich, Filter je Scope
    ```
