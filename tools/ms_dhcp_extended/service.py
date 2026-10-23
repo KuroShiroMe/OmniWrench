@@ -28,12 +28,21 @@ FLAG_MCLT, FLAG_SAFE, FLAG_PCT, FLAG_MODE, FLAG_SECRET = 0x1, 0x2, 0x8, 0x10, 0x
 SAFE_OFF = 4294967295
 FO_STATES = ["NO_STATE", "INIT", "STARTUP", "NORMAL", "COMMUNICATION_INT", "PARTNER_DOWN", "POTENTIAL_CONFLICT",
              "CONFLICT_DONE", "RESOLUTION_INT", "RECOVER", "RECOVER_WAIT", "RECOVER_DONE", "PAUSED", "SHUTDOWN"]
-_RPC_CODES = (5, 53, 87, 1326, 1722, 1753, 0x4E25, 0x4E98, 0x4E9D, 0x4EA0, 0x4EA5)
+_RPC_CODES = (5, 53, 87, 1326, 1722, 1753, 0x4E25, 0x4E37, 0x4E90, 0x4E91, 0x4E92, 0x4E93, 0x4E94, 0x4E98, 0x4E9D,
+              0x4E9F, 0x4EA0, 0x4EA1, 0x4EA3, 0x4EA4, 0x4EA5)
 _UNREACHABLE = re.compile(r"nicht erreichbar|unreachable|Zugriff|Access|WinRM|RPC|netsh dhcp|denied|verweigert", re.IGNORECASE)
 
 
 class UserError(Exception):
     """Fehler mit fertigem, übersetztem Text für die Oberfläche."""
+
+
+class Tx:
+    """Rücknahme-Journal einer Benutzeraktion: jede Änderung legt vor dem Schreiben ihre Gegenoperation ab."""
+
+    def __init__(self, title: str):
+        self.title = title
+        self.undo: list[tuple[str, Callable]] = []
 
 
 def ts(seconds) -> dict:
@@ -174,6 +183,8 @@ class DhcpService:
         self.prefetch: dict[str, object] | None = None   # Ergebnisse von cim_many (schnelle Prüfung)
         self.rights: dict[str, str] = {}     # "*" = Primärserver, sonst Partner -> admin | read | unknown
         self.peer: dict[str, dict] = {}      # Sicht der Partner: Failover-Beziehungen, Scopes, Server-Optionen
+        self.partner_diffs: dict[str, list] = {}   # Scope -> Abweichungen zum Partner aus der letzten Prüfung
+        self._tx: Tx | None = None           # laufende Transaktion (Rücknahme bei Fehlern)
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -189,8 +200,8 @@ class DhcpService:
             what, server, code, systext = m.group(1), m.group(2), int(m.group(3)), m.group(4).strip()
             if code in _RPC_CODES:
                 text = tr(f"rpc.code.{code}")
-            elif 0x4E90 <= code <= 0x4EAF:
-                text = tr("rpc.code.fo_conflict")
+            elif 0x4E90 <= code <= 0x4EAF and (not systext or systext.startswith("Fehler ")):
+                text = tr("rpc.code.fo_other")
             else:
                 text = systext
             if what in ("start", "start_logon", "logon"):
@@ -402,8 +413,28 @@ class DhcpService:
         """Einheitlicher, normalisierter Partnerzugriff (CIM oder netsh)."""
         via = self._ensure_partner(pn)
         if via == "Rpc":
-            return self._partner_netsh(pn, kind, **kw)
+            step = self._netsh_undo(pn, kind, **kw) if self._tx is not None and kind in ("opt_set", "opt_remove", "def_add") else None
+            res = self._partner_netsh(pn, kind, **kw)
+            self._undo_after(step)
+            return res
         return self._partner_cim(pn, kind, **kw)
+
+    def _netsh_undo(self, pn: str, kind: str, scope: str | None = None, **kw) -> tuple[str, Callable]:
+        """Gegenoperation für eine Änderung am Partner über netsh (vorher den Stand lesen)."""
+        if kind == "def_add":
+            d = kw["d"]
+            vend = f" vendor={nd.q(d['vendor'])}" if d.get("vendor") else ""
+            return (self.tr("undo.def_add", tag=f"{int(d['id']):03d}", server=pn),
+                    lambda: self.netsh_write(pn, f"delete optiondef {int(d['id'])}{vend}"))
+        oid, vendor, user = int(kw["id"]), kw.get("vendor", "") or "", kw.get("user", "") or ""
+        self.clear_dump(pn)
+        lst = self._partner_netsh(pn, "options", scope=scope)
+        old = next((list(o["values"]) for o in lst if int(o["id"]) == oid and (o.get("vendor") or "") == vendor
+                    and (o.get("user") or "") == user), None)
+        label = self.tr("undo.option", tag=f"{oid:03d}", where=f"{scope} ({pn})" if scope else self.tr("undo.server", server=pn))
+        if old is None:
+            return label, lambda: self._partner_netsh(pn, "opt_remove", scope=scope, id=oid, vendor=vendor, user=user)
+        return label, lambda: self._partner_netsh(pn, "opt_set", scope=scope, id=oid, values=old, vendor=vendor, user=user)
 
     def _partner_cim(self, pn: str, kind: str, scope: str | None = None, **kw):
         if kind == "version":
@@ -650,33 +681,160 @@ class DhcpService:
     def classes(self, server: str | None = None) -> list[dict]:
         return [n_class(x) for x in self.cim("Get-DhcpServerv4Class", server)]
 
+    # --- Transaktion: bei einem Fehler wird alles zurückgenommen -----------------------------------------
+    # Jede schreibende Methode liest vorher den bisherigen Stand und legt die Gegenoperation im Journal ab
+    # (nur, wenn eine Transaktion läuft). Schlägt ein Schritt fehl, laufen die Gegenoperationen rückwärts.
+    def tx_begin(self, title: str) -> tuple[Tx, Tx | None]:
+        """Startet eine (Teil-)Transaktion; liefert (neu, äußere). Gelingt sie, übernimmt die äußere ihre Schritte."""
+        outer = self._tx
+        self._tx = Tx(title)
+        return self._tx, outer
+
+    def tx_commit(self, tx: Tx, outer: Tx | None) -> None:
+        self._tx = outer
+        if outer is not None:
+            outer.undo += tx.undo
+
+    def _undo(self, label: str, fn: Callable) -> None:
+        if self._tx is not None:
+            self._tx.undo.append((label, fn))
+
+    def _undo_after(self, step: tuple[str, Callable] | None) -> None:
+        """Vorher vorbereitete Gegenoperation erst nach gelungenem Schreiben ablegen (sonst liefe sie ins Leere)."""
+        if step is not None:
+            self._undo(*step)
+
+    def tx_rollback(self, tx: Tx) -> list[str]:
+        """Nimmt alle Änderungen der Transaktion rückwärts zurück; liefert die Schritte, die nicht gingen."""
+        tr = self.tr
+        self._tx = None
+        self.dump_cache = {}
+        fails: list[str] = []
+        if not tx.undo:
+            return fails
+        self.log(tr("log.tx_rollback", title=tx.title, n=len(tx.undo)), True)
+        for label, fn in reversed(tx.undo):
+            try:
+                fn()
+                self.log("  ↶ " + label)
+            except Exception as e:  # noqa: BLE001 - jeder Schritt wird versucht, Fehler gesammelt
+                fails.append(f"{label}: {e}")
+                self.log("  ✗ " + tr("log.tx_undo_failed", step=label, error=str(e)), True)
+        self.dump_cache = {}
+        self.log(tr("log.tx_rollback_done" if not fails else "log.tx_rollback_partial", n=len(fails)), bool(fails))
+        return fails
+
+    def tx_fail(self, e: Exception, tx: Tx, outer: Tx | None) -> "TxError":
+        """Fehler in einer Transaktion: eigene Schritte zurücknehmen, Fehler mit Ergebnis der Rücknahme liefern."""
+        raw = e.raw if isinstance(e, TxError) else str(e) if isinstance(e, UserError) else f"{type(e).__name__}: {e}"
+        done = (e.undone if isinstance(e, TxError) else 0)
+        fails = (e.fails if isinstance(e, TxError) else [])
+        fails = fails + self.tx_rollback(tx)
+        self._tx = outer
+        n = done + len(tx.undo)
+        if not n:
+            text = raw
+        elif fails:
+            text = self.tr("tx.partial", error=raw, n=len(fails), list=short_list(fails, 10))
+        else:
+            text = self.tr("tx.rolled_back", error=raw, n=n)
+        return TxError(text, raw, n, fails)
+
+    def tx_message_cancel(self, tx: Tx, fails: list[str]) -> str:
+        if fails:
+            return self.tr("tx.cancel_partial", n=len(fails), list=short_list(fails, 10))
+        return self.tr("tx.cancel_done", n=len(tx.undo))
+
+    def atomic(self, title: str, fn: Callable):
+        """fn() als Transaktion: bei einem Fehler wird alles zurückgenommen, was fn() geändert hat."""
+        tx, outer = self.tx_begin(title)
+        try:
+            res = fn()
+        except Exception as e:  # noqa: BLE001 - jeder Fehler löst die Rücknahme aus
+            raise self.tx_fail(e, tx, outer) from None
+        self.tx_commit(tx, outer)
+        return res
+
+    # --- Bisheriger Stand (für die Gegenoperationen) ------------------------------------------------
+    def _cur_scope(self, sid: str, server: str | None = None) -> dict | None:
+        r = self.cim("Get-DhcpServerv4Scope", server, ScopeId=sid)
+        return n_scope(r[0]) if r else None
+
+    def _cur_option(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None = None):
+        for o in self.options(sid, server):
+            if int(o["id"]) == int(opt_id) and (o.get("vendor") or "") == (vendor or "") and (o.get("user") or "") == (user or ""):
+                return list(o["values"])
+        return None
+
+    def _cur_res(self, sid: str | None, rip: str) -> dict | None:
+        rows = self.cim("Get-DhcpServerv4Reservation", ScopeId=sid) if sid else []
+        for x in rows:
+            r = n_res(x)
+            if r["ip"] == rip:
+                return r
+        return None
+
     # --- Ändern -------------------------------------------------------------------------------------
     def scope_set(self, sid: str, **params) -> None:
+        step = None
+        if self._tx is not None:
+            old = self._cur_scope(sid)
+            if old:
+                back = {}
+                for k, f in (("Name", "name"), ("Description", "desc"), ("State", "state")):
+                    if k in params:
+                        back[k] = old[f]
+                if "LeaseDuration" in params and old.get("lease") is not None:
+                    back["LeaseDuration"] = old["lease"]
+                if "StartRange" in params and old.get("start") and old.get("end"):
+                    back["StartRange"], back["EndRange"] = old["start"], old["end"]
+                if back:
+                    step = (self.tr("undo.scope_set", id=sid), lambda: self.scope_set(sid, **back))
         if "LeaseDuration" in params and params["LeaseDuration"] is not None:
             params["LeaseDuration"] = ts(params["LeaseDuration"])
         self.cim("Set-DhcpServerv4Scope", ScopeId=sid, **params)
+        self._undo_after(step)
 
     def scope_add(self, start: str, end: str, mask: str, name: str, desc: str, lease: int, active: bool) -> None:
         self.cim("Add-DhcpServerv4Scope", StartRange=start, EndRange=end, SubnetMask=mask, Name=name,
                  Description=desc or None, LeaseDuration=ts(lease), State="Active" if active else "InActive")
+        sid = ip.int2ip(ip.ip2int(start) & ip.ip2int(mask))
+        self._undo(self.tr("undo.scope_add", id=sid), lambda: self.scope_remove(sid))
 
     def scope_remove(self, sid: str) -> None:
+        # Löschen ist endgültig (Leases gehen verloren) - immer der letzte Schritt einer Aktion
         self.cim("Remove-DhcpServerv4Scope", ScopeId=sid, Force=True)
 
     def excl_add(self, sid: str, start: str, end: str) -> None:
         self.cim("Add-DhcpServerv4ExclusionRange", ScopeId=sid, StartRange=start, EndRange=end)
+        self._undo(self.tr("undo.excl_add", range=f"{start} – {end}", id=sid), lambda: self.excl_remove(sid, start, end))
 
     def excl_remove(self, sid: str, start: str, end: str) -> None:
         self.cim("Remove-DhcpServerv4ExclusionRange", ScopeId=sid, StartRange=start, EndRange=end)
+        self._undo(self.tr("undo.excl_remove", range=f"{start} – {end}", id=sid), lambda: self.excl_add(sid, start, end))
+
+    def _opt_undo(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None):
+        if self._tx is None:
+            return None
+        old = self._cur_option(sid, opt_id, vendor, user, server)
+        where = sid or self.tr("undo.server", server=server or self.server)
+        label = self.tr("undo.option", tag=f"{int(opt_id):03d}", where=where)
+        if old is None:
+            return label, lambda: self.opt_remove(sid, opt_id, vendor, user, server)
+        return label, lambda: self.opt_set(sid, opt_id, old, vendor, user, server)
 
     def opt_set(self, sid: str | None, opt_id: int, values: list[str], vendor: str = "", user: str = "",
                 server: str | None = None) -> None:
+        step = self._opt_undo(sid, opt_id, vendor, user, server)
         self.cim("Set-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id),
                  Value=[str(v) for v in values], VendorClass=vendor or None, UserClass=user or None, Force=True)
+        self._undo_after(step)
 
     def opt_remove(self, sid: str | None, opt_id: int, vendor: str = "", user: str = "", server: str | None = None) -> None:
+        step = self._opt_undo(sid, opt_id, vendor, user, server)
         self.cim("Remove-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id), VendorClass=vendor or None,
                  UserClass=user or None)
+        self._undo_after(step)
 
     # --- Server-Optionen auf einem beliebigen Server der Failover-Gruppe ----------------------------------
     def srv_options(self, server: str | None) -> list[dict]:
@@ -722,34 +880,68 @@ class DhcpService:
     def res_add(self, sid: str, r: dict) -> None:
         self.cim("Add-DhcpServerv4Reservation", ScopeId=sid, IPAddress=r["ip"], ClientId=r["cid"], Name=r.get("name") or None,
                  Description=r.get("desc") or None, Type=r.get("type") or "Dhcp")
+        self._undo(self.tr("undo.res_add", ip=r["ip"]), lambda: self.res_remove(sid, r["ip"]))
 
-    def res_set(self, r: dict) -> None:
+    def res_set(self, r: dict, sid: str | None = None) -> None:
+        step = None
+        if self._tx is not None:
+            old = self._cur_res(sid, r["ip"]) if sid else None
+            if old is None:
+                for s in self.scopes:
+                    if ip.is_ipv4(s.get("id")) and ip.in_subnet(r["ip"], s["id"], s["mask"]):
+                        old = self._cur_res(s["id"], r["ip"])
+                        break
+            if old:
+                step = (self.tr("undo.res_set", ip=r["ip"]), lambda: self.res_set(old))
         self.cim("Set-DhcpServerv4Reservation", IPAddress=r["ip"], ClientId=r["cid"], Name=r.get("name") or "",
                  Description=r.get("desc") or "", Type=r.get("type") or "Dhcp")
+        self._undo_after(step)
 
     def res_remove(self, sid: str, rip: str) -> None:
+        old = self._cur_res(sid, rip) if self._tx is not None else None
         self.cim("Remove-DhcpServerv4Reservation", ScopeId=sid, IPAddress=rip)
+        if old:
+            self._undo(self.tr("undo.res_remove", ip=rip), lambda: self.res_add(sid, old))
 
     def lease_remove(self, rip: str) -> None:
+        # Leases lassen sich nicht wiederherstellen (der Client bekommt beim nächsten Kontakt eine neue)
         self.cim("Remove-DhcpServerv4Lease", IPAddress=rip)
 
     def dns_set(self, sid: str, d: dict) -> None:
+        step = None
+        if self._tx is not None:
+            cur = self.cim("Get-DhcpServerv4DnsSetting", ScopeId=sid)
+            if cur:
+                old = n_dns(cur[0])
+                step = (self.tr("undo.dns", id=sid), lambda: self.dns_set(sid, old))
         self.cim("Set-DhcpServerv4DnsSetting", ScopeId=sid, DynamicUpdates=d["dyn"] or "OnClientRequest",
                  DeleteDnsRROnLeaseExpiry=bool(d["delete_on_expiry"]), UpdateDnsRRForOlderClients=bool(d["older"]),
                  DisableDnsPtrRRUpdate=bool(d["disable_ptr"]), NameProtection=bool(d["name_protection"]))
+        self._undo_after(step)
 
     def def_add(self, d: dict, server: str | None = None) -> None:
         dv = [str(x) for x in d.get("default") or [] if str(x)]
         self.cim("Add-DhcpServerv4OptionDefinition", server, OptionId=int(d["id"]), Name=d["name"], Type=d["type"],
                  MultiValued=bool(d.get("multi")), VendorClass=d.get("vendor") or None, Description=d.get("desc") or None,
                  DefaultValue=dv or None)
+        self._undo(self.tr("undo.def_add", tag=f"{int(d['id']):03d}", server=server or self.server),
+                   lambda: self.cim("Remove-DhcpServerv4OptionDefinition", server, OptionId=int(d["id"]),
+                                    VendorClass=d.get("vendor") or None))
 
     def def_set(self, d: dict) -> None:
+        step = None
+        if self._tx is not None:
+            old = next((x for x in self.list_defs() if int(x["id"]) == int(d["id"])
+                        and (x.get("vendor") or "") == (d.get("vendor") or "")), None)
+            if old:
+                step = (self.tr("undo.def_set", tag=f"{int(d['id']):03d}"), lambda: self.def_set(old))
         dv = [str(x) for x in d.get("default") or [] if str(x)]
         self.cim("Set-DhcpServerv4OptionDefinition", OptionId=int(d["id"]), Name=d["name"], Description=d.get("desc") or "",
                  VendorClass=d.get("vendor") or None, DefaultValue=dv or None)
+        self._undo_after(step)
 
     def def_remove(self, opt_id: int, vendor: str = "") -> None:
+        # Mit der Definition löscht Windows auch alle gesetzten Werte dieser Option - nur auf ausdrückliche Bestätigung
         self.cim("Remove-DhcpServerv4OptionDefinition", OptionId=int(opt_id), VendorClass=vendor or None)
 
     # --- Replikation --------------------------------------------------------------------------------
@@ -781,6 +973,8 @@ class DhcpService:
                 continue
             try:
                 self.netsh_write(pn, nd.add_class_cmd(c))
+                self._undo(self.tr("undo.class_add", name=n, partner=pn),
+                           lambda n=n: self.netsh_write(pn, f"delete class {nd.q(n)}"))
                 self.log(self.tr("log.class_created", name=n, partner=pn))
             except UserError as e:
                 if not re.search(r"bereits|already exists", str(e), re.IGNORECASE):
@@ -844,6 +1038,7 @@ class DhcpService:
         except nd.MaskMismatch as e:
             raise UserError(tr("err.mask_mismatch", id=e.scope_id, remote=e.remote, local=e.local)) from None
         if cmds:
+            self._undo_partner_scope(pn, sid, rem)
             total = len(cmds)
             self.log(tr("log.repl_changes", n=total, partner=pn))
             self.progress(tr("status.repl_step", id=sid, i=0, n=total), 0, total)
@@ -865,11 +1060,40 @@ class DhcpService:
             exists = bool(chk and chk.get("mask"))
         return {"id": sid, "created": not rem and exists, "exists": exists, "changes": len(cmds), "errors": errs}
 
+    def _undo_partner_scope(self, pn: str, sid: str, before: dict | None) -> None:
+        """Gegenoperation für Änderungen an einem Partner-Scope: Stand `before` (aus dem Dump) wiederherstellen,
+        bzw. den Scope wieder löschen, wenn es ihn vorher nicht gab."""
+        if self._tx is None:
+            return
+        if not before or not before.get("mask"):
+            self._undo(self.tr("undo.partner_scope_created", id=sid, partner=pn),
+                       lambda: self.netsh_write(pn, f"delete scope {sid} dhcpfullforce"))
+            return
+        snap = json.loads(json.dumps(before))
+        want = {"scope": snap, "exclusions": snap.get("exclusions") or [], "options": snap.get("options") or [],
+                "reservations": snap.get("reservations") or []}
+
+        def restore():
+            self.clear_dump(pn)
+            now = self.netsh_parsed(pn, sid)["scopes"].get(sid)
+            cmds = nd.sync_plan(sid, want, now if now and now.get("mask") else None, self.opt_def)
+            bad = [nd.format_out(r) for r in self.netsh(pn, cmds) if not nd.is_ok(r)] if cmds else []
+            self.clear_dump(pn)
+            if bad:
+                raise UserError("; ".join(bad[:3]))
+        self._undo(self.tr("undo.partner_scope", id=sid, partner=pn), restore)
+
     def remove_partner_scopes(self, pn: str, ids: list[str]) -> list[str]:
         errs = []
         for sid in [x for x in ids if x]:
             try:
+                before = None
+                if self._tx is not None:
+                    self.clear_dump(pn)
+                    before = self.netsh_parsed(pn, sid)["scopes"].get(sid)
                 self.netsh_write(pn, f"delete scope {sid} dhcpfullforce")
+                if before and before.get("mask"):
+                    self._undo_partner_scope(pn, sid, before)
                 self.log(self.tr("log.partner_scope_deleted", id=sid, partner=pn))
             except UserError as e:
                 errs.append(self.tr("err.partner_scope_delete", id=sid, partner=pn, error=str(e)))
@@ -889,13 +1113,16 @@ class DhcpService:
                 continue
             pn = rel["partner"]
             self.progress(tr("status.replicating", id=sid, partner=pn))
-            try:
+            def one(sid=sid, pn=pn):
                 r = self.sync_scope_to_partner(sid, pn)
                 self.log(tr("log.repl_done", id=sid, partner=pn, n=r["changes"], errors=len(r["errors"])))
                 if r["errors"]:
-                    fail += [f"{sid}: {e}" for e in r["errors"]]
-                else:
-                    ok.append(sid)
+                    raise UserError("; ".join(r["errors"]))
+            try:
+                # jeder Scope einzeln: entweder ganz repliziert oder der Partner-Scope bleibt wie vorher
+                self.atomic(tr("tx.replicate", id=sid, partner=pn), one)
+                ok.append(sid)
+                self.partner_diffs.pop(sid, None)
             except UserError as e:
                 fail.append(f"{sid}: {e}")
         for f in fail:
@@ -914,10 +1141,39 @@ class DhcpService:
 
     # --- Failover über die DHCP-API -----------------------------------------------------------------
     def fo_api(self, server: str, op: str, rel: dict | None = None, name: str | None = None, flags: int = 0):
+        step = self._fo_undo(server, op, rel, name, flags) if self._tx is not None and op != "enum" else None
         data = self.call("fo_api", {"server": server, "op": op, "rel": rel, "name": name, "flags": int(flags)})
+        self._undo_after(step)
         if op == "enum":
             return list((data or {}).get("items") or [])
         return data
+
+    def _fo_undo(self, server: str, op: str, rel: dict | None, name: str | None, flags: int):
+        """Gegenoperation vorbereiten. Bei Scope-Listen sofort ablegen: Windows kann sie teilweise übernommen haben."""
+        tr = self.tr
+        rname = (rel or {}).get("name") or name or ""
+        if op == "create":
+            return (tr("undo.fo_create", name=rname, server=server),
+                    lambda: self.call("fo_api", {"server": server, "op": "delete", "name": rname, "flags": 0}))
+        elif op in ("add_scopes", "remove_scopes"):
+            back = "remove_scopes" if op == "add_scopes" else "add_scopes"
+            r = dict(rel or {})
+            self._undo(tr(f"undo.fo_{op}", name=rname, server=server, ids=", ".join(r.get("scopes") or [])),
+                       lambda: self.call("fo_api", {"server": server, "op": back, "rel": r, "name": None, "flags": 0}))
+        elif op in ("delete", "set"):
+            old = dict(self.fo_api_rel(server, rname))
+            old.pop("secret", None)          # der Schlüssel ist nicht lesbar und lässt sich nicht wiederherstellen
+            for k in ("state", "prev_state"):
+                old.pop(k, None)
+            if op == "delete":
+                return (tr("undo.fo_delete", name=rname, server=server),
+                        lambda: self.call("fo_api", {"server": server, "op": "create", "rel": old, "name": None, "flags": 0}))
+            else:
+                fl = int(flags) & ~FLAG_SECRET
+                if fl:
+                    return (tr("undo.fo_set", name=rname, server=server),
+                            lambda: self.call("fo_api", {"server": server, "op": "set", "rel": old, "name": None, "flags": fl}))
+        return None
 
     def fo_api_rel(self, server: str, name: str) -> dict:
         hit = [r for r in self.fo_api(server, "enum") if r.get("name") == name]
@@ -946,37 +1202,26 @@ class DhcpService:
     def _add_pair(self, spec: dict, local_primary: bool, lip: str, pip: str) -> None:
         ptype = 1 if local_primary else 0
         self.fo_api(spec["partner"], "create", self._pair_struct(spec, local_primary, lip, pip, ptype))
-        try:
-            self.fo_api(self.server, "create", self._pair_struct(spec, local_primary, lip, pip, 1 - ptype))
-        except UserError as e:
-            try:
-                self.fo_api(spec["partner"], "delete", name=spec["name"])
-            except UserError as e2:
-                self.log(self.tr("log.rollback_failed", server=spec["partner"], error=str(e2)), True)
-            raise e
+        self.fo_api(self.server, "create", self._pair_struct(spec, local_primary, lip, pip, 1 - ptype))
 
     def copy_scopes_to_partner(self, pn: str, ids: list[str]) -> dict:
         created, warn = [], []
         for sid in ids:
             self.progress(self.tr("status.copy_scope", id=sid, partner=pn))
-            r = None
-            try:
-                r = self.sync_scope_to_partner(sid, pn)
-            except UserError as e:
-                warn.append(f"{sid}: {e}")
-            if r and r["created"]:
+            r = self.sync_scope_to_partner(sid, pn)
+            if r["created"]:
                 created.append(sid)
-            if r:
-                warn += [f"{sid}: {x}" for x in r["errors"]]
-            if not r or not r["exists"]:
-                for e in self.remove_partner_scopes(pn, created):
-                    self.log(e, True)
+            warn += [f"{sid}: {x}" for x in r["errors"]]
+            if not r["exists"]:
                 if not any(x.startswith(f"{sid}: ") for x in warn):
                     warn.append(f"{sid}: " + self.tr("err.partner_scope_missing", id=sid, partner=pn))
                 raise UserError(self.tr("err.copy_scope_failed", id=sid, partner=pn, list=short_list(warn, 8)))
         return {"created": created, "warnings": warn}
 
     def new_relationship(self, spec: dict) -> list[str]:
+        return self.atomic(self.tr("tx.fo_create", name=spec["name"]), lambda: self._new_relationship(spec))
+
+    def _new_relationship(self, spec: dict) -> list[str]:
         local, pn = self.server, spec["partner"]
         if not spec.get("scopes"):
             raise UserError(self.tr("err.fo_no_scopes"))
@@ -987,8 +1232,6 @@ class DhcpService:
         try:
             self._add_pair(spec, local_primary, lip, pip)
         except UserError as e:
-            for x in self.remove_partner_scopes(pn, copy["created"]):
-                self.log(x, True)
             raise UserError(self.tr("err.fo_create_failed", name=spec["name"], error=str(e))) from None
         self.log(self.tr("log.fo_created", name=spec["name"], partner=pn, server=local, scopes=", ".join(spec["scopes"])))
         # Kontrolle über die Sicht des Servers - Prozent- bzw. Rollenzuordnung bei Bedarf korrigieren
@@ -1006,10 +1249,7 @@ class DhcpService:
             elif spec["mode"] == "HotStandby" and rel.get("role") and rel["role"] != spec.get("role"):
                 self.log(self.tr("log.fo_role_swapped", got=rel["role"], want=spec.get("role")), True)
                 for srv in (local, pn):
-                    try:
-                        self.fo_api(srv, "delete", name=spec["name"])
-                    except UserError:
-                        pass
+                    self.fo_api(srv, "delete", name=spec["name"])
                 self._add_pair(spec, not local_primary, lip, pip)
                 self.load_failovers()
         for w in copy["warnings"]:
@@ -1018,6 +1258,9 @@ class DhcpService:
 
     def set_relationship(self, rel: dict, p: dict) -> None:
         """p: mode, lb, role, reserve, mclt, auto, interval, secret (wie spec)."""
+        self.atomic(self.tr("tx.fo_change", name=rel["name"]), lambda: self._set_relationship(rel, p))
+
+    def _set_relationship(self, rel: dict, p: dict) -> None:
         local, pn = self.server, rel["partner"]
         api = self.fo_api_rel(local, rel["name"])
         hs = p["mode"] == "HotStandby"
@@ -1051,33 +1294,28 @@ class DhcpService:
                 raise UserError(self.tr("err.fo_secret", error=str(e))) from None
 
     def remove_relationship(self, rel: dict) -> list[str]:
+        return self.atomic(self.tr("tx.fo_delete", name=rel["name"]), lambda: self._remove_relationship(rel))
+
+    def _remove_relationship(self, rel: dict) -> list[str]:
         local, pn = self.server, rel["partner"]
         self.fo_api(pn, "delete", name=rel["name"])
         self.fo_api(local, "delete", name=rel["name"])
         self.log(self.tr("log.fo_deleted", name=rel["name"], partner=pn, server=local))
-        return self.remove_partner_scopes(pn, list(rel["scopes"]))
+        errs = self.remove_partner_scopes(pn, list(rel["scopes"]))
+        if errs:
+            raise UserError(short_list(errs, 8))
+        return []
 
     def add_fo_scopes(self, rel: dict, ids: list[str]) -> list[str]:
+        return self.atomic(self.tr("tx.fo_add", name=rel["name"], ids=", ".join(ids)), lambda: self._add_fo_scopes(rel, ids))
+
+    def _add_fo_scopes(self, rel: dict, ids: list[str]) -> list[str]:
         local, pn = self.server, rel["partner"]
         self.test_netsh(pn)
         copy = self.copy_scopes_to_partner(pn, ids)
         s = {"name": rel["name"], "scopes": list(ids)}
-        try:
-            self.fo_api(pn, "add_scopes", s)
-        except UserError:
-            for e in self.remove_partner_scopes(pn, copy["created"]):
-                self.log(e, True)
-            raise
-        try:
-            self.fo_api(local, "add_scopes", s)
-        except UserError:
-            try:
-                self.fo_api(pn, "remove_scopes", s)
-            except UserError as e2:
-                self.log(self.tr("log.rollback_failed", server=pn, error=str(e2)), True)
-            for e in self.remove_partner_scopes(pn, copy["created"]):
-                self.log(e, True)
-            raise
+        self.fo_api(pn, "add_scopes", s)
+        self.fo_api(local, "add_scopes", s)
         self.log(self.tr("log.fo_scopes_added", name=rel["name"], ids=", ".join(ids)))
         for w in copy["warnings"]:
             self.log(self.tr("log.transfer_warn", text=w), True)
@@ -1085,15 +1323,21 @@ class DhcpService:
 
     def remove_fo_scopes(self, rel: dict, ids: list[str]) -> list[str]:
         """Entfernt Scopes aus der Beziehung und löscht sie auf dem Partner; alle Scopes = Beziehung löschen."""
+        return self.atomic(self.tr("tx.fo_remove", name=rel["name"], ids=", ".join(ids)), lambda: self._remove_fo_scopes(rel, ids))
+
+    def _remove_fo_scopes(self, rel: dict, ids: list[str]) -> list[str]:
         local, pn = self.server, rel["partner"]
         if not [x for x in rel["scopes"] if x not in ids]:
             self.log(self.tr("log.fo_all_removed", name=rel["name"]))
-            return self.remove_relationship(rel)
+            return self._remove_relationship(rel)
         s = {"name": rel["name"], "scopes": list(ids)}
         self.fo_api(pn, "remove_scopes", s)
         self.fo_api(local, "remove_scopes", s)
         self.log(self.tr("log.fo_scopes_removed", name=rel["name"], ids=", ".join(ids)))
-        return self.remove_partner_scopes(pn, ids)
+        errs = self.remove_partner_scopes(pn, ids)
+        if errs:
+            raise UserError(short_list(errs, 8))
+        return []
 
     def fo_raw_text(self, rel: dict) -> str:
         tr = self.tr
@@ -1333,7 +1577,57 @@ class DhcpService:
             pc["defs"] = {(d.get("vendor") or "", d["id"]): d for d in self.partner(pn, "defs")}
         except UserError as e:
             pc["defs_error"] = str(e)
+        ids = sorted({sid for r in self.failovers if (r.get("partner") or "").lower() == pn.lower() for sid in r["scopes"]},
+                     key=ip.ip_sort_key)
+        try:
+            pc["scopes"] = self.partner_scopes(pn, ids)
+        except UserError as e:
+            pc["scopes_error"] = str(e)
+        try:
+            pc["fo"] = [n_fo(api.fo_cmdlet_row(r)) for r in self.fo_api(pn, "enum")]
+        except UserError as e:
+            pc["fo_error"] = str(e)
+        try:
+            pc["local_classes"] = {c["name"] for c in self.classes() if c.get("name")}
+            rc = self.netsh_parsed(pn, "")["classes"] if self.partner_via.get(pn) == "Rpc" else self.classes(pn)
+            pc["classes"] = {c["name"] for c in rc if c.get("name")}
+        except UserError as e:
+            pc["classes_error"] = str(e)
         return pc
+
+    def partner_scopes(self, pn: str, ids: list[str]) -> dict[str, dict | None]:
+        """Stand der Scopes auf dem Partner (Scope-Felder + exclusions, options, reservations); None = fehlt."""
+        out: dict[str, dict | None] = {}
+        if not ids:
+            return out
+        if self._ensure_partner(pn) == "Rpc":
+            self.clear_dump(pn)
+            d = self.netsh_parsed(pn, "")
+            for sid in ids:
+                x = d["scopes"].get(sid)
+                out[sid] = x if x and x.get("mask") else None
+            return out
+        for sid in ids:
+            x = self.partner(pn, "scope", scope=sid)
+            if x:
+                x = dict(x, exclusions=self.partner(pn, "exclusions", scope=sid), options=self.partner(pn, "options", scope=sid),
+                         reservations=self.partner(pn, "reservations", scope=sid))
+            out[sid] = x
+        return out
+
+    def apply_partner_diffs(self, scan: dict, pcs: list[dict], checker) -> None:
+        """Scope-Abweichungen zu den Partnern an die Scope-Befunde der Prüfung hängen."""
+        diffs: dict[str, list] = {}
+        for pc in pcs:
+            for sid, remote in (pc.get("scopes") or {}).items():
+                e = scan["scopes"].get(sid)
+                if not e or not e.get("data"):
+                    continue
+                fs = checker.partner_scope(e["scope"], e["data"], remote, pc["partner"])
+                if fs:
+                    diffs[sid] = fs
+                    e["findings"] = ck.sort_findings(e["findings"] + fs)
+        scan["partner_diffs"] = diffs
 
     def scan_data(self, s: dict, stat: dict | None, excl: list[tuple[int, int]], with_leases: bool) -> dict:
         sid = s["id"]
@@ -1393,6 +1687,7 @@ class DhcpService:
         self.progress(tr("scan.server"))
         info = self.server_info()
         pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+        self.apply_partner_diffs(scan, pcs, checker)
         scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
         scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
         scan["seconds"] = int(time.time() - started)
@@ -1499,6 +1794,7 @@ class DhcpService:
                 self.progress(tr("scan.server"))
                 info = self.server_info()
                 pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+                self.apply_partner_diffs(scan, pcs, checker)
                 scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
                 scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
         except UserError:
@@ -1515,6 +1811,14 @@ class ReplicationError(UserError):
     def __init__(self, text: str, ok: list[str]):
         super().__init__(text)
         self.ok = ok
+
+
+class TxError(ReplicationError):
+    """Fehler, nach dem die Änderungen der Aktion zurückgenommen wurden (raw = ursprünglicher Fehler)."""
+
+    def __init__(self, text: str, raw: str, undone: int, fails: list[str]):
+        super().__init__(text, [])
+        self.raw, self.undone, self.fails = raw, undone, fails
 
 
 def short_list(items: list[str], n: int) -> str:

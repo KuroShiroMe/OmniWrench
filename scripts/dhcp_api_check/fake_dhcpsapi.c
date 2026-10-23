@@ -56,13 +56,15 @@ DWORD DhcpGetSubnetInfo(LPWSTR s, DWORD sid, SUBNET** out) {
     x->SubnetName = W(sid == S1 ? L"Büro" : L"Lager"); x->SubnetComment = W(L"Kommentar"); x->SubnetState = sid == S1 ? 0 : 1;
     *out = x; return 0;
 }
+// Verteilbereich je Scope; S1 ist ein Failover-Scope (Bereich darf nicht gelöscht werden, nur angepasst)
+DWORD rng_s[2] = {S1 + 10, S2 + 10}, rng_e[2] = {S1 + 200, S2 + 200}; int range_adds = 0, range_fail_at = 0;
 DWORD last_set_state = 99; wchar_t last_set_name[64];
 DWORD DhcpSetSubnetInfo(LPWSTR s, DWORD sid, SUBNET* i) { last_set_state = i->SubnetState; wcsncpy(last_set_name, i->SubnetName, 63); return 0; }
 DWORD DhcpEnumSubnetElementsV5(LPWSTR s, DWORD sid, int type, DWORD* resume, DWORD pref, ELARR** out, DWORD* r, DWORD* t) {
     if (*resume) return 259;
     if (sid != S1 && sid != S2) return 20005;
     ELARR* a = M(sizeof *a); a->Elements = M(sizeof(ELEM) * 2); *resume = 1;
-    if (type == 0) { BRANGE* b = M(sizeof *b); b->Start = sid + 10; b->End = sid + 200; a->Elements[0].Type = 5; a->Elements[0].u.IpRange = b; a->NumElements = 1; }
+    if (type == 0) { BRANGE* b = M(sizeof *b); b->Start = rng_s[sid == S2]; b->End = rng_e[sid == S2]; a->Elements[0].Type = 5; a->Elements[0].u.IpRange = b; a->NumElements = 1; }
     else if (type == 3 && sid == S1) { RANGE* x = M(sizeof *x); x->Start = sid + 50; x->End = sid + 60; a->Elements[0].Type = 3; a->Elements[0].u.Excl = x; a->NumElements = 1; }
     else if (type == 2 && sid == S1) {
         RESV* x = M(sizeof *x); x->Ip = sid + 20; x->Types = 3; x->Uid = M(sizeof(BIN));
@@ -78,10 +80,22 @@ DWORD DhcpAddSubnetElementV5(LPWSTR s, DWORD sid, ELEM* e) {
     added_type = e->Type;
     if (e->Type == 2) { added_a = e->u.ReservedIp->Ip; added_b = e->u.ReservedIp->Uid->DataLength; }
     else if (e->Type == 3) { added_a = e->u.Excl->Start; added_b = e->u.Excl->End; }
-    else { added_a = e->u.IpRange->Start; added_b = e->u.IpRange->End; }
+    else {
+        // MS-DHCPM 3.2.4.38: vorhandener Bereich wird angepasst, neuer muss alten enthalten oder darin liegen
+        DWORD a = e->u.IpRange->Start, b = e->u.IpRange->End; int i = sid == S2;
+        added_a = a; added_b = b; range_adds++;
+        if (range_fail_at && range_adds == range_fail_at) return 20112;
+        if (b < a) return 20023;
+        if (rng_s[i] && !((a <= rng_s[i] && rng_e[i] <= b) || (rng_s[i] <= a && b <= rng_e[i]))) return 20023;
+        rng_s[i] = a; rng_e[i] = b;
+    }
     return 0;
 }
-DWORD DhcpRemoveSubnetElementV5(LPWSTR s, DWORD sid, ELEM* e, int f) { removed++; return 0; }
+DWORD DhcpRemoveSubnetElementV5(LPWSTR s, DWORD sid, ELEM* e, int f) {
+    if ((e->Type == 0 || e->Type == 5) && sid == S1) return 20132;     // ERROR_DHCP_FO_RANGE_PART_OF_REL
+    if (e->Type == 0 || e->Type == 5) rng_s[sid == S2] = rng_e[sid == S2] = 0;
+    removed++; return 0;
+}
 DWORD DhcpEnumSubnetClientsV5(LPWSTR s, DWORD sid, DWORD* resume, DWORD pref, CLARR** out, DWORD* r, DWORD* t) {
     if (*resume || sid != S1) return 259;
     CLARR* a = M(sizeof *a); a->NumElements = 2; a->Clients = M(sizeof(CL5*) * 2);

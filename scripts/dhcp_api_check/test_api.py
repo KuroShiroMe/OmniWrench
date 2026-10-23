@@ -45,6 +45,30 @@ svc.scope_set("10.1.0.0", Name="Neu", State="InActive", LeaseDuration=86400)
 print("set scope", ctypes.c_uint32.in_dll(lib, "last_set_state").value, ctypes.c_wchar_p(ctypes.addressof(ctypes.c_wchar.in_dll(lib, "last_set_name"))).value, "lease ->", ctypes.c_uint32.in_dll(lib, "set_id").value, ctypes.c_uint32.in_dll(lib, "set_v0").value)
 svc.scope_set("10.1.0.0", StartRange="10.1.0.5", EndRange="10.1.0.250")
 print("range", ctypes.c_int.in_dll(lib, "added_type").value, A.n2ip(ctypes.c_uint32.in_dll(lib, "added_a").value), A.n2ip(ctypes.c_uint32.in_dll(lib, "added_b").value), "removed", ctypes.c_int.in_dll(lib, "removed").value)
+# Failover-Scope (S1): Bereich darf nicht gelöscht werden (0x4EA4), wird direkt angepasst
+cur = lambda: (A.n2ip(ctypes.c_uint32.in_dll(lib, "rng_s").value), A.n2ip((ctypes.c_uint32 * 2).in_dll(lib, "rng_e")[0]))
+adds = lambda: ctypes.c_int.in_dll(lib, "range_adds").value
+def rng(start, end, label):
+    n0 = adds()
+    try:
+        svc.scope_set("10.1.0.0", StartRange=start, EndRange=end)
+        print(label, "->", cur(), "adds", adds() - n0, "removed", ctypes.c_int.in_dll(lib, "removed").value)
+    except S.UserError as e:
+        print(label, "->", e, "| Stand", cur(), "adds", adds() - n0)
+rng("10.1.0.100", "10.1.0.254", "fo verschieben")     # weder enthalten noch umfassend: Vereinigung, dann Ziel
+rng("10.1.0.120", "10.1.0.200", "fo verkleinern")
+rng("10.1.0.20", "10.1.0.240", "fo erweitern")
+ctypes.c_int.in_dll(lib, "range_fail_at").value = adds() + 2
+rng("10.1.0.250", "10.1.0.254", "fo verschieben, 2. Schritt scheitert")
+ctypes.c_int.in_dll(lib, "range_fail_at").value = 0
+print("text 0x4EA4:", svc.host_text(str(A.RpcError("write", "dhcp01", 0x4EA4))))
+print("text 0x4EA6 (unbekannt):", svc.host_text("@RPC:write:dhcp01:20134:"))
+from tools.ms_dhcp_extended import netshdump as nd
+loc = {"scope": {"name": "a", "desc": "", "state": "Active", "start": "10.1.0.100", "end": "10.1.0.254", "mask": "255.255.255.0"},
+       "exclusions": [], "options": [], "reservations": []}
+remote = {"name": "a", "desc": "", "state": "Active", "start": "10.1.0.10", "end": "10.1.0.200", "mask": "255.255.255.0",
+          "exclusions": [{"start": "10.1.0.50", "end": "10.1.0.60"}], "options": [], "reservations": []}
+print("netsh plan", [c for c in nd.sync_plan("10.1.0.0", loc, remote, lambda i, v="": None) if "range" in c])
 svc.res_add("10.1.0.0", {"ip": "10.1.0.30", "cid": "00-aa-bb-cc-dd-ee", "name": "x", "desc": "", "type": "Dhcp"}) if False else None
 svc.excl_add("10.1.0.0", "10.1.0.70", "10.1.0.80")
 print("excl", ctypes.c_int.in_dll(lib, "added_type").value, A.n2ip(ctypes.c_uint32.in_dll(lib, "added_a").value), A.n2ip(ctypes.c_uint32.in_dll(lib, "added_b").value))
@@ -80,3 +104,24 @@ except S.UserError as e:
     print("missing ->", e)
 # Rechte: Schreibprobe ohne Änderung (FieldsToSet = 0)
 print("access", b.call("access", {"server": "dhcp01"}), b.call("access", {"server": "ro"}), "fields", u("cfg_fields"))
+# Abgleich mit dem Partner (reine Auswertung, Daten wie aus netsh-Dump bzw. Scan)
+chk = S.ck.Checker(lambda k, **kw: f"{k}{kw}" if kw else k, {}, {}, [])
+scope = {"id": "10.1.0.0", "mask": "255.255.255.0", "name": "Büro", "desc": "", "state": "Active", "start": "10.1.0.10", "end": "10.1.0.200"}
+data = {"id": "10.1.0.0", "lease": 86400, "exclusions": [(A.ip2n("10.1.0.50"), A.ip2n("10.1.0.60"))],
+        "options": [{"id": 3, "values": ["10.1.0.1"], "vendor": "", "user": ""}, {"id": 51, "values": ["86400"], "vendor": "", "user": ""}],
+        "reservations": [{"ip": "10.1.0.20", "cid": "00-11-22-33-44-55", "name": "drucker"}]}
+remote = dict(scope, lease=86400, exclusions=[{"start": "10.1.0.50", "end": "10.1.0.60"}, {"start": "10.1.0.90", "end": "10.1.0.99"}],
+              options=[{"id": 3, "values": ["10.1.0.254"], "vendor": "", "user": ""}],
+              reservations=[{"ip": "10.1.0.20", "cid": "00-11-22-33-44-55", "name": "drucker"}, {"ip": "10.1.0.21", "cid": "aa-bb-cc-dd-ee-ff", "name": "x"}])
+for f in chk.partner_scope(scope, data, remote, "dhcp02"):
+    print("partner", f.level, f.area, f.targets, f.text)
+print("partner fehlt", [f.text for f in chk.partner_scope(scope, data, None, "dhcp02")])
+print("partner gleich", chk.partner_scope(scope, data, dict(scope, lease=86400, exclusions=[{"start": "10.1.0.50", "end": "10.1.0.60"}],
+      options=[{"id": 3, "values": ["10.1.0.1"], "vendor": "", "user": ""}], reservations=data["reservations"]), "dhcp02"))
+chk.failovers = [{"name": "r1", "partner": "dhcp02", "mode": "LoadBalance", "lb": 50, "reserve": None, "mclt": 3600, "auth": True,
+                  "scopes": ["10.1.0.0", "10.2.0.0"], "state": "Normal"}]
+pc = {"partner": "dhcp02", "local_options": {}, "options": {}, "defs": {}, "local_classes": {"Drucker", "Default"}, "classes": {"Default"},
+      "fo": [{"name": "r1", "mode": "LoadBalance", "lb": 60, "mclt": 1800, "auth": False, "scopes": ["10.1.0.0", "10.3.0.0"]}]}
+for f in chk.server_findings({}, [], {}, [pc]):
+    if f.area in ("partner",):
+        print("srv", f.level, f.text)

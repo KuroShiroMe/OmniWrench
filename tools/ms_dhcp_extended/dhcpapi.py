@@ -1161,18 +1161,38 @@ class DhcpApi:
         return e
 
     def set_range(self, sid: int, start: int, end: int) -> None:
+        """Ändert den Verteilbereich. Ein vorhandener Bereich wird per DhcpAddSubnetElementV5 direkt angepasst
+        (MS-DHCPM 3.2.4.38: neuer Bereich muss den alten enthalten oder darin liegen). Entfernen geht bei
+        Failover-Scopes nicht (ERROR_DHCP_FO_RANGE_PART_OF_REL), daher bei Verschiebung über die Vereinigung."""
         old = self.elements(sid, EL_RANGES)
         keep: list = []
         for r in old:
             if (r["start"], r["end"]) == (start, end):
                 return
+        t = old[0]["type"] if old and old[0]["type"] not in (EL_RANGES,) else EL_RANGES_DHCP_ONLY
+        if len(old) == 1:
+            o = old[0]
+            steps = [(start, end)]
+            if not (o["start"] <= start and end <= o["end"]) and not (start <= o["start"] and o["end"] <= end):
+                steps.insert(0, (min(start, o["start"]), max(end, o["end"])))     # erst erweitern, dann verkleinern
+            for i, (a, b) in enumerate(steps):
+                try:
+                    self.rpc("write", "DhcpAddSubnetElementV5", sid, byref(self._range_el(t, a, b, keep)))
+                except RpcError:
+                    if i:          # Vereinigung steht schon - alten Bereich wiederherstellen
+                        try:
+                            self.rpc("write", "DhcpAddSubnetElementV5", sid,
+                                     byref(self._range_el(t, o["start"], o["end"], keep)))
+                        except RpcError:
+                            pass
+                    raise
+            return
         for r in old:
             e = self._range_el(r["type"], r["start"], r["end"], keep)
             try:
                 self.rpc("write", "DhcpRemoveSubnetElementV5", sid, byref(e), NO_FORCE)
             except RpcError:
                 self.rpc("write", "DhcpRemoveSubnetElementV5", sid, byref(e), FULL_FORCE)
-        t = old[0]["type"] if old and old[0]["type"] not in (EL_RANGES,) else EL_RANGES_DHCP_ONLY
         e = self._range_el(t, start, end, keep)
         try:
             self.rpc("write", "DhcpAddSubnetElementV5", sid, byref(e))

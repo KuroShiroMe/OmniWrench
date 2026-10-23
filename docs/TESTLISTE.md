@@ -4,7 +4,7 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.2.2,
+Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.3.0,
 NetProbe 1.2.4, Subnetzrechner 1.2.5, OmniVault 1.1.5. App-Version 0.7.0.
 
 ## 0. Vorbereitung
@@ -114,6 +114,41 @@ dhcpsapi.dll.
 - [ ] Serverprüfung: Geschwindigkeit (ggf. Thread-Anzahl anpassen), Abbrechen, automatische Prüfung nach der
       Anmeldung, Spalte „Höchster Befund“.
 - [ ] Definitionen: nur mit Expertenmodus sichtbar, Entsperren, Anlegen/Bearbeiten/Löschen.
+
+**1.3.0: Adresspool und Abgleich mit dem Partner** (Fehler 0x4EA4 von rz-dhcp01, nur mit Fake-DLL getestet)
+- [ ] Failover-Scope, Pool **verkleinern** (z. B. Ende -10) und **vergrößern**: Speichern klappt ohne 0x4EA4,
+      die DHCP-Konsole zeigt den neuen Bereich, Ausschlüsse und Leases sind unverändert.
+- [ ] Failover-Scope, Pool **verschieben** (neuer Start hinter altem Start und neues Ende hinter altem Ende):
+      klappt in zwei Schritten (erst erweitern, dann kürzen).
+- [ ] Danach Replikation (automatisch oder „Replizieren“): Partner hat denselben Pool; Protokoll zeigt
+      `add iprange` (bei Verschiebung zweimal).
+- [ ] Pool so ändern, dass ein Ausschluss außerhalb liegt: Rückfrage nennt den Ausschluss, er wird entfernt.
+- [ ] Fehlerfall (z. B. Richtlinie mit IP-Bereich im Scope und Pool verkleinern): verständliche Meldung, Pool und
+      Ausschlüsse bleiben wie vorher.
+- [ ] Prüfung mit „Mit Partnern abgleichen“: Der zusätzliche Ausschluss auf rz-dhcp02 erscheint als „Ausschlüsse nur
+      auf rz-dhcp02, nicht hier“ (Kategorie „Abgleich mit Partner“), ebenso im Scope-Tab mit „Jetzt replizieren“.
+      Nach der Replikation ist der Befund im Scope-Tab weg, nach erneuter Prüfung auch in der Liste.
+- [ ] Keine Fehlalarme bei synchronen Scopes (Optionen, Reservierungen, Lease, Status); falls doch: Befundtext und
+      beide Werte melden.
+- [ ] Serverbefunde zur Beziehung: Lastverteilung, MCLT, Authentifizierung und Scope-Liste werden bei gleichen
+      Einstellungen nicht gemeldet; Klassen nur bei echten Unterschieden.
+- [ ] Neuer Scope und Duplikat: Pool-Felder, „Ganzes Netz“, beim Duplikat werden die Ausschlüsse der Quelle angelegt.
+
+**1.3.0: Automatische Rücknahme bei Fehlern** (Transaktionen, nur mit Fake-Server getestet – bitte an einem Test-Scope)
+- [ ] Pool verkleinern, sodass ein Ausschluss wegfällt, und einen Fehler provozieren (z. B. Richtlinie mit IP-Bereich
+      im Scope): Meldung „… Alle 1 bereits durchgeführten Änderungen wurden zurückgenommen“, der Ausschluss ist
+      wieder da. Protokoll zeigt „Fehler bei „Scope … speichern“ – nehme 1 Änderungen zurück“ und „↶ …“.
+- [ ] Reservierungen einfügen mit „Überschreiben“, eine davon ungültig (z. B. IP schon als Reservierung in anderem
+      Scope): keine Reservierung geändert, die überschriebenen sind unverändert da.
+- [ ] Mehrere Optionen entfernen, während der Server kurz nicht erreichbar ist (oder Nur-Lese-Konto): alle Optionen
+      bleiben bzw. kommen zurück.
+- [ ] Neuer Scope mit Failover und Replikation, Partner absichtlich nicht erreichbar: Scope wird wieder entfernt,
+      lokal und beim Partner bleibt nichts übrig.
+- [ ] Failover-Scope löschen, Fehler beim Löschen (z. B. Scope während des Löschens in der Konsole geöffnet/gesperrt):
+      Scope ist wieder in der Beziehung und auf dem Partner vorhanden.
+- [ ] Während einer langen Aktion „Abbrechen“: Hinweis „Die Aktion wurde abgebrochen …“, Stand wie vorher.
+- [ ] Rücknahme nach gelöschter Failover-Beziehung: Beziehung ist wieder da; gemeinsamen Schlüssel prüfen bzw. neu
+      setzen (lässt sich nicht wiederherstellen).
 
 ## 6. NetProbe (net.netprobe 1.2.3)
 

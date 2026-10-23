@@ -135,3 +135,11 @@
   `_install_prerequisites` (system=False) plus `system.supports_platform`; grab() with offscreen + screen.json.
 - Vendor name is part of data paths, setup dir and mutex: never change VENDOR without LEGACY_VENDORS + setup mutex list;
   the DPAPI entropy string must never change.
+## DHCP API
+- Never remove the IP range of a failover scope (DhcpRemoveSubnetElementV5 -> 20132 ERROR_DHCP_FO_RANGE_PART_OF_REL).
+  DhcpAddSubnetElementV5 / `netsh scope x add iprange` modify the existing range, but only if the new range contains
+  or lies inside the old one (else 20023) -> shift via the union. Codes 0x4E90-0x4EAF are not all failover errors
+  (0x4E90 = policy range conflict).
+- DHCP tool transactions: record an undo step only after the write succeeded, otherwise a failed write produces a
+  failing inverse ("partial rollback" false alarm). Inside `ctl.atomic` flows, do not catch UserError per item to
+  continue - raise, so the whole action is undone. Lambdas in except blocks must bind the exception (`exc=e`).

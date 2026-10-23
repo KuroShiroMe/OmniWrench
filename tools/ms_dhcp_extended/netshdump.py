@@ -220,13 +220,21 @@ def sync_plan(scope_id: str, local: dict, remote: dict | None, opt_def) -> list[
             cmds.append(f"{sc} set name {q(l_name)}")
         if str(remote.get("desc") or "") != l_desc:
             cmds.append(f"{sc} set comment {q(l_desc)}")
-        if f"{remote.get('start')} {remote.get('end')}" != l_range:
-            cmds.append(f"{sc} add iprange {l_range}")
-    # Ausschlüsse: erst überzählige entfernen, dann fehlende anlegen
+    # Ausschlüsse: erst überzählige entfernen (vor der Bereichsänderung), dann fehlende anlegen
     lx = {f"{x['start']} {x['end']}" for x in local.get("exclusions") or []}
     rx = {f"{x['start']} {x['end']}" for x in (remote or {}).get("exclusions") or []}
     for k in sorted(rx - lx):
         cmds.append(f"{sc} delete excluderange {k}")
+    if remote and f"{remote.get('start')} {remote.get('end')}" != l_range:
+        # "add iprange" passt den vorhandenen Bereich an (Failover-Scopes erlauben kein Löschen). Der neue Bereich
+        # muss den alten enthalten oder darin liegen - bei Verschiebung erst auf die Vereinigung erweitern.
+        try:
+            ls, le, rs, re_ = (ip.ip2int(s["start"]), ip.ip2int(s["end"]), ip.ip2int(remote["start"]), ip.ip2int(remote["end"]))
+        except (KeyError, TypeError, ValueError, AttributeError):
+            ls = None
+        if ls is not None and not (rs <= ls and le <= re_) and not (ls <= rs and re_ <= le):
+            cmds.append(f"{sc} add iprange {ip.int2ip(min(ls, rs))} {ip.int2ip(max(le, re_))}")
+        cmds.append(f"{sc} add iprange {l_range}")
     for k in sorted(lx - rx):
         cmds.append(f"{sc} add excluderange {k}")
     # Lease-Dauer (Option 51)

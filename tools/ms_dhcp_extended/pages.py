@@ -19,6 +19,7 @@ from . import ipcalc as ip
 from . import optcodec as oc
 from .editors import OptionsPanel, opt_row_key, option_rows
 from .runner import Job
+from .service import UserError
 from .ui_base import (
     ButtonBar, FindingsToolbar, FindingsView, Grid, bold_label, confirm, finding_tip, help_icon, hint_label, info, level_color,
     level_name, short_list, text_dialog, tint, warn,
@@ -404,40 +405,47 @@ class ServerOptionsPage(QWidget):
                                 partner_check=tr("opt.f.to_partner", partners=", ".join(targets)) if targets else "")
         if not res:
             return
-        if res["undefined"]:
-            if not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
-                return
-            ok = yield from self.ctl.new_definition_flow({"id": res["id"], "vendor": res["vendor"], "type": dlg.guess_type(res["values"])})
-            if not ok:
-                return
+        if res["undefined"] and not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
+            return
         tag = f"{res['id']:03d}"
-        yield Job(lambda: svc.srv_opt_set(srv, res["id"], res["values"], res["vendor"], res["user"]), tr("status.saving"))
+        done = [srv] + (targets if res.get("partner") else [])
+
+        def write():
+            # Definition, Option und Partner-Kopie als Einheit: scheitert ein Teil, wird alles zurückgenommen
+            if res["undefined"]:
+                ok = yield from self.ctl.new_definition_flow({"id": res["id"], "vendor": res["vendor"],
+                                                              "type": dlg.guess_type(res["values"])})
+                if not ok:
+                    return False
+            yield Job(lambda: svc.srv_opt_set(srv, res["id"], res["values"], res["vendor"], res["user"]), tr("status.saving"))
+            if res.get("partner") and targets:
+                yield from self._copy([dict(res)], srv, targets)
+            return True
+        try:
+            if not (yield from self.ctl.atomic(tr("tx.srvopt_set", tag=tag, server=srv), write())):
+                return
+        finally:
+            yield from self.reload_flow(servers=done)
         svc.log(tr("log.srvopt_set_on", tag=tag, server=srv, values=", ".join(res["values"])))
-        done = [srv]
-        if res.get("partner") and targets:
-            errs = yield from self._copy([dict(res)], srv, targets)
-            done += targets
-            if errs:
-                warn(self, tr("opt.to_partner"), short_list(errs, 12))
-        yield from self.reload_flow(servers=done)
 
     def _copy(self, opts: list[dict], src: str, targets: list[str]):
-        """Optionen von src auf die Ziele schreiben (bei Quelle = verbundener Server vorher eigene Definitionen)."""
+        """Optionen von src auf die Ziele schreiben (bei Quelle = verbundener Server vorher eigene Definitionen).
+        Bricht beim ersten Fehler ab - in einer Transaktion wird dann alles Geschriebene zurückgenommen."""
         tr, svc = self.tr, self.svc
-        errs: list[str] = []
 
         def work():
             for t in targets:
                 if svc.is_local(src):
-                    errs.extend(svc.sync_defs_to_partner(t, [(o["vendor"], int(o["id"])) for o in opts]))
+                    errs = svc.sync_defs_to_partner(t, [(o["vendor"], int(o["id"])) for o in opts])
+                    if errs:
+                        raise UserError("; ".join(errs))
                 for o in opts:
                     try:
                         svc.srv_opt_set(t, int(o["id"]), o["values"], o["vendor"], o["user"])
-                        svc.log(tr("log.srvopt_partner", tag=f"{int(o['id']):03d}", partner=t))
-                    except Exception as e:  # noqa: BLE001 - je Ziel weitermachen
-                        errs.append(f"{t} {int(o['id']):03d}: {e}")
+                    except UserError as e:
+                        raise UserError(f"{t} {int(o['id']):03d}: {e}") from None
+                    svc.log(tr("log.srvopt_partner", tag=f"{int(o['id']):03d}", partner=t))
         yield Job(work, tr("status.to_partner"))
-        return errs
 
     def remove_flow(self, srv: str, rows):
         tr, svc = self.tr, self.svc
@@ -450,26 +458,29 @@ class ServerOptionsPage(QWidget):
                                            tr("srvopt.remove_partner", partners=", ".join(also)) if also else "")
         if not ok:
             return
-        errs: list[str] = []
-        for r in rows:
-            yield Job(lambda r=r: svc.srv_opt_remove(srv, r["id"], r["vendor"], r["user"]), tr("status.saving"))
-            svc.log(tr("log.srvopt_removed_on", tag=f"{r['id']:03d}", server=srv))
-        if on_partner:
-            def work():
-                for t in also:
-                    have = {opt_row_key(o) for o in self.options_of(t) or []}
-                    for r in rows:
-                        if opt_row_key(r) not in have:
-                            continue
-                        try:
-                            svc.srv_opt_remove(t, r["id"], r["vendor"], r["user"])
+
+        def write():
+            # lokal und (falls gewählt) beim Partner: alles oder nichts
+            for r in rows:
+                yield Job(lambda r=r: svc.srv_opt_remove(srv, r["id"], r["vendor"], r["user"]), tr("status.saving"))
+                svc.log(tr("log.srvopt_removed_on", tag=f"{r['id']:03d}", server=srv))
+            if on_partner:
+                def work():
+                    for t in also:
+                        have = {opt_row_key(o) for o in self.options_of(t) or []}
+                        for r in rows:
+                            if opt_row_key(r) not in have:
+                                continue
+                            try:
+                                svc.srv_opt_remove(t, r["id"], r["vendor"], r["user"])
+                            except UserError as e:
+                                raise UserError(f"{t} {r['id']:03d}: {e}") from None
                             svc.log(tr("log.srvopt_removed_on", tag=f"{r['id']:03d}", server=t))
-                        except Exception as e:  # noqa: BLE001
-                            errs.append(f"{t} {r['id']:03d}: {e}")
-            yield Job(work, tr("status.to_partner"))
-        if errs:
-            warn(self, tr("opt.remove"), short_list(errs, 12))
-        yield from self.reload_flow(servers=[srv] + (also if on_partner else []))
+                yield Job(work, tr("status.to_partner"))
+        try:
+            yield from self.ctl.atomic(tr("tx.srvopt_remove", server=srv), write())
+        finally:
+            yield from self.reload_flow(servers=[srv] + (also if on_partner else []))
 
     def paste_flow(self, srv: str):
         tr, svc = self.tr, self.svc
@@ -481,11 +492,16 @@ class ServerOptionsPage(QWidget):
         over = [it for it in clip["Items"] if ck.option_key(it["id"], it.get("vendor"), it.get("user")) in have]
         if over and not confirm(self, tr("ui.paste"), tr("clip.overwrite_opts", list=short_list([f"{int(i['id']):03d}" for i in over]))):
             return
-        for it in clip["Items"]:
-            yield Job(lambda it=it: svc.srv_opt_set(srv, int(it["id"]), list(it["values"]), it.get("vendor") or "", it.get("user") or ""),
-                      tr("status.saving"))
+
+        def write():
+            for it in clip["Items"]:
+                yield Job(lambda it=it: svc.srv_opt_set(srv, int(it["id"]), list(it["values"]), it.get("vendor") or "",
+                                                        it.get("user") or ""), tr("status.saving"))
+        try:
+            yield from self.ctl.atomic(tr("tx.paste", kind=tr("clip.kind.Options"), id=srv), write())
+        finally:
+            yield from self.reload_flow(servers=[srv])
         svc.log(tr("log.pasted", n=len(clip["Items"]), kind=tr("clip.kind.Options"), id=srv))
-        yield from self.reload_flow(servers=[srv])
 
     def to_partner_flow(self, srv: str, row):
         tr = self.tr
@@ -496,12 +512,11 @@ class ServerOptionsPage(QWidget):
         if not confirm(self, tr("opt.to_partner"), tr("srvopt.confirm_partner", partners=", ".join(targets),
                                                      list=f"{row['id']:03d} {row['name']} = {row['value']}")):
             return
-        errs = yield from self._copy([row], srv, targets)
-        if errs:
-            warn(self, tr("opt.to_partner"), short_list(errs, 12))
-        else:
-            self.ctl.notify(tr("srvopt.partner_done_one", tag=f"{row['id']:03d}", partners=", ".join(targets)))
-        yield from self.reload_flow(servers=targets)
+        try:
+            yield from self.ctl.atomic(tr("tx.srvopt_partner", tag=f"{row['id']:03d}"), self._copy([row], srv, targets))
+        finally:
+            yield from self.reload_flow(servers=targets)
+        self.ctl.notify(tr("srvopt.partner_done_one", tag=f"{row['id']:03d}", partners=", ".join(targets)))
 
 
 # --- Failover --------------------------------------------------------------------------------------------
@@ -1187,14 +1202,15 @@ class DefsPage(QWidget):
         out = []
 
         def work():
+            # alle oder keine: scheitert eine Kopie, werden die schon kopierten Definitionen wieder entfernt
             for pn in partners:
                 for d in rows:
                     try:
                         out.append(tr("def.copied" if svc.copy_def_to_partner(d, pn) else "def.exists",
                                       tag=f"{d['id']:03d}", partner=pn))
-                    except Exception as e:  # noqa: BLE001
-                        out.append(tr("err.def_partner", tag=f"{d['id']:03d}", partner=pn, error=str(e)))
-        yield Job(work, tr("status.to_partner"))
+                    except UserError as e:
+                        raise UserError(tr("err.def_partner", tag=f"{d['id']:03d}", partner=pn, error=str(e))) from None
+        yield Job(lambda: svc.atomic(tr("tx.def_partner"), work), tr("status.to_partner"))
         info(self, tr("def.to_partner"), short_list(out, 20))
 
 

@@ -1,13 +1,10 @@
-"""Wiederverwendbare Eingabebausteine: Lease-Dauer, Bereichsliste und Optionsliste (Scope, Server, Entwurf)."""
+"""Wiederverwendbare Eingabebausteine: Lease-Dauer, Adresspool und Optionsliste (Scope, Server, Entwurf)."""
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QBrush, QColor
-from PySide6.QtWidgets import (
-    QAbstractItemView, QCheckBox, QHBoxLayout, QHeaderView, QLabel, QSpinBox, QTableWidget, QTableWidgetItem,
-    QVBoxLayout, QWidget,
-)
+from PySide6.QtCore import Signal
+from PySide6.QtGui import QColor
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QLineEdit, QSpinBox, QVBoxLayout, QWidget
 
 from omniwrench.ui import theme
 
@@ -57,8 +54,9 @@ class LeaseEdit(QWidget):
         return self.d.value() * 86400 + self.h.value() * 3600 + self.m.value() * 60
 
 
-class RangeEditor(QWidget):
-    """Liste der Verteilbereiche (Start/Ende). Aus den Bereichen ergeben sich Scope-Grenzen und Ausschlüsse."""
+class PoolEditor(QWidget):
+    """Adresspool des Scopes wie in der DHCP-Konsole: eine Start- und eine Endadresse. Ausschlüsse werden
+    getrennt auf der Seite „Ausschlüsse“ gepflegt (keine Umrechnung von Bereichen in Ausschlüsse)."""
 
     changed = Signal()
 
@@ -66,152 +64,98 @@ class RangeEditor(QWidget):
         super().__init__(parent)
         self.tr = tr
         self.model: ip.ScopeModel | None = None
-        lay = QVBoxLayout(self)
+        self.confirm_whole = None   # nicht mehr nötig, bleibt für Aufrufer kompatibel
+        lay = QHBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
-        self.table = QTableWidget(0, 3)
-        self.table.setHorizontalHeaderLabels([tr("rng.col.start"), tr("rng.col.end"), tr("rng.col.count")])
-        self.table.verticalHeader().setVisible(False)
-        self.table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.set_editable(True)
-        self.table.setMinimumHeight(130)
-        self.table.itemChanged.connect(self._item_changed)
-        lay.addWidget(self.table)
-        row = QHBoxLayout()
-        self.bar = ButtonBar([("Add", tr("rng.add")), ("Remove", tr("rng.remove")), ("WholeNet", tr("rng.whole_net")),
-                              ("Merge", tr("rng.merge"))])
-        self.bar.action.connect(self._action)
-        row.addWidget(self.bar, 1)
+        self.start, self.end = QLineEdit(), QLineEdit()
+        for lbl, w in ((tr("pool.start"), self.start), (tr("pool.end"), self.end)):
+            w.setFont(MONO)
+            w.setPlaceholderText("0.0.0.0")
+            w.setMaximumWidth(170)
+            w.textChanged.connect(self._edited)
+            lay.addWidget(QLabel(lbl))
+            lay.addWidget(w)
+        self.bar = ButtonBar([("WholeNet", tr("rng.whole_net"))])
+        self.bar.action.connect(lambda _a: self.whole_net())
+        lay.addWidget(self.bar)
         self.sum = QLabel("")
-        row.addWidget(self.sum)
-        row.addWidget(help_icon(tr("rng.note")))
-        lay.addLayout(row)
+        lay.addWidget(self.sum, 1)
         self._updating = False
-        self.confirm_whole = None   # Rückfrage vor "Ganzes Netz" bei mehreren Bereichen
 
-    def set_editable(self, on: bool) -> None:
-        t = QAbstractItemView.EditTrigger
-        self.table.setEditTriggers(t.DoubleClicked | t.EditKeyPressed | t.AnyKeyPressed if on else t.NoEditTriggers)
-
-    # ----------------------------------------------------------------------------------------------
-    def _item_changed(self, it: QTableWidgetItem) -> None:
-        if self._updating or it.column() == 2:
-            return
-        self.changed.emit()
-
-    def _action(self, aid: str) -> None:
-        if aid == "Add":
-            self.add_row("", "")
-            self.table.setCurrentCell(self.table.rowCount() - 1, 0)
-            self.table.editItem(self.table.item(self.table.rowCount() - 1, 0))
-        elif aid == "Remove":
-            rows = sorted({i.row() for i in self.table.selectedIndexes()}, reverse=True)
-            for r in rows:
-                self.table.removeRow(r)
-            if rows:
-                self.changed.emit()
-        elif aid == "WholeNet":
-            if self.table.rowCount() > 1 and self.confirm_whole and not self.confirm_whole():
-                return
-            self.whole_net()
-        elif aid == "Merge":
-            self.merge()
-
-    def add_row(self, start: str, end: str, emit: bool = True) -> None:
-        self._updating = True
-        r = self.table.rowCount()
-        self.table.insertRow(r)
-        for c, v in enumerate((start, end)):
-            it = QTableWidgetItem(v)
-            it.setFont(MONO)
-            self.table.setItem(r, c, it)
-        cnt = QTableWidgetItem("")
-        cnt.setFlags(cnt.flags() & ~Qt.ItemFlag.ItemIsEditable)
-        cnt.setTextAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.table.setItem(r, 2, cnt)
-        self._updating = False
-        if emit:
+    def _edited(self, _t: str = "") -> None:
+        if not self._updating:
             self.changed.emit()
 
-    def set_ranges(self, ranges: list[tuple[int, int]]) -> None:
+    def set_editable(self, on: bool) -> None:
+        self.start.setReadOnly(not on)
+        self.end.setReadOnly(not on)
+
+    def set_pool(self, start: int | None, end: int | None) -> None:
         self._updating = True
-        self.table.setRowCount(0)
+        self.start.setText(ip.int2ip(start) if start is not None else "")
+        self.end.setText(ip.int2ip(end) if end is not None else "")
         self._updating = False
-        for s, e in ranges:
-            self.add_row(ip.int2ip(s), ip.int2ip(e), emit=False)
+
+    def set_ranges(self, ranges: list[tuple[int, int]]) -> None:
+        """Ältere Aufrufer: Pool = erste bis letzte Adresse."""
+        self.set_pool(ranges[0][0] if ranges else None, ranges[-1][1] if ranges else None)
+
+    def texts(self) -> tuple[str, str]:
+        return self.start.text().strip(), self.end.text().strip()
 
     def items(self) -> list[tuple[int, str, str]]:
-        out = []
-        for r in range(self.table.rowCount()):
-            s = (self.table.item(r, 0).text() if self.table.item(r, 0) else "").strip()
-            e = (self.table.item(r, 1).text() if self.table.item(r, 1) else "").strip()
-            if s or e:
-                out.append((r, s, e))
-        return out
+        s, e = self.texts()
+        return [(0, s, e)] if s or e else []
 
-    def valid_ranges(self) -> list[tuple[int, int]]:
-        out = []
-        for _r, s, e in self.items():
-            if ip.is_ipv4(s) and ip.is_ipv4(e):
-                a, b = sorted((ip.ip2int(s), ip.ip2int(e)))
-                out.append((a, b))
-        return sorted(out)
+    def pool(self) -> tuple[int, int] | None:
+        s, e = self.texts()
+        if ip.is_ipv4(s) and ip.is_ipv4(e):
+            a, b = ip.ip2int(s), ip.ip2int(e)
+            return (a, b) if a <= b else (b, a)
+        return None
 
     def merged(self) -> list[tuple[int, int]]:
-        return ip.merge_ranges(self.valid_ranges())
+        p = self.pool()
+        return [p] if p else []
 
     # ----------------------------------------------------------------------------------------------
     def whole_net(self) -> None:
         if not self.model or self.model.hosts < 1:
             return
-        self.set_ranges([(self.model.net + 1, self.model.bc - 1)])
+        self.set_pool(self.model.net + 1, self.model.bc - 1)
         self.changed.emit()
 
-    def merge(self) -> None:
-        m = self.merged()
-        if m:
-            self.set_ranges(m)
-            self.changed.emit()
-
-    def swap(self, row: int) -> None:
-        if 0 <= row < self.table.rowCount():
-            a, b = self.table.item(row, 0).text(), self.table.item(row, 1).text()
-            self._updating = True
-            self.table.item(row, 0).setText(b)
-            self.table.item(row, 1).setText(a)
-            self._updating = False
-            self.changed.emit()
+    def swap(self, _row: int = 0) -> None:
+        s, e = self.texts()
+        self._updating = True
+        self.start.setText(e)
+        self.end.setText(s)
+        self._updating = False
+        self.changed.emit()
 
     def clip(self) -> None:
-        """Bereiche auf die nutzbaren Adressen des Netzes kürzen (ohne Netz- und Broadcastadresse)."""
-        if not self.model:
+        """Pool auf die nutzbaren Adressen des Netzes kürzen (ohne Netz- und Broadcastadresse)."""
+        p = self.pool()
+        if not self.model or not p:
             return
-        lo, hi = self.model.net + 1, self.model.bc - 1
-        out = []
-        for s, e in self.valid_ranges():
-            s, e = max(s, lo), min(e, hi)
-            if s <= e:
-                out.append((s, e))
-        self.set_ranges(out)
-        self.changed.emit()
+        s, e = max(p[0], self.model.net + 1), min(p[1], self.model.bc - 1)
+        if s <= e:
+            self.set_pool(s, e)
+            self.changed.emit()
+
+    def merge(self) -> None:
+        pass
 
     def show_result(self, counts: dict[int, int], total: int, index: dict[str, list[ck.Finding]], flt) -> None:
-        """Adressanzahl je Zeile, Summe und Zeilenfarbe nach Befunden."""
-        self._updating = True
-        for r in range(self.table.rowCount()):
-            it = self.table.item(r, 2)
-            if it is not None:
-                it.setText(str(counts[r]) if r in counts else "")
-            fs = [f for f in index.get(f"Range:{r}", []) if flt.marker(f)]
-            lvl = ck.worst(fs)
-            tip = "\n".join(f.text for f in fs)
-            for c in range(3):
-                cell = self.table.item(r, c)
-                if cell is not None:
-                    cell.setBackground(QBrush(tint(level_color(lvl), 60)) if lvl else QBrush())
-                    cell.setToolTip(tip)
-        self._updating = False
-        self.sum.setText(self.tr("rng.sum", n=total))
+        """Adressanzahl und Feldfarbe nach Befunden."""
+        fs = [f for f in index.get("Range:0", []) + index.get("Ranges", []) if flt.marker(f)]
+        lvl = ck.worst(fs)
+        css = f"background:{tint(level_color(lvl), 60).name(QColor.NameFormat.HexArgb)};" if lvl else ""
+        tip = "\n".join(dict.fromkeys(f.text for f in fs))
+        for w in (self.start, self.end):
+            w.setStyleSheet(css)
+            w.setToolTip(tip)
+        self.sum.setText(self.tr("pool.sum", n=total) if total else "")
 
 
 # --- Optionsliste --------------------------------------------------------------------------------------
