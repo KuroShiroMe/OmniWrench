@@ -147,3 +147,12 @@
   (focus loss while typing). Never poll while a modal dialog is open or the runner is busy.
 - DHCP tool: long reads that need no write lock (event log) do not belong in the Runner - every non-quiet Job disables
   the main area. Use `run_async` directly with a generation counter and a data snapshot for the worker thread.
+
+## DNS tool (WMI via pywin32)
+- `pip --target` ignores pywin32's .pth: add _lib, _lib/win32, _lib/win32/lib, _lib/pywin32_system32 to sys.path and
+  os.add_dll_directory(pywin32_system32) before `import pythoncom` (wmidns.load, install.check).
+- COM per thread: CoInitializeEx(MTA) + own SWbemServices per thread (threading.local); never share across threads.
+- SWbemServices.ExecMethod (no underscore) for static class methods; SWbemObject.ExecMethod_ for instances.
+- ConnectServer: pass "" (not None) for current credentials; local target "." with credentials -> 0x80041064.
+- WMI cannot age a single record: AgeAllRecords ages all records of the node (documented limitation).
+- Tool locales need `_meta`, `tool.*` and `settings.*` keys (store + settings dialog translations), not only UI keys.

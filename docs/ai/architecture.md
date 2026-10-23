@@ -260,6 +260,19 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   writes only after unlock; dock shown only with setting expert_mode. Grid.enable_layout(settings,key) = movable/
   hideable columns stored {"order","hidden"}; overview + failover use it.
 
+## MS DNS Extended Management (net.ms-dns-extended, folder tools/ms_dns_extended, class MsDnsExtended)
+- Same UI architecture as the DHCP tool (copied, not imported: ui_base, runner, eventlog): generator flows + Runner,
+  FindingsView/markers, QtAds docks (pages overview/server/search/compare/check/events + one tab per zone).
+- Layers: `dnsutil` (names, reverse v4/v6, TTL/timestamp, Rec dataclass, text representation, validation),
+  `wmidns` (WmiServer over root\MicrosoftDNS, errors as @ERR/@WMI strings), `backend.WmiBackend` (servers, creds,
+  event log, DHCP read, dnspython probes), `dhcpread` (dhcpsapi leases/reservations, read-only), `checks`, `service.
+  DnsService` (session, cache {(server, zone): recs, loaded, serial}, Tx undo journal, guard/diff, bulk ops), UI
+  (`tool`, `pages`, `page_zone`, `dialogs`), `ping` (ICMP v4/v6).
+- Conflict check: SOA serial of each touched zone before writing (`guard`); after a write only the new serial is
+  stored, after a failure/cancel the zones are reloaded (`_after_write_flow`).
+- Tests: scripts/dns_check/fake_backend.py (2 DCs + DMZ server) and test_logic.py; `MsDnsExtended.backend_factory`
+  replaces the WMI backend for renders.
+
 ## Wiki and template (2026-10-22)
 ```
 wiki/                         GitHub-Wiki source (German), *.md + images/; mirrored by .github/workflows/wiki.yml

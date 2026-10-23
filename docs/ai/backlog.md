@@ -38,6 +38,12 @@ that are not plain test steps.
 - [x] Merged 2026-10-22: #45 categories one level + tags, #46 tool updates, #47 master password reset, #48 rename
       KuroShiroMe, #49 DHCP 1.2.0. UAC prerequisites (#10) tested OK 2026-10-16.
 
+- [ ] MS DNS Extended Management 1.0.0 (net.ms-dns-extended): WMI backend (wmidns.py) only tested with a fake backend,
+      all Windows tests open (TESTLISTE 9). Unsure until tested: AgeAllRecords NodeName format (FQDN with dot), WMI array
+      assignment for forwarders/secondaries, audit log keywords in eventlog.classify (German server texts).
+      Ideas: DHCPv6 leases in dhcpread (after PR #60), DNSSEC/policies/zone scopes read-only views, per-record aging via
+      DNS RPC API (DnssrvUpdateRecord) instead of AgeAllRecords, virtualised record table for very large zones.
+
 ## Later (mentioned by user or proposed)
 - More password-manager connectors (Bitwarden, 1Password, HashiCorp Vault done in 1.1.0): KeePassXC (browser protocol),
   Passbolt, Psono, Devolutions, Delinea, CyberArk, Pleasant, Azure Key Vault, Keeper.

@@ -11,6 +11,7 @@
 | [IconForge](Tool-IconForge) | Dokumentation & Design | freie Symbole suchen und exportieren | ✔ | ✔ | keine |
 | [NetProbe](Tool-NetProbe) | Netzwerk & Konnektivität | Netzwerk-Tests, Portscan, DNS, Leitungstest | ✔ | ✔ | `dnspython` |
 | [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management) | Netzwerk & Konnektivität | Microsoft-DHCP-Server verwalten und prüfen | ✔ | – | RSAT: DHCP |
+| [MS DNS Extended Management](Tool-MS-DNS-Extended-Management) | Netzwerk & Konnektivität | Microsoft-DNS-Server verwalten und prüfen (IPv4/IPv6, PTR, Aufräumen) | ✔ | – | `pywin32`, `dnspython` |
 
 ¹ ohne die Konnektoren Microsoft SecretManagement und Netwrix Password Secure
 
