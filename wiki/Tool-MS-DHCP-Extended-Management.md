@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dhcp-extended` |
-| **Stand der Seite** | Version 1.2.1 |
+| **Stand der Seite** | Version 1.3.0 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | DHCP, Scopes, Failover, Reservations, Leases, DHCP Options, RSAT, Microsoft |
 | **Plattformen** | Windows |
@@ -123,7 +123,7 @@ Jeder Scope öffnet sich in einem eigenen Tab mit diesen Seiten:
 
 | Seite | Inhalt |
 |---|---|
-| **Allgemein** | Scope-ID, Subnetzmaske, Name, Beschreibung, Lease-Dauer (Tage/Std/Min oder unbegrenzt), Status, Auslastung, dynamisches DNS (immer / auf Anforderung / nie, Einträge bei Ablauf löschen, auch für ältere Clients, Namensschutz) und die **Adressbereiche** |
+| **Allgemein** | Scope-ID, Subnetzmaske, Name, Beschreibung, Lease-Dauer (Tage/Std/Min oder unbegrenzt), Status, Auslastung, dynamisches DNS (immer / auf Anforderung / nie, Einträge bei Ablauf löschen, auch für ältere Clients, Namensschutz) und der **Adresspool** |
 | **Optionen** | Scope-Optionen mit Hersteller- und Benutzerklasse; Optionen ohne eigenen Wert erben die Server-Optionen |
 | **Reservierungen** | IP, MAC/Client-ID, Name, Beschreibung, Typ (DHCP, BOOTP, beide) |
 | **Ausschlüsse** | Start, Ende, Anzahl |
@@ -131,9 +131,11 @@ Jeder Scope öffnet sich in einem eigenen Tab mit diesen Seiten:
 | **Failover** | Beziehung, Partner, Modus, Status, MCLT, Authentifizierung; Aktionen siehe [Failover](#failover) |
 | **Befunde** | alle Befunde des Scopes; Doppelklick wendet eine vorgeschlagene Korrektur an |
 
-**Adressbereiche:** Ein Scope kann mehrere Bereiche haben; Lücken dazwischen werden beim Speichern zu
-Ausschlüssen. Knöpfe: **Bereich hinzufügen**, **Bereich entfernen**, **Ganzes Netz**, **Zusammenführen**
-(überlappende oder angrenzende Bereiche). Doppelklick auf eine Zelle bearbeitet sie.
+**Adresspool:** wie in der DHCP-Konsole eine **Startadresse** und eine **Endadresse**; **Ganzes Netz** setzt
+alle nutzbaren Adressen des Netzes. Adressen, die nicht vergeben werden sollen, stehen als **Ausschlüsse** auf
+der Seite „Ausschlüsse“ und werden dort einzeln angelegt oder entfernt. Beim Speichern wird der Pool auf dem
+Server direkt angepasst (auch bei Failover-Scopes); Ausschlüsse, die danach außerhalb des Pools lägen, nennt
+die Rückfrage und entfernt sie. Bei einem Failover-Scope folgt anschließend die Replikation auf den Partner.
 
 **Optionen bearbeiten:** Werte je Zeile oder durch Komma getrennt, Binärwerte als Hex (`0A0B0C`). Jede Eingabe
 wird gegen die Definition geprüft (Typ, Anzahl, Adressen im Netz …). Ist eine Option nicht definiert, bietet das
@@ -153,7 +155,7 @@ Fehler offen sind; Warnungen und Hinweise sperren nicht. Ungespeicherte Änderun
 - **Netz & Allgemein:** Netz oktettweise eingeben; ein Schloss („fest“) sperrt Oktette gegen versehentliches
   Ändern. Darunter Maske, Hostbereich, Broadcast. Name (beim Duplikat „‹Name› (Kopie)“), Beschreibung,
   Lease-Dauer, **Sofort aktivieren**, **DNS-Einstellungen der Quelle übernehmen**.
-- **Bereiche:** folgen ohne eigene Eingabe dem Netz; beim Duplizieren werden die Bereiche der Quelle umgerechnet.
+- **Adresspool:** folgt ohne eigene Eingabe dem Netz; beim Duplizieren werden Pool und Ausschlüsse der Quelle umgerechnet.
 - **Optionen, Reservierungen, Ausschlüsse:** beim Duplizieren mit Spalten **Übernehmen**, **Wert (Quelle)**,
   **Wert (neu)** und **IP anpassen**. „IP anpassen“ rechnet Adressen aus dem Quellnetz auf das neue Netz um
   (z. B. Gateway `10.1.5.1` → `10.1.9.1`). Doppelklick auf „Wert (neu)“ setzt einen eigenen Wert.
@@ -211,18 +213,18 @@ Failover-Scopes sofort auf.
 Die Seite **Prüfung** bewertet den ganzen Server: Servereinstellungen und jeden Scope, parallel (bis zu 8
 gleichzeitig), mit Fortschritt; die Bedienung bleibt frei und die Prüfung lässt sich abbrechen.
 **Leases einbeziehen** liest zusätzlich alle Leases (langsam bei großen Servern), **Mit Partnern abgleichen**
-vergleicht Failover-Scopes.
+vergleicht alles, was auf beiden Failover-Servern gleich sein sollte (siehe [Abgleich mit dem Partner](#abgleich-mit-dem-partner)).
 
 Darstellung: Verteilungsbalken je Kategorie, die Scopes mit den meisten Befunden, Umschalter zwischen
 **Befunde zum Server** und **Befunde je Scope** (mit Spalte „Höchster Befund“).
 
 Stufen: **Fehler** (verhindert Speichern), **Warnung**, **Best Practice**, **Info**.
-Kategorien: Netz, Bereiche, Allgemein, Lease-Dauer, Auslastung, Ausschlüsse, Optionen, Reservierungen, Leases,
+Kategorien: Netz, Adresspool, Allgemein, Lease-Dauer, Auslastung, Ausschlüsse, Optionen, Reservierungen, Leases,
 Failover, DNS, Server, Server-Optionen, Definitionen, Sicherheit, Datenbank, Bindungen, Superscopes,
-Richtlinien, Filter.
+Richtlinien, Filter, Abgleich mit Partner.
 
 Beispiele für Befunde:
-- Bereich außerhalb des Netzes, überlappende oder zusammenführbare Bereiche, Netz-/Broadcastadresse im Bereich
+- Adresspool außerhalb des Netzes, Netz-/Broadcastadresse im Pool, Ausschluss außerhalb des Pools
 - Gateway (Option 3) nicht im Netz, keine DNS-Server (Option 6), kein Domänenname (Option 15)
 - ungültige Werte (Adressen, Hostnamen, Domänennamen, Leerzeichen, Text länger als 255 Byte)
 - Scope-Option identisch mit der Server-Option (überflüssig), Option auf dem Server nicht definiert
@@ -231,6 +233,19 @@ Beispiele für Befunde:
 - Scope ohne Failover, Abweichungen zum Partner
 
 Viele Befunde bieten eine **Korrektur** an: Doppelklick im Reiter „Befunde“ wendet sie an.
+
+#### Abgleich mit dem Partner
+Mit **Mit Partnern abgleichen** liest die Prüfung jeden Failover-Partner (per `netsh`-Dump bzw. DHCP-API) und
+meldet jede Abweichung einzeln, Kategorie **Abgleich mit Partner**:
+
+| Ebene | Geprüft |
+|---|---|
+| Scope | fehlt auf dem Partner, Subnetzmaske, Name, Beschreibung, Status, **Adresspool**, Lease-Dauer, **Ausschlüsse nur hier / nur auf dem Partner**, Optionen (alle Klassen; fehlt, nur auf dem Partner, anderer Wert), Reservierungen (fehlen, nur auf dem Partner, andere MAC oder anderer Name) |
+| Beziehung | fehlt auf dem Partner, Modus, Lastverteilung (Summe 100 %), Reserve, MCLT, Authentifizierung, Scopes nur auf einer Seite in der Beziehung |
+| Server | Server-Optionen, Optionsdefinitionen (fehlt, anderer Datentyp), Benutzer- und Herstellerklassen |
+
+Die Scope-Abweichungen erscheinen auch im Scope-Tab (Seite „Befunde“ und am betroffenen Feld) mit der Korrektur
+**Jetzt replizieren**; die Replikation überträgt den Stand dieses Servers auf den Partner.
 
 ### Definitionen (Expertenmodus)
 Nur sichtbar, wenn in den Einstellungen **Expertenmodus** eingeschaltet ist, und auch dann zuerst **gesperrt**.
@@ -291,11 +306,14 @@ Replikation); **Leeren** löscht die Anzeige.
 | „Speichern nicht möglich, solange Fehler offen sind“ | Fehler auf der Seite „Befunde“ beheben (Doppelklick wendet Korrekturen an) |
 | Seite „Definitionen“ fehlt | Expertenmodus in den Einstellungen einschalten |
 | Bearbeiten-Knöpfe fehlen | Konto hat nur Lesezugriff |
+| „Der Adressbereich eines Failover-Scopes kann nicht gelöscht werden“ (0x4EA4) | trat bis 1.2.2 beim Ändern des Pools eines Failover-Scopes auf; ab 1.3.0 wird der Pool direkt angepasst |
+| „Eine Richtlinie im Scope nutzt einen Adressbereich außerhalb des neuen Bereichs“ (0x4E90) | zuerst den Bereich der Richtlinie (Policy) in der DHCP-Konsole anpassen, dann den Pool |
 
 ## Versionen
 
 | Version | Änderungen |
 |---|---|
+| 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes |
 | 1.2.1 | Bereich und Tags neu |
 | 1.2.0 | Prüfung mit Spalte „Höchster Befund“, Failover-Beziehungen aufklappbar mit beiden Servern, Server-Optionen je Server; Alpha-Kennzeichnung entfernt |
 | 1.1.0 | Spalten verschiebbar, Failover-Ansicht je Server, Prüfseite mit Verteilung, Server-Optionen mit Abgleich, Definitionen im Expertenmodus, Erkennung von Nur-Lese-Zugriff |

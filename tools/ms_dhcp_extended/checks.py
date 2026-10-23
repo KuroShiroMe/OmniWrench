@@ -19,7 +19,7 @@ LEVEL_ORDER = {ERROR: 0, WARN: 1, BP: 2, INFO: 3}
 
 CATEGORIES = ("net", "ranges", "general", "lease", "usage", "exclusions", "options", "reservations", "leases",
               "failover", "dns", "server", "server_options", "defs", "security", "database", "bindings", "scopes",
-              "superscopes", "policies", "filter", "scan")
+              "superscopes", "policies", "filter", "partner", "scan")
 
 # Ein Befund ohne eigenes Ziel markiert das Feld bzw. die Seite seines Bereichs
 AREA_TARGETS = {"net": "Field:Net", "ranges": "Ranges", "options": "Options", "failover": "Failover",
@@ -605,6 +605,101 @@ class Checker:
         return h
 
     # ----------------------------------------------------------------------------------------------
+    def partner_scope(self, scope: dict, data: dict, remote: dict | None, partner: str) -> list[Finding]:
+        """Abweichungen eines Failover-Scopes zum Partner (jedes Element einzeln).
+
+        scope: Scope-Zeile des Servers (n_scope), data: Scan-Daten (options, reservations, exclusions [(s,e)], lease),
+        remote: Stand auf dem Partner (netsh-Dump bzw. Cmdlets, normalisiert) oder None = Scope fehlt dort.
+        """
+        tr = self.tr
+        h: list[Finding] = []
+        sid = scope.get("id") or data.get("id") or ""
+        obj = tr("obj.partner", name=partner)
+
+        def add(level, text, targets):
+            f = Finding(level, "partner", text, list(targets) + ["Failover"], obj)
+            f.scope_id = sid
+            h.append(f)
+
+        if not remote:
+            add(ERROR, tr("chk.p_missing", partner=partner), [])
+            return h
+        if remote.get("mask") and remote["mask"] != scope.get("mask"):
+            add(ERROR, tr("chk.p_mask", partner=partner, a=scope.get("mask"), b=remote["mask"]), [])
+        for key, field_, target in (("name", "cmp.name", "Field:Name"), ("desc", "cmp.desc", "Field:Name"),
+                                    ("state", "cmp.state", "Field:State")):
+            a, b = str(scope.get(key) or ""), str(remote.get(key) or "")
+            if a != b:
+                if key == "state":
+                    a, b = tr(f"state.{a}"), tr(f"state.{b}") if b else "–"
+                add(WARN, tr("chk.p_field", field=tr(field_), partner=partner, a=a or "–", b=b or "–"), [target])
+        a = f"{scope.get('start')} – {scope.get('end')}"
+        b = f"{remote.get('start') or '?'} – {remote.get('end') or '?'}"
+        if (scope.get("start"), scope.get("end")) != (remote.get("start"), remote.get("end")):
+            add(ERROR, tr("chk.p_range", partner=partner, a=a, b=b), ["Ranges"])
+        la, lb = data.get("lease"), remote.get("lease")
+        if la is not None and lb is not None and int(la) != int(lb):
+            add(WARN, tr("chk.p_field", field=tr("cmp.lease"), partner=partner, a=format_lease(la, tr), b=format_lease(lb, tr)),
+                ["Field:Lease"])
+        # Ausschlüsse
+        lx = {(int(x[0]), int(x[1])) for x in data.get("exclusions") or []}
+        rx = set()
+        for x in remote.get("exclusions") or []:
+            if ip.is_ipv4(x.get("start")) and ip.is_ipv4(x.get("end")):
+                rx.add((ip.ip2int(x["start"]), ip.ip2int(x["end"])))
+        only_l, only_r = sorted(lx - rx), sorted(rx - lx)
+        if only_l:
+            add(WARN, tr("chk.p_excl_local", partner=partner, list=", ".join(ip.fmt_range(x) for x in only_l)),
+                [f"Excl:{ip.int2ip(x[0])}-{ip.int2ip(x[1])}" for x in only_l] + ["Exclusions"])
+        if only_r:
+            add(WARN, tr("chk.p_excl_partner", partner=partner, list=", ".join(ip.fmt_range(x) for x in only_r)),
+                ["Exclusions"])
+        # Optionen (alle Klassen; 51 = Lease-Dauer oben, 81 = DNS-Einstellung)
+        def opts(lst):
+            out = {}
+            for o in lst or []:
+                oid = int(o["id"])
+                if oid in (51, 81) and not o.get("vendor") and not o.get("user"):
+                    continue
+                out[option_key(oid, o.get("vendor"), o.get("user"))] = (
+                    oid, o.get("vendor") or "", oc.compare_form(o.get("values") or [], self.opt_def(oid, o.get("vendor") or "")))
+            return out
+        lo, ro = opts(data.get("options")), opts(remote.get("options"))
+        for k in sorted(set(lo) | set(ro)):
+            a, b = lo.get(k), ro.get(k)
+            if a and b and a[2] == b[2]:
+                continue
+            oid, vendor = (a or b)[0], (a or b)[1]
+            tag = f"{oid:03d} {self.opt_name(oid, vendor)}".strip()
+            if not b:
+                text = tr("chk.p_opt_missing", tag=tag, partner=partner, a=a[2])
+            elif not a:
+                text = tr("chk.p_opt_only", tag=tag, partner=partner, b=b[2])
+            else:
+                text = tr("chk.p_opt", tag=tag, partner=partner, a=a[2], b=b[2])
+            add(WARN, text, [k, "Options"])
+        # Reservierungen (Client-ID, Name, Typ)
+        def res(lst):
+            return {r["ip"]: ((ip.format_client_id(r.get("cid")) or r.get("cid") or "").lower(), r.get("name") or "")
+                    for r in lst or [] if r.get("ip")}
+        lr, rr = res(data.get("reservations")), res(remote.get("reservations"))
+        miss = sorted((k for k in lr if k not in rr), key=ip.ip_sort_key)
+        extra = sorted((k for k in rr if k not in lr), key=ip.ip_sort_key)
+        diff = sorted((k for k in lr if k in rr and lr[k] != rr[k]), key=ip.ip_sort_key)
+
+        def lst(ids):
+            return ", ".join(ids[:10]) + (f" … (+{len(ids) - 10})" if len(ids) > 10 else "")
+        if miss:
+            add(WARN, tr("chk.p_res_missing", n=len(miss), partner=partner, list=lst(miss)),
+                [f"Res:{k}" for k in miss[:50]] + ["Reservations"])
+        if extra:
+            add(WARN, tr("chk.p_res_only", n=len(extra), partner=partner, list=lst(extra)), ["Reservations"])
+        if diff:
+            add(WARN, tr("chk.p_res_diff", n=len(diff), partner=partner, list=lst(diff)),
+                [f"Res:{k}" for k in diff[:50]] + ["Reservations"])
+        return h
+
+    # ----------------------------------------------------------------------------------------------
     def server_findings(self, info: dict, scopes: list[dict], scan_scopes: dict, partner_checks: list[dict]) -> list[Finding]:
         """Serverweite und scopeübergreifende Befunde.
 
@@ -745,10 +840,62 @@ class Checker:
                         vend = f" [{d['vendor']}]" if d.get("vendor") else ""
                         add(WARN, "defs", tr("chk.srv_def_missing", tag=f"{d['id']:03d}", name=d["name"], vendor=vend, partner=pn),
                             tr("obj.definition", tag=f"{d['id']:03d}"))
+                    elif d.get("type") and rd[key].get("type") and d["type"] != rd[key]["type"]:
+                        add(WARN, "defs", tr("chk.p_def_type", tag=f"{d['id']:03d}", name=d["name"], partner=pn,
+                                             a=d["type"], b=rd[key]["type"]), tr("obj.definition", tag=f"{d['id']:03d}"))
                 for key, d in rd.items():
                     if key not in self.defs:
                         add(INFO, "defs", tr("chk.srv_def_only_partner", tag=f"{d['id']:03d}", name=d["name"], partner=pn),
                             tr("obj.definition", tag=f"{d['id']:03d}"))
+            # Benutzer-/Herstellerklassen
+            if pc.get("classes_error"):
+                add(INFO, "scan", tr("chk.p_classes_err", partner=pn, error=pc["classes_error"]), tr("obj.partner", name=pn))
+            elif pc.get("classes") is not None and pc.get("local_classes") is not None:
+                lc, rc = pc["local_classes"], pc["classes"]
+                for n in sorted(lc - rc):
+                    add(WARN, "partner", tr("chk.p_class_missing", name=n, partner=pn), tr("obj.partner", name=pn))
+                for n in sorted(rc - lc):
+                    add(INFO, "partner", tr("chk.p_class_only", name=n, partner=pn), tr("obj.partner", name=pn))
+            # Failover-Beziehungen aus Sicht des Partners
+            if pc.get("scopes_error"):
+                add(INFO, "scan", tr("chk.p_scopes_err", partner=pn, error=pc["scopes_error"]), tr("obj.partner", name=pn))
+            if pc.get("fo_error"):
+                add(INFO, "scan", tr("chk.p_fo_err", partner=pn, error=pc["fo_error"]), tr("obj.partner", name=pn))
+            elif pc.get("fo") is not None:
+                theirs = {r["name"]: r for r in pc["fo"]}
+                for r in self.failovers:
+                    if (r.get("partner") or "").lower() != pn.lower():
+                        continue
+                    o = tr("obj.relationship", name=r["name"])
+                    p = theirs.get(r["name"])
+                    if not p:
+                        add(ERROR, "partner", tr("chk.p_rel_missing", name=r["name"], partner=pn), o)
+                        continue
+                    if p.get("mode") != r.get("mode"):
+                        add(ERROR, "partner", tr("chk.p_rel_field", name=r["name"], partner=pn, field=tr("fo.f.mode"),
+                                                 a=fo_mode(r, tr), b=fo_mode(p, tr)), o)
+                    elif r.get("mode") == "LoadBalance" and r.get("lb") is not None and p.get("lb") is not None \
+                            and int(r["lb"]) + int(p["lb"]) != 100:
+                        add(WARN, "partner", tr("chk.p_rel_lb", name=r["name"], partner=pn, a=r["lb"], b=p["lb"]), o)
+                    elif r.get("mode") != "LoadBalance" and r.get("reserve") is not None and p.get("reserve") is not None \
+                            and int(r["reserve"]) != int(p["reserve"]):
+                        add(WARN, "partner", tr("chk.p_rel_field", name=r["name"], partner=pn, field=tr("p.reserve"),
+                                                 a=f"{r['reserve']} %", b=f"{p['reserve']} %"), o)
+                    if r.get("mclt") is not None and p.get("mclt") is not None and int(r["mclt"]) != int(p["mclt"]):
+                        add(WARN, "partner", tr("chk.p_rel_field", name=r["name"], partner=pn, field="MCLT",
+                                                 a=format_duration(r["mclt"]), b=format_duration(p["mclt"])), o)
+                    if bool(r.get("auth")) != bool(p.get("auth")):
+                        add(WARN, "partner", tr("chk.p_rel_field", name=r["name"], partner=pn, field=tr("p.auth"),
+                                                 a=tr("p.on" if r.get("auth") else "p.off"),
+                                                 b=tr("p.on" if p.get("auth") else "p.off")), o)
+                    ls, rs = set(r.get("scopes") or []), set(p.get("scopes") or [])
+                    only_l = sorted(ls - rs, key=ip.ip_sort_key)
+                    only_r = sorted(rs - ls, key=ip.ip_sort_key)
+                    if only_l:
+                        add(ERROR, "partner", tr("chk.p_rel_scopes_local", name=r["name"], partner=pn, list=", ".join(only_l)),
+                            o, only_l[0])
+                    if only_r:
+                        add(WARN, "partner", tr("chk.p_rel_scopes_partner", name=r["name"], partner=pn, list=", ".join(only_r)), o)
 
         # Scope-übergreifend
         names: dict[str, list[str]] = {}

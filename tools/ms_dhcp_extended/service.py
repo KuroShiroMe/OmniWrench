@@ -28,7 +28,8 @@ FLAG_MCLT, FLAG_SAFE, FLAG_PCT, FLAG_MODE, FLAG_SECRET = 0x1, 0x2, 0x8, 0x10, 0x
 SAFE_OFF = 4294967295
 FO_STATES = ["NO_STATE", "INIT", "STARTUP", "NORMAL", "COMMUNICATION_INT", "PARTNER_DOWN", "POTENTIAL_CONFLICT",
              "CONFLICT_DONE", "RESOLUTION_INT", "RECOVER", "RECOVER_WAIT", "RECOVER_DONE", "PAUSED", "SHUTDOWN"]
-_RPC_CODES = (5, 53, 87, 1326, 1722, 1753, 0x4E25, 0x4E98, 0x4E9D, 0x4EA0, 0x4EA5)
+_RPC_CODES = (5, 53, 87, 1326, 1722, 1753, 0x4E25, 0x4E37, 0x4E90, 0x4E91, 0x4E92, 0x4E93, 0x4E94, 0x4E98, 0x4E9D,
+              0x4E9F, 0x4EA0, 0x4EA1, 0x4EA3, 0x4EA4, 0x4EA5)
 _UNREACHABLE = re.compile(r"nicht erreichbar|unreachable|Zugriff|Access|WinRM|RPC|netsh dhcp|denied|verweigert", re.IGNORECASE)
 
 
@@ -174,6 +175,7 @@ class DhcpService:
         self.prefetch: dict[str, object] | None = None   # Ergebnisse von cim_many (schnelle Prüfung)
         self.rights: dict[str, str] = {}     # "*" = Primärserver, sonst Partner -> admin | read | unknown
         self.peer: dict[str, dict] = {}      # Sicht der Partner: Failover-Beziehungen, Scopes, Server-Optionen
+        self.partner_diffs: dict[str, list] = {}   # Scope -> Abweichungen zum Partner aus der letzten Prüfung
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -189,8 +191,8 @@ class DhcpService:
             what, server, code, systext = m.group(1), m.group(2), int(m.group(3)), m.group(4).strip()
             if code in _RPC_CODES:
                 text = tr(f"rpc.code.{code}")
-            elif 0x4E90 <= code <= 0x4EAF:
-                text = tr("rpc.code.fo_conflict")
+            elif 0x4E90 <= code <= 0x4EAF and (not systext or systext.startswith("Fehler ")):
+                text = tr("rpc.code.fo_other")
             else:
                 text = systext
             if what in ("start", "start_logon", "logon"):
@@ -896,6 +898,7 @@ class DhcpService:
                     fail += [f"{sid}: {e}" for e in r["errors"]]
                 else:
                     ok.append(sid)
+                    self.partner_diffs.pop(sid, None)
             except UserError as e:
                 fail.append(f"{sid}: {e}")
         for f in fail:
@@ -1333,7 +1336,57 @@ class DhcpService:
             pc["defs"] = {(d.get("vendor") or "", d["id"]): d for d in self.partner(pn, "defs")}
         except UserError as e:
             pc["defs_error"] = str(e)
+        ids = sorted({sid for r in self.failovers if (r.get("partner") or "").lower() == pn.lower() for sid in r["scopes"]},
+                     key=ip.ip_sort_key)
+        try:
+            pc["scopes"] = self.partner_scopes(pn, ids)
+        except UserError as e:
+            pc["scopes_error"] = str(e)
+        try:
+            pc["fo"] = [n_fo(api.fo_cmdlet_row(r)) for r in self.fo_api(pn, "enum")]
+        except UserError as e:
+            pc["fo_error"] = str(e)
+        try:
+            pc["local_classes"] = {c["name"] for c in self.classes() if c.get("name")}
+            rc = self.netsh_parsed(pn, "")["classes"] if self.partner_via.get(pn) == "Rpc" else self.classes(pn)
+            pc["classes"] = {c["name"] for c in rc if c.get("name")}
+        except UserError as e:
+            pc["classes_error"] = str(e)
         return pc
+
+    def partner_scopes(self, pn: str, ids: list[str]) -> dict[str, dict | None]:
+        """Stand der Scopes auf dem Partner (Scope-Felder + exclusions, options, reservations); None = fehlt."""
+        out: dict[str, dict | None] = {}
+        if not ids:
+            return out
+        if self._ensure_partner(pn) == "Rpc":
+            self.clear_dump(pn)
+            d = self.netsh_parsed(pn, "")
+            for sid in ids:
+                x = d["scopes"].get(sid)
+                out[sid] = x if x and x.get("mask") else None
+            return out
+        for sid in ids:
+            x = self.partner(pn, "scope", scope=sid)
+            if x:
+                x = dict(x, exclusions=self.partner(pn, "exclusions", scope=sid), options=self.partner(pn, "options", scope=sid),
+                         reservations=self.partner(pn, "reservations", scope=sid))
+            out[sid] = x
+        return out
+
+    def apply_partner_diffs(self, scan: dict, pcs: list[dict], checker) -> None:
+        """Scope-Abweichungen zu den Partnern an die Scope-Befunde der Prüfung hängen."""
+        diffs: dict[str, list] = {}
+        for pc in pcs:
+            for sid, remote in (pc.get("scopes") or {}).items():
+                e = scan["scopes"].get(sid)
+                if not e or not e.get("data"):
+                    continue
+                fs = checker.partner_scope(e["scope"], e["data"], remote, pc["partner"])
+                if fs:
+                    diffs[sid] = fs
+                    e["findings"] = ck.sort_findings(e["findings"] + fs)
+        scan["partner_diffs"] = diffs
 
     def scan_data(self, s: dict, stat: dict | None, excl: list[tuple[int, int]], with_leases: bool) -> dict:
         sid = s["id"]
@@ -1393,6 +1446,7 @@ class DhcpService:
         self.progress(tr("scan.server"))
         info = self.server_info()
         pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+        self.apply_partner_diffs(scan, pcs, checker)
         scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
         scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
         scan["seconds"] = int(time.time() - started)
@@ -1499,6 +1553,7 @@ class DhcpService:
                 self.progress(tr("scan.server"))
                 info = self.server_info()
                 pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+                self.apply_partner_diffs(scan, pcs, checker)
                 scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
                 scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
         except UserError:

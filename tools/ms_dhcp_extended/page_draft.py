@@ -17,7 +17,7 @@ from PySide6.QtWidgets import (
 from . import checks as ck
 from . import dialogs as dlg
 from . import ipcalc as ip
-from .editors import LeaseEdit, RangeEditor
+from .editors import LeaseEdit, PoolEditor
 from .runner import Job
 from .service import UserError
 from .ui_base import (
@@ -170,17 +170,13 @@ class DraftTab(QWidget):
             w.textChanged.connect(self.recheck)
         self.f_lease.changed.connect(self.recheck)
 
-        rbox = QGroupBox(tr("scope.ranges"))
-        rl = QVBoxLayout(rbox)
-        rh = QHBoxLayout()
-        rh.addWidget(help_icon(tr("draft.ranges_hint")))
-        rh.addStretch(1)
-        rh.addWidget(self.markers.add("Ranges", None))
-        rl.addLayout(rh)
-        self.ranges = RangeEditor(tr)
-        self.ranges.confirm_whole = lambda: confirm(self, tr("rng.whole_net"), tr("rng.confirm_whole"))
+        rbox = QGroupBox(tr("scope.pool"))
+        rl = QHBoxLayout(rbox)
+        self.ranges = PoolEditor(tr)
         self.ranges.changed.connect(self._ranges_edited)
-        rl.addWidget(self.ranges)
+        rl.addWidget(self.ranges, 1)
+        rl.addWidget(help_icon(tr("draft.pool_hint")))
+        rl.addWidget(self.markers.add("Ranges", None))
         lay.addWidget(rbox)
 
         fbox = QGroupBox(tr("draft.failover"))
@@ -248,9 +244,10 @@ class DraftTab(QWidget):
             self.f_desc.setText(s["desc"])
             self.f_lease.set_value(s["lease"])
             self.f_active.setChecked(s["state"] == "Active")
-            ex = [(ip.ip2int(x["start"]), ip.ip2int(x["end"])) for x in src["exclusions"]
-                  if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])]
-            self.src_ranges = svc.ranges_of(s, ex)
+            self.src_excl = [(ip.ip2int(x["start"]), ip.ip2int(x["end"])) for x in src["exclusions"]
+                             if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])]
+            self.src_ranges = [(ip.ip2int(s["start"]), ip.ip2int(s["end"]))] \
+                if ip.is_ipv4(s.get("start")) and ip.is_ipv4(s.get("end")) else []
             self.ranges.set_ranges(self.src_ranges)
             self.ranges_touched = True
             self.opt_rows = [{"id": o["id"], "name": (svc.opt_def(o["id"], o["vendor"]) or {}).get("name", o.get("name", "")),
@@ -330,7 +327,7 @@ class DraftTab(QWidget):
         self.recheck()
 
     def _move_ranges(self, old: tuple[int, int] | None, m: ip.ScopeModel) -> None:
-        """Bereiche dem neuen Netz folgen lassen (Duplikat: aus der Quelle umgerechnet)."""
+        """Pool dem neuen Netz folgen lassen (Duplikat: aus der Quelle umgerechnet)."""
         if self.src_model is not None:
             out = []
             for s, e in getattr(self, "src_ranges", []):
@@ -345,6 +342,21 @@ class DraftTab(QWidget):
             if m.hosts > 0:
                 self.ranges.set_ranges([(m.net + 1, m.bc - 1)])
             self.ranges_touched = False
+
+    def draft_exclusions(self) -> list[tuple[int, int]]:
+        """Duplikat: Ausschlüsse der Quelle, ins neue Netz umgerechnet und auf den Pool begrenzt."""
+        m, p = self.net_model(), self.ranges.pool()
+        if not self.src_model or not m or not p:
+            return []
+        out = []
+        for s, e in getattr(self, "src_excl", []):
+            a = ip.convert_ip_num(s, self.src_model.net, self.src_model.mask, m.net, m.mask)
+            b = ip.convert_ip_num(e, self.src_model.net, self.src_model.mask, m.net, m.mask)
+            if a is not None and b is not None:
+                a, b = max(a, p[0]), min(b, p[1])
+                if a <= b:
+                    out.append((a, b))
+        return sorted(out)
 
     def _ranges_edited(self) -> None:
         self.ranges_touched = True
@@ -565,6 +577,8 @@ class DraftTab(QWidget):
                     continue
                 fs.append(f)
             rf, counts, total = checker.ranges(self.ranges.items(), m)
+            if merged:
+                total = ip.range_size(ip.effective_ranges(merged[0][0], merged[0][1], self.draft_exclusions()))
             fs += rf
             # Adressen aus dem Quellnetz, die nicht angepasst werden
             for r in self.opt_rows:
@@ -649,10 +663,9 @@ class DraftTab(QWidget):
                 self._fill_options()
                 self.recheck()
                 self.tabs.setCurrentIndex(1)
-            elif f.fix in ("swap_range", "clip_ranges", "merge_ranges", "whole_net"):
+            elif f.fix in ("swap_range", "clip_ranges", "whole_net"):
                 self.tabs.setCurrentIndex(0)
-                {"swap_range": lambda: self.ranges.swap(int(f.fix_arg)), "clip_ranges": self.ranges.clip,
-                 "merge_ranges": self.ranges.merge, "whole_net": lambda: self.ranges._action("WholeNet")}[f.fix]()
+                {"swap_range": self.ranges.swap, "clip_ranges": self.ranges.clip, "whole_net": self.ranges.whole_net}[f.fix]()
             elif f.fix == "new_def":
                 self.ctl.run(self._new_def_flow({"id": (f.fix_arg or {}).get("id"), "vendor": (f.fix_arg or {}).get("vendor", "")}))
             return
@@ -699,14 +712,15 @@ class DraftTab(QWidget):
             return
         m = self.net_model()
         merged = self.ranges.merged()
-        gaps = ip.range_gaps(merged)
+        gaps = self.draft_exclusions()
         sid = ip.int2ip(m.net)
         opts = self.taken_options()
         rel = self.selected_rel()
         pending = self.fo_on.isChecked() and self.fo_combo.currentData() == "__new__"
         lines = [tr("draft.sum.net", net=ip.fmt_net(m.net, m.prefix), mask=ip.int2ip(m.mask)),
                  tr("draft.sum.name", name=self.f_name.text().strip()),
-                 tr("draft.sum.range", start=ip.int2ip(merged[0][0]), end=ip.int2ip(merged[-1][1]), n=ip.range_size(merged)),
+                 tr("draft.sum.range", start=ip.int2ip(merged[0][0]), end=ip.int2ip(merged[-1][1]),
+                    n=ip.range_size(ip.effective_ranges(merged[0][0], merged[-1][1], gaps))),
                  tr("draft.sum.gaps", n=len(gaps)), tr("draft.sum.options", n=len(opts)),
                  tr("draft.sum.lease", lease=ck.format_lease(self.f_lease.value(), tr)),
                  tr("draft.sum.state", state=tr("state.Active" if self.f_active.isChecked() else "state.InActive"))]

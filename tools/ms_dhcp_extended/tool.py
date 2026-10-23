@@ -591,6 +591,11 @@ class MsDhcpExtended(ToolBase):
 
     def set_scan(self, scan: dict) -> None:
         self.scan = scan
+        if not scan.get("partial") and "partner_diffs" in scan:
+            self.svc.partner_diffs = dict(scan["partner_diffs"])
+            for w in list(self.tabs):
+                if isinstance(w, ScopeTab):
+                    w.recheck()
         self.check_page.set_scan(scan)
         self.overview.set_data(self.svc, scan)
         self.fo_page.refresh()

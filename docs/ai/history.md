@@ -409,3 +409,22 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - `templates/tool-repo/` (template repo content, tested locally: setup, build, check, version guard, new_tool).
 - `.github/workflows/wiki.yml`, `docs/README.md`, help menu entries (menu.wiki in all 23 locales), build_exe no
   longer copies docs/TOOL_ENTWICKLUNG.md.
+
+## 2026-10-23 DHCP: pool of failover scopes (0x4EA4) + partner comparison (net.ms-dhcp-extended 1.3.0)
+- Stef: changing the range of a failover scope failed with 0x4EA4. Cause: `set_range` removed the range element and
+  re-added it; Windows forbids deleting the range of a failover scope (ERROR_DHCP_FO_RANGE_PART_OF_REL 20132).
+  The old generic 0x4E90-0x4EAF -> "Failover-Konflikt" text hid this. Also: the save flow had already removed all
+  exclusions before the failing call (lost on the server).
+- Fix: `DhcpAddSubnetElementV5` modifies an existing range in place (MS-DHCPM 3.2.4.38: new range must contain or lie
+  inside the old one); shifted pools go via the union in two steps, rollback to the old range. netsh `sync_plan` does
+  the same for the partner and deletes stale exclusions before the range change. Own texts for 20023, 20112-20116,
+  20127, 20129, 20131, 20132; unknown failover codes show the system text.
+- Stef (same thread): back to the classic DHCP console model - one pool (start/end) + exclusions; the range list
+  that turned gaps into exclusions is removed (`PoolEditor` replaces `RangeEditor`, draft duplicates pool + exclusions).
+- Stef: new checks for all differences between the servers. Scan with "Mit Partnern abgleichen" now compares per
+  failover scope (missing, mask, name, desc, state, pool, lease, exclusions both ways, options all classes,
+  reservations), per relationship (missing, mode, LB sum, reserve, MCLT, auth, scope lists) and server classes +
+  definition types. Category `partner`; scope findings also in the scope tab (fix "replicate", from
+  `svc.partner_diffs`, set by `set_scan`, cleared on successful replication).
+- Tested: fake DLL (S1 = failover scope, rejects range removal with 20132, enforces containment), pure checker tests,
+  offscreen renders of scope tab and draft. Windows tests in TESTLISTE section 5.

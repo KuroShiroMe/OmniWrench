@@ -199,6 +199,10 @@
 - 2026-10-22 (Stef, 1.2.0): failover list = expandable relationship row, children = the two servers (collapsed by
   default). Server options list only the selected server's options (no rows for options that exist only on the
   partner). Alpha note removed although the rights probe is still untested on real servers (Stef's call).
+- 2026-10-23 (Stef, 1.3.0): scope address range like the classic DHCP console - one pool (start/end) plus
+  exclusions; the range list that converted gaps into exclusions is removed completely. Scan must find every
+  difference between failover servers (my scope of "all": scope fields, pool, lease, exclusions, options all
+  classes, reservations, relationship settings and scope lists, classes, definition types; not leases or policies).
 
 ## Landing page (2026-10-22)
 - kuroshiro.me = static landing page from `site/` in the OmniWrench repo, deployed via GitHub Pages (Actions,

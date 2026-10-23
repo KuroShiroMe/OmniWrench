@@ -1,10 +1,12 @@
-"""Scope-Tab: Allgemein und Bereiche, Optionen, Reservierungen, Ausschlüsse, Leases, Failover und Befunde.
+"""Scope-Tab: Allgemein und Adresspool, Optionen, Reservierungen, Ausschlüsse, Leases, Failover und Befunde.
 
 Befunde werden bei jeder Eingabe neu berechnet und markieren Felder, Zeilen und Unterseiten. Ein Klick
 auf einen Befund springt zum Objekt oder führt die vorgeschlagene Korrektur aus.
 """
 
 from __future__ import annotations
+
+from dataclasses import replace
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -17,7 +19,7 @@ from omniwrench.ui import theme
 from . import checks as ck
 from . import dialogs as dlg
 from . import ipcalc as ip
-from .editors import LeaseEdit, OptionsPanel, RangeEditor, opt_row_key
+from .editors import LeaseEdit, OptionsPanel, PoolEditor, opt_row_key
 from .runner import Job
 from .service import ReplicationError, UserError
 from .ui_base import (
@@ -96,8 +98,8 @@ class ScopeTab(QWidget):
         self.f_desc.setReadOnly(not rw)
         self.f_lease.setEnabled(rw)
         self.f_state.setEnabled(rw)
-        self.ranges.bar.setVisible(rw)
-        self.ranges.set_editable(rw)
+        self.pool.bar.setVisible(rw)
+        self.pool.set_editable(rw)
         self.opts.apply_rights(rw, False)
         for grid, bar, ids in ((self.res_grid, self.res_bar, ("Add", "Edit", "Remove", "Paste")),
                                (self.ex_grid, self.ex_bar, ("Add", "Remove", "Paste")),
@@ -148,17 +150,13 @@ class ScopeTab(QWidget):
         self.f_lease.changed.connect(self._edited)
         self.f_state.currentIndexChanged.connect(self._edited)
 
-        rbox = QGroupBox(tr("scope.ranges"))
-        rl = QVBoxLayout(rbox)
-        rh = QHBoxLayout()
-        rh.addWidget(help_icon(tr("scope.ranges_hint")))
-        rh.addStretch(1)
-        rh.addWidget(self.markers.add("Ranges", None))
-        rl.addLayout(rh)
-        self.ranges = RangeEditor(tr)
-        self.ranges.confirm_whole = lambda: confirm(self, tr("rng.whole_net"), tr("rng.confirm_whole"))
-        self.ranges.changed.connect(self._edited)
-        rl.addWidget(self.ranges)
+        rbox = QGroupBox(tr("scope.pool"))
+        rl = QHBoxLayout(rbox)
+        self.pool = PoolEditor(tr)
+        self.pool.changed.connect(self._edited)
+        rl.addWidget(self.pool, 1)
+        rl.addWidget(help_icon(tr("scope.pool_hint")))
+        rl.addWidget(self.markers.add("Ranges", None))
         lay.addWidget(rbox)
         bar = QHBoxLayout()
         self.save_bar = ButtonBar([("Save", tr("ui.save")), ("Discard", tr("ui.discard"))], primary=("Save",))
@@ -279,7 +277,7 @@ class ScopeTab(QWidget):
         self.data = data
         s = data["scope"]
         self.model = ip.ScopeModel.from_scope(s["id"], s["mask"])
-        self.ranges.model = self.model
+        self.pool.model = self.model
         self._loading = True
         if not keep_edits:
             self.f_id.setText(s["id"])
@@ -288,7 +286,7 @@ class ScopeTab(QWidget):
             self.f_desc.setText(s["desc"])
             self.f_lease.set_value(s["lease"])
             self.f_state.setCurrentIndex(0 if s["state"] == "Active" else 1)
-            self.ranges.set_ranges(self.server_ranges())
+            self.pool.set_pool(*self.server_pool())
         st = data.get("stat")
         self.f_stats.setText(tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"],
                                 reserved=st["reserved"]) if st else "–")
@@ -322,11 +320,20 @@ class ScopeTab(QWidget):
             parts.append(tr("dns.name_protection"))
         return ", ".join(parts)
 
-    def server_ranges(self) -> list[tuple[int, int]]:
+    def server_pool(self) -> tuple[int | None, int | None]:
         s = (self.data or {}).get("scope") or {}
-        ex = [(ip.ip2int(x["start"]), ip.ip2int(x["end"])) for x in (self.data or {}).get("exclusions") or []
-              if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])]
-        return self.svc.ranges_of(s, ex)
+        return (ip.ip2int(s["start"]) if ip.is_ipv4(s.get("start")) else None,
+                ip.ip2int(s["end"]) if ip.is_ipv4(s.get("end")) else None)
+
+    def exclusion_list(self) -> list[tuple[int, int]]:
+        return [(ip.ip2int(x["start"]), ip.ip2int(x["end"])) for x in (self.data or {}).get("exclusions") or []
+                if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])]
+
+    def pool_changed(self) -> bool:
+        p = self.pool.pool()
+        if p is None:
+            return bool(self.pool.items()) or self.server_pool() != (None, None)
+        return p != self.server_pool()
 
     def rel(self) -> dict | None:
         return self.svc.scope_fo.get(self.sid)
@@ -334,8 +341,7 @@ class ScopeTab(QWidget):
     def is_dirty(self) -> bool:
         if not self.data:
             return False
-        return bool(self.general_changes()) or ip.range_signature(self.ranges.merged()) != ip.range_signature(self.server_ranges()) \
-            or (not self.ranges.items() and bool(self.server_ranges()))
+        return bool(self.general_changes()) or self.pool_changed()
 
     def general_changes(self) -> dict:
         if not self.data:
@@ -363,24 +369,33 @@ class ScopeTab(QWidget):
             return
         tr = self.tr
         checker = self.ctl.checker()
-        valid = self.ranges.merged()
+        p = self.pool.pool()
+        excl = self.exclusion_list()
+        valid = ip.effective_ranges(p[0], p[1], excl) if p else []
         model = ip.ScopeModel(self.model.net, self.model.prefix, valid)
-        s = self.data["scope"]
-        start = ip.ip2int(s["start"]) if ip.is_ipv4(s["start"]) else None
-        end = ip.ip2int(s["end"]) if ip.is_ipv4(s["end"]) else None
+        start, end = self.server_pool()
         data = {"id": self.sid, "model": model, "name": self.f_name.text().strip(), "lease": self.f_lease.value(),
                 "state": self.f_state.currentData(), "start": start, "end": end,
-                "res_start": valid[0][0] if valid else start, "res_end": valid[-1][1] if valid else end,
-                "exclusions": [(ip.ip2int(x["start"]), ip.ip2int(x["end"])) for x in self.data["exclusions"]
-                               if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])],
+                "res_start": p[0] if p else start, "res_end": p[1] if p else end, "exclusions": excl,
                 "stat": self.data.get("stat"), "dns": self.data.get("dns"), "options": self.data["options"],
                 "reservations": self.data["reservations"], "leases": self.data.get("leases") or [], "rel": self.rel(),
                 "unreplicated": self.unreplicated, "is_tab": True}
         fs = checker.scope_findings(data)
-        rf, counts, total = checker.ranges(self.ranges.items(), self.model)
+        rf, counts, total = checker.ranges(self.pool.items(), self.model)
+        if p:
+            total = ip.range_size(valid)
+        if p and self.pool_changed():
+            for x in excl:
+                if x[1] < p[0] or x[0] > p[1]:
+                    rf.append(ck.Finding(ck.WARN, "ranges", tr("chk.x_outside_pool", range=ip.fmt_range(x)),
+                                         [f"Excl:{ip.int2ip(x[0])}-{ip.int2ip(x[1])}", "Ranges"], tr("obj.exclusions")))
         for f in rf:
             f.scope_id = self.sid
         fs += rf
+        # Abweichungen zum Failover-Partner aus der letzten Prüfung (Replikation gleicht sie an)
+        if self.rel():
+            fs += [replace(f, targets=list(f.targets), fix="replicate", fix_label=tr("fix.replicate"))
+                   for f in self.svc.partner_diffs.get(self.sid) or []]
         dirty = self.is_dirty()
         if dirty:
             fs.append(ck.Finding(ck.INFO, "general", tr("chk.unsaved"), ["Field:Name", "Ranges"], tr("obj.general"),
@@ -390,7 +405,7 @@ class ScopeTab(QWidget):
         for f in self.findings:
             for t in f.targets:
                 self.index.setdefault(t, []).append(f)
-        self.ranges.show_result(counts, total, self.index, self.ctl.flt)
+        self.pool.show_result(counts, total, self.index, self.ctl.flt)
         self.save_bar.buttons["Save"].setEnabled(dirty)
         self.save_bar.buttons["Discard"].setEnabled(dirty)
         self.dirty_lbl.setText(tr("scope.unsaved") if dirty else "")
@@ -457,10 +472,8 @@ class ScopeTab(QWidget):
             w = {"Field:Name": self.f_name, "Field:Lease": self.f_lease.d, "Field:State": self.f_state}.get(target)
             if w:
                 w.setFocus()
-            if target.startswith("Range:"):
-                row = int(target.split(":")[1])
-                if row < self.ranges.table.rowCount():
-                    self.ranges.table.selectRow(row)
+            if target.startswith("Range"):
+                self.pool.start.setFocus()
         elif target.startswith("Option"):
             self.select_page("Options")
             if ":" in target:
@@ -488,16 +501,13 @@ class ScopeTab(QWidget):
         fx = f.fix
         if fx == "whole_net":
             self.select_page("General")
-            self.ranges._action("WholeNet")
+            self.pool.whole_net()
         elif fx == "swap_range":
             self.select_page("General")
-            self.ranges.swap(int(f.fix_arg))
+            self.pool.swap()
         elif fx == "clip_ranges":
             self.select_page("General")
-            self.ranges.clip()
-        elif fx == "merge_ranges":
-            self.select_page("General")
-            self.ranges.merge()
+            self.pool.clip()
         elif fx == "edit_option":
             a = f.fix_arg or {}
             self.select_page("Options")
@@ -567,35 +577,41 @@ class ScopeTab(QWidget):
             warn(self, tr("ui.save"), tr("scope.save_blocked", list=short_list([f.text for f in errs], 10)))
             return
         ch = self.general_changes()
-        merged = self.ranges.merged()
-        range_changed = ip.range_signature(merged) != ip.range_signature(self.server_ranges())
-        if not ch and not range_changed:
+        pool_changed = self.pool_changed()
+        if not ch and not pool_changed:
             return
-        if range_changed:
-            gaps = ip.range_gaps(merged)
-            text = tr("scope.confirm_ranges", start=ip.int2ip(merged[0][0]), end=ip.int2ip(merged[-1][1]),
-                      gaps=short_list([ip.fmt_range(g) for g in gaps], 12) if gaps else tr("scope.no_gaps"),
-                      old=len(self.data["exclusions"]))
+        if pool_changed:
+            p = self.pool.pool()
+            old_s, old_e = self.server_pool()
+            # Ausschlüsse außerhalb des neuen Pools lässt Windows nicht stehen - vorher entfernen
+            drop = [x for x in self.data["exclusions"] if ip.is_ipv4(x["start"]) and ip.is_ipv4(x["end"])
+                    and (ip.ip2int(x["end"]) < p[0] or ip.ip2int(x["start"]) > p[1])]
+            text = tr("scope.confirm_pool", old_start=ip.int2ip(old_s) if old_s is not None else "–",
+                      old_end=ip.int2ip(old_e) if old_e is not None else "–", start=ip.int2ip(p[0]), end=ip.int2ip(p[1]))
+            if drop:
+                text += "\n\n" + tr("scope.confirm_pool_drop", list=short_list([f"{x['start']} – {x['end']}" for x in drop], 10))
+            if self.rel():
+                text += "\n\n" + tr("scope.confirm_pool_fo", partner=self.rel()["partner"])
             if not confirm(self, tr("ui.save"), text):
                 return
-            ch["StartRange"] = ip.int2ip(merged[0][0])
-            ch["EndRange"] = ip.int2ip(merged[-1][1])
-            old = list(self.data["exclusions"])
+            ch["StartRange"] = ip.int2ip(p[0])
+            ch["EndRange"] = ip.int2ip(p[1])
 
             def work():
-                for x in old:
-                    svc.excl_remove(sid, x["start"], x["end"])
-                svc.scope_set(sid, **ch)
-                errors = []
-                for g in gaps:
-                    try:
-                        svc.excl_add(sid, ip.int2ip(g[0]), ip.int2ip(g[1]))
-                    except UserError as e:
-                        errors.append(f"{ip.fmt_range(g)}: {e}")
-                return errors
-            errors = yield Job(work, tr("status.saving"))
-            if errors:
-                warn(self, tr("ui.save"), tr("scope.excl_errors", list=short_list(errors, 10)))
+                done = []
+                try:
+                    for x in drop:
+                        svc.excl_remove(sid, x["start"], x["end"])
+                        done.append(x)
+                    svc.scope_set(sid, **ch)
+                except UserError:
+                    for x in done:      # Pool unverändert - entfernte Ausschlüsse wiederherstellen
+                        try:
+                            svc.excl_add(sid, x["start"], x["end"])
+                        except UserError as e:
+                            svc.log(tr("log.excl_restore_failed", range=f"{x['start']} - {x['end']}", error=str(e)), True)
+                    raise
+            yield Job(work, tr("status.saving"))
         else:
             yield Job(lambda: svc.scope_set(sid, **ch), tr("status.saving"))
         svc.log(tr("log.scope_saved", id=sid, fields=", ".join(ch)))
@@ -623,7 +639,9 @@ class ScopeTab(QWidget):
     def option_flow(self, row: dict | None):
         tr, svc = self.tr, self.svc
         vendors, users = yield from self.ctl.load_classes()
-        model = ip.ScopeModel(self.model.net, self.model.prefix, self.ranges.merged())
+        p = self.pool.pool()
+        model = ip.ScopeModel(self.model.net, self.model.prefix,
+                              ip.effective_ranges(p[0], p[1], self.exclusion_list()) if p else [])
         res = dlg.option_dialog(self, tr, self.ctl.checker(), svc.defs, row, model, vendors, users)
         if not res:
             return
