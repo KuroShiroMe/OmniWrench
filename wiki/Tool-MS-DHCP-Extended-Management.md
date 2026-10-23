@@ -292,7 +292,8 @@ werden alle Bearbeitungsfunktionen ausgeblendet und Felder schreibgeschützt.
 
 ### Ereignisprotokoll
 Die Seite **Ereignisprotokoll** zeigt die Konfigurationsänderungen am DHCP-Server – wer hat wann was geändert.
-Sie lädt beim ersten Öffnen die letzten 24 Stunden.
+Sie lädt beim ersten Öffnen die letzten 24 Stunden. Das Laden läuft im Hintergrund: Während das Protokoll gelesen
+wird (Anzeige unten links), bleiben alle anderen Seiten bedienbar.
 
 - Oben: **Server** (verbundener Server oder Failover-Partner), **Zeitraum** (letzte Stunde, 24 Stunden, 7 Tage,
   30 Tage), **Bereich** und Suche; **Laden** liest neu. Neue Einträge des verbundenen Servers kommen mit der
@@ -415,6 +416,7 @@ Replikation); **Leeren** löscht die Anzeige.
 | Version | Änderungen |
 |---|---|
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
+| 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |
 | 1.4.0 | Änderungen anderer erkennen: Prüfung vor jedem Speichern (Scope und Server-Optionen) mit Liste der Unterschiede, automatisches Aktualisieren mit einstellbarem Abstand und Hinweisbalken, „wer hat geändert“ aus dem Ereignisprotokoll des DHCP-Servers |
 | 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes; jede Aktion läuft als Transaktion und wird bei einem Fehler oder Abbruch vollständig zurückgenommen (auch beim Partner), Einfügen und Entwurf sind „alles oder nichts“ |
 | 1.2.1 | Bereich und Tags neu |

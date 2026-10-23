@@ -145,3 +145,5 @@
   continue - raise, so the whole action is undone. Lambdas in except blocks must bind the exception (`exc=e`).
 - DHCP tool background polling: use `Job(..., quiet=True)`; a normal Job disables the main area for every step
   (focus loss while typing). Never poll while a modal dialog is open or the runner is busy.
+- DHCP tool: long reads that need no write lock (event log) do not belong in the Runner - every non-quiet Job disables
+  the main area. Use `run_async` directly with a generation counter and a data snapshot for the worker thread.

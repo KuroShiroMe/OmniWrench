@@ -4,6 +4,9 @@ Quelle ist das Protokoll Microsoft-Windows-Dhcp-Server/Operational des gewählte
 Ereignis zeigt die Seite Bereich, Aktion, Scope (mit Name) und betroffenes Objekt, darunter alle Details und
 einen Hinweis, was die Änderung bedeutet. Ist das Protokoll nicht lesbar (Recht fehlt, Firewall), erscheint ein
 Hinweis mit Link auf die Einrichtungsanleitung im Wiki.
+
+Das Laden läuft in einem eigenen Thread neben den übrigen Abläufen (nicht über den Runner): Abruf und Lesehilfe
+passieren im Hintergrund, die Oberfläche bleibt bedienbar, und ein langsamer Server sperrt keine anderen Seiten.
 """
 
 from __future__ import annotations
@@ -19,8 +22,9 @@ from PySide6.QtWidgets import (
 
 from omniwrench.ui import theme
 
+from omniwrench.sdk import run_async
+
 from . import eventlog
-from .runner import Job
 from .service import EventLogError, UserError
 from .ui_base import ButtonBar, Grid, tint
 
@@ -39,6 +43,9 @@ class EventsPage(QWidget):
         self.svc = ctl.svc
         self.events: list[dict] = []
         self.loaded_for: str | None = None      # Server, für den zuletzt geladen wurde
+        self.loading = False
+        self._gen = 0                           # Ladevorgang; ältere Ergebnisse (Abmelden, neues Laden) verwerfen
+        self._pending: list[dict] = []          # neue Ereignisse aus der Aktualisierung während des Ladens
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 8, 8, 8)
 
@@ -79,7 +86,7 @@ class EventsPage(QWidget):
         self.filter.textChanged.connect(self._apply_filter)
         top.addWidget(self.filter, 1)
         self.bar = ButtonBar([("Load", tr("evt.load"))], primary=("Load",))
-        self.bar.action.connect(lambda _a: self.ctl.run(self.load_flow()))
+        self.bar.action.connect(lambda _a: self.load())
         top.addWidget(self.bar)
         lay.addLayout(top)
 
@@ -118,6 +125,8 @@ class EventsPage(QWidget):
         self.server.blockSignals(False)
 
     def reset(self) -> None:
+        self._gen += 1
+        self._set_loading(False)
         self.loaded_for = None
         self.err_box.hide()
         self.set_events([])
@@ -125,55 +134,97 @@ class EventsPage(QWidget):
     def on_shown(self) -> None:
         """Beim ersten Öffnen der Seite (und nach einem Serverwechsel) automatisch laden."""
         if self.svc.server and self.loaded_for != self.server.currentText():
-            self.ctl.run(self.load_flow())
+            self.load()
 
-    def load_flow(self):
+    def load(self) -> None:
+        """Ereignisse im Hintergrund lesen und aufbereiten; das Ergebnis kommt in _loaded im GUI-Thread an."""
         tr, svc = self.tr, self.svc
         server = self.server.currentText() or svc.server
+        if not server:
+            return
         hours = int(self.period.currentData() or 24)
         since = eventlog.iso_utc(datetime.datetime.now() - datetime.timedelta(hours=hours))
+        self._gen += 1
+        gen = self._gen
         self.loaded_for = server
-        try:
-            items = yield Job(lambda: svc.events(server, since, MAX_EVENTS), tr("evt.loading", server=server))
-        except EventLogError as e:
-            self.set_events([])
-            self._show_error(server, e.code, str(e))
+        self._pending = []
+        self._set_loading(True, tr("evt.loading", server=server))
+        ctx = self._context()          # Momentaufnahme der Scopes/Definitionen für den Hintergrund-Thread
+
+        def work():
+            try:
+                items = svc.events(server, since, MAX_EVENTS)
+            except EventLogError as e:
+                return ("err", e.code, str(e))
+            except UserError as e:
+                return ("err", 0, str(e))
+            return ("ok", items, self._rows(items, ctx))
+
+        run_async(work, lambda res: self._loaded(gen, server, res),
+                  lambda text: self._loaded(gen, server, ("err", 0, text)))
+
+    def _loaded(self, gen: int, server: str, res: tuple) -> None:
+        if gen != self._gen:            # inzwischen abgemeldet oder neu geladen
             return
-        except UserError as e:
+        self._set_loading(False)
+        if res[0] == "err":
             self.set_events([])
-            self._show_error(server, 0, str(e))
+            self._show_error(server, res[1], res[2])
             return
         self.err_box.hide()
-        self.set_events(items)
-        svc.log(tr("log.events_loaded", n=len(items), server=server))
+        self.set_events(res[1], res[2])
+        pending, self._pending = self._pending, []
+        if pending:
+            self.add_events(pending)
+        self.svc.log(self.tr("log.events_loaded", n=len(res[1]), server=server))
+
+    def _set_loading(self, on: bool, text: str = "") -> None:
+        self.loading = on
+        self.bar.setEnabled(not on)
+        self.server.setEnabled(not on)
+        self.period.setEnabled(not on)
+        if on:
+            self.count.setText(text)
 
     def add_events(self, items: list[dict]) -> None:
         """Neue Ereignisse aus der automatischen Aktualisierung (nur für den verbundenen Server) vorne einfügen."""
         if self.loaded_for is None or not self.svc.is_local(self.loaded_for):
+            return
+        if self.loading:
+            self._pending = items + self._pending
             return
         have = {e.get("record") for e in self.events}
         new = [e for e in items if e.get("record") not in have]
         if new:
             self.set_events(new + self.events)
 
-    def _scope_list(self) -> list[tuple[str, str]]:
-        return [(s["id"], s["mask"]) for s in self.svc.scopes if s.get("id") and s.get("mask")]
+    def _context(self) -> tuple[list[tuple[str, str]], dict[str, str], dict[int, str]]:
+        svc = self.svc
+        scopes = [(s["id"], s["mask"]) for s in svc.scopes if s.get("id") and s.get("mask")]
+        names = {s["id"]: s.get("name") or "" for s in svc.scopes}
+        opts = {k[1]: d["name"] for k, d in svc.defs.items() if not k[0] and d.get("name")}   # Standardklasse
+        return scopes, names, opts
 
-    def set_events(self, items: list[dict]) -> None:
+    def _rows(self, items: list[dict], ctx) -> list[dict]:
+        """Lesehilfe je Ereignis (läuft auch im Hintergrund-Thread, nutzt nur die Momentaufnahme ctx)."""
         tr = self.tr
-        self.events = list(items)
-        names = {s["id"]: s.get("name") or "" for s in self.svc.scopes}
-        scopes = self._scope_list()
+        scopes, names, opts = ctx
         rows = []
-        for ev in self.events:
+        for ev in items:
             c = eventlog.classify(ev, scopes)
             sc = c["scope"]
             if c["area"] in ("option", "optiondef") and c["obj"][:3].isdigit():
-                d = self.svc.defs.get(("", int(c["obj"][:3])))       # Optionsname zur Nummer (Standardklasse)
-                if d and d.get("name"):
-                    c["obj"] = c["obj"].replace(c["obj"][:3], f"{c['obj'][:3]} {d['name']}", 1)
+                name = opts.get(int(c["obj"][:3]))       # Optionsname zur Nummer
+                if name:
+                    c["obj"] = c["obj"].replace(c["obj"][:3], f"{c['obj'][:3]} {name}", 1)
             rows.append(dict(ev, **c, area_t=tr(f"evt.a.{c['area']}"), action_t=tr(f"evt.act.{c['action']}"),
                              scope_t=f"{sc}  {names.get(sc, '')}".strip() if sc else ""))
+        return rows
+
+    def set_events(self, items: list[dict], rows: list[dict] | None = None) -> None:
+        self.events = list(items)
+        if rows is None:
+            rows = self._rows(self.events, self._context())
         self.grid.set_rows(rows)
         self.grid.autosize(260)
         self._apply_filter()

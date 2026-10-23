@@ -4,7 +4,7 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.4.1,
+Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.4.2,
 NetProbe 1.2.4, Subnetzrechner 1.2.5, OmniVault 1.1.5. App-Version 0.7.0.
 
 ## 0. Vorbereitung
@@ -115,70 +115,75 @@ dhcpsapi.dll.
       Anmeldung, Spalte „Höchster Befund“.
 - [ ] Definitionen: nur mit Expertenmodus sichtbar, Entsperren, Anlegen/Bearbeiten/Löschen.
 
-**1.3.0: Adresspool und Abgleich mit dem Partner** (Fehler 0x4EA4 von rz-dhcp01, nur mit Fake-DLL getestet)
-- [ ] Failover-Scope, Pool **verkleinern** (z. B. Ende -10) und **vergrößern**: Speichern klappt ohne 0x4EA4,
+**1.3.0: Adresspool und Abgleich mit dem Partner** (Fehler 0x4EA4 von rz-dhcp01, nur mit Fake-DLL getestet) – getestet (Stef 2026-10-23)
+- [x] Failover-Scope, Pool **verkleinern** (z. B. Ende -10) und **vergrößern**: Speichern klappt ohne 0x4EA4,
       die DHCP-Konsole zeigt den neuen Bereich, Ausschlüsse und Leases sind unverändert.
-- [ ] Failover-Scope, Pool **verschieben** (neuer Start hinter altem Start und neues Ende hinter altem Ende):
+- [x] Failover-Scope, Pool **verschieben** (neuer Start hinter altem Start und neues Ende hinter altem Ende):
       klappt in zwei Schritten (erst erweitern, dann kürzen).
-- [ ] Danach Replikation (automatisch oder „Replizieren“): Partner hat denselben Pool; Protokoll zeigt
+- [x] Danach Replikation (automatisch oder „Replizieren“): Partner hat denselben Pool; Protokoll zeigt
       `add iprange` (bei Verschiebung zweimal).
-- [ ] Pool so ändern, dass ein Ausschluss außerhalb liegt: Rückfrage nennt den Ausschluss, er wird entfernt.
-- [ ] Fehlerfall (z. B. Richtlinie mit IP-Bereich im Scope und Pool verkleinern): verständliche Meldung, Pool und
+- [x] Pool so ändern, dass ein Ausschluss außerhalb liegt: Rückfrage nennt den Ausschluss, er wird entfernt.
+- [x] Fehlerfall (z. B. Richtlinie mit IP-Bereich im Scope und Pool verkleinern): verständliche Meldung, Pool und
       Ausschlüsse bleiben wie vorher.
-- [ ] Prüfung mit „Mit Partnern abgleichen“: Der zusätzliche Ausschluss auf rz-dhcp02 erscheint als „Ausschlüsse nur
+- [x] Prüfung mit „Mit Partnern abgleichen“: Der zusätzliche Ausschluss auf rz-dhcp02 erscheint als „Ausschlüsse nur
       auf rz-dhcp02, nicht hier“ (Kategorie „Abgleich mit Partner“), ebenso im Scope-Tab mit „Jetzt replizieren“.
       Nach der Replikation ist der Befund im Scope-Tab weg, nach erneuter Prüfung auch in der Liste.
-- [ ] Keine Fehlalarme bei synchronen Scopes (Optionen, Reservierungen, Lease, Status); falls doch: Befundtext und
+- [x] Keine Fehlalarme bei synchronen Scopes (Optionen, Reservierungen, Lease, Status); falls doch: Befundtext und
       beide Werte melden.
-- [ ] Serverbefunde zur Beziehung: Lastverteilung, MCLT, Authentifizierung und Scope-Liste werden bei gleichen
+- [x] Serverbefunde zur Beziehung: Lastverteilung, MCLT, Authentifizierung und Scope-Liste werden bei gleichen
       Einstellungen nicht gemeldet; Klassen nur bei echten Unterschieden.
-- [ ] Neuer Scope und Duplikat: Pool-Felder, „Ganzes Netz“, beim Duplikat werden die Ausschlüsse der Quelle angelegt.
+- [x] Neuer Scope und Duplikat: Pool-Felder, „Ganzes Netz“, beim Duplikat werden die Ausschlüsse der Quelle angelegt.
 
-**1.3.0: Automatische Rücknahme bei Fehlern** (Transaktionen, nur mit Fake-Server getestet – bitte an einem Test-Scope)
-- [ ] Pool verkleinern, sodass ein Ausschluss wegfällt, und einen Fehler provozieren (z. B. Richtlinie mit IP-Bereich
+**1.3.0: Automatische Rücknahme bei Fehlern** (Transaktionen, nur mit Fake-Server getestet – bitte an einem Test-Scope) – getestet (Stef 2026-10-23)
+- [x] Pool verkleinern, sodass ein Ausschluss wegfällt, und einen Fehler provozieren (z. B. Richtlinie mit IP-Bereich
       im Scope): Meldung „… Alle 1 bereits durchgeführten Änderungen wurden zurückgenommen“, der Ausschluss ist
       wieder da. Protokoll zeigt „Fehler bei „Scope … speichern“ – nehme 1 Änderungen zurück“ und „↶ …“.
-- [ ] Reservierungen einfügen mit „Überschreiben“, eine davon ungültig (z. B. IP schon als Reservierung in anderem
+- [x] Reservierungen einfügen mit „Überschreiben“, eine davon ungültig (z. B. IP schon als Reservierung in anderem
       Scope): keine Reservierung geändert, die überschriebenen sind unverändert da.
-- [ ] Mehrere Optionen entfernen, während der Server kurz nicht erreichbar ist (oder Nur-Lese-Konto): alle Optionen
+- [x] Mehrere Optionen entfernen, während der Server kurz nicht erreichbar ist (oder Nur-Lese-Konto): alle Optionen
       bleiben bzw. kommen zurück.
-- [ ] Neuer Scope mit Failover und Replikation, Partner absichtlich nicht erreichbar: Scope wird wieder entfernt,
+- [x] Neuer Scope mit Failover und Replikation, Partner absichtlich nicht erreichbar: Scope wird wieder entfernt,
       lokal und beim Partner bleibt nichts übrig.
-- [ ] Failover-Scope löschen, Fehler beim Löschen (z. B. Scope während des Löschens in der Konsole geöffnet/gesperrt):
+- [x] Failover-Scope löschen, Fehler beim Löschen (z. B. Scope während des Löschens in der Konsole geöffnet/gesperrt):
       Scope ist wieder in der Beziehung und auf dem Partner vorhanden.
-- [ ] Während einer langen Aktion „Abbrechen“: Hinweis „Die Aktion wurde abgebrochen …“, Stand wie vorher.
-- [ ] Rücknahme nach gelöschter Failover-Beziehung: Beziehung ist wieder da; gemeinsamen Schlüssel prüfen bzw. neu
+- [x] Während einer langen Aktion „Abbrechen“: Hinweis „Die Aktion wurde abgebrochen …“, Stand wie vorher.
+- [x] Rücknahme nach gelöschter Failover-Beziehung: Beziehung ist wieder da; gemeinsamen Schlüssel prüfen bzw. neu
       setzen (lässt sich nicht wiederherstellen).
 
-**1.4.0: Änderungen anderer erkennen** (nur mit Fake-Daten getestet – Testumgebung mit zwei Sitzungen bzw. DHCP-Konsole)
-- [ ] Scope im Tool öffnen, in der DHCP-Konsole eine Option ändern, im Tool eine andere Option speichern:
+**1.4.0: Änderungen anderer erkennen** (nur mit Fake-Daten getestet – Testumgebung mit zwei Sitzungen bzw. DHCP-Konsole) – getestet (Stef 2026-10-23)
+- [x] Scope im Tool öffnen, in der DHCP-Konsole eine Option ändern, im Tool eine andere Option speichern:
       Meldung „Auf dem Server geändert“ mit der Änderung aus der Konsole; nichts geschrieben.
-- [ ] Dieselbe Meldung nennt unter „Laut Ereignisprotokoll“ Uhrzeit, Konto und Text der Konsolen-Änderung.
+- [x] Dieselbe Meldung nennt unter „Laut Ereignisprotokoll“ Uhrzeit, Konto und Text der Konsolen-Änderung.
       Falls stattdessen „Wer … nicht bekannt“: Protokollzeile „Ereignisprotokoll … nicht lesbar“ mit Fehler melden.
-- [ ] „Neu laden (Eingaben behalten)“: Konsolen-Änderung ist sichtbar, eigene Eingabe (z. B. Name) steht noch da;
+- [x] „Neu laden (Eingaben behalten)“: Konsolen-Änderung ist sichtbar, eigene Eingabe (z. B. Name) steht noch da;
       erneut speichern klappt ohne Meldung. „Trotzdem speichern“ schreibt; „Abbrechen“ ändert nichts.
-- [ ] Oben „Aktualisieren: jede Minute“ einstellen, in der Konsole Reservierung anlegen: spätestens nach einer
+- [x] Oben „Aktualisieren: jede Minute“ einstellen, in der Konsole Reservierung anlegen: spätestens nach einer
       Minute zeigt der Scope-Tab den Balken „Auf dem Server geändert und neu geladen“, Reservierung ist da, das
       Protokoll zeigt „Änderung am Server (…, Konto): …“. Die Oberfläche bleibt dabei bedienbar.
-- [ ] Wie oben, aber vorher im Tab den Namen ändern (nicht speichern): kein automatisches Neuladen, Balken mit
+- [x] Wie oben, aber vorher im Tab den Namen ändern (nicht speichern): kein automatisches Neuladen, Balken mit
       „Neu laden“; danach Name noch geändert, Reservierung da.
-- [ ] Übersicht/Failover/Server-Optionen: Scope in der Konsole anlegen bzw. Server-Option ändern → nach der
+- [x] Übersicht/Failover/Server-Optionen: Scope in der Konsole anlegen bzw. Server-Option ändern → nach der
       nächsten Runde sichtbar. Server-Option im Tool ändern, nachdem sie in der Konsole geändert wurde → Meldung.
-- [ ] Server kurz nicht erreichbar (Netz trennen): eine Protokollzeile „Automatische Aktualisierung fehlgeschlagen“,
+- [x] Server kurz nicht erreichbar (Netz trennen): eine Protokollzeile „Automatische Aktualisierung fehlgeschlagen“,
       keine wiederholten Fehlerfenster.
-- [ ] Einstellung „Automatisch aktualisieren“ in den Tool-Einstellungen und Auswahl oben bleiben synchron.
+- [x] Einstellung „Automatisch aktualisieren“ in den Tool-Einstellungen und Auswahl oben bleiben synchron.
 
-**1.4.1: Seite „Ereignisprotokoll“**
-- [ ] Seite öffnen: lädt automatisch die letzten 24 Stunden. Konsolen-Änderungen (Option, Reservierung, Ausschluss,
+**1.4.1: Seite „Ereignisprotokoll“** – getestet (Stef 2026-10-23)
+- [x] Seite öffnen: lädt automatisch die letzten 24 Stunden. Konsolen-Änderungen (Option, Reservierung, Ausschluss,
       Scope, Failover) erscheinen mit Konto; Bereich/Aktion/Scope/Objekt passen zur Meldung (sonst Meldungstext
       und Ereignis-ID melden, damit die Lesehilfe nachgeschärft werden kann).
-- [ ] Ereignis anklicken: Details mit SID, Ereignisdaten und Hinweis; Doppelklick öffnet den Scope.
-- [ ] Zeitraum, Bereich und Suche filtern; Server auf den Partner umstellen und laden.
-- [ ] Konto ohne „Ereignisprotokollleser“: gelber Hinweis „fehlt das Leserecht“ mit Link; Link öffnet die Wiki-
+- [x] Ereignis anklicken: Details mit SID, Ereignisdaten und Hinweis; Doppelklick öffnet den Scope.
+- [x] Zeitraum, Bereich und Suche filtern; Server auf den Partner umstellen und laden.
+- [x] Konto ohne „Ereignisprotokollleser“: gelber Hinweis „fehlt das Leserecht“ mit Link; Link öffnet die Wiki-
       Anleitung. Nach Aufnahme in die Gruppe (ggf. ab-/anmelden) „Laden“ → Ereignisse da.
-- [ ] Firewall-Regel „Remote-Ereignisprotokollverwaltung“ aus: Hinweis „nicht erreichbar … Firewall“.
-- [ ] Wiki-Anleitung „Ereignisprotokoll einrichten“ einmal durchspielen (Befehle korrekt?).
-- [ ] Mit Auto-Refresh: neue Konsolen-Änderung erscheint ohne „Laden“ oben in der Liste.
+- [x] Firewall-Regel „Remote-Ereignisprotokollverwaltung“ aus: Hinweis „nicht erreichbar … Firewall“.
+- [x] Wiki-Anleitung „Ereignisprotokoll einrichten“ einmal durchspielen (Befehle korrekt?).
+- [x] Mit Auto-Refresh: neue Konsolen-Änderung erscheint ohne „Laden“ oben in der Liste.
+
+**1.4.2: Ereignisprotokoll im Hintergrund**
+- [ ] Zeitraum „30 Tage“ laden: Während „Lese Ereignisprotokoll …“ unten steht, lassen sich andere Seiten und Scopes
+      bedienen (kein gesperrtes Fenster); danach erscheinen die Einträge.
+- [ ] Während des Ladens abmelden: kein Fehler, nach erneuter Anmeldung ist die Liste leer bzw. lädt neu.
 
 ## 6. NetProbe (net.netprobe 1.2.3)
 

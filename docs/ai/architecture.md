@@ -245,6 +245,9 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   warning box with wiki link `#ereignisprotokoll-einrichten`. `eventlog.classify(ev, scopes)` = reading aid
   (area/action keywords de+en, scope by IP containment, option number via regex, also EventData fields);
   hint text per area (`evt.hint.*`). poll_flow pushes new events via `events_page.add_events`.
+  1.4.2: `EventsPage.load()` bypasses the Runner (own `run_async` thread, fetch + classify `_rows(items, ctx)` in the
+  worker on a snapshot `_context()`), so the UI stays usable; `_gen` counter drops stale results (reset/reload),
+  `add_events` during loading is buffered in `_pending`.
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
 - 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
   5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;

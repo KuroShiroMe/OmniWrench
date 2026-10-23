@@ -12,10 +12,7 @@ that are not plain test steps.
 - [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.3.0, Alpha removed 2026-10-22): backend (DHCP API via
       ctypes) only tested with a fake DLL. THREADS=8 may need tuning. Old net.scopekeeper installs must be removed by
       hand. Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
-- [ ] DHCP 1.3.0 (2026-10-23): pool change on failover scopes, partner comparison and automatic rollback
-      (transactions) untested on Windows (TESTLISTE 5).
-- [ ] DHCP 1.4.0: conflict check, auto-refresh and event-log reader (wevtapi, channel name, message text,
-      SID lookup) untested on Windows (TESTLISTE 5).
+- [ ] DHCP 1.4.2: event log loads in background thread - Windows check open (TESTLISTE 5, 1.4.1 tested OK by Stef).
 - [ ] DHCP 1.4.1 event log page: classify() keywords are guesses from MS docs wording - tune with real
       message texts from Stef's test environment (German server). Per-scope "who" filter matches IPs in message text
       and EventData values.
