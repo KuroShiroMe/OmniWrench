@@ -277,9 +277,9 @@ class _Item(QTableWidgetItem):
 
 def sort_key(kind: str, value):
     if value is None or value == "":
-        return -1 if kind in ("ip", "int", "float") else ""
-    if kind == "ip":
-        return ip.ip_sort_key(str(value))
+        return -1 if kind in ("int", "float") else ""
+    if kind == "ip":     # als Hex-Text: IPv6-Schlüssel passen nicht in Qts 64-Bit-Zahlen
+        return f"{max(0, ip.ip_sort_key(str(value))):033x}"
     if kind in ("int", "float"):
         try:
             return float(value)

@@ -231,6 +231,17 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   Wrap only the write part of a flow - reloads/after_change replication stay outside. Partner inverses: netsh
   (`_netsh_undo`, `_undo_partner_scope` = sync_plan back to the dump snapshot or `delete scope`), fo_api (`_fo_undo`,
   deleted relationship comes back without shared secret). Test: scripts/dhcp_api_check/test_tx.py (stateful fake).
+- DHCPv6 (1.5.0): `dhcpapi._V6` mixin (DhcpEnumSubnetsV6 … DhcpServerSetConfigV6, DHCP_IPV6_ADDRESS = High/Low
+  QWORD big-endian halves, `ip6()`/`ip6s()`), cmdlet names Get-DhcpServerv6* in CMDLETS. Service: `scopes6`,
+  `scope_info6`, `server_options6`, `defs6` (keyed (vendor, id), internal ids >= V6_INTERNAL_MIN hidden),
+  `get_scope6`, `scope6_set/add/remove`, `excl6_*`, `res6_*` (DUID+IAID; name/desc via client record),
+  `lease6_remove`, opt/def/srv functions take `v6=`. All record undo like v4. `checks6` = scope/server findings
+  (Checker gets defs6/server_options6). UI: `page_scope6.ScopeTab6(ScopeTab)` (PAGES/PAGE_TARGETS class attrs,
+  no Failover page), `dialogs.scope6_dialog/reservation6_dialog/exclusion6_dialog`, `tool.set_family`,
+  `tool.new_scope6_flow`, pages.ServerOptionsPage/DefsPage `v6` property follows `ctl.family`. `ip6calc` = v6 math
+  (prefix, convert_values for duplicate/paste). Scan: `scan_list/scan_scope/scan_finish` cover both families;
+  `dnscheck.findings` (ThreadPoolExecutor 16, getaddrinfo + gethostbyaddr) when scan option with_dns.
+  Tests: scripts/dhcp_api_check/fake_dhcpsapi6.c + test_api6.py.
 - Changes by others (1.4.0): `svc.config_of(data)` = comparable scope config (no leases/stats), `diff_config` ->
   readable lines. ScopeTab keeps `base`/`loaded_utc` (set in `set_data`; keep_edits keeps only fields the user
   actually changed). `ScopeTab.guard()` before writes, `ServerOptionsPage._guard(servers)` likewise, both use

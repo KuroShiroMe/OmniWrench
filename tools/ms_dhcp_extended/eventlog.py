@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ctypes
 import datetime as _dt
+import ipaddress
 import re
 import xml.etree.ElementTree as ET
 from ctypes import Structure, byref, c_uint32, c_void_p, c_wchar_p
@@ -90,6 +91,22 @@ _IP = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
 _OPT = re.compile(r"option(?:s)?(?:[- ]?(?:id|nummer|number|wert|value|definition))?\s*[:#]?\s*(\d{1,3})\b", re.I)
 
 
+_IP6 = re.compile(r"(?<![0-9A-Fa-f:.])(?=[0-9A-Fa-f:]*:[0-9A-Fa-f]*:)[0-9A-Fa-f:]{2,39}(?![0-9A-Fa-f:])")
+
+
+def ipv6_in(text: str) -> list[str]:
+    """IPv6-Adressen in einem Meldungstext (kurze Schreibweise, ohne Dubletten)."""
+    out = []
+    for a in _IP6.findall(text or ""):
+        try:
+            n = ipaddress.IPv6Address(a).compressed
+        except ValueError:
+            continue
+        if n not in out:
+            out.append(n)
+    return out
+
+
 def _ip2int(a: str) -> int | None:
     p = a.split(".")
     if len(p) != 4 or not all(x.isdigit() and int(x) < 256 for x in p):
@@ -104,12 +121,25 @@ def classify(ev: dict, scopes: list[tuple[str, str]] | None = None) -> dict:
     low = text.lower()
     area = next((a for a, keys in AREAS if any(k in low for k in keys)), "other")
     action = next((a for a, keys in ACTIONS if any(k in low for k in keys)), "other")
-    nets = []
+    nets, nets6 = [], []
     for sid, mask in scopes or []:
+        if ":" in sid:          # DHCPv6: (Präfix, Präfixlänge)
+            try:
+                nets6.append((sid, ipaddress.IPv6Network(f"{sid}/{int(mask) if str(mask).isdigit() else 64}", strict=False)))
+            except ValueError:
+                pass
+            continue
         n, m = _ip2int(sid), _ip2int(mask)
         if n is not None and m is not None:
             nets.append((sid, n, m))
     scope, objs = "", []
+    for a in ipv6_in(text):
+        addr = ipaddress.IPv6Address(a)
+        if any(a == sid for sid, _n in nets6):
+            scope = scope or a
+            continue
+        scope = scope or next((sid for sid, n in nets6 if addr in n), "")
+        objs.append(a)
     for a in dict.fromkeys(_IP.findall(text)):
         v = _ip2int(a)
         if v is None:

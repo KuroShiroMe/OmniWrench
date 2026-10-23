@@ -15,10 +15,11 @@ from __future__ import annotations
 
 import ctypes
 import datetime as _dt
+import ipaddress
 import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from ctypes import POINTER, Structure, Union, byref, c_int, c_ubyte, c_uint16, c_uint32, c_void_p, c_wchar_p
+from ctypes import POINTER, Structure, Union, byref, c_int, c_ubyte, c_uint16, c_uint32, c_uint64, c_void_p, c_wchar_p
 
 DWORD = c_uint32
 ULONG = c_uint32
@@ -292,6 +293,119 @@ class DHCPDS_SERVERS(Structure):
     _fields_ = [("Flags", DWORD), ("NumElements", DWORD), ("Servers", POINTER(DHCPDS_SERVER))]
 
 
+# --- DHCPv6 (dhcpsapi.h) -------------------------------------------------------------------------------
+# IPv6-Adressen sind zwei ULONGLONG: HighOrderBits = die ersten 64 Bit, LowOrderBits = die letzten 64 Bit (als Zahl).
+
+class DHCP_IPV6_ADDRESS(Structure):
+    _fields_ = [("HighOrderBits", c_uint64), ("LowOrderBits", c_uint64)]
+
+
+class DHCPV6_IP_ARRAY(Structure):
+    _fields_ = [("NumElements", DWORD), ("Elements", POINTER(DHCP_IPV6_ADDRESS))]
+
+
+class DHCP_SUBNET_INFO_V6(Structure):
+    _fields_ = [("SubnetAddress", DHCP_IPV6_ADDRESS), ("Prefix", ULONG), ("Preference", WORD), ("SubnetName", LPWSTR),
+                ("SubnetComment", LPWSTR), ("State", DWORD), ("ScopeId", DWORD)]
+
+
+class DHCP_IP_RANGE_V6(Structure):
+    _fields_ = [("StartAddress", DHCP_IPV6_ADDRESS), ("EndAddress", DHCP_IPV6_ADDRESS)]
+
+
+class DHCP_IP_RESERVATION_V6(Structure):
+    _fields_ = [("ReservedIpAddress", DHCP_IPV6_ADDRESS), ("ReservedForClient", POINTER(DHCP_BINARY_DATA)),
+                ("InterfaceId", DWORD)]
+
+
+class _ElementUnionV6(Union):
+    _fields_ = [("IpRange", POINTER(DHCP_IP_RANGE_V6)), ("ReservedIp", POINTER(DHCP_IP_RESERVATION_V6)),
+                ("ExcludeIpRange", POINTER(DHCP_IP_RANGE_V6))]
+
+
+class DHCP_SUBNET_ELEMENT_DATA_V6(Structure):
+    _fields_ = [("ElementType", c_int), ("Element", _ElementUnionV6)]
+
+
+class DHCP_SUBNET_ELEMENT_INFO_ARRAY_V6(Structure):
+    _fields_ = [("NumElements", DWORD), ("Elements", POINTER(DHCP_SUBNET_ELEMENT_DATA_V6))]
+
+
+class DHCP_HOST_INFO_V6(Structure):
+    _fields_ = [("IpAddress", DHCP_IPV6_ADDRESS), ("NetBiosName", LPWSTR), ("HostName", LPWSTR)]
+
+
+class DHCP_CLIENT_INFO_V6(Structure):
+    _fields_ = [("ClientIpAddress", DHCP_IPV6_ADDRESS), ("ClientDUID", DHCP_BINARY_DATA), ("AddressType", DWORD),
+                ("IAID", DWORD), ("ClientName", LPWSTR), ("ClientComment", LPWSTR), ("ClientValidLeaseExpires", DATE_TIME),
+                ("ClientPrefLeaseExpires", DATE_TIME), ("OwnerHost", DHCP_HOST_INFO_V6)]
+
+
+class DHCP_CLIENT_INFO_ARRAY_V6(Structure):
+    _fields_ = [("NumElements", DWORD), ("Clients", POINTER(POINTER(DHCP_CLIENT_INFO_V6)))]
+
+
+class _SearchUnionV6(Union):
+    _fields_ = [("ClientIpAddress", DHCP_IPV6_ADDRESS), ("ClientDUID", DHCP_BINARY_DATA), ("ClientName", LPWSTR)]
+
+
+class DHCP_SEARCH_INFO_V6(Structure):
+    _fields_ = [("SearchType", c_int), ("SearchInfo", _SearchUnionV6)]
+
+
+class DHCP_RESERVED_SCOPE6(Structure):
+    _fields_ = [("ReservedIpAddress", DHCP_IPV6_ADDRESS), ("ReservedIpSubnetAddress", DHCP_IPV6_ADDRESS)]
+
+
+class _ScopeUnion6(Union):
+    _fields_ = [("DefaultScopeInfo", c_void_p), ("SubnetScopeInfo", DHCP_IPV6_ADDRESS),
+                ("ReservedScopeInfo", DHCP_RESERVED_SCOPE6)]
+
+
+class DHCP_OPTION_SCOPE_INFO6(Structure):
+    _fields_ = [("ScopeType", c_int), ("ScopeInfo", _ScopeUnion6)]
+
+
+class DHCP_CLASS_INFO_V6(Structure):
+    _fields_ = [("ClassName", LPWSTR), ("ClassComment", LPWSTR), ("ClassDataLength", DWORD), ("IsVendor", BOOL),
+                ("EnterpriseNumber", DWORD), ("Flags", DWORD), ("ClassData", POINTER(BYTE))]
+
+
+class DHCP_CLASS_INFO_ARRAY_V6(Structure):
+    _fields_ = [("NumElements", DWORD), ("Classes", POINTER(DHCP_CLASS_INFO_V6))]
+
+
+class SCOPE_MIB_INFO_V6(Structure):
+    _fields_ = [("Subnet", DHCP_IPV6_ADDRESS), ("NumAddressesInuse", c_uint64), ("NumAddressesFree", c_uint64),
+                ("NumPendingAdvertises", c_uint64)]
+
+
+class DHCP_MIB_INFO_V6(Structure):
+    _fields_ = [("Solicits", DWORD), ("Advertises", DWORD), ("Requests", DWORD), ("Renews", DWORD), ("Rebinds", DWORD),
+                ("Replies", DWORD), ("Confirms", DWORD), ("Declines", DWORD), ("Releases", DWORD), ("Informs", DWORD),
+                ("ServerStartTime", DATE_TIME), ("Scopes", DWORD), ("ScopeInfo", POINTER(SCOPE_MIB_INFO_V6))]
+
+
+class DHCP_SERVER_CONFIG_INFO_V6(Structure):
+    _fields_ = [("UnicastFlag", BOOL), ("RapidCommitFlag", BOOL), ("PreferredLifetime", DWORD), ("ValidLifetime", DWORD),
+                ("T1", DWORD), ("T2", DWORD), ("PreferredLifetimeIATA", DWORD), ("ValidLifetimeIATA", DWORD),
+                ("fAuditLog", BOOL)]
+
+
+class DHCPV6_STATELESS_PARAMS(Structure):
+    _fields_ = [("Status", BOOL), ("PurgeInterval", DWORD)]
+
+
+class DHCPV6_BIND_ELEMENT(Structure):
+    _fields_ = [("Flags", ULONG), ("fBoundToDHCPServer", BOOL), ("AdapterPrimaryAddress", DHCP_IPV6_ADDRESS),
+                ("AdapterSubnetAddress", DHCP_IPV6_ADDRESS), ("IfDescription", LPWSTR), ("IpV6IfIndex", DWORD),
+                ("IfIdSize", ULONG), ("IfId", POINTER(BYTE))]
+
+
+class DHCPV6_BIND_ELEMENT_ARRAY(Structure):
+    _fields_ = [("NumElements", DWORD), ("Elements", POINTER(DHCPV6_BIND_ELEMENT))]
+
+
 # --- Funktionen ------------------------------------------------------------------------------------
 
 def _p(t):
@@ -344,6 +458,35 @@ _PROTOS = {
     "DhcpV4FailoverAddScopeToRelationship": (LPWSTR, _p(DHCP_FAILOVER_RELATIONSHIP)),
     "DhcpV4FailoverDeleteScopeFromRelationship": (LPWSTR, _p(DHCP_FAILOVER_RELATIONSHIP)),
     "DhcpEnumServers": (DWORD, c_void_p, _p(_p(DHCPDS_SERVERS)), c_void_p, c_void_p),
+    # DHCPv6
+    "DhcpEnumSubnetsV6": (LPWSTR, _p(DWORD), DWORD, _p(_p(DHCPV6_IP_ARRAY)), _p(DWORD), _p(DWORD)),
+    "DhcpGetSubnetInfoV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(_p(DHCP_SUBNET_INFO_V6))),
+    "DhcpSetSubnetInfoV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(DHCP_SUBNET_INFO_V6)),
+    "DhcpCreateSubnetV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(DHCP_SUBNET_INFO_V6)),
+    "DhcpDeleteSubnetV6": (LPWSTR, DHCP_IPV6_ADDRESS, c_int),
+    "DhcpEnumSubnetElementsV6": (LPWSTR, DHCP_IPV6_ADDRESS, c_int, _p(DWORD), DWORD,
+                                 _p(_p(DHCP_SUBNET_ELEMENT_INFO_ARRAY_V6)), _p(DWORD), _p(DWORD)),
+    "DhcpAddSubnetElementV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(DHCP_SUBNET_ELEMENT_DATA_V6)),
+    "DhcpRemoveSubnetElementV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(DHCP_SUBNET_ELEMENT_DATA_V6), c_int),
+    "DhcpEnumSubnetClientsV6": (LPWSTR, DHCP_IPV6_ADDRESS, _p(DHCP_IPV6_ADDRESS), DWORD, _p(_p(DHCP_CLIENT_INFO_ARRAY_V6)),
+                                _p(DWORD), _p(DWORD)),
+    "DhcpGetClientInfoV6": (LPWSTR, _p(DHCP_SEARCH_INFO_V6), _p(_p(DHCP_CLIENT_INFO_V6))),
+    "DhcpSetClientInfoV6": (LPWSTR, _p(DHCP_CLIENT_INFO_V6)),
+    "DhcpDeleteClientInfoV6": (LPWSTR, _p(DHCP_SEARCH_INFO_V6)),
+    "DhcpGetAllOptionsV6": (LPWSTR, DWORD, _p(_p(DHCP_ALL_OPTIONS))),
+    "DhcpCreateOptionV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR, _p(DHCP_OPTION)),
+    "DhcpSetOptionInfoV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR, _p(DHCP_OPTION)),
+    "DhcpRemoveOptionV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR),
+    "DhcpGetAllOptionValuesV6": (LPWSTR, DWORD, _p(DHCP_OPTION_SCOPE_INFO6), _p(_p(DHCP_ALL_OPTION_VALUES))),
+    "DhcpGetOptionValueV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR, _p(DHCP_OPTION_SCOPE_INFO6), _p(_p(DHCP_OPTION_VALUE))),
+    "DhcpSetOptionValueV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR, _p(DHCP_OPTION_SCOPE_INFO6), _p(DHCP_OPTION_DATA)),
+    "DhcpRemoveOptionValueV6": (LPWSTR, DWORD, DWORD, LPWSTR, LPWSTR, _p(DHCP_OPTION_SCOPE_INFO6)),
+    "DhcpEnumClassesV6": (LPWSTR, DWORD, _p(DWORD), DWORD, _p(_p(DHCP_CLASS_INFO_ARRAY_V6)), _p(DWORD), _p(DWORD)),
+    "DhcpGetMibInfoV6": (LPWSTR, _p(_p(DHCP_MIB_INFO_V6))),
+    "DhcpServerGetConfigV6": (LPWSTR, _p(DHCP_OPTION_SCOPE_INFO6), _p(_p(DHCP_SERVER_CONFIG_INFO_V6))),
+    "DhcpServerSetConfigV6": (LPWSTR, _p(DHCP_OPTION_SCOPE_INFO6), DWORD, _p(DHCP_SERVER_CONFIG_INFO_V6)),
+    "DhcpV6GetStatelessStoreParams": (LPWSTR, BOOL, DHCP_IPV6_ADDRESS, _p(_p(DHCPV6_STATELESS_PARAMS))),
+    "DhcpGetServerBindingInfoV6": (LPWSTR, ULONG, _p(_p(DHCPV6_BIND_ELEMENT_ARRAY))),
 }
 
 _lib = None
@@ -647,9 +790,567 @@ class _Impersonate:
         return False
 
 
+# --- DHCPv6 ------------------------------------------------------------------------------------------
+# Elementtypen (DHCP_SUBNET_ELEMENT_TYPE_V6), Optionsebenen (DHCP_OPTION_SCOPE_TYPE6), Suchtypen
+EL6_RANGES, EL6_RESERVED, EL6_EXCLUDED = 0, 1, 2
+SCOPE6_DEFAULT, SCOPE6_SUBNET, SCOPE6_RESERVED, SCOPE6_GLOBAL = 0, 1, 2, 3
+SEARCH6_IP = 0
+# DhcpServerSetConfigV6: je Aufruf genau EIN Feld (MS-DHCPM 3.2.4.66); IATA-Lebensdauern ignoriert der Server
+SET6_UNICAST, SET6_RAPID, SET6_PREF, SET6_VALID, SET6_T1, SET6_T2 = 0x01, 0x02, 0x04, 0x08, 0x10, 0x20
+# Interne Optionen, in denen Windows die Scope-Einstellungen ablegt (Unicast, Rapid Commit, Lebensdauern, T1/T2)
+V6_INTERNAL_MIN = 0x10000
+ADDRESS_TYPES6 = {0: "IANA", 1: "IATA", 2: "IAPD"}
+
+
+def ip6(text: str) -> "DHCP_IPV6_ADDRESS":
+    n = int(ipaddress.IPv6Address(str(text).strip().split("/")[0]))
+    return DHCP_IPV6_ADDRESS(n >> 64, n & 0xFFFFFFFFFFFFFFFF)
+
+
+def ip6s(a: "DHCP_IPV6_ADDRESS") -> str:
+    return str(ipaddress.IPv6Address((int(a.HighOrderBits) << 64) | int(a.LowOrderBits)))
+
+
+def _scope_info6(sid: str | None, kind: int | None = None) -> "DHCP_OPTION_SCOPE_INFO6":
+    si = DHCP_OPTION_SCOPE_INFO6()
+    if sid:
+        si.ScopeType = SCOPE6_SUBNET
+        si.ScopeInfo.SubnetScopeInfo = ip6(sid)
+    else:
+        si.ScopeType = SCOPE6_GLOBAL if kind is None else kind
+    return si
+
+
+def _ft_value(dt: DATE_TIME) -> int:
+    return (int(dt.dwHighDateTime) << 32) | int(dt.dwLowDateTime)
+
+
+def _ft_now() -> int:
+    t = _dt.datetime.now(_dt.timezone.utc) - _dt.datetime(1601, 1, 1, tzinfo=_dt.timezone.utc)
+    return (t.days * 86400 + t.seconds) * 10_000_000 + t.microseconds * 10
+
+
+def _duid(data: bytes) -> str:
+    return "-".join(f"{b:02x}" for b in data)
+
+
+class _V6:
+    """DHCPv6-Aufrufe (Mixin für DhcpApi); Ergebnisse in der Form der DhcpServer-Cmdlets (Get-DhcpServerv6*)."""
+
+    server: str
+
+    # --- Scopes -------------------------------------------------------------------------------------
+    def subnets6(self) -> list[str]:
+        out: list[str] = []
+
+        def read(buf):
+            a = buf.contents
+            out.extend(ip6s(a.Elements[i]) for i in range(a.NumElements))
+        self._enum_resume("read", "DhcpEnumSubnetsV6", (), (), read)
+        return out
+
+    def subnet_info6(self, sid: str) -> dict | None:
+        p = POINTER(DHCP_SUBNET_INFO_V6)()
+        try:
+            self.rpc("read", "DhcpGetSubnetInfoV6", ip6(sid), byref(p))
+        except RpcError as e:
+            if e.code in (ERROR_DHCP_SUBNET_NOT_PRESENT, 2):
+                return None
+            raise
+        if not p:
+            return None
+        s = p.contents
+        out = {"prefix": int(s.Prefix), "pref": int(s.Preference), "name": s.SubnetName or "", "comment": s.SubnetComment or "",
+               "state": int(s.State), "scope_id": int(s.ScopeId)}
+        _free(p)
+        return out
+
+    def config6(self, sid: str | None = None) -> dict | None:
+        """Lebensdauern/Flags eines Scopes (sid) bzw. des Servers (None, Standardwerte für neue Scopes)."""
+        kinds = [SCOPE6_SUBNET] if sid else [SCOPE6_DEFAULT, SCOPE6_GLOBAL]
+        last = None
+        for k in kinds:
+            si = _scope_info6(sid, None if sid else k)
+            p = POINTER(DHCP_SERVER_CONFIG_INFO_V6)()
+            try:
+                self.rpc("read", "DhcpServerGetConfigV6", byref(si), byref(p))
+            except RpcError as e:
+                last = e
+                continue
+            if not p:
+                return None
+            c = p.contents
+            out = {"unicast": bool(c.UnicastFlag), "rapid": bool(c.RapidCommitFlag), "pref": int(c.PreferredLifetime),
+                   "valid": int(c.ValidLifetime), "t1": int(c.T1), "t2": int(c.T2), "audit": bool(c.fAuditLog)}
+            _free(p)
+            return out
+        if last is not None and sid is None:
+            raise last
+        return None
+
+    def _set_config6(self, sid: str | None, field: int, cfg: "DHCP_SERVER_CONFIG_INFO_V6") -> None:
+        si = _scope_info6(sid)
+        self.rpc("write", "DhcpServerSetConfigV6", byref(si), field, byref(cfg))
+
+    def elements6(self, sid: str, kind: int) -> list[dict]:
+        out: list[dict] = []
+
+        def read(buf):
+            a = buf.contents
+            for i in range(a.NumElements):
+                e = a.Elements[i]
+                if kind == EL6_RESERVED:
+                    r = e.Element.ReservedIp
+                    if r:
+                        r = r.contents
+                        uid = _bytes(r.ReservedForClient.contents) if r.ReservedForClient else b""
+                        out.append({"ip": ip6s(r.ReservedIpAddress), "duid": uid, "iaid": int(r.InterfaceId)})
+                else:
+                    r = e.Element.ExcludeIpRange if kind == EL6_EXCLUDED else e.Element.IpRange
+                    if r:
+                        out.append({"start": ip6s(r.contents.StartAddress), "end": ip6s(r.contents.EndAddress)})
+        try:
+            self._enum_resume("read", "DhcpEnumSubnetElementsV6", (ip6(sid), kind), (), read)
+        except RpcError as e:
+            if e.code == ERROR_DHCP_SUBNET_NOT_PRESENT:
+                return []
+            raise
+        return out
+
+    def clients6(self, sid: str) -> list[dict]:
+        f = getattr(_dll(), "DhcpEnumSubnetClientsV6", None)
+        if f is None:
+            raise RuntimeError("@ERR:no_api:DhcpEnumSubnetClientsV6")
+        resume = DHCP_IPV6_ADDRESS(0, 0)
+        now = _ft_now()
+        out: list[dict] = []
+        for _ in range(100000):
+            buf = POINTER(DHCP_CLIENT_INFO_ARRAY_V6)()
+            nread, total = DWORD(0), DWORD(0)
+            with _Impersonate(self.ident):
+                rc = int(f(self.server, ip6(sid), byref(resume), MAX_PREF, byref(buf), byref(nread), byref(total)))
+            if rc in (ERROR_NO_MORE_ITEMS, ERROR_DHCP_SUBNET_NOT_PRESENT):
+                break
+            if rc not in (0, ERROR_MORE_DATA):
+                raise RpcError("read", self.server, rc)
+            if buf:
+                try:
+                    a = buf.contents
+                    for i in range(a.NumElements):
+                        p = a.Clients[i]
+                        if not p:
+                            continue
+                        c = p.contents
+                        ft = _ft_value(c.ClientValidLeaseExpires)
+                        out.append({"ip": ip6s(c.ClientIpAddress), "duid": _bytes(c.ClientDUID), "iaid": int(c.IAID),
+                                    "type": int(c.AddressType), "name": c.ClientName or "", "comment": c.ClientComment or "",
+                                    "expires": _filetime(c.ClientValidLeaseExpires),
+                                    "pref_expires": _filetime(c.ClientPrefLeaseExpires),
+                                    "expired": 0 < ft < now, "never_seen": ft == 0})
+                finally:
+                    _free(buf)
+            if rc == 0:
+                break
+        return out
+
+    def _scope6(self, sid: str) -> dict | None:
+        info = self.subnet_info6(sid)
+        if info is None:
+            return None
+        try:
+            cfg = self.config6(sid) or {}
+        except RpcError:
+            cfg = {}
+        return {"Prefix": sid, "PrefixLength": info["prefix"], "Name": info["name"], "Description": info["comment"],
+                "Preference": info["pref"], "State": "Active" if info["state"] == 0 else "InActive",
+                "PreferredLifetime": cfg.get("pref"), "ValidLifetime": cfg.get("valid"), "T1": cfg.get("t1"),
+                "T2": cfg.get("t2"), "RapidCommit": cfg.get("rapid"), "Unicast": cfg.get("unicast")}
+
+    def scopes6(self, sid: str | None = None) -> list[dict]:
+        ids = [sid] if sid else self.subnets6()
+        return [s for s in self.parallel(self._scope6, ids) if s]
+
+    def _ids6(self, sid: str | None) -> list[str]:
+        return [sid] if sid else self.subnets6()
+
+    def exclusions6(self, sid: str | None = None) -> list[dict]:
+        ids = self._ids6(sid)
+        out = []
+        for x, rows in zip(ids, self.parallel(lambda s: self.elements6(s, EL6_EXCLUDED), ids)):
+            out += [{"Prefix": x, "StartRange": r["start"], "EndRange": r["end"]} for r in rows]
+        return out
+
+    def statistics6(self, sid: str | None = None) -> list[dict]:
+        p = POINTER(DHCP_MIB_INFO_V6)()
+        self.rpc("read", "DhcpGetMibInfoV6", byref(p))
+        mib = {}
+        if p:
+            m = p.contents
+            for i in range(m.Scopes):
+                s = m.ScopeInfo[i]
+                mib[ip6s(s.Subnet)] = (int(s.NumAddressesInuse), int(s.NumAddressesFree), int(s.NumPendingAdvertises))
+            _free(p)
+        ids = [sid] if sid else list(mib)
+        out = []
+        for x in ids:
+            used, free, pend = mib.get(x, (0, 0, 0))
+            tot = used + free
+            out.append({"Prefix": x, "AddressesInUse": used, "AddressesFree": free, "PendingAdvertises": pend,
+                        "PercentageInUse": round(used * 100.0 / tot, 4) if tot else 0.0})
+        return out
+
+    def reservations6(self, sid: str | None = None) -> list[dict]:
+        def one(x):
+            res = self.elements6(x, EL6_RESERVED)
+            if not res:
+                return []
+            names = {c["ip"]: c for c in self.clients6(x)}
+            return [{"Prefix": x, "IPAddress": r["ip"], "ClientDuid": _duid(r["duid"]), "Iaid": r["iaid"],
+                     "Name": names.get(r["ip"], {}).get("name", ""), "Description": names.get(r["ip"], {}).get("comment", "")}
+                    for r in res]
+        return [r for rows in self.parallel(one, self._ids6(sid)) for r in rows]
+
+    def leases6(self, sid: str | None = None) -> list[dict]:
+        def one(x):
+            res = {r["ip"] for r in self.elements6(x, EL6_RESERVED)}
+            rows = []
+            for c in self.clients6(x):
+                if c["ip"] in res:
+                    state = "InactiveReservation" if c["expired"] or c["never_seen"] else "ActiveReservation"
+                else:
+                    state = "Expired" if c["expired"] else "Active"
+                rows.append({"Prefix": x, "IPAddress": c["ip"], "ClientDuid": _duid(c["duid"]), "Iaid": c["iaid"],
+                             "HostName": c["name"], "Description": c["comment"], "AddressState": state,
+                             "AddressType": ADDRESS_TYPES6.get(c["type"], str(c["type"])), "LeaseExpiryTime": c["expires"]})
+            return rows
+        return [r for rows in self.parallel(one, self._ids6(sid)) for r in rows]
+
+    # --- Optionen -----------------------------------------------------------------------------------
+    def definitions6(self, fresh: bool = False) -> list[dict]:
+        with self._defs_lock:
+            if getattr(self, "_defs6", None) is not None and not fresh:
+                return list(self._defs6)
+        p = POINTER(DHCP_ALL_OPTIONS)()
+        self.rpc("read", "DhcpGetAllOptionsV6", 0, byref(p))
+        out = []
+
+        def row(o, vendor: str, cls: str):
+            if int(o.OptionID) >= V6_INTERNAL_MIN:
+                return
+            typ, vals = _format_data(o.DefaultValue)
+            out.append({"OptionId": int(o.OptionID), "Name": o.OptionName or "", "Description": o.OptionComment or "",
+                        "Type": typ or "String", "MultiValued": int(o.OptionType) == 1, "VendorClass": vendor or "",
+                        "UserClass": cls or "", "DefaultValue": vals})
+        if p:
+            a = p.contents
+            if a.NonVendorOptions:
+                arr = a.NonVendorOptions.contents
+                for i in range(arr.NumElements):
+                    row(arr.Options[i], "", "")
+            for i in range(a.NumVendorOptions):
+                v = a.VendorOptions[i]
+                row(v.Option, v.VendorName or "", v.ClassName or "")
+            _free(p)
+        with self._defs_lock:
+            self._defs6 = out
+        return list(out)
+
+    def _def6(self, opt_id: int, vendor: str = "") -> dict | None:
+        for fresh in (False, True):
+            for d in self.definitions6(fresh):
+                if d["OptionId"] == int(opt_id) and (d["VendorClass"] or "") == (vendor or ""):
+                    return d
+        return None
+
+    def option_values6(self, sid: str | None = None) -> list[dict]:
+        si = _scope_info6(sid)
+        p = POINTER(DHCP_ALL_OPTION_VALUES)()
+        self.rpc("read", "DhcpGetAllOptionValuesV6", 0, byref(si), byref(p))
+        names = {(d["VendorClass"], d["OptionId"]): d["Name"] for d in self.definitions6()}
+        out = []
+        if p:
+            a = p.contents
+            for i in range(a.NumElements):
+                it = a.Options[i]
+                if not it.OptionsArray:
+                    continue
+                vendor = (it.VendorName or "") if it.IsVendor else ""
+                user = it.ClassName or ""
+                arr = it.OptionsArray.contents
+                for k in range(arr.NumElements):
+                    v = arr.Values[k]
+                    oid = int(v.OptionID)
+                    if oid >= V6_INTERNAL_MIN:      # Scope-Einstellungen, keine echten Optionen
+                        continue
+                    typ, vals = _format_data(v.Value)
+                    out.append({"OptionId": oid, "Name": names.get((vendor, oid), ""), "Value": vals, "Type": typ or "",
+                                "VendorClass": vendor, "UserClass": user})
+            _free(p)
+        return out
+
+    def classes6(self) -> list[dict]:
+        out = []
+
+        def read(buf):
+            a = buf.contents
+            for i in range(a.NumElements):
+                c = a.Classes[i]
+                data = bytes(c.ClassData[:c.ClassDataLength]) if c.ClassData and c.ClassDataLength else b""
+                out.append({"Name": c.ClassName or "", "Description": c.ClassComment or "",
+                            "Type": "Vendor" if c.IsVendor else "User", "Data": data.decode("ascii", errors="replace"),
+                            "EnterpriseNumber": int(c.EnterpriseNumber)})
+        self._enum_resume("read", "DhcpEnumClassesV6", (0,), (), read)
+        return out
+
+    # --- Server -------------------------------------------------------------------------------------
+    def server_setting6(self) -> list[dict]:
+        cfg = self.config6(None) or {}
+        st = {}
+        p = POINTER(DHCPV6_STATELESS_PARAMS)()
+        try:
+            self.rpc("read", "DhcpV6GetStatelessStoreParams", 1, DHCP_IPV6_ADDRESS(0, 0), byref(p))
+            if p:
+                st = {"enabled": bool(p.contents.Status), "purge": int(p.contents.PurgeInterval)}
+                _free(p)
+        except RpcError:
+            pass
+        return [{"PreferredLifetime": cfg.get("pref"), "ValidLifetime": cfg.get("valid"), "RapidCommit": cfg.get("rapid"),
+                 "Unicast": cfg.get("unicast"), "AuditLog": cfg.get("audit"), "StatelessEnabled": st.get("enabled"),
+                 "StatelessPurgeInterval": st.get("purge")}]
+
+    def bindings6(self) -> list[dict]:
+        p = POINTER(DHCPV6_BIND_ELEMENT_ARRAY)()
+        self.rpc("read", "DhcpGetServerBindingInfoV6", 0, byref(p))
+        out = []
+        if p:
+            a = p.contents
+            for i in range(a.NumElements):
+                b = a.Elements[i]
+                out.append({"BindingState": bool(b.fBoundToDHCPServer), "InterfaceAlias": b.IfDescription or "",
+                            "IPAddress": ip6s(b.AdapterPrimaryAddress)})
+            _free(p)
+        return out
+
+    # --- Ändern -------------------------------------------------------------------------------------
+    def set_scope6(self, p: dict) -> None:
+        sid = str(p["Prefix"])
+        if any(k in p for k in ("Name", "Description", "State", "Preference")):
+            cur = POINTER(DHCP_SUBNET_INFO_V6)()
+            self.rpc("read", "DhcpGetSubnetInfoV6", ip6(sid), byref(cur))
+            c = cur.contents
+            info = DHCP_SUBNET_INFO_V6()
+            info.SubnetAddress = DHCP_IPV6_ADDRESS(c.SubnetAddress.HighOrderBits, c.SubnetAddress.LowOrderBits)
+            info.Prefix = c.Prefix
+            info.Preference = int(p["Preference"]) & 0xFFFF if p.get("Preference") is not None else c.Preference
+            info.SubnetName = p["Name"] if p.get("Name") is not None else (c.SubnetName or "")
+            info.SubnetComment = p["Description"] if p.get("Description") is not None else (c.SubnetComment or "")
+            info.State = (0 if str(p["State"]).lower() == "active" else 1) if p.get("State") else c.State
+            info.ScopeId = c.ScopeId
+            _free(cur)
+            self.rpc("write", "DhcpSetSubnetInfoV6", ip6(sid), byref(info))
+        self._set_lifetimes6(sid, p)
+        for key, field, attr in (("Unicast", SET6_UNICAST, "UnicastFlag"), ("RapidCommit", SET6_RAPID, "RapidCommitFlag")):
+            if p.get(key) is not None:
+                cfg = DHCP_SERVER_CONFIG_INFO_V6()
+                setattr(cfg, attr, 1 if _truthy(p[key]) else 0)
+                self._set_config6(sid, field, cfg)
+
+    def _set_lifetimes6(self, sid: str, p: dict) -> None:
+        """Bevorzugte und gültige Lebensdauer: Windows verlangt bevorzugt < gültig bei jedem Einzelschritt, daher
+        beim Vergrößern erst die gültige, beim Verkleinern erst die bevorzugte setzen (T1/T2 setzt der Server neu)."""
+        pref, valid = p.get("PreferredLifetime"), p.get("ValidLifetime")
+        if pref is None and valid is None:
+            return
+        cur = self.config6(sid) or {}
+        order = []
+        if valid is not None and pref is not None:
+            order = [("valid", valid), ("pref", pref)] if int(valid) >= int(cur.get("valid") or 0) else \
+                [("pref", pref), ("valid", valid)]
+        elif valid is not None:
+            order = [("valid", valid)]
+        else:
+            order = [("pref", pref)]
+        for k, v in order:
+            cfg = DHCP_SERVER_CONFIG_INFO_V6()
+            if k == "valid":
+                cfg.ValidLifetime = _secs(v)
+                cfg.PreferredLifetime = _secs(pref) if pref is not None else int(cur.get("pref") or 0)
+                self._set_config6(sid, SET6_VALID, cfg)
+            else:
+                cfg.PreferredLifetime = _secs(v)
+                cfg.ValidLifetime = _secs(valid) if valid is not None else int(cur.get("valid") or 0)
+                self._set_config6(sid, SET6_PREF, cfg)
+
+    def add_scope6(self, p: dict) -> None:
+        sid = str(ipaddress.IPv6Network(f"{p['Prefix']}/{int(p.get('PrefixLength') or 64)}", strict=False).network_address)
+        info = DHCP_SUBNET_INFO_V6()
+        info.SubnetAddress = ip6(sid)
+        info.Prefix = int(p.get("PrefixLength") or 64)
+        info.Preference = int(p.get("Preference") or 0) & 0xFFFF
+        info.SubnetName = p.get("Name") or ""
+        info.SubnetComment = p.get("Description") or ""
+        info.State = 0 if str(p.get("State") or "Active").lower() == "active" else 1
+        self.rpc("write", "DhcpCreateSubnetV6", ip6(sid), byref(info))
+        try:
+            self._set_lifetimes6(sid, {k: p.get(k) for k in ("PreferredLifetime", "ValidLifetime")})
+        except Exception:
+            try:
+                self.rpc("write", "DhcpDeleteSubnetV6", ip6(sid), FULL_FORCE)
+            except RpcError:
+                pass
+            raise
+
+    def remove_scope6(self, sid: str) -> None:
+        self.rpc("write", "DhcpDeleteSubnetV6", ip6(sid), FULL_FORCE)
+
+    def _range6_el(self, kind: int, start: str, end: str, keep: list) -> "DHCP_SUBNET_ELEMENT_DATA_V6":
+        r = DHCP_IP_RANGE_V6(ip6(start), ip6(end))
+        keep.append(r)
+        e = DHCP_SUBNET_ELEMENT_DATA_V6()
+        e.ElementType = kind
+        if kind == EL6_EXCLUDED:
+            e.Element.ExcludeIpRange = ctypes.pointer(r)
+        else:
+            e.Element.IpRange = ctypes.pointer(r)
+        return e
+
+    def add_exclusion6(self, sid: str, start: str, end: str) -> None:
+        keep: list = []
+        self.rpc("write", "DhcpAddSubnetElementV6", ip6(sid), byref(self._range6_el(EL6_EXCLUDED, start, end, keep)))
+
+    def remove_exclusion6(self, sid: str, start: str, end: str) -> None:
+        keep: list = []
+        self.rpc("write", "DhcpRemoveSubnetElementV6", ip6(sid), byref(self._range6_el(EL6_EXCLUDED, start, end, keep)),
+                 FULL_FORCE)
+
+    def set_option6(self, opt_id: int, values: list, sid: str | None = None, vendor: str = "", user: str = "") -> None:
+        d = self._def6(opt_id, vendor)
+        keep: list = []
+        data = _build_data(d["Type"] if d else "String", values, keep)
+        si = _scope_info6(sid)
+        self.rpc("write", "DhcpSetOptionValueV6", FLAG_VENDOR if vendor else 0, int(opt_id), user or None, vendor or None,
+                 byref(si), byref(data))
+
+    def remove_option6(self, opt_id: int, sid: str | None = None, vendor: str = "", user: str = "") -> None:
+        si = _scope_info6(sid)
+        self.rpc("write", "DhcpRemoveOptionValueV6", FLAG_VENDOR if vendor else 0, int(opt_id), user or None,
+                 vendor or None, byref(si))
+
+    def _reservation6_el(self, rip: str, duid: bytes, iaid: int, keep: list) -> "DHCP_SUBNET_ELEMENT_DATA_V6":
+        buf = (BYTE * max(1, len(duid))).from_buffer_copy(duid or b"\0")
+        bd = DHCP_BINARY_DATA(len(duid), ctypes.cast(buf, POINTER(BYTE)))
+        r = DHCP_IP_RESERVATION_V6(ip6(rip), ctypes.pointer(bd), int(iaid) & 0xFFFFFFFF)
+        keep += [buf, bd, r]
+        e = DHCP_SUBNET_ELEMENT_DATA_V6()
+        e.ElementType = EL6_RESERVED
+        e.Element.ReservedIp = ctypes.pointer(r)
+        return e
+
+    def _set_client_text6(self, rip: str, name: str | None, desc: str | None) -> bool:
+        """Name/Beschreibung einer Reservierung stehen im Client-Eintrag; False, wenn der Server das ablehnt."""
+        if name is None and desc is None:
+            return True
+        si = DHCP_SEARCH_INFO_V6()
+        si.SearchType = SEARCH6_IP
+        si.SearchInfo.ClientIpAddress = ip6(rip)
+        p = POINTER(DHCP_CLIENT_INFO_V6)()
+        try:
+            self.rpc("read", "DhcpGetClientInfoV6", byref(si), byref(p))
+        except RpcError:
+            return False
+        c = p.contents
+        n = DHCP_CLIENT_INFO_V6()
+        n.ClientIpAddress = DHCP_IPV6_ADDRESS(c.ClientIpAddress.HighOrderBits, c.ClientIpAddress.LowOrderBits)
+        uid = _bytes(c.ClientDUID)
+        buf = (BYTE * max(1, len(uid))).from_buffer_copy(uid or b"\0")
+        n.ClientDUID = DHCP_BINARY_DATA(len(uid), ctypes.cast(buf, POINTER(BYTE)))
+        n.AddressType, n.IAID = c.AddressType, c.IAID
+        n.ClientName = name if name is not None else (c.ClientName or "")
+        n.ClientComment = desc if desc is not None else (c.ClientComment or "")
+        n.ClientValidLeaseExpires = DATE_TIME(c.ClientValidLeaseExpires.dwLowDateTime, c.ClientValidLeaseExpires.dwHighDateTime)
+        n.ClientPrefLeaseExpires = DATE_TIME(c.ClientPrefLeaseExpires.dwLowDateTime, c.ClientPrefLeaseExpires.dwHighDateTime)
+        _free(p)
+        try:
+            self.rpc("write", "DhcpSetClientInfoV6", byref(n))
+        except RpcError:
+            return False
+        return True
+
+    def add_reservation6(self, p: dict) -> list[dict]:
+        keep: list = []
+        self.rpc("write", "DhcpAddSubnetElementV6", ip6(p["Prefix"]),
+                 byref(self._reservation6_el(p["IPAddress"], _cid_bytes(p["ClientDuid"]), int(p.get("Iaid") or 0), keep)))
+        ok = self._set_client_text6(p["IPAddress"], p.get("Name") or "", p.get("Description") or "")
+        return [{"NameSet": ok}]
+
+    def _find_reservation6(self, rip: str, sid: str | None = None) -> tuple[str, dict]:
+        want = ipaddress.IPv6Address(rip)
+        for s in ([sid] if sid else self.subnets6()):
+            for r in self.elements6(s, EL6_RESERVED):
+                if ipaddress.IPv6Address(r["ip"]) == want:
+                    return s, r
+        raise RuntimeError(f"@ERR:res_missing:{rip}")
+
+    def set_reservation6(self, p: dict) -> list[dict]:
+        sid, cur = self._find_reservation6(p["IPAddress"], p.get("Prefix"))
+        duid = _cid_bytes(p["ClientDuid"]) if p.get("ClientDuid") else cur["duid"]
+        iaid = int(p["Iaid"]) if p.get("Iaid") is not None else cur["iaid"]
+        if duid != cur["duid"] or iaid != cur["iaid"]:
+            keep: list = []
+            self.rpc("write", "DhcpRemoveSubnetElementV6", ip6(sid),
+                     byref(self._reservation6_el(cur["ip"], cur["duid"], cur["iaid"], keep)), FULL_FORCE)
+            try:
+                self.rpc("write", "DhcpAddSubnetElementV6", ip6(sid), byref(self._reservation6_el(cur["ip"], duid, iaid, keep)))
+            except RpcError:
+                self.rpc("write", "DhcpAddSubnetElementV6", ip6(sid),
+                         byref(self._reservation6_el(cur["ip"], cur["duid"], cur["iaid"], keep)))
+                raise
+        return [{"NameSet": self._set_client_text6(cur["ip"], p.get("Name"), p.get("Description"))}]
+
+    def remove_reservation6(self, sid: str | None, rip: str) -> None:
+        s, cur = self._find_reservation6(rip, sid)
+        keep: list = []
+        self.rpc("write", "DhcpRemoveSubnetElementV6", ip6(s), byref(self._reservation6_el(cur["ip"], cur["duid"], cur["iaid"], keep)),
+                 FULL_FORCE)
+
+    def remove_lease6(self, rip: str) -> None:
+        si = DHCP_SEARCH_INFO_V6()
+        si.SearchType = SEARCH6_IP
+        si.SearchInfo.ClientIpAddress = ip6(rip)
+        self.rpc("write", "DhcpDeleteClientInfoV6", byref(si))
+
+    def add_definition6(self, p: dict) -> None:
+        keep: list = []
+        vendor = p.get("VendorClass") or ""
+        o = self._option_struct({"OptionId": p["OptionId"], "Name": p.get("Name"), "Description": p.get("Description"),
+                                 "Type": p.get("Type") or "String", "MultiValued": p.get("MultiValued"),
+                                 "DefaultValue": p.get("DefaultValue")}, keep)
+        self.rpc("write", "DhcpCreateOptionV6", FLAG_VENDOR if vendor else 0, int(p["OptionId"]), None, vendor or None, byref(o))
+        self.definitions6(True)
+
+    def set_definition6(self, p: dict) -> None:
+        vendor = p.get("VendorClass") or ""
+        cur = self._def6(p["OptionId"], vendor)
+        if not cur:
+            raise RpcError("write", self.server, 20010)
+        d = dict(cur)
+        for k in ("Name", "Description", "DefaultValue"):
+            if p.get(k) is not None:
+                d[k] = p[k]
+        keep: list = []
+        o = self._option_struct(d, keep)
+        self.rpc("write", "DhcpSetOptionInfoV6", FLAG_VENDOR if vendor else 0, int(p["OptionId"]), None, vendor or None, byref(o))
+        self.definitions6(True)
+
+    def remove_definition6(self, p: dict) -> None:
+        vendor = p.get("VendorClass") or ""
+        self.rpc("write", "DhcpRemoveOptionV6", FLAG_VENDOR if vendor else 0, int(p["OptionId"]), None, vendor or None)
+        self.definitions6(True)
+
+
 # --- Zugriff auf einen Server ----------------------------------------------------------------------
 
-class DhcpApi:
+class DhcpApi(_V6):
     """Alle Aufrufe gegen einen Server; liefert Daten in Cmdlet-Form."""
 
     def __init__(self, server: str, ident: Identity | None = None, threads: int = 8):
@@ -657,6 +1358,7 @@ class DhcpApi:
         self.ident = ident
         self.threads = max(1, int(threads))
         self._defs = None
+        self._defs6 = None
         self._defs_lock = threading.Lock()
 
     # --- Grundaufruf --------------------------------------------------------------------------------
@@ -1509,4 +2211,31 @@ CMDLETS = {
     "Add-DhcpServerv4OptionDefinition": lambda a, p: a.add_definition(p),
     "Set-DhcpServerv4OptionDefinition": lambda a, p: a.set_definition(p),
     "Remove-DhcpServerv4OptionDefinition": lambda a, p: a.remove_definition(p),
+    # DHCPv6 (Namen wie die Cmdlets des DhcpServer-Moduls; ScopeId = Präfixadresse)
+    "Get-DhcpServerv6Scope": lambda a, p: a.scopes6(p.get("Prefix")),
+    "Get-DhcpServerv6ScopeStatistics": lambda a, p: a.statistics6(p.get("Prefix")),
+    "Get-DhcpServerv6ExclusionRange": lambda a, p: a.exclusions6(p.get("Prefix")),
+    "Get-DhcpServerv6Reservation": lambda a, p: a.reservations6(p.get("Prefix")),
+    "Get-DhcpServerv6Lease": lambda a, p: a.leases6(p.get("Prefix")),
+    "Get-DhcpServerv6OptionDefinition": lambda a, p: a.definitions6(True),
+    "Get-DhcpServerv6OptionValue": lambda a, p: a.option_values6(p.get("Prefix")),
+    "Get-DhcpServerv6Class": lambda a, p: a.classes6(),
+    "Get-DhcpServerv6Setting": lambda a, p: a.server_setting6(),
+    "Get-DhcpServerv6Binding": lambda a, p: a.bindings6(),
+    "Set-DhcpServerv6Scope": lambda a, p: a.set_scope6(p),
+    "Add-DhcpServerv6Scope": lambda a, p: a.add_scope6(p),
+    "Remove-DhcpServerv6Scope": lambda a, p: a.remove_scope6(p["Prefix"]),
+    "Add-DhcpServerv6ExclusionRange": lambda a, p: a.add_exclusion6(p["Prefix"], p["StartRange"], p["EndRange"]),
+    "Remove-DhcpServerv6ExclusionRange": lambda a, p: a.remove_exclusion6(p["Prefix"], p["StartRange"], p["EndRange"]),
+    "Set-DhcpServerv6OptionValue": lambda a, p: a.set_option6(p["OptionId"], _list(p.get("Value")), p.get("Prefix"),
+                                                              p.get("VendorClass") or "", p.get("UserClass") or ""),
+    "Remove-DhcpServerv6OptionValue": lambda a, p: a.remove_option6(p["OptionId"], p.get("Prefix"),
+                                                                    p.get("VendorClass") or "", p.get("UserClass") or ""),
+    "Add-DhcpServerv6Reservation": lambda a, p: a.add_reservation6(p),
+    "Set-DhcpServerv6Reservation": lambda a, p: a.set_reservation6(p),
+    "Remove-DhcpServerv6Reservation": lambda a, p: a.remove_reservation6(p.get("Prefix"), p["IPAddress"]),
+    "Remove-DhcpServerv6Lease": lambda a, p: a.remove_lease6(p["IPAddress"]),
+    "Add-DhcpServerv6OptionDefinition": lambda a, p: a.add_definition6(p),
+    "Set-DhcpServerv6OptionDefinition": lambda a, p: a.set_definition6(p),
+    "Remove-DhcpServerv6OptionDefinition": lambda a, p: a.remove_definition6(p),
 }

@@ -18,7 +18,11 @@ import time
 from typing import Callable
 
 from . import checks as ck
+from . import checks6 as ck6
 from . import dhcpapi as api
+from . import dnscheck
+from . import eventlog
+from . import ip6calc as ip6
 from . import ipcalc as ip
 from . import netshdump as nd
 from . import optcodec as oc
@@ -143,6 +147,46 @@ def n_class(r: dict) -> dict:
             "data": _s(r.get("Data"))}
 
 
+# --- DHCPv6 ------------------------------------------------------------------------------------------
+
+def n_scope6(r: dict) -> dict:
+    def life(k):
+        v = r.get(k)
+        return None if v is None else min(_i(v), ip.UNLIMITED)
+    return {"id": ip6.norm(_s(r.get("Prefix"))), "plen": _i(r.get("PrefixLength"), 64), "name": _s(r.get("Name")),
+            "desc": _s(r.get("Description")), "state": "Active" if _s(r.get("State")).lower() == "active" else "InActive",
+            "pref": _i(r.get("Preference")), "lease_pref": life("PreferredLifetime"), "lease_valid": life("ValidLifetime"),
+            "t1": life("T1"), "t2": life("T2"), "rapid": _b(r.get("RapidCommit")), "unicast": _b(r.get("Unicast")),
+            "family": 6}
+
+
+def n_stats6(r: dict) -> dict:
+    try:
+        pct = float(r.get("PercentageInUse") or 0)
+    except (TypeError, ValueError):
+        pct = 0.0
+    return {"id": ip6.norm(_s(r.get("Prefix"))), "in_use": _i(r.get("AddressesInUse")), "free": _i(r.get("AddressesFree")),
+            "pending": _i(r.get("PendingAdvertises")), "pct": pct}
+
+
+def n_excl6(r: dict) -> dict:
+    return {"scope": ip6.norm(_s(r.get("Prefix"))), "start": ip6.norm(_s(r.get("StartRange"))),
+            "end": ip6.norm(_s(r.get("EndRange")))}
+
+
+def n_res6(r: dict) -> dict:
+    d = _s(r.get("ClientDuid"))
+    return {"ip": ip6.norm(_s(r.get("IPAddress"))), "duid": ip6.format_duid(d) or d, "iaid": _i(r.get("Iaid")),
+            "name": _s(r.get("Name")), "desc": _s(r.get("Description"))}
+
+
+def n_lease6(r: dict) -> dict:
+    d = _s(r.get("ClientDuid"))
+    return {"ip": ip6.norm(_s(r.get("IPAddress"))), "duid": ip6.format_duid(d) or d, "iaid": _i(r.get("Iaid")),
+            "host": _s(r.get("HostName")), "state": _s(r.get("AddressState")), "type": _s(r.get("AddressType")),
+            "expires": _s(r.get("LeaseExpiryTime")).replace("T", " ")}
+
+
 def opt_label(o: dict) -> str:
     v = f" [{o['vendor']}]" if o.get("vendor") else ""
     u = f" <{o['user']}>" if o.get("user") else ""
@@ -186,6 +230,13 @@ class DhcpService:
         self.partner_diffs: dict[str, list] = {}   # Scope -> Abweichungen zum Partner aus der letzten Prüfung
         self._tx: Tx | None = None           # laufende Transaktion (Rücknahme bei Fehlern)
         self.events_error = ""               # Ereignisprotokoll nicht lesbar (Text, einmal gemeldet)
+        # DHCPv6 (kein Failover, keine Partner): eigene Listen, Fehler beim Laden nur protokolliert
+        self.scopes6: list[dict] = []
+        self.scope_info6: dict[str, dict] = {}
+        self.defs6: dict[tuple[str, int], dict] = {}
+        self.server_options6: dict[int, list[str]] = {}
+        self.server_option_rows6: list[dict] = []
+        self.v6_error = ""
 
     def log(self, text: str, error: bool = False) -> None:
         self._log(text, error)
@@ -557,10 +608,20 @@ class DhcpService:
             raise UserError(self.tr("err.netsh_says", partner=pn, text=nd.format_out(r)))
 
     # --- Laden --------------------------------------------------------------------------------------
-    def opt_def(self, opt_id: int, vendor: str = "") -> dict | None:
-        return self.defs.get((vendor or "", int(opt_id)))
+    def opt_def(self, opt_id: int, vendor: str = "", v6: bool = False) -> dict | None:
+        return (self.defs6 if v6 else self.defs).get((vendor or "", int(opt_id)))
 
-    def list_defs(self, server: str | None = None) -> list[dict]:
+    def defs_of(self, v6: bool) -> dict[tuple[str, int], dict]:
+        return self.defs6 if v6 else self.defs
+
+    def _v6_failed(self, e: UserError) -> None:
+        if str(e) != self.v6_error:
+            self.v6_error = str(e)
+            self.log(self.tr("log.v6_failed", error=str(e)), True)
+
+    def list_defs(self, server: str | None = None, v6: bool = False) -> list[dict]:
+        if v6:
+            return [n_def(x) for x in self.cim("Get-DhcpServerv6OptionDefinition", server)]
         try:
             raw = self.cim("Get-DhcpServerv4OptionDefinition", server, All=True)
         except UserError:
@@ -573,8 +634,16 @@ class DhcpService:
         except UserError as e:
             self.defs = {}
             self.log(self.tr("log.defs_failed", error=str(e)), True)
+        try:
+            self.defs6 = {(d["vendor"], d["id"]): d for d in self.list_defs(v6=True)}
+        except UserError as e:
+            self.defs6 = {}
+            self._v6_failed(e)
 
-    def options(self, scope_id: str | None = None, server: str | None = None) -> list[dict]:
+    def options(self, scope_id: str | None = None, server: str | None = None, v6: bool = False) -> list[dict]:
+        if v6 or ip6.is_v6_scope(scope_id):
+            p = {"Prefix": scope_id} if scope_id else {}
+            return [n_opt(x) for x in self.cim("Get-DhcpServerv6OptionValue", server, **p)]
         p = {"ScopeId": scope_id} if scope_id else {}
         try:
             raw = self.cim("Get-DhcpServerv4OptionValue", server, All=True, **p)
@@ -589,7 +658,18 @@ class DhcpService:
             opts = []
         self.server_options = {o["id"]: o["values"] for o in opts if not o["vendor"] and not o["user"]}
         self.server_option_rows = sorted(opts, key=lambda o: (o["vendor"], o["user"], o["id"]))
+        self.load_server_options6()
         return self.server_option_rows
+
+    def load_server_options6(self) -> list[dict]:
+        try:
+            opts = self.options(v6=True)
+        except UserError as e:
+            self._v6_failed(e)
+            opts = []
+        self.server_options6 = {o["id"]: o["values"] for o in opts if not o["vendor"] and not o["user"]}
+        self.server_option_rows6 = sorted(opts, key=lambda o: (o["vendor"], o["user"], o["id"]))
+        return self.server_option_rows6
 
     def load_failovers(self) -> None:
         self.failovers, self.scope_fo = [], {}
@@ -617,7 +697,42 @@ class DhcpService:
             rng = self.ranges_of(s, excl.get(s["id"], []))
             self.scope_info[s["id"]] = {"scope": s, "stat": stats.get(s["id"]), "exclusions": excl.get(s["id"], []),
                                         "ranges": rng, "usable": ip.range_size(rng)}
+        self.load_overview6()
         return scopes
+
+    def load_overview6(self) -> list[dict]:
+        """DHCPv6-Scopes mit Statistik und Ausschlüssen; Fehler (z. B. ältere Server) nur im Protokoll."""
+        try:
+            scopes = sorted((n_scope6(x) for x in self.cim("Get-DhcpServerv6Scope")), key=lambda s: ip6.sort_key(s["id"]))
+        except UserError as e:
+            self._v6_failed(e)
+            return self.scopes6
+        stats: dict[str, dict] = {}
+        try:
+            for x in self.cim("Get-DhcpServerv6ScopeStatistics"):
+                st = n_stats6(x)
+                stats[st["id"]] = st
+        except UserError:
+            pass
+        excl: dict[str, list[tuple[str, str]]] = {}
+        try:
+            for x in self.cim("Get-DhcpServerv6ExclusionRange"):
+                e = n_excl6(x)
+                excl.setdefault(e["scope"], []).append((e["start"], e["end"]))
+        except UserError:
+            pass
+        self.scopes6 = scopes
+        self.scope_info6 = {s["id"]: {"scope": s, "stat": stats.get(s["id"]), "exclusions": excl.get(s["id"], [])}
+                            for s in scopes}
+        self.v6_error = ""
+        return scopes
+
+    def all_scopes(self) -> list[dict]:
+        return self.scopes + self.scopes6
+
+    def scope_row(self, sid: str) -> dict | None:
+        info = (self.scope_info6 if ip6.is_v6_scope(sid) else self.scope_info).get(sid)
+        return (info or {}).get("scope")
 
     def exclusions_by_scope(self, scopes: list[dict]) -> dict[str, list[tuple[int, int]]]:
         out: dict[str, list[tuple[int, int]]] = {}
@@ -648,6 +763,8 @@ class DhcpService:
         self.load_overview()
 
     def get_scope(self, sid: str, leases: bool = True) -> dict:
+        if ip6.is_v6_scope(sid):
+            return self.get_scope6(sid, leases)
         s = self.cim("Get-DhcpServerv4Scope", ScopeId=sid)
         if not s:
             raise UserError(self.tr("err.scope_missing", id=sid))
@@ -679,30 +796,66 @@ class DhcpService:
                 info["stat"] = out["stat"]
         return out
 
+    def get_scope6(self, sid: str, leases: bool = True) -> dict:
+        s = self.cim("Get-DhcpServerv6Scope", Prefix=sid)
+        if not s:
+            raise UserError(self.tr("err.scope_missing", id=sid))
+        out = {"scope": n_scope6(s[0]), "stat": None, "dns": None, "leases": []}
+        try:
+            st = self.cim("Get-DhcpServerv6ScopeStatistics", Prefix=sid)
+            out["stat"] = n_stats6(st[0]) if st else None
+        except UserError:
+            pass
+        out["exclusions"] = [n_excl6(x) for x in self.cim("Get-DhcpServerv6ExclusionRange", Prefix=sid)]
+        out["options"] = self.options(sid)
+        out["reservations"] = [n_res6(x) for x in self.cim("Get-DhcpServerv6Reservation", Prefix=sid)]
+        if leases:
+            try:
+                out["leases"] = [n_lease6(x) for x in self.cim("Get-DhcpServerv6Lease", Prefix=sid)]
+            except UserError as e:
+                self.log(self.tr("log.leases_failed", id=sid, error=str(e)), True)
+        info = self.scope_info6.get(sid)
+        if info is not None:
+            info.update({"scope": out["scope"], "exclusions": [(x["start"], x["end"]) for x in out["exclusions"]]})
+            if out["stat"]:
+                info["stat"] = out["stat"]
+        return out
+
     # --- Änderungen anderer erkennen ---------------------------------------------------------------------
+    SCOPE_KEYS = ("name", "desc", "state", "start", "end", "lease", "mask")
+    SCOPE_KEYS6 = ("name", "desc", "state", "pref", "lease_pref", "lease_valid", "rapid", "unicast")
+
     @staticmethod
     def config_of(data: dict) -> dict:
         """Vergleichbarer Konfigurationsstand eines Scopes (ohne Leases und Statistik)."""
         s = data.get("scope") or {}
-        return {"scope": {k: s.get(k) for k in ("name", "desc", "state", "start", "end", "lease", "mask")},
+        v6 = s.get("family") == 6
+        keys = DhcpService.SCOPE_KEYS6 if v6 else DhcpService.SCOPE_KEYS
+        if v6:
+            res = {r["ip"]: (r.get("duid") or "", str(r.get("iaid") or 0), r.get("name") or "", r.get("desc") or "")
+                   for r in data.get("reservations") or []}
+        else:
+            res = {r["ip"]: (r.get("cid") or "", r.get("name") or "", r.get("desc") or "", r.get("type") or "")
+                   for r in data.get("reservations") or []}
+        return {"scope": {k: s.get(k) for k in keys},
                 "exclusions": sorted((x["start"], x["end"]) for x in data.get("exclusions") or []),
                 "options": {(int(o["id"]), o.get("vendor") or "", o.get("user") or ""): list(o["values"])
                             for o in data.get("options") or []},
-                "reservations": {r["ip"]: (r.get("cid") or "", r.get("name") or "", r.get("desc") or "", r.get("type") or "")
-                                 for r in data.get("reservations") or []},
-                "dns": data.get("dns")}
+                "reservations": res, "dns": data.get("dns")}
 
     def diff_config(self, old: dict, new: dict) -> list[str]:
         """Was hat sich zwischen zwei Ständen von config_of geändert? (lesbare Zeilen)"""
         tr = self.tr
         out = []
-        for k in ("name", "desc", "state", "start", "end", "lease", "mask"):
+        for k in old["scope"]:
             a, b = old["scope"].get(k), new["scope"].get(k)
             if a != b:
-                if k == "lease":
+                if k in ("lease", "lease_pref", "lease_valid"):
                     a, b = ck.format_lease(a, tr) if a is not None else "–", ck.format_lease(b, tr) if b is not None else "–"
                 elif k == "state":
                     a, b = tr("state." + str(a)), tr("state." + str(b))
+                elif k in ("rapid", "unicast"):
+                    a, b = tr("ui.on" if a else "ui.off"), tr("ui.on" if b else "ui.off")
                 out.append(tr("conf.field", field=tr("conf.f." + k), a=a if a not in (None, "") else "–",
                               b=b if b not in (None, "") else "–"))
         oe, ne = set(old["exclusions"]), set(new["exclusions"])
@@ -720,7 +873,7 @@ class DhcpService:
             elif oo[k] != no[k]:
                 out.append(tr("conf.opt_changed", tag=tag(k), a=", ".join(oo[k]), b=", ".join(no[k])))
         orr, nr = old["reservations"], new["reservations"]
-        for k in sorted(set(orr) | set(nr), key=lambda x: ip.ip2int(x) if ip.is_ipv4(x) else 0):
+        for k in sorted(set(orr) | set(nr), key=ip.ip_sort_key):
             if k not in orr:
                 out.append(tr("conf.res_new", ip=k, mac=nr[k][0], name=nr[k][1]))
             elif k not in nr:
@@ -758,6 +911,9 @@ class DhcpService:
     def change_events_match(ev: dict, sid: str, mask: str | None) -> bool:
         """Nennt das Ereignis den Scope oder eine Adresse darin (z. B. Reservierung, Ausschluss)?"""
         text = " ".join([ev.get("text") or ""] + [str(x) for x in ev.get("data") or []])
+        if ip6.is_v6_scope(sid):
+            plen = int(mask) if str(mask or "").isdigit() else ip6.PREFIX
+            return any(ip6.in_prefix(a, sid, plen) for a in eventlog.ipv6_in(text))
         for a in re.findall(r"\b\d{1,3}(?:\.\d{1,3}){3}\b", text):
             if a == sid or (mask and ip.is_ipv4(a) and ip.in_subnet(a, sid, mask)):
                 return True
@@ -768,8 +924,8 @@ class DhcpService:
                                    user=ev.get("user") or "?", text=ev.get("text") or f"#{ev.get('id')}")
                            for ev in events], n)
 
-    def classes(self, server: str | None = None) -> list[dict]:
-        return [n_class(x) for x in self.cim("Get-DhcpServerv4Class", server)]
+    def classes(self, server: str | None = None, v6: bool = False) -> list[dict]:
+        return [n_class(x) for x in self.cim("Get-DhcpServerv6Class" if v6 else "Get-DhcpServerv4Class", server)]
 
     # --- Transaktion: bei einem Fehler wird alles zurückgenommen -----------------------------------------
     # Jede schreibende Methode liest vorher den bisherigen Stand und legt die Gegenoperation im Journal ab
@@ -850,8 +1006,9 @@ class DhcpService:
         r = self.cim("Get-DhcpServerv4Scope", server, ScopeId=sid)
         return n_scope(r[0]) if r else None
 
-    def _cur_option(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None = None):
-        for o in self.options(sid, server):
+    def _cur_option(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None = None,
+                    v6: bool = False):
+        for o in self.options(sid, server, v6):
             if int(o["id"]) == int(opt_id) and (o.get("vendor") or "") == (vendor or "") and (o.get("user") or "") == (user or ""):
                 return list(o["values"])
         return None
@@ -903,43 +1060,61 @@ class DhcpService:
         self.cim("Remove-DhcpServerv4ExclusionRange", ScopeId=sid, StartRange=start, EndRange=end)
         self._undo(self.tr("undo.excl_remove", range=f"{start} – {end}", id=sid), lambda: self.excl_add(sid, start, end))
 
-    def _opt_undo(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None):
+    def _opt_undo(self, sid: str | None, opt_id: int, vendor: str, user: str, server: str | None, v6: bool = False):
         if self._tx is None:
             return None
-        old = self._cur_option(sid, opt_id, vendor, user, server)
-        where = sid or self.tr("undo.server", server=server or self.server)
+        old = self._cur_option(sid, opt_id, vendor, user, server, v6)
+        where = sid or self.tr("undo.server6" if v6 else "undo.server", server=server or self.server)
         label = self.tr("undo.option", tag=f"{int(opt_id):03d}", where=where)
         if old is None:
-            return label, lambda: self.opt_remove(sid, opt_id, vendor, user, server)
-        return label, lambda: self.opt_set(sid, opt_id, old, vendor, user, server)
+            return label, lambda: self.opt_remove(sid, opt_id, vendor, user, server, v6)
+        return label, lambda: self.opt_set(sid, opt_id, old, vendor, user, server, v6)
 
     def opt_set(self, sid: str | None, opt_id: int, values: list[str], vendor: str = "", user: str = "",
-                server: str | None = None) -> None:
-        step = self._opt_undo(sid, opt_id, vendor, user, server)
-        self.cim("Set-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id),
-                 Value=[str(v) for v in values], VendorClass=vendor or None, UserClass=user or None, Force=True)
+                server: str | None = None, v6: bool = False) -> None:
+        v6 = v6 or ip6.is_v6_scope(sid)
+        step = self._opt_undo(sid, opt_id, vendor, user, server, v6)
+        if v6:
+            self.cim("Set-DhcpServerv6OptionValue", server, Prefix=sid or None, OptionId=int(opt_id),
+                     Value=[str(v) for v in values], VendorClass=vendor or None, UserClass=user or None)
+        else:
+            self.cim("Set-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id),
+                     Value=[str(v) for v in values], VendorClass=vendor or None, UserClass=user or None, Force=True)
         self._undo_after(step)
 
-    def opt_remove(self, sid: str | None, opt_id: int, vendor: str = "", user: str = "", server: str | None = None) -> None:
-        step = self._opt_undo(sid, opt_id, vendor, user, server)
-        self.cim("Remove-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id), VendorClass=vendor or None,
-                 UserClass=user or None)
+    def opt_remove(self, sid: str | None, opt_id: int, vendor: str = "", user: str = "", server: str | None = None,
+                   v6: bool = False) -> None:
+        v6 = v6 or ip6.is_v6_scope(sid)
+        step = self._opt_undo(sid, opt_id, vendor, user, server, v6)
+        if v6:
+            self.cim("Remove-DhcpServerv6OptionValue", server, Prefix=sid or None, OptionId=int(opt_id),
+                     VendorClass=vendor or None, UserClass=user or None)
+        else:
+            self.cim("Remove-DhcpServerv4OptionValue", server, ScopeId=sid or None, OptionId=int(opt_id),
+                     VendorClass=vendor or None, UserClass=user or None)
         self._undo_after(step)
 
     # --- Server-Optionen auf einem beliebigen Server der Failover-Gruppe ----------------------------------
-    def srv_options(self, server: str | None) -> list[dict]:
+    def srv_options(self, server: str | None, v6: bool = False) -> list[dict]:
+        if v6:
+            return self.load_server_options6()
         if self.is_local(server):
             return self.load_server_options()
         return sorted(self.partner(server, "options"), key=lambda o: (o.get("vendor") or "", o.get("user") or "", int(o["id"])))
 
-    def srv_opt_set(self, server: str | None, opt_id: int, values: list[str], vendor: str = "", user: str = "") -> None:
-        if self.is_local(server):
+    def srv_opt_set(self, server: str | None, opt_id: int, values: list[str], vendor: str = "", user: str = "",
+                    v6: bool = False) -> None:
+        if v6:
+            self.opt_set(None, opt_id, values, vendor, user, v6=True)
+        elif self.is_local(server):
             self.opt_set(None, opt_id, values, vendor, user)
         else:
             self.partner(server, "opt_set", scope=None, id=int(opt_id), values=list(values), vendor=vendor, user=user)
 
-    def srv_opt_remove(self, server: str | None, opt_id: int, vendor: str = "", user: str = "") -> None:
-        if self.is_local(server):
+    def srv_opt_remove(self, server: str | None, opt_id: int, vendor: str = "", user: str = "", v6: bool = False) -> None:
+        if v6:
+            self.opt_remove(None, opt_id, vendor, user, v6=True)
+        elif self.is_local(server):
             self.opt_remove(None, opt_id, vendor, user)
         else:
             self.partner(server, "opt_remove", scope=None, id=int(opt_id), vendor=vendor, user=user)
@@ -1009,8 +1184,16 @@ class DhcpService:
                  DisableDnsPtrRRUpdate=bool(d["disable_ptr"]), NameProtection=bool(d["name_protection"]))
         self._undo_after(step)
 
-    def def_add(self, d: dict, server: str | None = None) -> None:
+    def def_add(self, d: dict, server: str | None = None, v6: bool = False) -> None:
         dv = [str(x) for x in d.get("default") or [] if str(x)]
+        if v6:
+            self.cim("Add-DhcpServerv6OptionDefinition", server, OptionId=int(d["id"]), Name=d["name"], Type=d["type"],
+                     MultiValued=bool(d.get("multi")), VendorClass=d.get("vendor") or None, Description=d.get("desc") or None,
+                     DefaultValue=dv or None)
+            self._undo(self.tr("undo.def_add", tag=f"{int(d['id']):03d}", server=server or self.server),
+                       lambda: self.cim("Remove-DhcpServerv6OptionDefinition", server, OptionId=int(d["id"]),
+                                        VendorClass=d.get("vendor") or None))
+            return
         self.cim("Add-DhcpServerv4OptionDefinition", server, OptionId=int(d["id"]), Name=d["name"], Type=d["type"],
                  MultiValued=bool(d.get("multi")), VendorClass=d.get("vendor") or None, Description=d.get("desc") or None,
                  DefaultValue=dv or None)
@@ -1018,21 +1201,100 @@ class DhcpService:
                    lambda: self.cim("Remove-DhcpServerv4OptionDefinition", server, OptionId=int(d["id"]),
                                     VendorClass=d.get("vendor") or None))
 
-    def def_set(self, d: dict) -> None:
+    def def_set(self, d: dict, v6: bool = False) -> None:
         step = None
         if self._tx is not None:
-            old = next((x for x in self.list_defs() if int(x["id"]) == int(d["id"])
+            old = next((x for x in self.list_defs(v6=v6) if int(x["id"]) == int(d["id"])
                         and (x.get("vendor") or "") == (d.get("vendor") or "")), None)
             if old:
-                step = (self.tr("undo.def_set", tag=f"{int(d['id']):03d}"), lambda: self.def_set(old))
+                step = (self.tr("undo.def_set", tag=f"{int(d['id']):03d}"), lambda: self.def_set(old, v6))
         dv = [str(x) for x in d.get("default") or [] if str(x)]
-        self.cim("Set-DhcpServerv4OptionDefinition", OptionId=int(d["id"]), Name=d["name"], Description=d.get("desc") or "",
+        self.cim("Set-DhcpServerv6OptionDefinition" if v6 else "Set-DhcpServerv4OptionDefinition", OptionId=int(d["id"]), Name=d["name"], Description=d.get("desc") or "",
                  VendorClass=d.get("vendor") or None, DefaultValue=dv or None)
         self._undo_after(step)
 
-    def def_remove(self, opt_id: int, vendor: str = "") -> None:
+    def def_remove(self, opt_id: int, vendor: str = "", v6: bool = False) -> None:
         # Mit der Definition löscht Windows auch alle gesetzten Werte dieser Option - nur auf ausdrückliche Bestätigung
-        self.cim("Remove-DhcpServerv4OptionDefinition", OptionId=int(opt_id), VendorClass=vendor or None)
+        self.cim("Remove-DhcpServerv6OptionDefinition" if v6 else "Remove-DhcpServerv4OptionDefinition",
+                 OptionId=int(opt_id), VendorClass=vendor or None)
+
+    # --- DHCPv6: Ändern (jede Methode legt in einer Transaktion ihre Gegenoperation ab) -------------------
+    def _cur_scope6(self, sid: str) -> dict | None:
+        r = self.cim("Get-DhcpServerv6Scope", Prefix=sid)
+        return n_scope6(r[0]) if r else None
+
+    SCOPE6_PARAMS = (("Name", "name"), ("Description", "desc"), ("State", "state"), ("Preference", "pref"),
+                     ("PreferredLifetime", "lease_pref"), ("ValidLifetime", "lease_valid"), ("RapidCommit", "rapid"),
+                     ("Unicast", "unicast"))
+
+    def scope6_set(self, sid: str, **params) -> None:
+        step = None
+        if self._tx is not None:
+            old = self._cur_scope6(sid)
+            if old:
+                back = {k: old[f] for k, f in self.SCOPE6_PARAMS if k in params and old.get(f) is not None}
+                if "PreferredLifetime" in back or "ValidLifetime" in back:      # immer als Paar zurück (Reihenfolge)
+                    back["PreferredLifetime"], back["ValidLifetime"] = old["lease_pref"], old["lease_valid"]
+                if back:
+                    step = (self.tr("undo.scope_set", id=sid), lambda: self.scope6_set(sid, **back))
+        self.cim("Set-DhcpServerv6Scope", Prefix=sid, **params)
+        self._undo_after(step)
+
+    def scope6_add(self, prefix: str, name: str, desc: str, pref: int, lease_pref: int, lease_valid: int, active: bool,
+                   plen: int = ip6.PREFIX) -> str:
+        sid = ip6.prefix_of(prefix, plen)
+        self.cim("Add-DhcpServerv6Scope", Prefix=sid, PrefixLength=plen, Name=name, Description=desc or None,
+                 Preference=int(pref), PreferredLifetime=int(lease_pref), ValidLifetime=int(lease_valid),
+                 State="Active" if active else "InActive")
+        self._undo(self.tr("undo.scope_add", id=sid), lambda: self.scope6_remove(sid))
+        return sid
+
+    def scope6_remove(self, sid: str) -> None:
+        # endgültig (Leases gehen verloren) - immer der letzte Schritt einer Aktion
+        self.cim("Remove-DhcpServerv6Scope", Prefix=sid)
+
+    def excl6_add(self, sid: str, start: str, end: str) -> None:
+        self.cim("Add-DhcpServerv6ExclusionRange", Prefix=sid, StartRange=start, EndRange=end)
+        self._undo(self.tr("undo.excl_add", range=f"{start} – {end}", id=sid), lambda: self.excl6_remove(sid, start, end))
+
+    def excl6_remove(self, sid: str, start: str, end: str) -> None:
+        self.cim("Remove-DhcpServerv6ExclusionRange", Prefix=sid, StartRange=start, EndRange=end)
+        self._undo(self.tr("undo.excl_remove", range=f"{start} – {end}", id=sid), lambda: self.excl6_add(sid, start, end))
+
+    def _cur_res6(self, sid: str, rip: str) -> dict | None:
+        want = ip6.norm(rip)
+        return next((r for r in map(n_res6, self.cim("Get-DhcpServerv6Reservation", Prefix=sid)) if r["ip"] == want), None)
+
+    def _name_hint(self, res: list, rip: str) -> None:
+        if res and isinstance(res[0], dict) and res[0].get("NameSet") is False:
+            self.log(self.tr("log.res6_name_failed", ip=rip), True)
+
+    def res6_add(self, sid: str, r: dict) -> None:
+        out = self.cim("Add-DhcpServerv6Reservation", Prefix=sid, IPAddress=r["ip"], ClientDuid=r["duid"],
+                       Iaid=int(r.get("iaid") or 0), Name=r.get("name") or "", Description=r.get("desc") or "")
+        self._undo(self.tr("undo.res_add", ip=r["ip"]), lambda: self.res6_remove(sid, r["ip"]))
+        self._name_hint(out, r["ip"])
+
+    def res6_set(self, sid: str, r: dict) -> None:
+        step = None
+        if self._tx is not None:
+            old = self._cur_res6(sid, r["ip"])
+            if old:
+                step = (self.tr("undo.res_set", ip=r["ip"]), lambda: self.res6_set(sid, old))
+        out = self.cim("Set-DhcpServerv6Reservation", Prefix=sid, IPAddress=r["ip"], ClientDuid=r["duid"],
+                       Iaid=int(r.get("iaid") or 0), Name=r.get("name") or "", Description=r.get("desc") or "")
+        self._undo_after(step)
+        self._name_hint(out, r["ip"])
+
+    def res6_remove(self, sid: str, rip: str) -> None:
+        old = self._cur_res6(sid, rip) if self._tx is not None else None
+        self.cim("Remove-DhcpServerv6Reservation", Prefix=sid, IPAddress=rip)
+        if old:
+            self._undo(self.tr("undo.res_remove", ip=rip), lambda: self.res6_add(sid, old))
+
+    def lease6_remove(self, rip: str) -> None:
+        # nicht wiederherstellbar (der Client holt sich beim nächsten Kontakt eine neue Adresse)
+        self.cim("Remove-DhcpServerv6Lease", IPAddress=rip)
 
     # --- Replikation --------------------------------------------------------------------------------
     def local_scope_data(self, sid: str) -> dict:
@@ -1748,7 +2010,87 @@ class DhcpService:
                 "stat": stat, "dns": dns, "options": opts, "reservations": res, "leases": leases,
                 "rel": self.scope_fo.get(sid), "unreplicated": False, "is_tab": False}
 
-    def scan(self, with_leases: bool, compare_partners: bool) -> dict:
+    def scan_data6(self, s: dict, stat: dict | None, excl: list[tuple[str, str]], with_leases: bool) -> dict:
+        sid = s["id"]
+        try:
+            opts = self.options(sid)
+        except UserError:
+            opts = []
+        try:
+            res = [n_res6(x) for x in self.cim("Get-DhcpServerv6Reservation", Prefix=sid)]
+        except UserError:
+            res = []
+        leases = []
+        if with_leases:
+            try:
+                leases = [n_lease6(x) for x in self.cim("Get-DhcpServerv6Lease", Prefix=sid)]
+            except UserError:
+                pass
+        return {"id": sid, "plen": s["plen"], "name": s["name"], "state": s["state"], "lease_pref": s["lease_pref"],
+                "lease_valid": s["lease_valid"], "stat": stat, "exclusions": excl, "options": opts, "reservations": res,
+                "leases": leases, "family": 6, "is_tab": False}
+
+    def server_info6(self) -> dict:
+        if self.v6_error and not self.scopes6:
+            return {"error": self.v6_error}
+        info: dict = {}
+        try:
+            info["bindings"] = [{"state": _b(b.get("BindingState")), "alias": _s(b.get("InterfaceAlias")),
+                                 "ip": _s(b.get("IPAddress"))} for b in self.cim("Get-DhcpServerv6Binding")]
+        except UserError:
+            pass
+        try:
+            r = (self.cim("Get-DhcpServerv6Setting") or [{}])[0]
+            info["settings"] = {"stateless": _b(r.get("StatelessEnabled")), "purge": _i(r.get("StatelessPurgeInterval"))}
+        except UserError:
+            pass
+        return info
+
+    def checker(self) -> ck.Checker:
+        return ck.Checker(self.tr, self.defs, self.server_options, self.failovers, self.defs6, self.server_options6)
+
+    def scan_list(self) -> list[dict]:
+        """Alle zu prüfenden Scopes (IPv4, dann IPv6)."""
+        return self.scopes + self.scopes6
+
+    def scan_scope(self, checker: ck.Checker, s: dict, with_leases: bool) -> dict:
+        """Daten eines Scopes lesen und prüfen (beide Familien); Fehler werden zum Befund."""
+        sid = s["id"]
+        v6 = s.get("family") == 6
+        info = (self.scope_info6 if v6 else self.scope_info).get(sid) or {}
+        try:
+            if v6:
+                data = self.scan_data6(s, info.get("stat"), info.get("exclusions") or [], with_leases)
+                f = ck.sort_findings(ck6.scope_findings(checker, data))
+            else:
+                data = self.scan_data(s, info.get("stat"), info.get("exclusions") or [], with_leases)
+                f = ck.sort_findings(checker.scope_findings(data))
+        except Exception as e:  # noqa: BLE001 - ein defekter Scope darf den Scan nicht abbrechen
+            data = None
+            f = [ck.Finding(ck.WARN, "scan", self.tr("chk.scan_scope_failed", error=str(e)), obj="Scan")]
+            f[0].scope_id = sid
+        return {"scope": s, "findings": f, "data": data}
+
+    def scan_finish(self, scan: dict, checker: ck.Checker, compare_partners: bool, check_dns: bool) -> None:
+        """Server-Befunde (beide Familien), Partnerabgleich und auf Wunsch der DNS-Abgleich."""
+        self.progress(self.tr("scan.server"))
+        info = self.server_info()
+        pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
+        self.apply_partner_diffs(scan, pcs, checker)
+        s4 = {k: v["data"] for k, v in scan["scopes"].items() if v["data"] and not ip6.is_v6_scope(k)}
+        s6 = {k: v["data"] for k, v in scan["scopes"].items() if v["data"] and ip6.is_v6_scope(k)}
+        found = checker.server_findings(info, self.scopes, s4, pcs)
+        if self.scopes6 or self.v6_error:
+            found += ck6.server_findings(checker, self.server_info6(), self.scopes6, s6)
+        scan["server"] = ck.sort_findings(found)
+        if check_dns and not self.cancel.is_set():
+            self.progress(self.tr("scan.dns"))
+            for sid, fs in dnscheck.findings({**s4, **s6}, self.tr, self.cancel).items():
+                e = scan["scopes"][sid]
+                e["findings"] = ck.sort_findings(e["findings"] + fs)
+        scan["with_dns"] = check_dns
+
+    def scan(self, with_leases: bool, compare_partners: bool, check_dns: bool = False) -> dict:
         tr = self.tr
         self.cancel.clear()
         started = time.time()
@@ -1757,29 +2099,17 @@ class DhcpService:
         self.load_server_options()
         self.load_failovers()
         self.load_overview()
-        checker = ck.Checker(tr, self.defs, self.server_options, self.failovers)
+        checker = self.checker()
         scan = {"time": time.strftime("%H:%M:%S"), "scopes": {}, "partial": False, "with_leases": with_leases}
-        n = len(self.scopes)
-        for i, s in enumerate(self.scopes, 1):
+        todo = self.scan_list()
+        n = len(todo)
+        for i, s in enumerate(todo, 1):
             if self.cancel.is_set():
                 scan["partial"] = True
                 break
             self.progress(tr("scan.scope", i=i, n=n, id=s["id"], name=s["name"]), i, n)
-            info = self.scope_info.get(s["id"]) or {}
-            try:
-                data = self.scan_data(s, info.get("stat"), info.get("exclusions") or [], with_leases)
-                f = ck.sort_findings(checker.scope_findings(data))
-            except Exception as e:  # noqa: BLE001 - ein defekter Scope darf den Scan nicht abbrechen
-                data = None
-                f = [ck.Finding(ck.WARN, "scan", tr("chk.scan_scope_failed", error=str(e)), obj="Scan")]
-                f[0].scope_id = s["id"]
-            scan["scopes"][s["id"]] = {"scope": s, "findings": f, "data": data}
-        self.progress(tr("scan.server"))
-        info = self.server_info()
-        pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
-        self.apply_partner_diffs(scan, pcs, checker)
-        scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
-        scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
+            scan["scopes"][s["id"]] = self.scan_scope(checker, s, with_leases)
+        self.scan_finish(scan, checker, compare_partners, check_dns)
         scan["seconds"] = int(time.time() - started)
         return scan
 
@@ -1807,7 +2137,8 @@ class DhcpService:
             if pn != "*":
                 self.call("set_cred", {"server": pn, "user": u, "password": p})
 
-    def fast_scan(self, with_leases: bool, compare_partners: bool, on_scope=None, threads: int = 8) -> dict:
+    def fast_scan(self, with_leases: bool, compare_partners: bool, on_scope=None, threads: int = 8,
+                  check_dns: bool = False) -> dict:
         """Wie scan(), aber alle Lesezugriffe gebündelt und parallel; Scopes werden sofort ausgewertet,
         sobald ihre Daten da sind (on_scope(id, eintrag, fertig, gesamt)). Abbruch liefert ein Teilergebnis."""
         tr = self.tr
@@ -1821,23 +2152,29 @@ class DhcpService:
                    ("Get-DhcpServerv4ExclusionRange", {}), ("Get-DhcpServerVersion", {}), ("Get-DhcpServerSetting", {}),
                    ("Get-DhcpServerAuditLog", {}), ("Get-DhcpServerDatabase", {}), ("Get-DhcpServerv4DnsSetting", {}),
                    ("Get-DhcpServerDnsCredential", {}), ("Get-DhcpServerv4Binding", {}), ("Get-DhcpServerv4Superscope", {}),
-                   ("Get-DhcpServerv4Policy", {}), ("Get-DhcpServerv4FilterList", {}), ("Get-DhcpServerv4Filter", {"List": "Allow"})]
+                   ("Get-DhcpServerv4Policy", {}), ("Get-DhcpServerv4FilterList", {}), ("Get-DhcpServerv4Filter", {"List": "Allow"}),
+                   ("Get-DhcpServerv6OptionDefinition", {}), ("Get-DhcpServerv6OptionValue", {}), ("Get-DhcpServerv6Scope", {}),
+                   ("Get-DhcpServerv6ScopeStatistics", {}), ("Get-DhcpServerv6ExclusionRange", {}),
+                   ("Get-DhcpServerv6Binding", {}), ("Get-DhcpServerv6Setting", {})]
             self.prefetch.update(self.cim_many([(n, None, p) for n, p in srv], threads))
             self.load_defs()
             self.load_server_options()
             self.load_failovers()
             self.load_overview()
-            checker = ck.Checker(tr, self.defs, self.server_options, self.failovers)
-            scopes = {s["id"]: s for s in self.scopes}
+            checker = self.checker()
+            scopes = {s["id"]: s for s in self.scan_list()}
             per = [("Get-DhcpServerv4OptionValue", {"All": True}), ("Get-DhcpServerv4Reservation", {}),
                    ("Get-DhcpServerv4DnsSetting", {})]
+            per6 = [("Get-DhcpServerv6OptionValue", {}), ("Get-DhcpServerv6Reservation", {})]
             if with_leases:
                 per.append(("Get-DhcpServerv4Lease", {}))
+                per6.append(("Get-DhcpServerv6Lease", {}))
             calls, need, owner = [], {}, {}
             for sid in scopes:
                 need[sid] = set()
-                for name, p in per:
-                    pp = dict(p, ScopeId=sid)
+                v6 = ip6.is_v6_scope(sid)
+                for name, p in (per6 if v6 else per):
+                    pp = dict(p, Prefix=sid) if v6 else dict(p, ScopeId=sid)
                     k = self._key(name, None, pp)
                     calls.append((name, None, pp))
                     need[sid].add(k)
@@ -1846,15 +2183,7 @@ class DhcpService:
 
             def evaluate(sid):
                 s = scopes[sid]
-                info = self.scope_info.get(sid) or {}
-                try:
-                    data = self.scan_data(s, info.get("stat"), info.get("exclusions") or [], with_leases)
-                    f = ck.sort_findings(checker.scope_findings(data))
-                except Exception as e:  # noqa: BLE001 - ein defekter Scope darf die Prüfung nicht abbrechen
-                    data = None
-                    f = [ck.Finding(ck.WARN, "scan", tr("chk.scan_scope_failed", error=str(e)), obj="Scan")]
-                    f[0].scope_id = sid
-                entry = {"scope": s, "findings": f, "data": data}
+                entry = self.scan_scope(checker, s, with_leases)
                 scan["scopes"][sid] = entry
                 done = len(scan["scopes"])
                 self.progress(tr("scan.scope", i=done, n=n, id=sid, name=s["name"]), done, n)
@@ -1881,12 +2210,7 @@ class DhcpService:
                 for sid in scopes:
                     if sid not in scan["scopes"]:
                         evaluate(sid)
-                self.progress(tr("scan.server"))
-                info = self.server_info()
-                pcs = [self.partner_check(pn) for pn in self.partners()] if compare_partners else []
-                self.apply_partner_diffs(scan, pcs, checker)
-                scan_scopes = {k: v["data"] for k, v in scan["scopes"].items() if v["data"]}
-                scan["server"] = ck.sort_findings(checker.server_findings(info, self.scopes, scan_scopes, pcs))
+                self.scan_finish(scan, checker, compare_partners, check_dns)
         except UserError:
             if not self.cancel.is_set():
                 raise

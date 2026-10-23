@@ -443,3 +443,10 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   "Ereignisprotokoll einrichten" (Event Log Readers S-1-5-32-573, firewall RemoteEventLogSvc*, wevtutil, test).
 - PR #58 merged, Stef tested 1.4.1 OK. Stef: load the event log in its own thread so the GUI does not block,
   as 1.4.2, merge, then close the thread. Built EventsPage.load() via run_async (not the Runner).
+
+- 2026-10-23 Stef (via DNS thread): make the DHCP tool fully IPv6/DHCPv6-capable with the same scope as IPv4
+  (scopes, options, reservations, leases, check, transactions, conflict detection, event log). Built 1.5.0:
+  dhcpapi V6 layer, service v6 methods with undo, checks6, page_scope6 (ScopeTab6), IPv4/IPv6 switch, v6 server
+  options/definitions, v6 scope dialog (new/duplicate). Agreed with the DNS thread: optional "DNS-Abgleich" in the
+  check (dnscheck.py, socket resolver only, no dependency on the DNS tool). Tested on Linux: test_api6.py (fake
+  fake_dhcpsapi6.c, 36 checks), test_api/test_tx/test_conflict unchanged, offscreen UI flows + screenshots.

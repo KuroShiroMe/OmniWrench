@@ -185,6 +185,26 @@ dhcpsapi.dll.
       bedienen (kein gesperrtes Fenster); danach erscheinen die Einträge.
 - [ ] Während des Ladens abmelden: kein Fehler, nach erneuter Anmeldung ist die Liste leer bzw. lädt neu.
 
+**1.5.0: IPv6 (DHCPv6)** – Server mit mindestens einem DHCPv6-Scope (gern Testserver)
+- [ ] Umschalter **IPv6** oben links: Übersicht zeigt die v6-Scopes (Präfix, Status, Gültige Dauer); Server-Optionen und
+      Definitionen zeigen die DHCPv6-Werte. Tool schließen und öffnen → Auswahl bleibt erhalten.
+- [ ] v6-Scope öffnen: Werte wie in der DHCP-Konsole (Name, Preference, bevorzugte/gültige Dauer, Status, Rapid Commit,
+      Unicast). Name, Beschreibung, beide Dauern ändern, speichern → in der Konsole sichtbar.
+- [ ] Bevorzugte Dauer ≥ gültige Dauer eingeben → Fehler, Speichern gesperrt.
+- [ ] Option 23 (DNS-Server) und 24 (Domänensuchliste) im Scope und als Server-Option setzen, ändern, entfernen.
+- [ ] Reservierung anlegen (DUID und IAID von einem echten Client, z. B. `ipconfig /all` bzw. Lease), Name/Beschreibung
+      ändern, entfernen. Hinweis im Protokoll, falls der Name nicht gesetzt werden konnte?
+- [ ] Ausschluss hinzufügen und entfernen; Lease löschen.
+- [ ] Neuer v6-Scope … (inaktiv anlegen), danach **Duplizieren …** mit anderem Präfix: Optionen und Ausschlüsse
+      umgerechnet, Tab öffnet sich. Aktivieren/Deaktivieren und Löschen aus der Übersicht.
+- [ ] Konflikt: v6-Scope im Tool ändern, vorher in der Konsole den Namen ändern → Meldung mit Unterschied.
+- [ ] Optionen/Reservierungen eines v6-Scopes kopieren und in einen anderen v6-Scope einfügen; in einen IPv4-Scope
+      einfügen → Ablehnung.
+- [ ] Definitionen (Expertenmodus) unter IPv6: neue Definition anlegen und löschen.
+- [ ] Prüfung: v6-Scopes erscheinen unter „Befunde je Scope“; Ereignisprotokoll zeigt v6-Änderungen der Konsole.
+- [ ] **DNS-Abgleich** ankreuzen (mit „Leases einbeziehen“), prüfen: Reservierung mit falschem/fehlendem DNS-Eintrag
+      und fehlendem PTR wird gemeldet; korrekte Einträge ohne Befund.
+
 ## 6. NetProbe (net.netprobe 1.2.3)
 
 - [ ] Ping über IcmpSendEcho (Aufwärmen, 2 s Timeout): kein Paketverlust, wo CMD-Ping keinen hat.

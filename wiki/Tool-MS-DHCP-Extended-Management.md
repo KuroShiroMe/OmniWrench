@@ -1,15 +1,15 @@
 # MS DHCP Extended Management
 
-> **Kurz:** Verwaltet Microsoft-DHCP-Server (IPv4) mit Scopes, Optionen, Reservierungen, Failover und einer
+> **Kurz:** Verwaltet Microsoft-DHCP-Server (IPv4 und DHCPv6) mit Scopes, Optionen, Reservierungen, Failover und einer
 > vollständigen Konfigurationsprüfung. Befunde erscheinen schon beim Tippen, Änderungen an Failover-Scopes
 > werden auf den Partner repliziert, neue Scopes entstehen aus Entwürfen oder Duplikaten mit Netzumrechnung.
 
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dhcp-extended` |
-| **Stand der Seite** | Version 1.3.0 |
+| **Stand der Seite** | Version 1.5.0 |
 | **Bereich** | Netzwerk & Konnektivität |
-| **Tags** | DHCP, Scopes, Failover, Reservations, Leases, DHCP Options, RSAT, Microsoft |
+| **Tags** | DHCP, DHCPv6, IPv6, Scopes, Failover, Reservations, Leases, DHCP Options, RSAT, Microsoft |
 | **Plattformen** | Windows |
 | **Voraussetzungen** | RSAT: DHCP-Server-Tools (für `netsh dhcp`), wird automatisch installiert |
 | **Adminrechte** | lokal nur für die Installation von RSAT; auf dem DHCP-Server Mitglied von „DHCP Administrators“ (Lesen: „DHCP Users“) |
@@ -28,10 +28,12 @@
   - [Übersicht](#übersicht)
   - [Scope-Tab](#scope-tab)
   - [Neuer Scope und Duplikat (Entwurf)](#neuer-scope-und-duplikat-entwurf)
+  - [IPv6 (DHCPv6)](#ipv6-dhcpv6)
   - [Server-Optionen](#server-optionen)
   - [Failover](#failover)
   - [Replikation auf den Partner](#replikation-auf-den-partner)
   - [Prüfung und Befunde](#prüfung-und-befunde)
+    - [DNS-Abgleich](#dns-abgleich)
   - [Definitionen (Expertenmodus)](#definitionen-expertenmodus)
   - [Zwischenablage](#zwischenablage)
   - [Nur-Lese-Zugriff](#nur-lese-zugriff)
@@ -53,6 +55,8 @@
   erreichbar ist
 - einen ganzen Server auf Fehler, Warnungen und Best-Practice-Abweichungen prüfen
 - Optionen und Reservierungen zwischen Scopes kopieren
+- DHCPv6-Scopes (Präfixe) mit demselben Umfang verwalten und prüfen
+- Reservierungen und Leases mit dem DNS abgleichen (Name, Adresse, PTR)
 
 ## Installation und Voraussetzungen
 - Der Zugriff auf den Server läuft direkt über die **Windows-DHCP-API** (`dhcpsapi.dll`, RPC), wie die
@@ -100,6 +104,10 @@ Ist ein **Failover-Partner** mit den Anmeldedaten nicht erreichbar, fragt das To
 Das Hauptfenster hat ein eigenes Dock-System: feste Seiten **Übersicht**, **Server-Optionen**, **Failover**,
 **Prüfung**, **Ereignisprotokoll** (und **Definitionen** im Expertenmodus) sowie ein schließbarer Tab je geöffnetem Scope oder Entwurf.
 Alle lassen sich nebeneinander anordnen oder ausklinken.
+
+Oben links wählt der Umschalter **IPv4 | IPv6** die Adressfamilie; Übersicht, Server-Optionen und
+Definitionen zeigen dann die Daten dieser Familie (die Wahl wird gespeichert). Prüfung und Ereignisprotokoll
+umfassen immer beide Familien.
 
 Oben rechts: Schalter **Auto-Replikation**, **Protokoll**, **Hilfe**, **Abmelden**. Lang laufende Aktionen
 zeigen Status, Fortschritt und, wo möglich, **Abbrechen**.
@@ -171,6 +179,32 @@ Fehler offen sind; Warnungen und Hinweise sperren nicht. Ungespeicherte Änderun
 - **Erstellen** zeigt eine Zusammenfassung (Netz, Bereich, Ausschlüsse, Optionen, Lease, Status, Failover) und
   legt alles in einem Schritt an. Fehler im Entwurf verhindern das Anlegen.
 
+### IPv6 (DHCPv6)
+
+![DHCPv6-Scope](images/ms-dhcp-ipv6.png)
+
+Mit dem Umschalter **IPv6** zeigt die Übersicht die DHCPv6-Scopes (Präfixe) des Servers. Es gibt dieselben
+Funktionen wie bei IPv4, angepasst an DHCPv6:
+
+| Bereich | DHCPv6 |
+|---|---|
+| Scope | Präfix (immer /64), Name, Beschreibung, Einstellung (Preference 0–255), bevorzugte und gültige Dauer, Status, Rapid Commit, Unicast erlauben |
+| Adressen | kein Adresspool: verteilt wird aus dem ganzen /64-Präfix, nicht zu vergebende Adressen gehören auf die Seite **Ausschlüsse** |
+| Optionen | Scope- und Server-Optionen (ID 1–65535), mit Benutzer- und Herstellerklassen; Definitionen getrennt von IPv4 |
+| Reservierungen | Adresse, **DUID** und **IAID** (dezimal oder `0x…`), Name und Beschreibung |
+| Leases | Adresse, DUID, IAID, Hostname, Status, Typ (IANA/IATA), Ablauf; Löschen einzeln oder gesammelt |
+| Neuer Scope / Duplikat | Dialog mit Präfix und Gültigkeitsdauern; beim Duplizieren werden Optionen und Ausschlüsse auf das neue Präfix umgerechnet |
+| Zwischenablage | Optionen, Reservierungen und Ausschlüsse zwischen v6-Scopes; Einfügen in einen IPv4-Scope (und umgekehrt) wird abgelehnt |
+
+Transaktionen mit Rücknahme, Prüfung vor dem Speichern (Änderungen anderer), automatisches Aktualisieren und das
+Ereignisprotokoll gelten genauso für DHCPv6. Die bevorzugte Dauer muss kleiner als die gültige sein; beim
+Ändern beider Werte setzt das Tool sie in der Reihenfolge, die Windows annimmt.
+
+Prüfungen für DHCPv6 (Auswahl): Name fehlt, bevorzugte Dauer nicht kleiner als gültige bzw. sehr kurz oder sehr
+lang, Ausschlüsse außerhalb des Präfixes, vertauscht oder überlappend, Optionswerte (Adressen, Loopback/Multicast,
+Link-Local als DNS-Server, Domänennamen), keine DNS-Server (Option 23), Reservierung außerhalb des Präfixes, im
+Ausschluss, ohne Name oder mit doppelter DUID/IAID, abgelehnte Leases, Server ohne DHCPv6-Bindung.
+
 ### Server-Optionen
 Oben die Server der Failover-Gruppe (verbundener Server und Partner) mit Rolle, Verbindung, Anzahl Optionen und
 Abweichungen. Unten die Optionen des gewählten Servers mit Spalte **Abgleich**:
@@ -219,7 +253,8 @@ Failover-Scopes sofort auf.
 
 Die Seite **Prüfung** bewertet den ganzen Server: Servereinstellungen und jeden Scope, parallel (bis zu 8
 gleichzeitig), mit Fortschritt; die Bedienung bleibt frei und die Prüfung lässt sich abbrechen.
-**Leases einbeziehen** liest zusätzlich alle Leases (langsam bei großen Servern), **Mit Partnern abgleichen**
+**Leases einbeziehen** liest zusätzlich alle Leases (langsam bei großen Servern), **DNS-Abgleich** prüft
+Reservierungen und Leases gegen das DNS (siehe [DNS-Abgleich](#dns-abgleich)), **Mit Partnern abgleichen**
 vergleicht alles, was auf beiden Failover-Servern gleich sein sollte (siehe [Abgleich mit dem Partner](#abgleich-mit-dem-partner)).
 
 Darstellung: Verteilungsbalken je Kategorie, die Scopes mit den meisten Befunden, Umschalter zwischen
@@ -240,6 +275,20 @@ Beispiele für Befunde:
 - Scope ohne Failover, Abweichungen zum Partner
 
 Viele Befunde bieten eine **Korrektur** an: Doppelklick im Reiter „Befunde“ wendet sie an.
+
+#### DNS-Abgleich
+Mit **DNS-Abgleich** prüft die Prüfung jede Reservierung und (mit „Leases einbeziehen“) jede aktive Lease mit
+Namen, IPv4 und IPv6, über den DNS-Resolver dieses Rechners:
+
+| Befund | Stufe |
+|---|---|
+| Name lässt sich nicht auflösen | Warnung |
+| Name zeigt auf eine andere Adresse | Warnung |
+| kein PTR-Eintrag für die Adresse | Best Practice |
+| PTR zeigt auf einen anderen Namen | Warnung |
+| DNS antwortet nicht rechtzeitig | Info |
+
+Ein kurzer Name und sein vollständiger Name (FQDN) gelten als gleich. Bis zu 16 Abfragen laufen gleichzeitig.
 
 #### Abgleich mit dem Partner
 Mit **Mit Partnern abgleichen** liest die Prüfung jeden Failover-Partner (per `netsh`-Dump bzw. DHCP-API) und
@@ -384,7 +433,9 @@ Replikation); **Leeren** löscht die Anzeige.
 - Gespeichert werden nur die Einstellungen, die Spaltenanordnung und, falls gewünscht, die Zugangsdaten im Tresor.
 
 ## Grenzen und bekannte Einschränkungen
-- Nur IPv4; DHCPv6 wird nicht verwaltet.
+- DHCPv6: kein Failover (unter Windows nicht vorhanden), keine DNS-Einstellungen je Scope, Präfix immer /64.
+- DHCPv6-Reservierungen: Name und Beschreibung lassen sich erst setzen, wenn der Client bekannt ist; sonst
+  steht ein Hinweis im Protokoll.
 - Richtlinien (Policies), Filter und Superscopes werden geprüft, aber nicht bearbeitet.
 - Server-Optionen werden nur auf Knopfdruck auf Partner übertragen.
 - Nur unter Windows (DHCP-API und RSAT).
@@ -415,6 +466,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
+| 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |
 | 1.4.0 | Änderungen anderer erkennen: Prüfung vor jedem Speichern (Scope und Server-Optionen) mit Liste der Unterschiede, automatisches Aktualisieren mit einstellbarem Abstand und Hinweisbalken, „wer hat geändert“ aus dem Ereignisprotokoll des DHCP-Servers |

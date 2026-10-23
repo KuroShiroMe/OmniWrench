@@ -1,9 +1,11 @@
-"""MS DHCP Extended Management – Verwaltung von Microsoft-DHCP-Servern (IPv4) mit Prüfung, Failover und Replikation.
+"""MS DHCP Extended Management – Verwaltung von Microsoft-DHCP-Servern (IPv4 und IPv6) mit Prüfung, Failover und Replikation.
 
 Aufbau:
 * Anmeldeseite (Server, Anmeldedaten, Partner) -> Hauptbereich mit eigenem Dock-Manager (QtAds):
   feste Seiten Übersicht, Server-Optionen, Failover, Definitionen, Prüfung; dazu je Scope ein Tab
   und Entwürfe für neue Scopes.
+* Umschalter IPv4/IPv6 oben: Übersicht, Server-Optionen und Definitionen zeigen die gewählte Familie,
+  DHCPv6-Scopes öffnen als page_scope6.ScopeTab6; Failover nur IPv4, Prüfung und Ereignisprotokoll beide.
 * Alle Serverzugriffe laufen über service.DhcpService im Hintergrund (runner.Runner); Dialoge und
   Rückfragen laufen zwischen den Schritten im GUI-Thread.
 """
@@ -32,9 +34,11 @@ from omniwrench.ui.widgets import make_button
 from . import checks as ck
 from . import dialogs as dlg
 from . import eventlog
+from . import ip6calc as ip6
 from .page_draft import DraftTab
 from .page_events import EventsPage
 from .page_scope import ScopeTab
+from .page_scope6 import ScopeTab6
 from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
 from .backend import ApiBackend
 from .runner import Job, Runner
@@ -75,7 +79,8 @@ class MsDhcpExtended(ToolBase):
         self.queue: list = []
         self.tabs: dict[QWidget, ads.CDockWidget] = {}
         self.scan: dict | None = None
-        self._classes: tuple[list[str], list[str]] | None = None
+        self._classes: dict[bool, tuple[list[str], list[str]]] = {}     # v6? -> (Hersteller-, Benutzerklassen)
+        self.family = 6 if self.settings.get("family") == 6 else 4
         self._dock_seq = 0
         self._ev_since = ""             # Ereignisprotokoll: bis hierhin gelesen (UTC)
         self._ev_seen: set[int] = set()  # schon gemeldete Ereignisse (EventRecordID)
@@ -243,6 +248,7 @@ class MsDhcpExtended(ToolBase):
         lay.setContentsMargins(8, 6, 8, 0)
         lay.setSpacing(6)
         top = QHBoxLayout()
+        top.addWidget(self._build_family_switch())
         self.conn_info = QLabel("")
         self.conn_info.setTextFormat(Qt.TextFormat.RichText)
         top.addWidget(self.conn_info, 1)
@@ -323,6 +329,43 @@ class MsDhcpExtended(ToolBase):
         lay.addWidget(split, 1)
         self.main_area = host
         return page
+
+    def _build_family_switch(self) -> QWidget:
+        """IPv4 | IPv6 als Segmentschaltfläche: bestimmt Übersicht, Server-Optionen und Definitionen."""
+        c = theme.current
+        w = QWidget()
+        lay = QHBoxLayout(w)
+        lay.setContentsMargins(0, 0, 8, 0)
+        lay.setSpacing(0)
+        self.family_group = QButtonGroup(w)
+        for i, fam in enumerate((4, 6)):
+            b = QPushButton(f"IPv{fam}")
+            b.setCheckable(True)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+            b.setToolTip(self.tr("main.family_tip"))
+            rad = "border-top-left-radius:5px; border-bottom-left-radius:5px;" if i == 0 else \
+                "border-top-right-radius:5px; border-bottom-right-radius:5px; border-left:none;"
+            b.setStyleSheet(f"QPushButton {{ padding:3px 14px; border:1px solid {c['border']}; border-radius:0; {rad}"
+                            f" background:{c['surface']}; color:{c['text']}; font-weight:600; }}"
+                            f" QPushButton:checked {{ background:{c['accent']}; border-color:{c['accent']}; color:white; }}")
+            self.family_group.addButton(b, fam)
+            lay.addWidget(b)
+        self.family_group.button(self.family).setChecked(True)
+        self.family_group.idClicked.connect(self.set_family)
+        return w
+
+    def set_family(self, fam: int) -> None:
+        if fam not in (4, 6) or fam == self.family:
+            return
+        self.family = fam
+        self.settings.set("family", fam)
+        self.family_group.button(fam).setChecked(True)
+        self.overview.set_data(self.svc, self.scan)
+        self.srv_opts.current = None
+        self.srv_opts.refresh()
+        self.defs_page.refresh()
+        self.defs_page.apply_rights()
+        self.update_conn_info()
 
     def _build_status(self) -> QWidget:
         bar = QWidget()
@@ -479,7 +522,7 @@ class MsDhcpExtended(ToolBase):
             # Sicht der direkt erreichbaren Partner gleich mitladen (schnell); netsh-Partner erst bei Bedarf
             yield from self.load_peer_flow([pn for pn in svc.partners() if svc.partner_via.get(pn) == "Cim"], refresh=False)
         self.login_status.setText("")
-        self._classes = None
+        self._classes = {}
         self.scan = None
         self.check_page.scan = None
         self.refresh_pages()
@@ -615,11 +658,14 @@ class MsDhcpExtended(ToolBase):
             parts.append(html.escape(f"{tr('conn.partner')} {pn}: {svc.partner_state(pn)}"))
         if svc.partner_mode == "Off":
             parts.append(html.escape(tr("conn.primary_only")))
+        if self.family == 6 and svc.v6_error:
+            parts.append(html.escape(tr("conn.v6_error")))
+            warn_state = True
         color = theme.current["warning"] if warn_state else theme.current["text"]
         self.conn_info.setText(f"<span style='color:{color}'>" + " · ".join(parts) + "</span>")
 
     def checker(self) -> ck.Checker:
-        return ck.Checker(self.tr, self.svc.defs, self.svc.server_options, self.svc.failovers)
+        return self.svc.checker()
 
     # --- Prüfung im Hintergrund ----------------------------------------------------------------------
     def start_scan(self) -> None:
@@ -627,7 +673,7 @@ class MsDhcpExtended(ToolBase):
         if self.scanner.running or not self.svc.server:
             return
         cp.scan_started()
-        if not self.scanner.start(cp.with_leases.isChecked(), cp.with_partner.isChecked()):
+        if not self.scanner.start(cp.with_leases.isChecked(), cp.with_partner.isChecked(), cp.with_dns.isChecked()):
             cp.scan_stopped()
 
     def _scan_finished(self, scan: dict) -> None:
@@ -653,7 +699,7 @@ class MsDhcpExtended(ToolBase):
 
     def reload_all_flow(self):
         yield Job(self.svc.load_all, self.tr("status.loading_server", server=self.svc.server))
-        self._classes = None
+        self._classes = {}
         self.refresh_pages()
 
     def refresh_overview_rows(self):
@@ -670,7 +716,7 @@ class MsDhcpExtended(ToolBase):
         if a == "Refresh":
             self.run(self.reload_all_flow())
         elif a == "New":
-            self.open_draft(None)
+            self.open_draft(None, v6=self.family == 6)
         elif a == "Edit":
             for sid in ids[:10]:
                 self.open_scope(sid)
@@ -684,7 +730,7 @@ class MsDhcpExtended(ToolBase):
     def state_flow(self, ids: list[str], active: bool):
         tr, svc = self.tr, self.svc
         state = "Active" if active else "InActive"
-        ids = [i for i in ids if (svc.scope_info.get(i) or {}).get("scope", {}).get("state") != state]
+        ids = [i for i in ids if (svc.scope_row(i) or {}).get("state") != state]
         if not ids:
             return
         if not confirm(self.root, tr("ov.activate" if active else "ov.deactivate"),
@@ -693,7 +739,8 @@ class MsDhcpExtended(ToolBase):
 
         def write():    # alle oder keiner
             for sid in ids:
-                yield Job(lambda sid=sid: svc.scope_set(sid, State=state), tr("status.saving"))
+                setter = svc.scope6_set if ip6.is_v6_scope(sid) else svc.scope_set
+                yield Job(lambda sid=sid, setter=setter: setter(sid, State=state), tr("status.saving"))
         yield from self.atomic(tr("tx.scope_state", state=tr("state." + state)), write())
         for sid in ids:
             svc.log(tr("log.scope_state", id=sid, state=tr("state." + state)))
@@ -720,7 +767,10 @@ class MsDhcpExtended(ToolBase):
                 # je Scope eine Transaktion: scheitert das Löschen, kommt er zurück in die Beziehung und zum Partner
                 if rel:
                     yield Job(lambda: svc.remove_fo_scopes(rel, [sid]), tr("status.fo_remove", id=sid))
-                yield Job(lambda: svc.scope_remove(sid), tr("status.removing", id=sid))
+                if ip6.is_v6_scope(sid):
+                    yield Job(lambda: svc.scope6_remove(sid), tr("status.removing", id=sid))
+                else:
+                    yield Job(lambda: svc.scope_remove(sid), tr("status.removing", id=sid))
             try:
                 yield from self.atomic(tr("tx.scope_remove", id=sid), write())
                 svc.log(tr("log.scope_removed", id=sid))
@@ -756,7 +806,7 @@ class MsDhcpExtended(ToolBase):
     def open_scope(self, sid: str, show_findings: bool = False) -> None:
         tab = self.scope_tab(sid)
         if tab is None:
-            tab = ScopeTab(self, sid)
+            tab = ScopeTab6(self, sid) if ip6.is_v6_scope(sid) else ScopeTab(self, sid)
             self._add_dock(tab, sid)
             self.run(tab.load_flow(leases=True))
         else:
@@ -765,10 +815,42 @@ class MsDhcpExtended(ToolBase):
         if show_findings:
             tab.select_page("Findings")
 
-    def open_draft(self, source: str | None) -> None:
+    def open_draft(self, source: str | None, v6: bool = False) -> None:
+        if v6 or ip6.is_v6_scope(source):
+            self.run(self.new_scope6_flow(source))
+            return
         d = DraftTab(self, source)
         self._add_dock(d, self.tr("draft.tab_dup", id=source) if source else self.tr("draft.tab_new"))
         self.run(d.init_flow())
+
+    def new_scope6_flow(self, source: str | None):
+        """Neuer DHCPv6-Scope bzw. Kopie: ein Dialog statt Entwurf (kein Pool, kein Failover). Optionen und
+        Ausschlüsse der Quelle werden auf den neuen Präfix umgerechnet; alles oder nichts."""
+        tr, svc = self.tr, self.svc
+        src = svc.scope_row(source) if source else None
+        data = None
+        if src:
+            data = yield Job(lambda: svc.get_scope(source, False), tr("status.loading_scope", id=source))
+        res = dlg.scope6_dialog(self.root, tr, {s["id"] for s in svc.scopes6}, (data or {}).get("scope"))
+        if not res:
+            return
+        pfx = res["prefix"]
+
+        def work():
+            sid = svc.scope6_add(pfx, res["name"], res["desc"], res["pref"], res["lease_pref"], res["lease_valid"], False)
+            if data and res.get("copy_exclusions"):
+                for x in data["exclusions"]:
+                    svc.excl6_add(sid, *ip6.convert_values([x["start"], x["end"]], source, sid))
+            if data and res.get("copy_options"):
+                for o in data["options"]:
+                    svc.opt_set(sid, int(o["id"]), ip6.convert_values(o["values"], source, sid), o.get("vendor") or "",
+                                o.get("user") or "")
+            if res["active"]:
+                svc.scope6_set(sid, State="Active")
+        yield Job(lambda: svc.atomic(tr("tx.scope6_add", id=pfx), work), tr("status.saving"))
+        svc.log(tr("log.scope6_created", id=pfx, name=res["name"]))
+        yield from self.refresh_overview_rows()
+        self.open_scope(pfx)
 
     def close_tab(self, w: QWidget, force: bool = False) -> None:
         d = self.tabs.get(w)
@@ -804,7 +886,8 @@ class MsDhcpExtended(ToolBase):
             return
         d.setIcon(level_icon(lvl) if lvl else level_icon(None))
         if isinstance(w, ScopeTab):
-            title = w.sid + (" *" if w.is_dirty() else "") + (" ⟳" if w.unreplicated else "")
+            title = (ip6.fmt_net(w.sid, w.plen) if isinstance(w, ScopeTab6) else w.sid) + (" *" if w.is_dirty() else "") \
+                + (" ⟳" if w.unreplicated else "")
             d.setWindowTitle(title)
 
     # --- Gemeinsame Abläufe --------------------------------------------------------------------------
@@ -897,8 +980,8 @@ class MsDhcpExtended(ToolBase):
 
     def _server_sig(self) -> str:
         svc = self.svc
-        return json.dumps([svc.failovers, svc.server_option_rows, sorted(map(str, svc.defs.items()))], sort_keys=True,
-                          default=str)
+        return json.dumps([svc.failovers, svc.server_option_rows, sorted(map(str, svc.defs.items())), svc.server_option_rows6,
+                           sorted(map(str, svc.defs6.items()))], sort_keys=True, default=str)
 
     def _mark_replicated(self, ok: list[str], failed: list[str]) -> None:
         for sid in ok:
@@ -937,31 +1020,33 @@ class MsDhcpExtended(ToolBase):
             warn(self.root, tr("fo.replicate"), str(e))
         self.update_conn_info()
 
-    def load_classes(self):
-        if self._classes is None:
+    def load_classes(self, v6: bool = False):
+        if v6 not in self._classes:
             try:
-                cls = yield Job(self.svc.classes, self.tr("status.loading"))
+                cls = yield Job(lambda: self.svc.classes(v6=v6), self.tr("status.loading"))
             except UserError:
                 cls = []
             vendors = sorted(c["name"] for c in cls if c["type"].lower() == "vendor")
             users = sorted(c["name"] for c in cls if c["type"].lower() == "user")
-            self._classes = (vendors, users)
-        return self._classes
+            self._classes[v6] = (vendors, users)
+        return self._classes[v6]
 
     def new_definition_flow(self, preset: dict):
         tr, svc = self.tr, self.svc
-        vendors, _users = yield from self.load_classes()
-        with_partner = bool(svc.partners()) and svc.partner_mode != "Off"
-        d = dlg.definition_dialog(self.root, tr, None, vendors, with_partner, preset or None)
+        preset = dict(preset or {})
+        v6 = bool(preset.pop("v6", False))
+        vendors, _users = yield from self.load_classes(v6)
+        with_partner = bool(svc.partners()) and svc.partner_mode != "Off" and not v6
+        d = dlg.definition_dialog(self.root, tr, None, vendors, with_partner, preset or None, v6=v6)
         if not d:
             return False
-        if svc.opt_def(d["id"], d["vendor"]):
+        if svc.opt_def(d["id"], d["vendor"], v6):
             warn(self.root, tr("def.new"), tr("def.err_exists", tag=f"{d['id']:03d}"))
             return False
 
         def work():
             # Definition lokal und beim Partner - scheitert der Partner, wird auch die lokale wieder entfernt
-            svc.def_add(d)
+            svc.def_add(d, v6=v6)
             for pn in (svc.partners() if d.get("partner") else []):
                 try:
                     svc.copy_def_to_partner(d, pn)
@@ -977,8 +1062,9 @@ class MsDhcpExtended(ToolBase):
 
     # --- Zwischenablage ------------------------------------------------------------------------------
     def clip_set(self, kind: str, items: list[dict], sid: str, mask: str, text: str) -> None:
+        fam = 6 if ip6.is_v6_scope(sid) or (not sid and self.family == 6) else 4
         payload = {"App": "OmniWrench.MsDhcpExtended", "Kind": kind, "Server": self.svc.server, "SourceScopeId": sid,
-                   "SourceMask": mask, "Items": items}
+                   "SourceMask": mask, "Family": fam, "Items": items}
         md = QMimeData()
         md.setData(MIME, json.dumps(payload, ensure_ascii=False).encode("utf-8"))
         md.setText(text)

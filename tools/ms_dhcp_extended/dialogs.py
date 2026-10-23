@@ -1,4 +1,5 @@
-"""Eingabedialoge von MS DHCP Extended Management (Option, Reservierung, Ausschluss, Failover, Definition, Anmeldung)."""
+"""Eingabedialoge von MS DHCP Extended Management (Option, Reservierung, Ausschluss, Failover, Definition, Anmeldung,
+DHCPv6-Scope)."""
 
 from __future__ import annotations
 
@@ -7,6 +8,8 @@ import re
 from PySide6.QtWidgets import QCheckBox, QMessageBox
 
 from . import checks as ck
+from . import checks6 as ck6
+from . import ip6calc as ip6
 from . import ipcalc as ip
 from . import optcodec as oc
 from .ui_base import FormDialog, confirm
@@ -18,9 +21,11 @@ def _opt_id(v) -> int | None:
 
 
 def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None = None, model: ip.ScopeModel | None = None,
-                  vendors: list[str] = (), users: list[str] = (), title: str = "", partner_check: str = "") -> dict | None:
+                  vendors: list[str] = (), users: list[str] = (), title: str = "", partner_check: str = "",
+                  v6: bool = False) -> dict | None:
     """Option anlegen/bearbeiten. Ergebnis: {"id", "values", "vendor", "user", "undefined", "partner"}.
-    partner_check: Beschriftung des Hakens „Auf Partner übertragen“ (Opt-out, vorausgewählt); leer = kein Haken."""
+    partner_check: Beschriftung des Hakens „Auf Partner übertragen“ (Opt-out, vorausgewählt); leer = kein Haken.
+    v6: DHCPv6-Option (Code 1–65535, Prüfung nach checks6)."""
     std = sorted((d for (v, _i), d in defs.items() if not v), key=lambda d: d["id"])
     items = [(d["id"], f"{d['id']:03d} – {d['name']}") for d in std]
     edit = opt is not None
@@ -41,9 +46,9 @@ def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None 
 
     def validate(v: dict) -> str | None:
         oid = _opt_id(v["id"])
-        if oid is None or not 1 <= oid <= 254:
-            return tr("opt.err_id")
-        if oid == 51 and not v["vendor"]:
+        if oid is None or not 1 <= oid <= (65535 if v6 else 254):
+            return tr("opt.err_id6" if v6 else "opt.err_id")
+        if oid == 51 and not v["vendor"] and not v6:
             return tr("opt.err_51")
         d = defs.get((v["vendor"] or "", oid))
         vals = oc.split_option_text(v["values"], d)
@@ -52,7 +57,9 @@ def option_dialog(parent, tr, checker: ck.Checker, defs: dict, opt: dict | None 
         if not d:
             state.update(id=oid, values=vals, undefined=True)
             return None
-        fs = [f for f in checker.option_values(oid, vals, v["vendor"] or "", model) if f.fix != "new_def"]
+        fs = ck6.option_values(checker, oid, vals, v["vendor"] or "") if v6 else \
+            checker.option_values(oid, vals, v["vendor"] or "", model)
+        fs = [f for f in fs if f.fix != "new_def"]
         errs = [f.text for f in fs if f.level == ck.ERROR]
         if errs:
             return "\n".join(errs)
@@ -89,6 +96,8 @@ def confirm_check(parent, title: str, text: str, check_label: str = "", checked:
 def guess_type(values: list[str]) -> str:
     if values and all(ip.is_ipv4(v) for v in values):
         return "IPv4Address"
+    if values and all(ip6.is_ipv6(v) for v in values):
+        return "IPv6Address"
     if values and all(oc.to_number(v) is not None for v in values):
         mx = max(oc.to_number(v) for v in values)
         return "Byte" if mx <= 255 else "Word" if mx <= 65535 else "DWord"
@@ -96,14 +105,14 @@ def guess_type(values: list[str]) -> str:
 
 
 def definition_dialog(parent, tr, d: dict | None = None, vendors: list[str] = (), with_partner: bool = False,
-                      preset: dict | None = None) -> dict | None:
+                      preset: dict | None = None, v6: bool = False) -> dict | None:
     edit = d is not None
     base = d or preset or {}
     fields = [
-        {"key": "id", "label": tr("def.f.id"), "type": "number", "min": 1, "max": 255, "value": base.get("id", 224),
-         "readonly": edit},
+        {"key": "id", "label": tr("def.f.id"), "type": "number", "min": 1, "max": 65535 if v6 else 255,
+         "value": base.get("id", 224), "readonly": edit},
         {"key": "name", "label": tr("def.f.name"), "value": base.get("name", "")},
-        {"key": "type", "label": tr("def.f.type"), "type": "combo", "items": oc.OPTION_TYPES[:-1],
+        {"key": "type", "label": tr("def.f.type"), "type": "combo", "items": oc.OPTION_TYPES if v6 else oc.OPTION_TYPES[:-1],
          "value": base.get("type", "String"), "readonly": edit},
         {"key": "multi", "label": tr("def.f.multi"), "type": "check", "value": base.get("multi", False), "readonly": edit},
         {"key": "vendor", "label": tr("def.f.vendor"), "type": "combo",
@@ -119,7 +128,8 @@ def definition_dialog(parent, tr, d: dict | None = None, vendors: list[str] = ()
             return tr("def.err_name")
         return None
 
-    res = FormDialog.ask(parent, tr("def.title_edit") if edit else tr("def.title_add"), fields, tr, validate=validate)
+    title = tr("def.title_edit") if edit else tr("def.title_add")
+    res = FormDialog.ask(parent, title + (" (DHCPv6)" if v6 else ""), fields, tr, validate=validate)
     if res is None:
         return None
     res["default"] = [x.strip() for x in res["default"].splitlines() if x.strip()]
@@ -177,6 +187,107 @@ def exclusion_dialog(parent, tr, model: ip.ScopeModel) -> tuple[str, str] | None
 
     res = FormDialog.ask(parent, tr("excl.title"), fields, tr, validate=validate)
     return (res["start"], res["end"]) if res else None
+
+
+# --- DHCPv6 -------------------------------------------------------------------------------------------
+
+def reservation6_dialog(parent, tr, prefix: str, plen: int, r: dict | None = None) -> dict | None:
+    """DHCPv6-Reservierung: Adresse + DUID + IAID (der Client wird über DUID und IAID erkannt, nicht über die MAC)."""
+    edit = r is not None
+    fields = [
+        {"key": "ip", "label": tr("res.f.ip"), "value": r["ip"] if edit else prefix, "readonly": edit},
+        {"key": "duid", "label": tr("res6.f.duid"), "value": (r or {}).get("duid", "")},
+        {"key": "iaid", "label": tr("res6.f.iaid"), "value": str((r or {}).get("iaid", "") or "")},
+        {"key": "name", "label": tr("res.f.name"), "value": (r or {}).get("name", "")},
+        {"key": "desc", "label": tr("res.f.desc"), "value": (r or {}).get("desc", "")},
+    ]
+
+    def validate(v):
+        if not ip6.is_ipv6(v["ip"]):
+            return tr("res6.err_ip")
+        if not ip6.in_prefix(v["ip"], prefix, plen):
+            return tr("res.err_outside", net=ip6.fmt_net(prefix, plen))
+        if ip6.host_part(v["ip"], plen) == 0:
+            return tr("res6.err_anycast")
+        if not ip6.format_duid(v["duid"]):
+            return tr("res6.err_duid")
+        t = v["iaid"].strip()
+        n = int(t, 16) if t.lower().startswith("0x") and len(t) > 2 else int(t) if t.isdigit() else -1
+        if not 0 <= n <= 0xFFFFFFFF:
+            return tr("res6.err_iaid")
+        return None
+
+    res = FormDialog.ask(parent, tr("res.title_edit") if edit else tr("res.title_add"), fields, tr,
+                         hint=tr("res6.hint"), validate=validate)
+    if res:
+        t = res["iaid"].strip()
+        res["iaid"] = int(t, 16) if t.lower().startswith("0x") else int(t)
+        res["ip"] = ip6.norm(res["ip"])
+        res["duid"] = ip6.format_duid(res["duid"])
+    return res
+
+
+def exclusion6_dialog(parent, tr, prefix: str, plen: int) -> tuple[str, str] | None:
+    fields = [{"key": "start", "label": tr("excl.f.start"), "value": prefix},
+              {"key": "end", "label": tr("excl.f.end"), "value": prefix}]
+
+    def validate(v):
+        for k in ("start", "end"):
+            if not ip6.is_ipv6(v[k]):
+                return tr("excl.err_ip", value=v[k])
+            if not ip6.in_prefix(v[k], prefix, plen):
+                return tr("excl.err_outside", value=v[k], net=ip6.fmt_net(prefix, plen))
+        if ip6.to_int(v["start"]) > ip6.to_int(v["end"]):
+            return tr("excl.err_order")
+        return None
+
+    res = FormDialog.ask(parent, tr("excl.title"), fields, tr, validate=validate)
+    return (ip6.norm(res["start"]), ip6.norm(res["end"])) if res else None
+
+
+def scope6_dialog(parent, tr, existing: set[str], source: dict | None = None) -> dict | None:
+    """Neuer DHCPv6-Scope (bzw. Kopie von source = n_scope6-Zeile). Ergebnis: prefix, name, desc, pref, lease_pref,
+    lease_valid, active, copy_options, copy_exclusions."""
+    s = source or {}
+    fields = [
+        {"key": "prefix", "label": tr("scope6.f.prefix"), "value": "", "readonly": False},
+        {"key": "name", "label": tr("scope.f.name"), "value": (s.get("name") + " " + tr("scope6.copy_suffix")) if s else ""},
+        {"key": "desc", "label": tr("scope.f.desc"), "value": s.get("desc", "")},
+        {"key": "pref", "label": tr("scope6.f.preference"), "type": "number", "min": 0, "max": 255, "value": s.get("pref", 0)},
+        {"key": "lease_pref", "label": tr("scope6.f.lease_pref"), "value": ck.format_duration(s.get("lease_pref") or 8 * 86400)},
+        {"key": "lease_valid", "label": tr("scope6.f.lease_valid"),
+         "value": ck.format_duration(s.get("lease_valid") or 12 * 86400)},
+        {"key": "active", "label": tr("scope6.f.active"), "type": "check", "value": False},
+    ]
+    if s:
+        fields += [{"key": "copy_options", "label": tr("scope6.copy_options"), "type": "check", "value": True},
+                   {"key": "copy_exclusions", "label": tr("scope6.copy_exclusions"), "type": "check", "value": True}]
+
+    def validate(v):
+        p = ip6.parse_prefix(v["prefix"])
+        if not p:
+            return tr("scope6.err_prefix")
+        if p[1] != ip6.PREFIX:
+            return tr("scope6.err_plen")
+        if ip6.prefix_of(p[0]) in existing:
+            return tr("scope6.err_exists", prefix=ip6.prefix_of(p[0]))
+        if not v["name"].strip():
+            return tr("def.err_name")
+        a, b = ck.parse_duration(v["lease_pref"]), ck.parse_duration(v["lease_valid"])
+        if not a or not b:
+            return tr("scope6.err_lifetime")
+        if a >= b:
+            return tr("scope6.err_pref_valid")
+        return None
+
+    res = FormDialog.ask(parent, tr("scope6.title_dup", id=s["id"]) if s else tr("scope6.title_new"), fields, tr,
+                         hint=tr("scope6.hint"), validate=validate)
+    if not res:
+        return None
+    p = ip6.parse_prefix(res["prefix"])
+    res.update(prefix=ip6.prefix_of(p[0]), name=res["name"].strip(), desc=res["desc"].strip(), pref=int(res["pref"]),
+               lease_pref=ck.parse_duration(res["lease_pref"]), lease_valid=ck.parse_duration(res["lease_valid"]))
+    return res
 
 
 def failover_dialog(parent, tr, servers: list[str], local: str, rel: dict | None = None,

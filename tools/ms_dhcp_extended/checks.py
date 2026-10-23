@@ -130,11 +130,13 @@ class Checker:
     """Prüfungen mit dem Wissensstand des verbundenen Servers (Optionsdefinitionen, Server-Optionen, Failover)."""
 
     def __init__(self, tr: Callable, defs: dict | None = None, server_options: dict | None = None,
-                 failovers: list | None = None):
+                 failovers: list | None = None, defs6: dict | None = None, server_options6: dict | None = None):
         self.tr = tr
         self.defs = defs or {}                       # (vendor, id) -> Definition
         self.server_options = server_options or {}   # id -> [werte] (ohne Klassen)
         self.failovers = failovers or []
+        self.defs6 = defs6 or {}                     # dasselbe für DHCPv6 (Befunde in checks6.py)
+        self.server_options6 = server_options6 or {}
 
     def opt_def(self, opt_id: int, vendor: str = "") -> dict | None:
         return self.defs.get((vendor or "", int(opt_id)))

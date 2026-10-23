@@ -37,6 +37,17 @@ def excl_key(r: dict) -> str:
 
 
 class ScopeTab(QWidget):
+    PAGES = PAGES
+    # Unterseite -> welche Befund-Ziele ihr Symbol bestimmen
+    PAGE_TARGETS = {
+        "General": lambda t: t.startswith(("Field:", "Range")),
+        "Options": lambda t: t.startswith("Option"),
+        "Reservations": lambda t: t.startswith("Res"),
+        "Exclusions": lambda t: t.startswith("Excl"),
+        "Leases": lambda t: t == "Leases",
+        "Failover": lambda t: t == "Failover",
+    }
+
     def __init__(self, ctl, sid: str, parent=None):
         super().__init__(parent)
         self.ctl = ctl
@@ -291,7 +302,6 @@ class ScopeTab(QWidget):
         self.set_data(data, keep_edits=self.is_dirty())
 
     def set_data(self, data: dict, keep_edits: bool = False) -> None:
-        tr = self.tr
         # eigene Eingaben merken (nur die tatsächlich geänderten Felder), alles andere kommt neu vom Server
         mine = self.general_changes() if keep_edits else {}
         pool_mine = keep_edits and self.data is not None and self.pool_changed()
@@ -315,9 +325,7 @@ class ScopeTab(QWidget):
             self.pool.set_pool(*self.server_pool())
         elif pool_val is not None:
             self.pool.set_pool(*pool_val)
-        st = data.get("stat")
-        self.f_stats.setText(tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"],
-                                reserved=st["reserved"]) if st else "–")
+        self.f_stats.setText(self._stats_text(data.get("stat")))
         d = data.get("dns")
         self.f_dns.setText(self._dns_text(d) if d else "–")
         self._loading = False
@@ -336,6 +344,15 @@ class ScopeTab(QWidget):
         self._fill_failover()
         self.apply_rights()
         self.recheck()
+
+    def _stats_text(self, st: dict | None) -> str:
+        if not st:
+            return "–"
+        return self.tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"], reserved=st["reserved"])
+
+    def clip_mask(self) -> str:
+        """Netzangabe für die Zwischenablage (IPv4: Maske, IPv6: Präfixlänge)."""
+        return self.data["scope"]["mask"]
 
     def _dns_text(self, d: dict) -> str:
         tr = self.tr
@@ -452,18 +469,10 @@ class ScopeTab(QWidget):
                 lvl = ck.worst(fs)
                 grid.style_row(k, tint(level_color(lvl), 60) if lvl else None, None, False, finding_tip(tr, fs) if fs else "")
         # Unterseiten: Symbol nach schwerstem Befund
-        page_targets = {
-            0: lambda t: t.startswith(("Field:", "Range")),
-            1: lambda t: t.startswith("Option"),
-            2: lambda t: t.startswith("Res"),
-            3: lambda t: t.startswith("Excl"),
-            4: lambda t: t == "Leases",
-            5: lambda t: t == "Failover",
-        }
-        for page, pred in page_targets.items():
+        for page, pred in self.PAGE_TARGETS.items():
             fs = [f for f in self.findings if flt.marker(f) and any(pred(t) for t in f.targets)]
             lvl = ck.worst(fs)
-            self.tabs.setTabIcon(page, level_icon(lvl) if lvl else level_icon(None, 1))
+            self.tabs.setTabIcon(self.PAGES.index(page), level_icon(lvl) if lvl else level_icon(None, 1))
         cnt = {}
         for f in self.findings:
             if flt.visible(f, ignore_level=True):
@@ -474,13 +483,16 @@ class ScopeTab(QWidget):
         color = level_color(lvl)
         txt = " · ".join(parts) if parts else tr("scope.no_findings")
         self.summary.setText(f"&nbsp;&nbsp;<a href='f' style='color:{color}; text-decoration:none'>● {txt}</a>")
-        self.tabs.setTabText(6, tr("scope.page.findings") + (f" ({n})" if n else ""))
+        self.tabs.setTabText(self.PAGES.index("Findings"), tr("scope.page.findings") + (f" ({n})" if n else ""))
+        self.title.setText(self.title_text())
+        self.ctl.update_tab(self, lvl)
+
+    def title_text(self) -> str:
         s = (self.data or {}).get("scope") or {}
         title = f"{self.sid}/{self.model.prefix if self.model else ''}  {s.get('name', '')}"
         if self.unreplicated:
-            title += "  " + tr("scope.unreplicated_badge")
-        self.title.setText(title)
-        self.ctl.update_tab(self, lvl)
+            title += "  " + self.tr("scope.unreplicated_badge")
+        return title
 
     def show_findings(self, key: str | None) -> None:
         if key:
@@ -488,11 +500,11 @@ class ScopeTab(QWidget):
             self.fview.set_target(key, label)
         else:
             self.fview.clear_target()
-        self.tabs.setCurrentIndex(6)
+        self.tabs.setCurrentIndex(self.PAGES.index("Findings"))
 
     def select_page(self, name: str) -> None:
-        if name in PAGES:
-            self.tabs.setCurrentIndex(PAGES.index(name))
+        if name in self.PAGES:
+            self.tabs.setCurrentIndex(self.PAGES.index(name))
 
     def goto(self, target: str) -> None:
         if target.startswith("Field:") or target.startswith("Range"):
@@ -616,7 +628,7 @@ class ScopeTab(QWidget):
         diffs = svc.diff_config(self.base, svc.config_of(fresh))
         if not diffs:
             return True
-        mask = self.data["scope"]["mask"]
+        mask = self.clip_mask()
         events = yield Job(lambda: svc.change_events(self.loaded_utc, sid, mask), tr("status.conflict_check", id=sid))
         svc.log(tr("log.conflict", id=sid, n=len(diffs)), True)
         ans = choose(self, tr("conf.title"), tr("conf.conflict", id=sid, list=short_list(diffs, 12)) + self._who(events),
@@ -633,9 +645,8 @@ class ScopeTab(QWidget):
         if self.base is None:
             return []
         if fresh.get("stat"):
-            self.data["stat"] = st = fresh["stat"]
-            self.f_stats.setText(tr("scope.stats", in_use=st["in_use"], pct=f"{st['pct']:.1f}", free=st["free"],
-                                    reserved=st["reserved"]))
+            self.data["stat"] = fresh["stat"]
+            self.f_stats.setText(self._stats_text(fresh["stat"]))
         diffs = self.svc.diff_config(self.base, self.svc.config_of(fresh))
         if not diffs:
             return []
@@ -649,7 +660,7 @@ class ScopeTab(QWidget):
         return diffs
 
     def _mine(self, ev: dict) -> bool:
-        return bool(self.svc.change_events_match(ev, self.sid, self.data["scope"]["mask"]))
+        return bool(self.svc.change_events_match(ev, self.sid, self.clip_mask()))
 
     def _show_banner(self, text: str, reload_btn: bool) -> None:
         c = theme.current
@@ -725,7 +736,7 @@ class ScopeTab(QWidget):
         elif a == "Copy" and g.selected_rows():
             rows = g.selected_rows()
             self.ctl.clip_set("Options", [{"id": r["id"], "values": r["values"], "vendor": r["vendor"], "user": r["user"]}
-                                          for r in rows], self.sid, self.data["scope"]["mask"], g.rows_as_text(rows))
+                                          for r in rows], self.sid, self.clip_mask(), g.rows_as_text(rows))
         elif a == "Paste":
             self.ctl.run(self.paste_flow("Options"))
 
@@ -788,7 +799,7 @@ class ScopeTab(QWidget):
             self.ctl.run(self.res_remove_flow(g.selected_rows()))
         elif a == "Copy" and g.selected_rows():
             rows = g.selected_rows()
-            self.ctl.clip_set("Reservations", [dict(r) for r in rows], self.sid, self.data["scope"]["mask"], g.rows_as_text(rows))
+            self.ctl.clip_set("Reservations", [dict(r) for r in rows], self.sid, self.clip_mask(), g.rows_as_text(rows))
         elif a == "Paste":
             self.ctl.run(self.paste_flow("Reservations"))
 
@@ -834,7 +845,7 @@ class ScopeTab(QWidget):
         elif a == "Copy" and g.selected_rows():
             rows = g.selected_rows()
             self.ctl.clip_set("Exclusions", [{"start": r["start"], "end": r["end"]} for r in rows], self.sid,
-                              self.data["scope"]["mask"], g.rows_as_text(rows))
+                              self.clip_mask(), g.rows_as_text(rows))
         elif a == "Paste":
             self.ctl.run(self.paste_flow("Exclusions"))
 
@@ -897,7 +908,7 @@ class ScopeTab(QWidget):
         elif a == "CopyRes" and g.selected_rows():
             rows = [r for r in g.selected_rows() if ip.format_client_id(r.get("cid"))]
             if rows:
-                self.ctl.clip_set("Reservations", [self._lease_res(r) for r in rows], self.sid, self.data["scope"]["mask"],
+                self.ctl.clip_set("Reservations", [self._lease_res(r) for r in rows], self.sid, self.clip_mask(),
                                   g.rows_as_text(rows))
 
     def _lease_remove_flow(self, rows):
@@ -913,6 +924,9 @@ class ScopeTab(QWidget):
         clip = self.ctl.clip_get()
         if not clip or not clip.get("Items"):
             info(self, tr("ui.paste"), tr("clip.empty"))
+            return
+        if clip.get("Family") == 6:
+            info(self, tr("ui.paste"), tr("clip.wrong_family"))
             return
         kind = clip["Kind"]
         if want and kind != want:
