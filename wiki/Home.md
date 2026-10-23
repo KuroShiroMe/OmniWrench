@@ -49,6 +49,7 @@ Eine Übersicht aller Tools mit Plattformen und Voraussetzungen steht auf der Se
 | [IconForge](Tool-IconForge) | Über 100.000 freie Symbole suchen, anpassen und exportieren |
 | [NetProbe](Tool-NetProbe) | Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS, Leitungstest |
 | [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management) | Microsoft-DHCP-Server verwalten und prüfen |
+| [MS DNS Extended Management](Tool-MS-DNS-Extended-Management) | Microsoft-DNS-Server verwalten und prüfen |
 
 ## Eigene Tools entwickeln
 

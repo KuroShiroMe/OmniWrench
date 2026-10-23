@@ -443,3 +443,16 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   "Ereignisprotokoll einrichten" (Event Log Readers S-1-5-32-573, firewall RemoteEventLogSvc*, wevtutil, test).
 - PR #58 merged, Stef tested 1.4.1 OK. Stef: load the event log in its own thread so the GUI does not block,
   as 1.4.2, merge, then close the thread. Built EventsPage.load() via run_async (not the Runner).
+
+## 2026-10-23 MS DNS Extended Management (net.ms-dns-extended 1.0.0)
+- Stef: "Equivalent zum DHCP-Tool für DNS?" -> concept doc (Claude Doc). Decisions: name OK, editing from the start (no
+  read-only phase), every kind of MS DNS (DCs + standalone/non-domain servers), IPv6 right away, both tools fully
+  independent but cooperate where useful, pywin32 OK, separate thread makes the DHCP tool IPv6-capable.
+- Built tools/ms_dns_extended: WMI root\MicrosoftDNS via pywin32 (DCOM, per-thread connection), records A/AAAA/CNAME/
+  PTR/MX/TXT/SRV/NS with PTR sync (in-addr.arpa + ip6.arpa nibbles), zones (create incl. IPv6 reverse, settings,
+  transfers, actions, delete), server settings, scavenging preview with ICMP ping, checks + NS/forwarder probes
+  (dnspython), multi-server compare (SOA serials), search, read-only DHCP lease comparison (own dhcpread.py),
+  audit event log page, conflict check via SOA serial, auto-refresh, transactions with rollback.
+- The DHCP-IPv6 thread added the reverse direction (DNS check in the DHCP tool, PR #60) without importing the DNS tool.
+- Tested on Linux only: scripts/dns_check/test_logic.py (88 checks, fake backend), offscreen renders, UI flows
+  (create with PTR, edit, rollback, conflict, delete with PTR). Windows tests: TESTLISTE section 9.

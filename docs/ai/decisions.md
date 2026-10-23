@@ -238,3 +238,12 @@
   (GITHUB_TOKEN may not modify workflows), only the marker `.github/template-setup.json` is deleted.
 - Help menu: "Online-Hilfe (Wiki)" (F1) opens the wiki, "Tool-Entwicklung" opens wiki/Entwicklung; docs/ no longer
   shipped next to the EXE.
+
+## MS DNS Extended Management (2026-10-23)
+- Stef: name "MS DNS Extended Management", id net.ms-dns-extended; editing in the first version; support every kind of
+  MS DNS server incl. servers outside a domain; IPv6 from the start; DNS and DHCP tool must work fully independently
+  (no imports between tools), cooperation only where it helps (DNS tool reads DHCP leases itself, DHCP tool checks DNS
+  via the system resolver); pywin32 is allowed as a dependency.
+- My choices: WMI (root\MicrosoftDNS) instead of PowerShell/dnscmd (Python-only rule, no RSAT); editing = delete +
+  create as one transaction; zone delete, scavenge now, clear cache are final and need confirmation; local server
+  always uses the logged-on account (WMI forbids local credentials).

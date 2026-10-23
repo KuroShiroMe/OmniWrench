@@ -1,0 +1,88 @@
+{
+  "settings": [
+    {
+      "key": "last_server",
+      "type": "string",
+      "label": "Last server",
+      "default": "",
+      "group": "Connection"
+    },
+    {
+      "key": "auto_discover",
+      "type": "bool",
+      "label": "Connect further DNS servers at login",
+      "default": true,
+      "group": "Connection",
+      "description": "Reads the NS records of the zones and connects the other DNS servers found (e.g. further domain controllers) with the same login. Otherwise servers are added by hand."
+    },
+    {
+      "key": "auto_scan",
+      "type": "bool",
+      "label": "Check the server after login",
+      "default": true,
+      "group": "Connection",
+      "description": "Starts the configuration check in the background after login."
+    },
+    {
+      "key": "probe_ns",
+      "type": "bool",
+      "label": "Query name servers and forwarders during the check",
+      "default": true,
+      "group": "Connection",
+      "description": "Sends DNS queries (SOA, NS) to every name server of a zone and to the forwarders to compare serials and answers."
+    },
+    {
+      "key": "auto_refresh",
+      "type": "choice",
+      "label": "Refresh automatically",
+      "default": 5,
+      "group": "Connection",
+      "options": [
+        {
+          "value": 0,
+          "label": "off"
+        },
+        {
+          "value": 1,
+          "label": "every minute"
+        },
+        {
+          "value": 2,
+          "label": "every 2 minutes"
+        },
+        {
+          "value": 5,
+          "label": "every 5 minutes"
+        },
+        {
+          "value": 10,
+          "label": "every 10 minutes"
+        },
+        {
+          "value": 15,
+          "label": "every 15 minutes"
+        },
+        {
+          "value": 30,
+          "label": "every 30 minutes"
+        }
+      ],
+      "description": "Checks at the chosen interval whether open zones were changed (SOA serial, also via the DNS console) and reloads them. Who changed it is shown from the server's audit log."
+    },
+    {
+      "key": "dhcp_server",
+      "type": "string",
+      "label": "DHCP server for the comparison",
+      "default": "",
+      "group": "DHCP",
+      "description": "Optional Microsoft DHCP server whose leases and reservations are compared with DNS. Empty = no comparison."
+    },
+    {
+      "key": "credential",
+      "type": "credential",
+      "label": "Stored credentials",
+      "description": "Used when \"Stored credentials\" is selected at login. Stored encrypted in the vault.",
+      "group": "Login"
+    }
+  ]
+}
