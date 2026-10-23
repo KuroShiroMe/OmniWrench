@@ -59,11 +59,12 @@ for line in d:
 check("alle Unterschiede erkannt (Pool, 2 Ausschlüsse, 2 Optionen, Reservierung, DNS)", len(d) == 7)
 check("Herstelleroption mit Klasse", any("001 [MSFT]" in x for x in d))
 
-svc.call = lambda cmd, args=None, prog=None: {"items": [
+EVENTS = [
     {"record": 3, "text": "Reservierung 10.1.0.21 im Bereich hinzugefügt", "user": "A", "time": "2026-10-23 11:00:00"},
     {"record": 2, "text": "Bereich 10.1.0.0 geändert", "user": "B", "time": "2026-10-23 10:59:00"},
     {"record": 1, "text": "Bereich 10.9.0.0 geändert", "user": "C", "time": "2026-10-23 10:58:00"},
-    {"record": 0, "text": "Serveroption 6 geändert", "user": "D", "time": "2026-10-23 10:57:00"}]}
+    {"record": 0, "text": "Serveroption 6 geändert", "user": "D", "time": "2026-10-23 10:57:00"}]
+svc.backend = type("B", (), {"call": staticmethod(lambda cmd, args=None, prog=None: {"items": EVENTS})})()
 check("alle Ereignisse", len(svc.change_events("x")) == 4)
 check("nur dieser Scope (Scope-ID und Adressen darin)",
       [e["record"] for e in svc.change_events("x", "10.1.0.0", "255.255.255.0")] == [3, 2])
@@ -71,11 +72,28 @@ check("nur dieser Scope (Scope-ID und Adressen darin)",
 
 def boom(cmd, args=None, prog=None):
     raise S.HostError("@RPC:events:dhcp01:5:Zugriff verweigert")
-svc.call = S.DhcpService.call.__get__(svc)
 svc.backend = type("B", (), {"call": staticmethod(boom)})()
 r1, r2 = svc.change_events("x"), svc.change_events("x")
 check("Protokoll nicht lesbar: leer, nur einmal gemeldet", r1 == [] and r2 == [] and len(logs) == 1 and svc.events_error)
 print("   ", logs[0])
+try:
+    svc.events("dhcp01", "x")
+except S.EventLogError as e:
+    check(f"EventLogError mit Code {e.code}", e.code == 5)
+
+# Lesehilfe
+sc = [("10.1.0.0", "255.255.255.0"), ("10.2.0.0", "255.255.0.0")]
+for text, want in (("Reservierung 10.1.0.21 wurde im Bereich 10.1.0.0 hinzugefügt.", ("reservation", "create", "10.1.0.0", "10.1.0.21")),
+                   ("Scope 10.2.0.0 was deleted.", ("scope", "delete", "10.2.0.0", "")),
+                   ("The option value for option 6 was modified in scope 10.1.0.0", ("option", "change", "10.1.0.0", "006")),
+                   ("Failover relationship a-b was modified", ("failover", "change", "", "")),
+                   ("Optionsdefinition 250 wurde erstellt", ("optiondef", "create", "", "250")),
+                   ("Reservation 10.2.5.7 removed", ("reservation", "delete", "10.2.0.0", "10.2.5.7"))):
+    c = E.classify({"text": text}, sc)
+    check(f"Lesehilfe: {text} -> {c}", (c["area"], c["action"], c["scope"], c["obj"]) == want)
+c = E.classify({"text": "", "fields": [("ScopeId", "10.1.0.0"), ("ReservedIP", "10.1.0.9"), ("Op", "deleted reservation")]}, sc)
+check(f"Lesehilfe aus Ereignisdaten: {c}", c["area"] == "reservation" and c["scope"] == "10.1.0.0" and c["obj"] == "10.1.0.9")
+check(f"Feldnamen: {ev['fields']}", ev["fields"][:2] == [("ScopeName", "Büro"), ("ScopeId", "10.1.0.0")] and ev["level"] == 4)
 
 print("\nALLES OK" if ok else "\nFEHLER")
 sys.exit(0 if ok else 1)

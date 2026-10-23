@@ -33,6 +33,7 @@ from . import checks as ck
 from . import dialogs as dlg
 from . import eventlog
 from .page_draft import DraftTab
+from .page_events import EventsPage
 from .page_scope import ScopeTab
 from .pages import CheckPage, DefsPage, FailoverPage, OverviewPage, ServerOptionsPage
 from .backend import ApiBackend
@@ -282,10 +283,11 @@ class MsDhcpExtended(ToolBase):
         self.fo_page = FailoverPage(self)
         self.defs_page = DefsPage(self)
         self.check_page = CheckPage(self)
+        self.events_page = EventsPage(self)
         self.fixed_docks = []
         self.area = None
         for key, w in (("overview", self.overview), ("server_options", self.srv_opts), ("failover", self.fo_page),
-                       ("defs", self.defs_page), ("check", self.check_page)):
+                       ("defs", self.defs_page), ("check", self.check_page), ("events", self.events_page)):
             d = ads.CDockWidget(self.dm, tr("page." + key))
             d.setObjectName(f"sk_{key}")
             d.setWidget(w)
@@ -295,6 +297,7 @@ class MsDhcpExtended(ToolBase):
             else:
                 self.dm.addDockWidgetTabToArea(d, self.area)
             self.fixed_docks.append(d)
+        self.fixed_docks[5].visibilityChanged.connect(lambda vis: self.events_page.on_shown() if vis else None)
         self.fixed_docks[0].setAsCurrentTab()
         self.apply_expert_mode()
         split.addWidget(host)
@@ -539,6 +542,7 @@ class MsDhcpExtended(ToolBase):
         yield Job(self.svc.disconnect, tr("status.disconnecting"))
         self.defs_page.lock()
         self.srv_opts.current = None
+        self.events_page.reset()
         self.stack.setCurrentIndex(0)
 
     def remember_server(self, server: str) -> None:
@@ -563,6 +567,7 @@ class MsDhcpExtended(ToolBase):
         self.fo_page.refresh()
         self.defs_page.refresh()
         self.srv_opts.refresh()
+        self.events_page.refresh()
         self.apply_expert_mode()
         self.apply_rights()
 
@@ -854,6 +859,7 @@ class MsDhcpExtended(ToolBase):
             events = yield Job(lambda: svc.change_events(since), quiet=True)
             self._ev_since = stamp
             new = [ev for ev in events if ev.get("record") not in self._ev_seen]
+            self.events_page.add_events(new)
             for ev in reversed(new):
                 self._ev_seen.add(ev.get("record"))
                 svc.log(tr("log.changed_by", time=(ev.get("time") or "")[:16], user=ev.get("user") or "?",

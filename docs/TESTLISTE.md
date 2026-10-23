@@ -4,7 +4,7 @@ Alle offenen Windows-Tests aus Threads, Issues und `docs/ai/backlog.md` an einer
 geordnet. Alles hier ist bisher nur unter Linux, mit Attrappen (Fake-DLL, Fake-CLI) oder im CI-Starttest geprüft.
 Erledigte Punkte abhaken; Fehler mit Screenshot oder Logdatei melden.
 
-Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.4.0,
+Tool-Versionen im Store: AD User Lookup 1.3.4, IconForge 1.1.5, MS DHCP Extended Management 1.4.1,
 NetProbe 1.2.4, Subnetzrechner 1.2.5, OmniVault 1.1.5. App-Version 0.7.0.
 
 ## 0. Vorbereitung
@@ -167,6 +167,18 @@ dhcpsapi.dll.
 - [ ] Server kurz nicht erreichbar (Netz trennen): eine Protokollzeile „Automatische Aktualisierung fehlgeschlagen“,
       keine wiederholten Fehlerfenster.
 - [ ] Einstellung „Automatisch aktualisieren“ in den Tool-Einstellungen und Auswahl oben bleiben synchron.
+
+**1.4.1: Seite „Ereignisprotokoll“**
+- [ ] Seite öffnen: lädt automatisch die letzten 24 Stunden. Konsolen-Änderungen (Option, Reservierung, Ausschluss,
+      Scope, Failover) erscheinen mit Konto; Bereich/Aktion/Scope/Objekt passen zur Meldung (sonst Meldungstext
+      und Ereignis-ID melden, damit die Lesehilfe nachgeschärft werden kann).
+- [ ] Ereignis anklicken: Details mit SID, Ereignisdaten und Hinweis; Doppelklick öffnet den Scope.
+- [ ] Zeitraum, Bereich und Suche filtern; Server auf den Partner umstellen und laden.
+- [ ] Konto ohne „Ereignisprotokollleser“: gelber Hinweis „fehlt das Leserecht“ mit Link; Link öffnet die Wiki-
+      Anleitung. Nach Aufnahme in die Gruppe (ggf. ab-/anmelden) „Laden“ → Ereignisse da.
+- [ ] Firewall-Regel „Remote-Ereignisprotokollverwaltung“ aus: Hinweis „nicht erreichbar … Firewall“.
+- [ ] Wiki-Anleitung „Ereignisprotokoll einrichten“ einmal durchspielen (Befehle korrekt?).
+- [ ] Mit Auto-Refresh: neue Konsolen-Änderung erscheint ohne „Laden“ oben in der Liste.
 
 ## 6. NetProbe (net.netprobe 1.2.3)
 
