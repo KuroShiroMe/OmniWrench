@@ -222,6 +222,15 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   `partner`) to the scope entries and stores them in scan["partner_diffs"] -> `set_scan` copies them to
   `svc.partner_diffs`, `ScopeTab.recheck` shows them with fix "replicate"; `replicate` clears a scope on success.
   Relationship/class/definition-type differences are server findings (`server_findings`).
+- Transactions (1.3.0): `svc._tx` = open `Tx` (title, undo list of (label, fn)). Every write primitive reads the old
+  state while a tx is open and records its inverse AFTER the write succeeded (`_undo_after`; failover scope lists
+  and partner-scope syncs record before, Windows may apply them partially). `svc.atomic(title, fn)` for one Job,
+  `ctl.atomic(title, gen)` (tool.py) for flows over several Jobs: on exception it yields a rollback Job
+  (`tx_fail` -> TxError with text tx.rolled_back / tx.partial), on GeneratorExit (cancel) it queues `_rollback_flow`.
+  Nested tx: success merges undo into the outer one, failure rolls back only its own steps and re-raises.
+  Wrap only the write part of a flow - reloads/after_change replication stay outside. Partner inverses: netsh
+  (`_netsh_undo`, `_undo_partner_scope` = sync_plan back to the dump snapshot or `delete scope`), fo_api (`_fo_undo`,
+  deleted relationship comes back without shared secret). Test: scripts/dhcp_api_check/test_tx.py (stateful fake).
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
 - 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
   5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;

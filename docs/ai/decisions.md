@@ -203,6 +203,10 @@
   exclusions; the range list that converted gaps into exclusions is removed completely. Scan must find every
   difference between failover servers (my scope of "all": scope fields, pool, lease, exclusions, options all
   classes, reservations, relationship settings and scope lists, classes, definition types; not leases or policies).
+- 2026-10-23 (Stef, after the 0x4EA4 incident: "nicht, dass Dinge gelöscht bleiben"): every user action in the DHCP
+  tool is a transaction - on error or cancel everything it changed (server and partner) is undone automatically.
+  Paste and draft creation are all-or-nothing (no "partially done" results). Final, not undoable, therefore always
+  the last step: lease delete, scope delete, definition delete. Multi-scope replication is atomic per scope.
 
 ## Landing page (2026-10-22)
 - kuroshiro.me = static landing page from `site/` in the OmniWrench repo, deployed via GitHub Pages (Actions,

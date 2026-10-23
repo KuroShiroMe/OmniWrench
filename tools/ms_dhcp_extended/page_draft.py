@@ -729,48 +729,50 @@ class DraftTab(QWidget):
         if not confirm(self, tr("draft.create"), tr("draft.confirm_create", lines="\n".join("• " + x for x in lines))):
             return
         name, desc, lease, active = self.f_name.text().strip(), self.f_desc.text().strip(), self.f_lease.value(), self.f_active.isChecked()
-        yield Job(lambda: svc.scope_add(ip.int2ip(merged[0][0]), ip.int2ip(merged[-1][1]), ip.int2ip(m.mask), name, desc,
-                                        lease, active), tr("status.creating", id=sid))
-        svc.log(tr("log.scope_created", id=sid, prefix=m.prefix, name=name))
-        problems: list[str] = []
         dns = (self.src or {}).get("dns") if self.source_sid and self.f_dns.isChecked() else None
 
         def details():
-            errs = []
             for g in gaps:
                 try:
                     svc.excl_add(sid, ip.int2ip(g[0]), ip.int2ip(g[1]))
                 except UserError as e:
-                    errs.append(f"{ip.fmt_range(g)}: {e}")
+                    raise UserError(f"{ip.fmt_range(g)}: {e}") from None
             for o in opts:
                 try:
                     svc.opt_set(sid, o["id"], o["values"], o["vendor"], o["user"])
                 except UserError as e:
-                    errs.append(f"{o['id']:03d}: {e}")
+                    raise UserError(f"{o['id']:03d}: {e}") from None
             if dns:
                 try:
                     svc.dns_set(sid, dns)
                 except UserError as e:
-                    errs.append(f"DNS: {e}")
-            return errs
-        problems += yield Job(details, tr("status.creating_details", id=sid))
-        if rel:
-            try:
+                    raise UserError(f"DNS: {e}") from None
+
+        def write():
+            # Anlegen als Einheit: scheitert ein Schritt (Ausschluss, Option, Failover, Replikation),
+            # wird der neue Scope samt Failover-Zuordnung wieder entfernt - es bleibt kein halber Scope zurück
+            warns: list[str] = []
+            yield Job(lambda: svc.scope_add(ip.int2ip(merged[0][0]), ip.int2ip(merged[-1][1]), ip.int2ip(m.mask), name, desc,
+                                            lease, active), tr("status.creating", id=sid))
+            yield Job(details, tr("status.creating_details", id=sid))
+            if rel:
                 if pending:
                     spec = dict(self.pending_rel, scopes=[sid])
                     w = yield Job(lambda: svc.new_relationship(spec), tr("status.fo_create", name=spec["name"]))
                 else:
                     real = next(r for r in svc.failovers if r["name"] == rel["name"])
                     w = yield Job(lambda: svc.add_fo_scopes(real, [sid]), tr("status.fo_add", id=sid, name=real["name"]))
-                problems += w or []
+                warns += w or []
                 yield Job(svc.load_failovers, tr("status.loading"))
                 if self.fo_repl.isChecked():
-                    try:
-                        yield Job(lambda: svc.replicate([sid]), tr("status.replicating", id=sid, partner=rel["partner"]))
-                    except UserError as e:
-                        problems.append(str(e))
-            except UserError as e:
-                problems.append(tr("draft.fo_failed", error=str(e)))
+                    yield Job(lambda: svc.replicate([sid]), tr("status.replicating", id=sid, partner=rel["partner"]))
+            return warns
+        try:
+            problems = yield from self.ctl.atomic(tr("tx.draft_create", id=sid), write())
+        finally:
+            if rel:
+                yield Job(svc.load_failovers, tr("status.loading"))
+        svc.log(tr("log.scope_created", id=sid, prefix=m.prefix, name=name))
         if problems:
             warn(self, tr("draft.create"), tr("draft.created_with_problems", id=sid, list=short_list(problems, 12)))
         yield from self.ctl.refresh_overview_rows()

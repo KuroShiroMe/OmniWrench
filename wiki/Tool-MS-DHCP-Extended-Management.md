@@ -285,6 +285,12 @@ Replikation); **Leeren** löscht die Anzeige.
   `netsh`), für „Aus AD laden“ zum Active Directory.
 - Das Tool **ändert die DHCP-Konfiguration** – jede schreibende Aktion wird angezeigt, kritische Aktionen
   (Löschen, Definitionen) brauchen eine ausdrückliche Bestätigung.
+- **Alles oder nichts:** Jede Aktion (Speichern, Entfernen, Einfügen, neuer Scope, Failover, Replikation eines
+  Scopes, Server-Optionen, Definitionen) läuft als Transaktion. Vor jeder Änderung merkt sich das Tool den bisherigen
+  Stand. Schlägt ein Schritt fehl oder wird die Aktion abgebrochen, nimmt es alle bereits gemachten Änderungen
+  rückwärts zurück – auf dem Server und beim Partner. Die Meldung sagt, ob der vorherige Stand vollständig
+  wiederhergestellt ist; Schritte, die beim Zurücknehmen scheitern, werden einzeln genannt und im Protokoll mit
+  „↶“ bzw. „✗“ aufgeführt.
 - Abweichende Anmeldedaten gelten nur für die Sitzung und nur für die Serververbindungen; Passwörter werden nicht
   auf der Kommandozeile übergeben.
 - Gespeichert werden nur die Einstellungen, die Spaltenanordnung und, falls gewünscht, die Zugangsdaten im Tresor.
@@ -294,6 +300,10 @@ Replikation); **Leeren** löscht die Anzeige.
 - Richtlinien (Policies), Filter und Superscopes werden geprüft, aber nicht bearbeitet.
 - Server-Optionen werden nur auf Knopfdruck auf Partner übertragen.
 - Nur unter Windows (DHCP-API und RSAT).
+- Nicht zurücknehmbar und deshalb immer der letzte Schritt einer Aktion: gelöschte Leases, ein gelöschter Scope
+  (mit seinen Leases) und gelöschte Definitionen. Eine zurückgenommene gelöschte Failover-Beziehung wird ohne
+  gemeinsamen Schlüssel neu angelegt (Windows gibt ihn nicht heraus) – ggf. neu setzen.
+- Mehrere Scopes replizieren: jeder Scope ist für sich eine Transaktion; bereits fertige Scopes bleiben repliziert.
 
 ## Fehlerbehebung
 
@@ -307,13 +317,15 @@ Replikation); **Leeren** löscht die Anzeige.
 | Seite „Definitionen“ fehlt | Expertenmodus in den Einstellungen einschalten |
 | Bearbeiten-Knöpfe fehlen | Konto hat nur Lesezugriff |
 | „Der Adressbereich eines Failover-Scopes kann nicht gelöscht werden“ (0x4EA4) | trat bis 1.2.2 beim Ändern des Pools eines Failover-Scopes auf; ab 1.3.0 wird der Pool direkt angepasst |
+| „… Alle n bereits durchgeführten Änderungen wurden zurückgenommen“ | die Aktion ist an der genannten Ursache gescheitert, der vorherige Stand ist wiederhergestellt; Ursache beheben und erneut ausführen |
+| „Beim Zurücknehmen sind n Schritte fehlgeschlagen“ | die genannten Schritte in der DHCP-Konsole prüfen bzw. von Hand nachziehen; Details im Protokoll |
 | „Eine Richtlinie im Scope nutzt einen Adressbereich außerhalb des neuen Bereichs“ (0x4E90) | zuerst den Bereich der Richtlinie (Policy) in der DHCP-Konsole anpassen, dann den Pool |
 
 ## Versionen
 
 | Version | Änderungen |
 |---|---|
-| 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes |
+| 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes; jede Aktion läuft als Transaktion und wird bei einem Fehler oder Abbruch vollständig zurückgenommen (auch beim Partner), Einfügen und Entwurf sind „alles oder nichts“ |
 | 1.2.1 | Bereich und Tags neu |
 | 1.2.0 | Prüfung mit Spalte „Höchster Befund“, Failover-Beziehungen aufklappbar mit beiden Servern, Server-Optionen je Server; Alpha-Kennzeichnung entfernt |
 | 1.1.0 | Spalten verschiebbar, Failover-Ansicht je Server, Prüfseite mit Verteilung, Server-Optionen mit Abgleich, Definitionen im Expertenmodus, Erkennung von Nur-Lese-Zugriff |

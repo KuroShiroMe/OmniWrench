@@ -597,23 +597,15 @@ class ScopeTab(QWidget):
             ch["StartRange"] = ip.int2ip(p[0])
             ch["EndRange"] = ip.int2ip(p[1])
 
-            def work():
-                done = []
-                try:
-                    for x in drop:
-                        svc.excl_remove(sid, x["start"], x["end"])
-                        done.append(x)
-                    svc.scope_set(sid, **ch)
-                except UserError:
-                    for x in done:      # Pool unverändert - entfernte Ausschlüsse wiederherstellen
-                        try:
-                            svc.excl_add(sid, x["start"], x["end"])
-                        except UserError as e:
-                            svc.log(tr("log.excl_restore_failed", range=f"{x['start']} - {x['end']}", error=str(e)), True)
-                    raise
-            yield Job(work, tr("status.saving"))
         else:
-            yield Job(lambda: svc.scope_set(sid, **ch), tr("status.saving"))
+            drop = []
+
+        def work():
+            # Transaktion: schlägt ein Schritt fehl, kommen entfernte Ausschlüsse und alte Werte zurück
+            for x in drop:
+                svc.excl_remove(sid, x["start"], x["end"])
+            svc.scope_set(sid, **ch)
+        yield Job(lambda: svc.atomic(tr("tx.scope_save", id=sid), work), tr("status.saving"))
         svc.log(tr("log.scope_saved", id=sid, fields=", ".join(ch)))
         yield from self.load_flow(leases=False)
         self.set_data(self.data, keep_edits=False)
@@ -645,14 +637,20 @@ class ScopeTab(QWidget):
         res = dlg.option_dialog(self, tr, self.ctl.checker(), svc.defs, row, model, vendors, users)
         if not res:
             return
-        if res["undefined"]:
-            if not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
-                return
-            ok = yield from self.ctl.new_definition_flow({"id": res["id"], "vendor": res["vendor"],
-                                                          "type": dlg.guess_type(res["values"])})
-            if not ok:
-                return
-        yield Job(lambda: svc.opt_set(self.sid, res["id"], res["values"], res["vendor"], res["user"]), tr("status.saving"))
+        if res["undefined"] and not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
+            return
+
+        def write():
+            # neue Definition und Option gehören zusammen: scheitert die Option, verschwindet auch die Definition
+            if res["undefined"]:
+                ok = yield from self.ctl.new_definition_flow({"id": res["id"], "vendor": res["vendor"],
+                                                              "type": dlg.guess_type(res["values"])})
+                if not ok:
+                    return False
+            yield Job(lambda: svc.opt_set(self.sid, res["id"], res["values"], res["vendor"], res["user"]), tr("status.saving"))
+            return True
+        if not (yield from self.ctl.atomic(tr("tx.opt_set", tag=f"{res['id']:03d}", id=self.sid), write())):
+            return
         svc.log(tr("log.opt_set", tag=f"{res['id']:03d}", id=self.sid, values=", ".join(res["values"])))
         yield from self._after_detail_change()
 
@@ -660,8 +658,12 @@ class ScopeTab(QWidget):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("opt.remove"), tr("opt.confirm_remove", list=short_list([f"{r['id']:03d} {r['name']}" for r in rows]))):
             return
+
+        def write():
+            for r in rows:
+                yield Job(lambda r=r: svc.opt_remove(self.sid, r["id"], r["vendor"], r["user"]), tr("status.saving"))
+        yield from self.ctl.atomic(tr("tx.opt_remove", id=self.sid), write())
         for r in rows:
-            yield Job(lambda r=r: svc.opt_remove(self.sid, r["id"], r["vendor"], r["user"]), tr("status.saving"))
             svc.log(tr("log.opt_removed", tag=f"{r['id']:03d}", id=self.sid))
         yield from self._after_detail_change()
 
@@ -691,7 +693,7 @@ class ScopeTab(QWidget):
         if not r:
             return
         if row:
-            yield Job(lambda: svc.res_set(r), tr("status.saving"))
+            yield Job(lambda: svc.atomic(tr("tx.res_set", ip=r["ip"]), lambda: svc.res_set(r, self.sid)), tr("status.saving"))
         else:
             if any(x["ip"] == r["ip"] for x in self.data["reservations"]):
                 warn(self, tr("res.title_add"), tr("res.err_exists", ip=r["ip"]))
@@ -704,8 +706,12 @@ class ScopeTab(QWidget):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("res.remove"), tr("res.confirm_remove", list=short_list([f"{r['ip']}  {r['name']}" for r in rows]))):
             return
+
+        def write():
+            for r in rows:
+                yield Job(lambda r=r: svc.res_remove(self.sid, r["ip"]), tr("status.saving"))
+        yield from self.ctl.atomic(tr("tx.res_remove", id=self.sid), write())
         for r in rows:
-            yield Job(lambda r=r: svc.res_remove(self.sid, r["ip"]), tr("status.saving"))
             svc.log(tr("log.res_removed", ip=r["ip"], id=self.sid))
         yield from self._after_detail_change()
 
@@ -741,8 +747,12 @@ class ScopeTab(QWidget):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("excl.remove"), tr("excl.confirm_remove", list=short_list([excl_key(r) for r in rows]))):
             return
+
+        def write():
+            for r in rows:
+                yield Job(lambda r=r: svc.excl_remove(self.sid, r["start"], r["end"]), tr("status.saving"))
+        yield from self.ctl.atomic(tr("tx.excl_remove", id=self.sid), write())
         for r in rows:
-            yield Job(lambda r=r: svc.excl_remove(self.sid, r["start"], r["end"]), tr("status.saving"))
             svc.log(tr("log.excl_removed", range=excl_key(r), id=self.sid))
         yield from self.load_flow(leases=False)
         self.set_data(self.data, keep_edits=False)
@@ -810,7 +820,7 @@ class ScopeTab(QWidget):
                 def _conv(values):
                     return ip.convert_values(values, sn, sm, self.model.net, self.model.mask)
                 conv = _conv
-        errors, skipped, done = [], [], 0
+        skipped, steps = [], []      # steps: (Bezeichnung, Funktion) - alles oder nichts
         if kind == "Options":
             have = {(o["id"], o.get("vendor") or "", o.get("user") or "") for o in self.data["options"]}
             over = [it for it in items if (int(it["id"]), it.get("vendor") or "", it.get("user") or "") in have]
@@ -818,12 +828,8 @@ class ScopeTab(QWidget):
                 return
             for it in items:
                 vals = conv(it["values"]) if conv else list(it["values"])
-                try:
-                    yield Job(lambda it=it, vals=vals: svc.opt_set(sid, int(it["id"]), vals, it.get("vendor") or "",
-                                                                   it.get("user") or ""), tr("status.saving"))
-                    done += 1
-                except UserError as e:
-                    errors.append(f"{int(it['id']):03d}: {e}")
+                steps.append((f"{int(it['id']):03d}", lambda it=it, vals=vals: svc.opt_set(
+                    sid, int(it["id"]), vals, it.get("vendor") or "", it.get("user") or "")))
         elif kind == "Reservations":
             have = {r["ip"] for r in self.data["reservations"]}
             todo = []
@@ -837,32 +843,28 @@ class ScopeTab(QWidget):
             if over and not confirm(self, tr("ui.paste"), tr("clip.overwrite_res", list=short_list(over))):
                 return
             for t in todo:
-                try:
-                    if t["ip"] in have:
-                        yield Job(lambda t=t: svc.res_remove(sid, t["ip"]), tr("status.saving"))
-                    yield Job(lambda t=t: svc.res_add(sid, t), tr("status.saving"))
-                    done += 1
-                except UserError as e:
-                    errors.append(f"{t['ip']}: {e}")
+                if t["ip"] in have:     # überschreiben = entfernen + neu anlegen (wird bei Fehler zurückgenommen)
+                    steps.append((t["ip"], lambda t=t: svc.res_remove(sid, t["ip"])))
+                steps.append((t["ip"], lambda t=t: svc.res_add(sid, t)))
         elif kind == "Exclusions":
             for it in items:
                 s, e = (conv([it["start"], it["end"]]) if conv else [it["start"], it["end"]])
                 if not (ip.is_ipv4(s) and ip.is_ipv4(e)) or not (self.model.contains(ip.ip2int(s)) and self.model.contains(ip.ip2int(e))):
                     skipped.append(f"{s}-{e}")
                     continue
+                steps.append((f"{s}-{e}", lambda s=s, e=e: svc.excl_add(sid, s, e)))
+
+        def write():
+            for label, fn in steps:
                 try:
-                    yield Job(lambda s=s, e=e: svc.excl_add(sid, s, e), tr("status.saving"))
-                    done += 1
+                    yield Job(fn, tr("status.saving"))
                 except UserError as ex:
-                    errors.append(f"{s}-{e}: {ex}")
+                    raise UserError(f"{label}: {ex}") from None
+        yield from self.ctl.atomic(tr("tx.paste", kind=tr("clip.kind." + kind), id=sid), write())
+        done = len({label for label, _fn in steps})
         svc.log(tr("log.pasted", n=done, kind=tr("clip.kind." + kind), id=sid))
-        if skipped or errors:
-            msg = tr("clip.result", n=done)
-            if skipped:
-                msg += "\n\n" + tr("clip.skipped", list=short_list(skipped, 10))
-            if errors:
-                msg += "\n\n" + tr("clip.errors", list=short_list(errors, 10))
-            warn(self, tr("ui.paste"), msg)
+        if skipped:
+            warn(self, tr("ui.paste"), tr("clip.result", n=done) + "\n\n" + tr("clip.skipped", list=short_list(skipped, 10)))
         if done:
             if kind == "Exclusions":
                 yield from self.load_flow(leases=False)

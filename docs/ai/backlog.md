@@ -12,7 +12,8 @@ that are not plain test steps.
 - [ ] MS DHCP Extended Management (net.ms-dhcp-extended 1.3.0, Alpha removed 2026-10-22): backend (DHCP API via
       ctypes) only tested with a fake DLL. THREADS=8 may need tuning. Old net.scopekeeper installs must be removed by
       hand. Later ideas: replication via API instead of netsh (would drop RSAT), IPv6 scopes, policies/filters editing.
-- [ ] DHCP 1.3.0 (2026-10-23): pool change on failover scopes + partner comparison untested on Windows (TESTLISTE 5).
+- [ ] DHCP 1.3.0 (2026-10-23): pool change on failover scopes, partner comparison and automatic rollback
+      (transactions) untested on Windows (TESTLISTE 5).
       Ideas: compare DNS settings (option 81) and policies with the partner; "take value from partner" fix for
       single differences (replication always pushes this server's state).
 - [ ] PowerShell -> Python inventory (2026-10-20, Stef wants PowerShell only where unavoidable): core/prerequisites

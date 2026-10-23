@@ -332,6 +332,29 @@ class MsDhcpExtended(ToolBase):
             return True
         return self.runner.start(gen, self._next)
 
+    def atomic(self, title: str, flow):
+        """Führt einen Ablauf (Generator mit Jobs) als Transaktion aus: Tritt ein Fehler auf, werden alle
+        Änderungen, die der Ablauf bis dahin am Server und am Partner gemacht hat, zurückgenommen."""
+        svc = self.svc
+        tx, outer = svc.tx_begin(title)
+        try:
+            result = yield from flow
+        except GeneratorExit:
+            svc._tx = outer
+            if tx.undo:     # abgebrochen: Rücknahme als eigener Ablauf nachholen
+                self.queue.insert(0, self._rollback_flow(tx))
+            raise
+        except Exception as e:  # noqa: BLE001 - jeder Fehler löst die Rücknahme aus
+            svc._tx = None
+            err = yield Job(lambda exc=e: svc.tx_fail(exc, tx, outer), self.tr("status.rollback"))
+            raise err from None
+        svc.tx_commit(tx, outer)
+        return result
+
+    def _rollback_flow(self, tx):
+        fails = yield Job(lambda: self.svc.tx_rollback(tx), self.tr("status.rollback"))
+        warn(self.root, self.tr("tx.title"), self.svc.tx_message_cancel(tx, fails))
+
     def _next(self) -> None:
         if self.queue and not self.runner.active:
             self.runner.start(self.queue.pop(0), self._next)
@@ -640,8 +663,12 @@ class MsDhcpExtended(ToolBase):
         if not confirm(self.root, tr("ov.activate" if active else "ov.deactivate"),
                        tr("ov.confirm_state", state=tr("state." + state), list=short_list(ids))):
             return
+
+        def write():    # alle oder keiner
+            for sid in ids:
+                yield Job(lambda sid=sid: svc.scope_set(sid, State=state), tr("status.saving"))
+        yield from self.atomic(tr("tx.scope_state", state=tr("state." + state)), write())
         for sid in ids:
-            yield Job(lambda sid=sid: svc.scope_set(sid, State=state), tr("status.saving"))
             svc.log(tr("log.scope_state", id=sid, state=tr("state." + state)))
             tab = self.scope_tab(sid)
             yield from self.after_change(sid, tab)
@@ -661,11 +688,14 @@ class MsDhcpExtended(ToolBase):
         errs = []
         for sid in ids:
             rel = svc.scope_fo.get(sid)
-            try:
+
+            def write(sid=sid, rel=rel):
+                # je Scope eine Transaktion: scheitert das Löschen, kommt er zurück in die Beziehung und zum Partner
                 if rel:
-                    errs += (yield Job(lambda rel=rel, sid=sid: svc.remove_fo_scopes(rel, [sid]), tr("status.fo_remove", id=sid)))
-                    yield Job(svc.load_failovers, tr("status.loading"))
-                yield Job(lambda sid=sid: svc.scope_remove(sid), tr("status.removing", id=sid))
+                    yield Job(lambda: svc.remove_fo_scopes(rel, [sid]), tr("status.fo_remove", id=sid))
+                yield Job(lambda: svc.scope_remove(sid), tr("status.removing", id=sid))
+            try:
+                yield from self.atomic(tr("tx.scope_remove", id=sid), write())
                 svc.log(tr("log.scope_removed", id=sid))
                 tab = self.scope_tab(sid)
                 if tab is not None:
@@ -830,21 +860,20 @@ class MsDhcpExtended(ToolBase):
         if svc.opt_def(d["id"], d["vendor"]):
             warn(self.root, tr("def.new"), tr("def.err_exists", tag=f"{d['id']:03d}"))
             return False
-        yield Job(lambda: svc.def_add(d), tr("status.saving"))
-        svc.log(tr("log.def_created", tag=f"{d['id']:03d}", name=d["name"]))
-        yield Job(svc.load_defs, tr("status.loading"))
-        if d.get("partner"):
-            errs = []
 
-            def work():
-                for pn in svc.partners():
-                    try:
-                        svc.copy_def_to_partner(d, pn)
-                    except UserError as e:
-                        errs.append(tr("err.def_partner", tag=f"{d['id']:03d}", partner=pn, error=str(e)))
-            yield Job(work, tr("status.to_partner"))
-            if errs:
-                warn(self.root, tr("def.new"), short_list(errs, 8))
+        def work():
+            # Definition lokal und beim Partner - scheitert der Partner, wird auch die lokale wieder entfernt
+            svc.def_add(d)
+            for pn in (svc.partners() if d.get("partner") else []):
+                try:
+                    svc.copy_def_to_partner(d, pn)
+                except UserError as e:
+                    raise UserError(tr("err.def_partner", tag=f"{d['id']:03d}", partner=pn, error=str(e))) from None
+        try:
+            yield Job(lambda: svc.atomic(tr("tx.def_add", tag=f"{d['id']:03d}"), work), tr("status.saving"))
+        finally:
+            yield Job(svc.load_defs, tr("status.loading"))
+        svc.log(tr("log.def_created", tag=f"{d['id']:03d}", name=d["name"]))
         self.defs_page.refresh()
         return True
 

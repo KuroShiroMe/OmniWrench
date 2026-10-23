@@ -428,3 +428,9 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   `svc.partner_diffs`, set by `set_scan`, cleared on successful replication).
 - Tested: fake DLL (S1 = failover scope, rejects range removal with 20132, enforces containment), pure checker tests,
   offscreen renders of scope tab and draft. Windows tests in TESTLISTE section 5.
+- Stef: "Warte was? Gelöscht?!" - audit of all delete paths (pool save removed exclusions, reservation change via
+  remove+add, paste overwrite, scope delete incl. failover/partner, fo remove/delete/role swap, replication deletes on
+  the partner, server option removal on partners, partial draft creation). Built the transaction journal (see
+  architecture "Transactions"): all UI write flows wrapped, manual rollbacks in failover code replaced, paste/draft/
+  partner copies now raise instead of collecting errors. Tested with test_tx.py (rollback, nested, partial, UI flow,
+  cancel) + test_api.py. Windows tests added to TESTLISTE 5 ("Automatische Rücknahme").

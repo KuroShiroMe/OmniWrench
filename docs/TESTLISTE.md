@@ -134,6 +134,22 @@ dhcpsapi.dll.
       Einstellungen nicht gemeldet; Klassen nur bei echten Unterschieden.
 - [ ] Neuer Scope und Duplikat: Pool-Felder, „Ganzes Netz“, beim Duplikat werden die Ausschlüsse der Quelle angelegt.
 
+**1.3.0: Automatische Rücknahme bei Fehlern** (Transaktionen, nur mit Fake-Server getestet – bitte an einem Test-Scope)
+- [ ] Pool verkleinern, sodass ein Ausschluss wegfällt, und einen Fehler provozieren (z. B. Richtlinie mit IP-Bereich
+      im Scope): Meldung „… Alle 1 bereits durchgeführten Änderungen wurden zurückgenommen“, der Ausschluss ist
+      wieder da. Protokoll zeigt „Fehler bei „Scope … speichern“ – nehme 1 Änderungen zurück“ und „↶ …“.
+- [ ] Reservierungen einfügen mit „Überschreiben“, eine davon ungültig (z. B. IP schon als Reservierung in anderem
+      Scope): keine Reservierung geändert, die überschriebenen sind unverändert da.
+- [ ] Mehrere Optionen entfernen, während der Server kurz nicht erreichbar ist (oder Nur-Lese-Konto): alle Optionen
+      bleiben bzw. kommen zurück.
+- [ ] Neuer Scope mit Failover und Replikation, Partner absichtlich nicht erreichbar: Scope wird wieder entfernt,
+      lokal und beim Partner bleibt nichts übrig.
+- [ ] Failover-Scope löschen, Fehler beim Löschen (z. B. Scope während des Löschens in der Konsole geöffnet/gesperrt):
+      Scope ist wieder in der Beziehung und auf dem Partner vorhanden.
+- [ ] Während einer langen Aktion „Abbrechen“: Hinweis „Die Aktion wurde abgebrochen …“, Stand wie vorher.
+- [ ] Rücknahme nach gelöschter Failover-Beziehung: Beziehung ist wieder da; gemeinsamen Schlüssel prüfen bzw. neu
+      setzen (lässt sich nicht wiederherstellen).
+
 ## 6. NetProbe (net.netprobe 1.2.3)
 
 - [ ] Ping über IcmpSendEcho (Aufwärmen, 2 s Timeout): kein Paketverlust, wo CMD-Ping keinen hat.
