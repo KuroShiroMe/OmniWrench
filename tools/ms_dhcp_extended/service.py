@@ -735,7 +735,7 @@ class DhcpService:
         """Konfigurationsänderungen laut Ereignisprotokoll des Servers seit since_utc (neueste zuerst), optional nur
         die, die den Scope bzw. eine Adresse darin nennen. Ist das Protokoll nicht lesbar: [] (einmal gemeldet)."""
         try:
-            items = list((self.call("events", {"server": self.server, "since": since_utc}) or {}).get("items") or [])
+            items = self.events(self.server, since_utc)
         except UserError as e:
             if not self.events_error:
                 self.events_error = str(e)
@@ -743,6 +743,16 @@ class DhcpService:
             return []
         self.events_error = ""
         return [ev for ev in items if self.change_events_match(ev, sid, mask)] if sid else items
+
+    def events(self, server: str | None, since_utc: str, max_n: int = 200) -> list[dict]:
+        """Ereignisse des DHCP-Ereignisprotokolls (neueste zuerst); EventLogError mit Windows-Fehlercode."""
+        server = server or self.server
+        try:
+            data = self.backend.call("events", {"server": server, "since": since_utc, "max": int(max_n)})
+        except HostError as e:
+            m = re.match(r"^@RPC:\w+:[^:]*:(\d+):", str(e))
+            raise EventLogError(self.host_text(str(e)), int(m.group(1)) if m else 0) from None
+        return list((data or {}).get("items") or [])
 
     @staticmethod
     def change_events_match(ev: dict, sid: str, mask: str | None) -> bool:
@@ -1891,6 +1901,14 @@ class ReplicationError(UserError):
     def __init__(self, text: str, ok: list[str]):
         super().__init__(text)
         self.ok = ok
+
+
+class EventLogError(UserError):
+    """Ereignisprotokoll nicht lesbar; code = Windows-Fehler (5 = Zugriff verweigert, 1722/1753 = nicht erreichbar)."""
+
+    def __init__(self, text: str, code: int = 0):
+        super().__init__(text)
+        self.code = code
 
 
 class TxError(ReplicationError):

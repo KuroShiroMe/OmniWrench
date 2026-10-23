@@ -36,6 +36,8 @@
   - [Zwischenablage](#zwischenablage)
   - [Nur-Lese-Zugriff](#nur-lese-zugriff)
   - [Änderungen anderer erkennen](#änderungen-anderer-erkennen)
+  - [Ereignisprotokoll](#ereignisprotokoll)
+  - [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten)
   - [Protokoll](#protokoll)
 - [Einstellungen](#einstellungen)
 - [Sicherheit und Datenschutz](#sicherheit-und-datenschutz)
@@ -60,9 +62,10 @@
 - Auf dem DHCP-Server: Mitgliedschaft in **DHCP Administrators** zum Ändern oder **DHCP Users** zum Lesen.
 - Netzwerk: RPC zum DHCP-Server (TCP 135 und dynamische RPC-Ports), wie für die DHCP-Konsole.
 - „Aus AD laden“ liest die autorisierten DHCP-Server aus dem Active Directory.
-- Optional, für die Anzeige „wer hat geändert“: Leserecht auf das Ereignisprotokoll des DHCP-Servers (Mitglied
-  in **Ereignisprotokollleser**/*Event Log Readers* oder Administrator) und die Firewall-Regelgruppe
-  **Remote-Ereignisprotokollverwaltung** auf dem Server. Ohne das funktioniert alles andere weiter.
+- Optional, für die Seite „Ereignisprotokoll“ und die Anzeige „wer hat geändert“: Leserecht auf das
+  Ereignisprotokoll des DHCP-Servers (Mitglied in **Ereignisprotokollleser**/*Event Log Readers* oder
+  Administrator) und die Firewall-Regelgruppe **Remote-Ereignisprotokollverwaltung** auf dem Server – siehe
+  [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten). Ohne das funktioniert alles andere weiter.
 
 Nur unter Windows verfügbar.
 
@@ -95,7 +98,7 @@ Ist ein **Failover-Partner** mit den Anmeldedaten nicht erreichbar, fragt das To
 
 ### Aufbau des Hauptfensters
 Das Hauptfenster hat ein eigenes Dock-System: feste Seiten **Übersicht**, **Server-Optionen**, **Failover**,
-**Prüfung** (und **Definitionen** im Expertenmodus) sowie ein schließbarer Tab je geöffnetem Scope oder Entwurf.
+**Prüfung**, **Ereignisprotokoll** (und **Definitionen** im Expertenmodus) sowie ein schließbarer Tab je geöffnetem Scope oder Entwurf.
 Alle lassen sich nebeneinander anordnen oder ausklinken.
 
 Oben rechts: Schalter **Auto-Replikation**, **Protokoll**, **Hilfe**, **Abmelden**. Lang laufende Aktionen
@@ -285,6 +288,68 @@ werden alle Bearbeitungsfunktionen ausgeblendet und Felder schreibgeschützt.
   Ereignisprotokoll (*Anwendungs- und Dienstprotokolle › Microsoft › Windows › DHCP-Server ›
   Betriebsbereit*). Das Tool liest es mit denselben Anmeldedaten und schreibt neue Einträge ins Protokoll
   („Änderung am Server (Zeit, Benutzer): …“). Ist das Ereignisprotokoll nicht lesbar, steht das einmal im Protokoll.
+  Alle Einträge zeigt die Seite [Ereignisprotokoll](#ereignisprotokoll).
+
+### Ereignisprotokoll
+Die Seite **Ereignisprotokoll** zeigt die Konfigurationsänderungen am DHCP-Server – wer hat wann was geändert.
+Sie lädt beim ersten Öffnen die letzten 24 Stunden.
+
+- Oben: **Server** (verbundener Server oder Failover-Partner), **Zeitraum** (letzte Stunde, 24 Stunden, 7 Tage,
+  30 Tage), **Bereich** und Suche; **Laden** liest neu. Neue Einträge des verbundenen Servers kommen mit der
+  automatischen Aktualisierung von selbst dazu.
+- Spalten mit Lesehilfe: **Zeit**, **Konto**, **Bereich** (Scope, Option, Optionsdefinition, Reservierung,
+  Ausschluss, Failover, Richtlinie, Filter, Klasse, Bereichsgruppe, Server), **Aktion** (angelegt, geändert,
+  gelöscht), **Scope** mit Name, **Objekt** (z. B. Adresse oder „006 DNS-Server“), **Ereignis-ID** und die
+  Originalmeldung. Bereich, Aktion, Scope und Objekt leitet das Tool aus Meldung und Ereignisdaten ab; passt
+  etwas nicht, gilt die Originalmeldung.
+- Unten die Details des gewählten Ereignisses: Konto mit SID, Ereignis-ID, Stufe, alle Ereignisdaten und ein
+  **Hinweis**, was die Änderung bedeutet und worauf zu achten ist (z. B. bei Failover-Scopes den Partner prüfen).
+- Doppelklick bzw. **Scope öffnen** öffnet den betroffenen Scope.
+- Kann das Protokoll nicht gelesen werden, erscheint oben ein Hinweis mit dem Grund (Recht fehlt, Server nicht
+  erreichbar, Protokoll deaktiviert) und einem Link auf die Anleitung unten.
+
+### Ereignisprotokoll einrichten
+Für die Seite „Ereignisprotokoll“ und die Anzeige „wer hat geändert“ braucht das Konto, mit dem sich das Tool
+anmeldet, Lesezugriff auf das Ereignisprotokoll des DHCP-Servers (und der Partner, wenn sie dort angezeigt
+werden sollen). Alles andere im Tool funktioniert auch ohne.
+
+**1. Leserecht geben** – das Konto (besser: eine Gruppe wie „DHCP-Admins“) in die Gruppe
+**Ereignisprotokollleser** (*Event Log Readers*) aufnehmen:
+- DHCP-Server ist Mitgliedsserver: lokale Gruppe auf dem Server, z. B. per *Computerverwaltung › Lokale
+  Benutzer und Gruppen* oder in PowerShell auf dem Server:
+  ```powershell
+  Add-LocalGroupMember -SID S-1-5-32-573 -Member "DOMÄNE\DHCP-Admins"   # S-1-5-32-573 = Ereignisprotokollleser
+  ```
+- DHCP-Server ist Domänencontroller: die Gruppe „Ereignisprotokollleser“ im Container *Builtin* der Domäne
+  (gilt für alle DCs).
+- Für viele Server per Gruppenrichtlinie: *Computerkonfiguration › Einstellungen › Systemsteuerungseinstellungen ›
+  Lokale Benutzer und Gruppen* → Gruppe „Ereignisprotokollleser (integriert)“ aktualisieren, Mitglied hinzufügen.
+- Mitglieder von „Administratoren“ dürfen ohnehin lesen. „DHCP-Administratoren“ allein reicht **nicht**.
+- Nach der Aufnahme in eine Domänengruppe am Arbeitsplatz einmal ab- und wieder anmelden (oder `klist purge`),
+  damit das neue Gruppenmitglied im Anmeldeticket steht.
+
+**2. Firewall öffnen** – auf dem DHCP-Server die vordefinierte Regelgruppe **Remote-Ereignisprotokollverwaltung**
+(*Remote Event Log Management*) für eingehende Verbindungen aktivieren:
+```powershell
+Get-NetFirewallRule -Name "RemoteEventLogSvc*" | Enable-NetFirewallRule   # Regelnamen sind sprachunabhängig
+```
+Per Gruppenrichtlinie: *Computerkonfiguration › Richtlinien › Windows-Einstellungen › Sicherheitseinstellungen ›
+Windows Defender Firewall mit erweiterter Sicherheit › Eingehende Regeln › Neue Regel › Vordefiniert ›
+Remote-Ereignisprotokollverwaltung*.
+
+**3. Protokoll prüfen** – das Protokoll „Betriebsbereit“ ist normalerweise aktiv. Prüfen bzw. einschalten auf dem
+Server:
+```powershell
+wevtutil gl "Microsoft-Windows-Dhcp-Server/Operational"            # enabled: true?
+wevtutil sl "Microsoft-Windows-Dhcp-Server/Operational" /e:true    # einschalten
+```
+
+**4. Testen** – vom Arbeitsplatz mit dem Konto des Tools:
+```powershell
+Get-WinEvent -ComputerName rz-dhcp01 -LogName "Microsoft-Windows-Dhcp-Server/Operational" -MaxEvents 5
+```
+Klappt das, im Tool auf der Seite „Ereignisprotokoll“ **Laden** drücken. Fehler 5 (Zugriff verweigert) → Schritt 1,
+„RPC-Server nicht verfügbar“ → Schritt 2.
 
 ### Protokoll
 **Protokoll** zeigt alle ausgeführten Aktionen und Befehle der Sitzung (z. B. die `netsh`-Befehle der
@@ -341,7 +406,7 @@ Replikation); **Leeren** löscht die Anzeige.
 | „Der Adressbereich eines Failover-Scopes kann nicht gelöscht werden“ (0x4EA4) | trat bis 1.2.2 beim Ändern des Pools eines Failover-Scopes auf; ab 1.3.0 wird der Pool direkt angepasst |
 | „… Alle n bereits durchgeführten Änderungen wurden zurückgenommen“ | die Aktion ist an der genannten Ursache gescheitert, der vorherige Stand ist wiederhergestellt; Ursache beheben und erneut ausführen |
 | „Auf dem Server geändert“ beim Speichern | jemand anderes hat den Scope seit dem Laden geändert; „Neu laden (Eingaben behalten)“, prüfen, erneut speichern |
-| „Ereignisprotokoll des Servers nicht lesbar“ im Protokoll | Konto in „Ereignisprotokollleser“ aufnehmen und Firewall-Regel „Remote-Ereignisprotokollverwaltung“ auf dem Server freigeben; betrifft nur die Anzeige „wer“ |
+| „Ereignisprotokoll des Servers nicht lesbar“ im Protokoll bzw. Hinweis auf der Seite „Ereignisprotokoll“ | siehe [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten); betrifft nur die Seite und die Anzeige „wer“ |
 | „Beim Zurücknehmen sind n Schritte fehlgeschlagen“ | die genannten Schritte in der DHCP-Konsole prüfen bzw. von Hand nachziehen; Details im Protokoll |
 | „Eine Richtlinie im Scope nutzt einen Adressbereich außerhalb des neuen Bereichs“ (0x4E90) | zuerst den Bereich der Richtlinie (Policy) in der DHCP-Konsole anpassen, dann den Pool |
 
@@ -349,6 +414,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
+| 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.0 | Änderungen anderer erkennen: Prüfung vor jedem Speichern (Scope und Server-Optionen) mit Liste der Unterschiede, automatisches Aktualisieren mit einstellbarem Abstand und Hinweisbalken, „wer hat geändert“ aus dem Ereignisprotokoll des DHCP-Servers |
 | 1.3.0 | Adresspool wie in der DHCP-Konsole (Start/Ende + Ausschlüsse statt Bereichsliste); Pool von Failover-Scopes änderbar (Fehler 0x4EA4 behoben, Pool wird direkt angepasst, Ausschlüsse bleiben bei Fehlern erhalten); Prüfung gleicht alles mit dem Failover-Partner ab (Scopes, Ausschlüsse, Optionen, Reservierungen, Beziehung, Klassen, Definitionen); verständliche Texte für weitere DHCP-Fehlercodes; jede Aktion läuft als Transaktion und wird bei einem Fehler oder Abbruch vollständig zurückgenommen (auch beim Partner), Einfügen und Entwurf sind „alles oder nichts“ |
 | 1.2.1 | Bereich und Tags neu |

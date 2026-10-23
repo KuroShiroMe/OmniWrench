@@ -240,6 +240,11 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   the connection's credentials, channel Microsoft-Windows-Dhcp-Server/Operational, EvtFormatMessage, SID ->
   LookupAccountSid on the server), backend cmd `events`, `svc.change_events(since, sid, mask)` filters by IPs in
   the message text; unreadable log -> [] and one log line (`events_error`). Tests: test_conflict.py.
+- Event log page (1.4.1, `page_events.py`, fixed dock index 5, loads on first show via visibilityChanged):
+  `svc.events(server, since, max)` raises `EventLogError(code)` (5 access, 1722/1753 RPC, 15007 channel) ->
+  warning box with wiki link `#ereignisprotokoll-einrichten`. `eventlog.classify(ev, scopes)` = reading aid
+  (area/action keywords de+en, scope by IP containment, option number via regex, also EventData fields);
+  hint text per area (`evt.hint.*`). poll_flow pushes new events via `events_page.add_events`.
 - Login view: stack index 0 form, 1 main, 2 loading card (title, busy bar, last 8 log lines); `_failed` jumps 2 -> 0.
 - 1.1.0 (2026-10-22): Rights: `DhcpApi.access()` = no-op write probe DhcpServerSetConfigV4(FieldsToSet=0): rc 0 admin,
   5 read (DHCP Users), else unknown (treated as writable). `svc.rights` per server ("*" = primary), `svc.can_write(s)`;

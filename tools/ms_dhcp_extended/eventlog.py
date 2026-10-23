@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import ctypes
 import datetime as _dt
+import re
 import xml.etree.ElementTree as ET
 from ctypes import Structure, byref, c_uint32, c_void_p, c_wchar_p
 
@@ -41,7 +42,8 @@ def xpath_since(since_utc: str) -> str:
 
 
 def parse_event_xml(xml: str) -> dict:
-    """Ereignis-XML -> {record, id, time (lokal, "JJJJ-MM-TT HH:MM:SS"), utc, sid, data (Werte aus EventData)}."""
+    """Ereignis-XML -> {record, id, level, time (lokal, "JJJJ-MM-TT HH:MM:SS"), utc, sid, computer,
+    data (Werte aus EventData), fields ([(Name, Wert)])}."""
     root = ET.fromstring(xml)
     sys_ = root.find(NS + "System")
 
@@ -58,15 +60,71 @@ def parse_event_xml(xml: str) -> dict:
             local = utc[:19].replace("T", " ")
     sec = f("Security")
     rec, eid = f("EventRecordID"), f("EventID")
-    data = []
+    data, fields = [], []
     for parent in (root.find(NS + "EventData"), root.find(NS + "UserData")):
         if parent is not None:
             for el in parent.iter():
                 if el is not parent and el.text and el.text.strip() and not list(el):
                     data.append(el.text.strip())
+                    fields.append((el.get("Name") or el.tag.split("}")[-1], el.text.strip()))
+    lvl, comp = f("Level"), f("Computer")
     return {"record": int(rec.text) if rec is not None and (rec.text or "").isdigit() else 0,
             "id": int(eid.text) if eid is not None and (eid.text or "").isdigit() else 0,
-            "utc": utc, "time": local, "sid": sec.get("UserID", "") if sec is not None else "", "data": data}
+            "level": int(lvl.text) if lvl is not None and (lvl.text or "").isdigit() else 4,
+            "utc": utc, "time": local, "sid": sec.get("UserID", "") if sec is not None else "",
+            "computer": comp.text if comp is not None and comp.text else "", "data": data, "fields": fields}
+
+
+# --- Lesehilfe: Bereich, Aktion, Scope und Objekt aus dem Meldungstext (deutsch oder englisch) ---------------
+# Reihenfolge zählt: spezielle Begriffe vor allgemeinen ("Reservierung im Bereich" ist eine Reservierung).
+AREAS = (("failover", ("failover",)), ("policy", ("policy", "richtlinie")), ("filter", ("filter",)),
+         ("reservation", ("reservation", "reservierung")), ("exclusion", ("exclusion", "ausschluss", "exclude")),
+         ("optiondef", ("option definition", "optionsdefinition", "optiondefinition")),
+         ("option", ("option",)), ("class", ("class", "klasse")), ("superscope", ("superscope", "bereichsgruppe")),
+         ("scope", ("scope", "bereich")), ("server", ("server", "audit", "datenbank", "database", "binding", "bindung")))
+ACTIONS = (("delete", ("delet", "remov", "gelöscht", "entfernt")),
+           ("create", ("creat", "added", "add ", "hinzugef", "erstellt", "angelegt")),
+           ("change", ("modif", "chang", "updat", "geändert", "aktualisiert", "festgelegt", "configured", "konfiguriert",
+                       "activat", "deactivat", "aktiviert", "deaktiviert", "enabled", "disabled")))
+_IP = re.compile(r"\b\d{1,3}(?:\.\d{1,3}){3}\b")
+_OPT = re.compile(r"option(?:s)?(?:[- ]?(?:id|nummer|number|wert|value|definition))?\s*[:#]?\s*(\d{1,3})\b", re.I)
+
+
+def _ip2int(a: str) -> int | None:
+    p = a.split(".")
+    if len(p) != 4 or not all(x.isdigit() and int(x) < 256 for x in p):
+        return None
+    return (int(p[0]) << 24) | (int(p[1]) << 16) | (int(p[2]) << 8) | int(p[3])
+
+
+def classify(ev: dict, scopes: list[tuple[str, str]] | None = None) -> dict:
+    """Lesehilfe zu einem Ereignis: area, action, scope (Scope-ID), obj (Adresse/Option) – leer, wenn unklar.
+    scopes = [(Scope-ID, Maske)] des Servers, um Adressen einem Scope zuzuordnen."""
+    text = " ".join([ev.get("text") or ""] + [f"{k} {v}" for k, v in ev.get("fields") or []])
+    low = text.lower()
+    area = next((a for a, keys in AREAS if any(k in low for k in keys)), "other")
+    action = next((a for a, keys in ACTIONS if any(k in low for k in keys)), "other")
+    nets = []
+    for sid, mask in scopes or []:
+        n, m = _ip2int(sid), _ip2int(mask)
+        if n is not None and m is not None:
+            nets.append((sid, n, m))
+    scope, objs = "", []
+    for a in dict.fromkeys(_IP.findall(text)):
+        v = _ip2int(a)
+        if v is None:
+            continue
+        hit = next((sid for sid, n, m in nets if v & m == n), "")
+        if a in (sid for sid, _n, _m in nets):
+            scope = scope or a
+        else:
+            scope = scope or hit
+            objs.append(a)
+    if area in ("option", "optiondef"):
+        m = _OPT.search(text)
+        if m:
+            objs.insert(0, f"{int(m.group(1)):03d}")
+    return {"area": area, "action": action, "scope": scope, "obj": ", ".join(objs[:3])}
 
 
 class EventReader:
