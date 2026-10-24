@@ -146,7 +146,13 @@ def mac_hex(cid: str | None) -> str:
 
 
 def ip_sort_key(ip: str):
-    return ip2int(ip) if is_ipv4(ip) else -1
+    """IPv4 zuerst, dann IPv6 (DHCPv6-Präfixe und -Adressen), sonst -1."""
+    if is_ipv4(ip):
+        return ip2int(ip)
+    if isinstance(ip, str) and ":" in ip:
+        from . import ip6calc
+        return ip6calc.sort_key(ip)
+    return -1
 
 
 # --- Bereiche --------------------------------------------------------------------------------------

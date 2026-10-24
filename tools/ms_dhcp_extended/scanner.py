@@ -35,17 +35,17 @@ class Scanner(QObject):
         self._lock = threading.Lock()
         self.running = False
 
-    def start(self, with_leases: bool, with_partner: bool) -> bool:
+    def start(self, with_leases: bool, with_partner: bool, with_dns: bool = False) -> bool:
         main = self._main()
         if self.running or not main.server:
             return False
         self.running = True
         self.running_changed.emit(True)
-        threading.Thread(target=self._run, args=(main, with_leases, with_partner), daemon=True,
+        threading.Thread(target=self._run, args=(main, with_leases, with_partner, with_dns), daemon=True,
                          name="DhcpExt-Pruefung").start()
         return True
 
-    def _run(self, main, with_leases: bool, with_partner: bool) -> None:
+    def _run(self, main, with_leases: bool, with_partner: bool, with_dns: bool) -> None:
         try:
             with self._lock:
                 if self._host is None:
@@ -58,7 +58,8 @@ class Scanner(QObject):
                 svc.attach()
                 self._attached = True
             scan = svc.fast_scan(with_leases, with_partner,
-                                 on_scope=lambda sid, entry, i, n: self.scope_done.emit(sid, entry, i, n), threads=THREADS)
+                                 on_scope=lambda sid, entry, i, n: self.scope_done.emit(sid, entry, i, n), threads=THREADS,
+                                 check_dns=with_dns)
             if scan.get("partial"):
                 self._drop_host()
             self.finished.emit(scan)

@@ -1,4 +1,8 @@
-"""Feste Seiten des Hauptbereichs: Übersicht, Server-Optionen, Failover, Optionsdefinitionen und Prüfung."""
+"""Feste Seiten des Hauptbereichs: Übersicht, Server-Optionen, Failover, Optionsdefinitionen und Prüfung.
+
+Übersicht, Server-Optionen und Definitionen zeigen die oben gewählte Adressfamilie (ctl.family 4/6);
+Failover gibt es nur für IPv4, die Prüfung umfasst immer beide Familien.
+"""
 
 from __future__ import annotations
 
@@ -14,7 +18,9 @@ from PySide6.QtWidgets import (
 from omniwrench.ui import theme
 
 from . import checks as ck
+from . import checks6 as ck6
 from . import dialogs as dlg
+from . import ip6calc as ip6
 from . import ipcalc as ip
 from . import optcodec as oc
 from .editors import OptionsPanel, opt_row_key, option_rows
@@ -72,6 +78,8 @@ class OverviewPage(QWidget):
         self.count.setText(self.tr("ov.count", shown=len(self.grid.visible_rows()), total=len(self.grid.rows)))
 
     def set_data(self, svc, scan: dict | None) -> None:
+        if self.ctl.family == 6:
+            return self._set_rows(self._rows6(svc, scan))
         tr = self.tr
         rows = []
         for s in svc.scopes:
@@ -89,6 +97,26 @@ class OverviewPage(QWidget):
                          "fo": f"{rel['name']} ({ck.fo_state(rel.get('state', ''), tr)})" if rel else "–",
                          "lease_t": ck.format_lease(s["lease"], tr), "pct": st["pct"] if st else None, "desc": s["desc"],
                          "find": find if scan else "", "_find": fs, "_rel": rel, "_inf": inf, "_stat": st})
+        self._set_rows(rows)
+
+    def _rows6(self, svc, scan: dict | None) -> list[dict]:
+        tr = self.tr
+        rows = []
+        for s in svc.scopes6:
+            inf = svc.scope_info6.get(s["id"]) or {}
+            st = inf.get("stat")
+            fs = ((scan or {}).get("scopes", {}).get(s["id"]) or {}).get("findings") or []
+            cnt = {lv: sum(1 for f in fs if f.level == lv) for lv in (ck.ERROR, ck.WARN)}
+            find = " · ".join(f"{level_name(tr, lv, cnt[lv] != 1)} {cnt[lv]}" for lv in cnt if cnt[lv])
+            ex = inf.get("exclusions") or []
+            rows.append({"id": s["id"], "prefix": s["plen"], "name": s["name"], "ranges": tr("ov.excl_n", n=len(ex)) if ex else "",
+                         "usable": None, "free": None, "state": s["state"], "state_t": tr("state." + s["state"]),
+                         "fo": tr("ov.no_fo6"), "lease_t": ck.format_lease(s["lease_valid"], tr), "pct": None,
+                         "desc": s["desc"], "find": find if scan else "", "_find": fs, "_rel": None, "_inf": inf, "_stat": st,
+                         "_v6": True})
+        return rows
+
+    def _set_rows(self, rows: list[dict]) -> None:
         self.grid.set_rows(rows)
         c = theme.current
         for r in rows:
@@ -96,8 +124,11 @@ class OverviewPage(QWidget):
             if r["state"] != "Active":
                 self.grid.style_cell(k, "state_t", fore=c["muted"])
             rel = r["_rel"]
-            self.grid.style_cell(k, "fo", fore=c["warning"] if not rel else c["success"] if rel.get("state") == "Normal" else c["danger"],
-                                 bold=bool(rel) and rel.get("state") != "Normal")
+            if r.get("_v6"):
+                self.grid.style_cell(k, "fo", fore=c["muted"])
+            else:
+                self.grid.style_cell(k, "fo", fore=c["warning"] if not rel else c["success"] if rel.get("state") == "Normal" else c["danger"],
+                                     bold=bool(rel) and rel.get("state") != "Normal")
             if r["pct"] is not None and r["pct"] >= 90:
                 self.grid.style_cell(k, "pct", fore=c["danger"], bold=True)
             lvl = ck.worst([f for f in r["_find"] if f.level in (ck.ERROR, ck.WARN)])
@@ -117,6 +148,15 @@ class OverviewPage(QWidget):
         tr = self.tr
         inf = r["_inf"]
         lines = [f"{r['id']}/{r['prefix']}  {r['name']}"]
+        if r.get("_v6"):
+            ex = inf.get("exclusions") or []
+            if ex:
+                lines.append(tr("ov.tip.exclusions", list=", ".join(ip6.fmt_range(x) for x in ex[:6]) + (" …" if len(ex) > 6 else "")))
+            if r["_stat"]:
+                lines.append(tr("scope6.stats", in_use=r["_stat"]["in_use"], pending=r["_stat"].get("pending", 0)))
+            if r["_find"]:
+                lines += ["", finding_tip(tr, [f for f in r["_find"] if f.level != ck.INFO], 8)]
+            return "\n".join(lines)
         lines.append(tr("ov.tip.ranges", list=", ".join(ip.fmt_range(x) for x in inf.get("ranges") or []) or "–"))
         ex = inf.get("exclusions") or []
         if ex:
@@ -186,25 +226,30 @@ class ServerOptionsPage(QWidget):
         lay.addWidget(sp, 1)
 
     # --- Daten ----------------------------------------------------------------------------------------
+    @property
+    def v6(self) -> bool:
+        """DHCPv6-Ansicht: nur der verbundene Server (für DHCPv6 gibt es kein Failover und keine Partner)."""
+        return self.ctl.family == 6
+
     def servers(self) -> list[str]:
         out = [self.svc.server] if self.svc.server else []
-        if self.svc.partner_mode != "Off":
+        if self.svc.partner_mode != "Off" and not self.v6:
             out += self.svc.partners()
         return out
 
     def options_of(self, server: str) -> list[dict] | None:
         if self.svc.is_local(server):
-            return list(self.svc.server_option_rows)
-        return (self.svc.peer.get(server) or {}).get("options")
+            return list(self.svc.server_option_rows6 if self.v6 else self.svc.server_option_rows)
+        return None if self.v6 else (self.svc.peer.get(server) or {}).get("options")
 
     def targets(self, server: str | None) -> list[str]:
         """Gegenüber eines Servers: für den verbundenen Server alle Partner, für einen Partner der verbundene Server."""
-        if self.svc.partner_mode == "Off" or not server:
+        if self.svc.partner_mode == "Off" or not server or self.v6:
             return []
         return self.svc.partners() if self.svc.is_local(server) else [self.svc.server]
 
     def _form(self, o: dict) -> str:
-        return oc.compare_form(o["values"], self.svc.opt_def(int(o["id"]), o.get("vendor") or ""))
+        return oc.compare_form(o["values"], self.svc.opt_def(int(o["id"]), o.get("vendor") or "", self.v6))
 
     def compare(self, server: str) -> dict[str, list[tuple[str, str, dict | None]]]:
         """Je Option: [(Gegenüber, same|diff|missing|only, Option des Gegenübers)] – nur geladene Gegenüber."""
@@ -270,9 +315,9 @@ class ServerOptionsPage(QWidget):
         if not srv:
             return
         opts = self.options_of(srv)
-        self.opt_title.setText(tr("srvopt.options_of", server=srv))
+        self.opt_title.setText(tr("srvopt.options_of", server=srv) + (" – DHCPv6" if self.v6 else ""))
         cmp = self.compare(srv)
-        rows = option_rows(opts or [], self.svc.defs)
+        rows = option_rows(opts or [], self.svc.defs_of(self.v6))
         # nur die Optionen dieses Servers; was nur auf dem Gegenüber existiert, steht dort als „Fehlt auf …“
         for r in rows:
             lst = cmp.get(opt_row_key(r))
@@ -299,11 +344,13 @@ class ServerOptionsPage(QWidget):
         fs = []
         for o in opts:
             key = ck.option_key(o["id"], o["vendor"], o["user"])
-            for f in checker.option_values(o["id"], o["values"], o["vendor"], None, area="server_options"):
+            found = ck6.option_values(checker, o["id"], o["values"], o["vendor"], area="server_options") if self.v6 else \
+                checker.option_values(o["id"], o["values"], o["vendor"], None, area="server_options")
+            for f in found:
                 f.targets = [key]
-                f.obj = tr("obj.server_option", tag=f"{o['id']:03d}")
+                f.obj = tr("obj.server_option6" if self.v6 else "obj.server_option", tag=f"{o['id']:03d}")
                 fs.append(f)
-        if any(o["id"] == 3 and not o["vendor"] and not o["user"] for o in opts):
+        if not self.v6 and any(o["id"] == 3 and not o["vendor"] and not o["user"] for o in opts):
             fs.append(ck.Finding(ck.WARN, "server_options", tr("chk.srv_o3"), [ck.option_key(3)],
                                  tr("obj.server_option", tag="003")))
         mine = {opt_row_key(o): o for o in opts}
@@ -345,8 +392,8 @@ class ServerOptionsPage(QWidget):
                 self.panel.grid.select_key(k)
                 return
             if f.fix == "new_def":
-                self.ctl.run(self._after(self.ctl.new_definition_flow({"id": f.fix_arg["id"], "vendor": f.fix_arg["vendor"]}),
-                                         [self.svc.server]))
+                self.ctl.run(self._after(self.ctl.new_definition_flow({"id": f.fix_arg["id"], "vendor": f.fix_arg["vendor"],
+                                                                       "v6": self.v6}), [self.svc.server]))
 
     def load_flow(self):
         yield from self.reload_flow(server=self.svc.server)
@@ -356,7 +403,7 @@ class ServerOptionsPage(QWidget):
         lst = self.servers() if all_servers else (servers or [server or svc.server])
         for srv in lst:
             if svc.is_local(srv):
-                yield Job(svc.load_server_options, tr("status.loading"))
+                yield Job(svc.load_server_options6 if self.v6 else svc.load_server_options, tr("status.loading"))
             else:
                 def work(srv=srv):
                     d = svc.peer.setdefault(srv, {"fo": None, "scopes": None, "options": None, "errors": {}})
@@ -403,7 +450,7 @@ class ServerOptionsPage(QWidget):
             before = self.options_of(srv)
             if before is None:
                 continue
-            fresh = yield Job(lambda srv=srv: svc.srv_options(srv), tr("status.conflict_check", id=srv))
+            fresh = yield Job(lambda srv=srv: svc.srv_options(srv, self.v6), tr("status.conflict_check", id=srv))
             diffs += [f"{srv}: {d}" for d in svc.diff_config(conf(before), conf(fresh))]
         if not diffs:
             return True
@@ -419,13 +466,14 @@ class ServerOptionsPage(QWidget):
         return [t for t in self.targets(srv) if self.svc.can_write(t)]
 
     def option_flow(self, srv: str, row):
-        tr, svc = self.tr, self.svc
-        vendors, users = yield from self.ctl.load_classes()
+        tr, svc, v6 = self.tr, self.svc, self.v6
+        vendors, users = yield from self.ctl.load_classes(v6)
         targets = self._write_targets(srv)
         edit = row is not None and not row.get("ghost")
         title = tr("srvopt.title_edit", server=srv) if edit else tr("srvopt.title_add", server=srv)
-        res = dlg.option_dialog(self, tr, self.ctl.checker(), svc.defs, row, None, vendors, users, title=title,
-                                partner_check=tr("opt.f.to_partner", partners=", ".join(targets)) if targets else "")
+        res = dlg.option_dialog(self, tr, self.ctl.checker(), svc.defs_of(v6), row, None, vendors, users,
+                                title=title + (" – DHCPv6" if v6 else ""),
+                                partner_check=tr("opt.f.to_partner", partners=", ".join(targets)) if targets else "", v6=v6)
         if not res:
             return
         if res["undefined"] and not confirm(self, tr("opt.title_add"), tr("opt.confirm_new_def", tag=f"{res['id']:03d}")):
@@ -439,10 +487,10 @@ class ServerOptionsPage(QWidget):
             # Definition, Option und Partner-Kopie als Einheit: scheitert ein Teil, wird alles zurückgenommen
             if res["undefined"]:
                 ok = yield from self.ctl.new_definition_flow({"id": res["id"], "vendor": res["vendor"],
-                                                              "type": dlg.guess_type(res["values"])})
+                                                              "type": dlg.guess_type(res["values"]), "v6": v6})
                 if not ok:
                     return False
-            yield Job(lambda: svc.srv_opt_set(srv, res["id"], res["values"], res["vendor"], res["user"]), tr("status.saving"))
+            yield Job(lambda: svc.srv_opt_set(srv, res["id"], res["values"], res["vendor"], res["user"], v6), tr("status.saving"))
             if res.get("partner") and targets:
                 yield from self._copy([dict(res)], srv, targets)
             return True
@@ -489,7 +537,7 @@ class ServerOptionsPage(QWidget):
         def write():
             # lokal und (falls gewählt) beim Partner: alles oder nichts
             for r in rows:
-                yield Job(lambda r=r: svc.srv_opt_remove(srv, r["id"], r["vendor"], r["user"]), tr("status.saving"))
+                yield Job(lambda r=r: svc.srv_opt_remove(srv, r["id"], r["vendor"], r["user"], self.v6), tr("status.saving"))
                 svc.log(tr("log.srvopt_removed_on", tag=f"{r['id']:03d}", server=srv))
             if on_partner:
                 def work():
@@ -515,6 +563,9 @@ class ServerOptionsPage(QWidget):
         if not clip or clip.get("Kind") != "Options" or not clip.get("Items"):
             info(self, tr("ui.paste"), tr("clip.no_options"))
             return
+        if (clip.get("Family") or 4) != self.ctl.family:
+            info(self, tr("ui.paste"), tr("clip.wrong_family"))
+            return
         have = {opt_row_key(r) for r in self.panel.grid.rows if not r.get("ghost")}
         over = [it for it in clip["Items"] if ck.option_key(it["id"], it.get("vendor"), it.get("user")) in have]
         if over and not confirm(self, tr("ui.paste"), tr("clip.overwrite_opts", list=short_list([f"{int(i['id']):03d}" for i in over]))):
@@ -525,7 +576,7 @@ class ServerOptionsPage(QWidget):
         def write():
             for it in clip["Items"]:
                 yield Job(lambda it=it: svc.srv_opt_set(srv, int(it["id"]), list(it["values"]), it.get("vendor") or "",
-                                                        it.get("user") or ""), tr("status.saving"))
+                                                        it.get("user") or "", self.v6), tr("status.saving"))
         try:
             yield from self.ctl.atomic(tr("tx.paste", kind=tr("clip.kind.Options"), id=srv), write())
         finally:
@@ -1175,14 +1226,20 @@ class DefsPage(QWidget):
         for aid in self.WRITE:
             self.bar.buttons[aid].setEnabled(on)
             self.grid.set_action_visible(aid, on)
-        self.bar.buttons["ToPartner"].setEnabled(on and any(self.svc.can_write(pn) for pn in self.svc.partners()))
+        self.bar.buttons["ToPartner"].setEnabled(on and not self.v6 and any(self.svc.can_write(pn) for pn in self.svc.partners()))
+        self.grid.set_action_visible("ToPartner", on and not self.v6)
         self.lock_btn.setVisible(rw)
         self.lock_btn.setText(tr("def.lock") if self.unlocked else tr("def.unlock"))
         self.lock_text.setText(tr("def.read_only") if not rw else tr("def.unlocked_text") if self.unlocked else tr("def.locked_text"))
         self.grid.default_action = "Edit" if on else None
 
+    @property
+    def v6(self) -> bool:
+        return self.ctl.family == 6
+
     def refresh(self) -> None:
-        rows = [dict(d, default_t=", ".join(d["default"])) for d in sorted(self.svc.defs.values(), key=lambda d: (d["vendor"], d["id"]))]
+        defs = self.svc.defs_of(self.v6)
+        rows = [dict(d, default_t=", ".join(d["default"])) for d in sorted(defs.values(), key=lambda d: (d["vendor"], d["id"]))]
         self.grid.set_rows(rows)
         self.grid.autosize(320)
         self.grid.apply_filter(self.filter.text())
@@ -1194,12 +1251,12 @@ class DefsPage(QWidget):
         elif a in self.WRITE and not (self.unlocked and self.svc.can_write(None)):
             return
         elif a == "New":
-            self.ctl.run(self.ctl.new_definition_flow({}))
+            self.ctl.run(self.ctl.new_definition_flow({"v6": self.v6}))
         elif a == "Edit" and cur:
             self.ctl.run(self.edit_flow(cur))
         elif a == "Remove" and cur:
             self.ctl.run(self.remove_flow(cur))
-        elif a == "ToPartner" and self.grid.selected_rows():
+        elif a == "ToPartner" and self.grid.selected_rows() and not self.v6:
             self.ctl.run(self.to_partner_flow(self.grid.selected_rows()))
 
     def _reload(self):
@@ -1208,11 +1265,12 @@ class DefsPage(QWidget):
 
     def edit_flow(self, d):
         tr, svc = self.tr, self.svc
-        res = dlg.definition_dialog(self, tr, d)
+        v6 = self.v6
+        res = dlg.definition_dialog(self, tr, d, v6=v6)
         if not res:
             return
         res.update(id=d["id"], vendor=d["vendor"], type=d["type"], multi=d["multi"])
-        yield Job(lambda: svc.def_set(res), tr("status.saving"))
+        yield Job(lambda: svc.def_set(res, v6), tr("status.saving"))
         svc.log(tr("log.def_changed", tag=f"{d['id']:03d}", name=res["name"]))
         yield from self._reload()
 
@@ -1220,7 +1278,8 @@ class DefsPage(QWidget):
         tr, svc = self.tr, self.svc
         if not confirm(self, tr("def.remove"), tr("def.confirm_remove", tag=f"{d['id']:03d}", name=d["name"])):
             return
-        yield Job(lambda: svc.def_remove(d["id"], d["vendor"]), tr("status.saving"))
+        v6 = self.v6
+        yield Job(lambda: svc.def_remove(d["id"], d["vendor"], v6), tr("status.saving"))
         svc.log(tr("log.def_removed", tag=f"{d['id']:03d}", name=d["name"]))
         yield from self._reload()
 
@@ -1378,8 +1437,13 @@ class CheckPage(QWidget):
         self.with_leases.setToolTip(tr("chk.with_leases_tip"))
         self.with_partner = QCheckBox(tr("chk.with_partner"))
         self.with_partner.setChecked(True)
+        self.with_dns = QCheckBox(tr("chk.with_dns"))
+        self.with_dns.setToolTip(tr("chk.with_dns_tip"))
+        self.with_dns.setChecked(bool(ctl.settings.get("check_dns", False)))
+        self.with_dns.toggled.connect(lambda on: ctl.settings.set("check_dns", on))
         top.addWidget(self.with_leases)
         top.addWidget(self.with_partner)
+        top.addWidget(self.with_dns)
         self.state = QLabel(tr("chk.not_run"))
         self.state.setStyleSheet(f"color:{theme.current['muted']};")
         top.addWidget(self.state, 1)
@@ -1492,6 +1556,7 @@ class CheckPage(QWidget):
         self.bar.buttons["Scan"].setEnabled(False)
         self.with_leases.setEnabled(False)
         self.with_partner.setEnabled(False)
+        self.with_dns.setEnabled(False)
         self.cancel_btn.setEnabled(True)
         self.cancel_btn.show()
         self.pbar.setRange(0, 0)
@@ -1521,6 +1586,7 @@ class CheckPage(QWidget):
         self.bar.buttons["Scan"].setEnabled(True)
         self.with_leases.setEnabled(True)
         self.with_partner.setEnabled(True)
+        self.with_dns.setEnabled(True)
         self.cancel_btn.hide()
         self.pbar.hide()
         self.live = None
@@ -1544,7 +1610,8 @@ class CheckPage(QWidget):
         if not scan.get("running"):
             self.state.setText(tr("chk.state_partial" if scan.get("partial") else "chk.state", time=scan["time"],
                                   sec=scan["seconds"], n=len(scan["scopes"]))
-                               + ("  " + tr("chk.state_leases") if scan.get("with_leases") else ""))
+                               + ("  " + tr("chk.state_leases") if scan.get("with_leases") else "")
+                               + ("  " + tr("chk.state_dns") if scan.get("with_dns") else ""))
         allf = list(scan["server"])
         for v in scan["scopes"].values():
             allf += v["findings"]

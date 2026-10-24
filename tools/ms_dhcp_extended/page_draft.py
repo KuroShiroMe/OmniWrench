@@ -516,6 +516,9 @@ class DraftTab(QWidget):
         if not clip or clip.get("Kind") != "Options" or not clip.get("Items"):
             info(self, tr("ui.paste"), tr("clip.no_options"))
             return
+        if clip.get("Family") == 6:
+            info(self, tr("ui.paste"), tr("clip.wrong_family"))
+            return
         sn = sm = None
         if ip.is_ipv4(clip.get("SourceScopeId") or "") and ip.is_ipv4(clip.get("SourceMask") or ""):
             sm = ip.ip2int(clip["SourceMask"])
