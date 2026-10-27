@@ -14,6 +14,7 @@ Siehe docs/TOOL_ENTWICKLUNG.md für die vollständige Beschreibung.
 from __future__ import annotations
 
 import logging
+import os
 import subprocess
 import sys
 import tempfile
@@ -236,7 +237,9 @@ class InstallContext(_ContextBase):
         log_file = None
         if getattr(sys, "frozen", False):
             # EXE-Build: pip ist eingebaut (main.py --pip); Fensterprogramm hat evtl. keine Ausgabe -> Logdatei
-            log_file = Path(tempfile.mkstemp(prefix="omniwrench_pip_", suffix=".log")[1])
+            fd, name = tempfile.mkstemp(prefix="omniwrench_pip_", suffix=".log")
+            os.close(fd)  # offener Handle sperrt die Datei unter Windows (WinError 32 beim Löschen)
+            log_file = Path(name)
             cmd = [sys.executable, "--pip", *args, "--prefer-binary", "--log", str(log_file)]
         else:
             cmd = [sys.executable, "-m", "pip", *args]
@@ -246,7 +249,10 @@ class InstallContext(_ContextBase):
         if log_file:
             if not details.strip() and log_file.exists():
                 details = log_file.read_text(encoding="utf-8", errors="replace")
-            log_file.unlink(missing_ok=True)
+            try:
+                log_file.unlink(missing_ok=True)
+            except OSError:
+                self.log.debug("pip-Logdatei nicht löschbar: %s", log_file)
         if proc.returncode != 0:
             raise RuntimeError(tr("err.pip") + "\n" + details[-2000:])
 
