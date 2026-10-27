@@ -19,6 +19,7 @@
 - [IconForge](Tool-IconForge)
 - [NetProbe](Tool-NetProbe)
 - [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management)
+- [MS DNS Extended Management](Tool-MS-DNS-Extended-Management)
 
 **[Entwicklung](Entwicklung)**
 - [Schnellstart](Entwicklung-Schnellstart)

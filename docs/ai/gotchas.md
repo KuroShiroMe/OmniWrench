@@ -154,3 +154,12 @@
 - Qt item sort keys are int64: IPv6 ints overflow -> DHCP grid "ip" sort key is a 33-hex-digit string.
 - ScopeTab6 inherits guard() from page_scope, which calls page_scope.choose: tests must patch page_scope.choose,
   not page_scope6.choose.
+
+## DNS tool (WMI via pywin32)
+- `pip --target` ignores pywin32's .pth: add _lib, _lib/win32, _lib/win32/lib, _lib/pywin32_system32 to sys.path and
+  os.add_dll_directory(pywin32_system32) before `import pythoncom` (wmidns.load, install.check).
+- COM per thread: CoInitializeEx(MTA) + own SWbemServices per thread (threading.local); never share across threads.
+- SWbemServices.ExecMethod (no underscore) for static class methods; SWbemObject.ExecMethod_ for instances.
+- ConnectServer: pass "" (not None) for current credentials; local target "." with credentials -> 0x80041064.
+- WMI cannot age a single record: AgeAllRecords ages all records of the node (documented limitation).
+- Tool locales need `_meta`, `tool.*` and `settings.*` keys (store + settings dialog translations), not only UI keys.

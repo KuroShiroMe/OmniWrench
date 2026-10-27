@@ -229,6 +229,34 @@ Nur testen, was verfügbar ist. Nach bestätigtem Test wird der Alpha-Hinweis de
 
 - [ ] Schmale Kopfzeile bei kleiner Fensterbreite und 150–200 % Skalierung (Issue #17).
 
+## 9. MS DNS Extended Management (net.ms-dns-extended 1.0.0)
+
+Neu, nur unter Linux mit einem Test-Backend geprüft. Zugriff über WMI (root\MicrosoftDNS).
+- [ ] Installation aus dem Store: pywin32 und dnspython landen im Tool-Ordner, Tool startet ohne Fehler.
+- [ ] Anmeldung an einem DC mit angemeldetem Benutzer, mit Tresor-Zugangsdaten, mit anderen Anmeldedaten; an einem
+      DNS-Server außerhalb der Domäne mit `SERVER\Benutzer`; am lokalen Computer (Hinweis „andere Anmeldedaten ignoriert“).
+- [ ] Fehlermeldungen verständlich: falsches Kennwort, Konto ohne DnsAdmins, Server ohne DNS-Rolle, Firewall zu.
+- [ ] Weitere DNS-Server werden nach der Anmeldung verbunden (zweiter DC), Vergleich zeigt Einstellungen und Zonen.
+- [ ] Zone öffnen: Einträge, Allgemein (SOA, Updates, Alterung, Übertragung), Befunde, Aufräumen plausibel.
+- [ ] Eintrag anlegen: A mit PTR, AAAA mit PTR (ip6.arpa-Zone vorhanden), CNAME, MX, TXT (langer DKIM-Text), SRV, NS;
+      in der DNS-Konsole kontrollieren.
+- [ ] Eintrag ändern (IP und Name) mit PTR: alter PTR weg, neuer da. TTL ändern, „Statisch machen“.
+- [ ] „Dynamisch“ beim Anlegen: Zeitstempel gesetzt (AgeAllRecords); Hinweis: andere Einträge desselben Namens werden
+      auch dynamisch.
+- [ ] Löschen mit „PTR mitlöschen“.
+- [ ] Zoneneinstellungen ändern (Updates, Alterung, Übertragung/Benachrichtigung mit Serverliste) und zurück.
+- [ ] Neue Zone: primär AD, primär Datei, IPv4-Reverse aus Netz, IPv6-Reverse aus /48, sekundär, Stub, bedingte
+      Weiterleitung; danach löschen (Wort „löschen“).
+- [ ] Zonenaktionen: Anhalten/Fortsetzen, Neu laden, Von Master übertragen, Aus AD neu laden, In Datei schreiben.
+- [ ] Server: Weiterleitungen ändern, Weiterleitungen testen, Aufräumintervall, Cache leeren, Jetzt aufräumen.
+- [ ] Prüfung mit Namensserver-Abfrage; Befunde plausibel, Doppelklick-Korrekturen (PTR erstellen, Eintrag löschen).
+- [ ] Aufräumen-Reiter: Ping v4/v6 zeigt „antwortet“/„keine Antwort“.
+- [ ] DHCP-Abgleich mit echtem DHCP-Server (gleiche und andere Anmeldung).
+- [ ] Ereignisprotokoll (DNSServer/Audit): Bereich/Aktion/Zone/Objekt sinnvoll bei deutschem Server.
+- [ ] Änderung in der DNS-Konsole während die Zone offen ist: automatische Aktualisierung, „Am Server geändert“ beim
+      Speichern mit „wer“.
+- [ ] Fehler mitten im Ablauf (z. B. PTR-Zone ohne Schreibrecht): A-Eintrag wird zurückgenommen.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).
