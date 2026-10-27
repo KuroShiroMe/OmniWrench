@@ -250,7 +250,7 @@
     {
       "id": "net.ms-dns-extended",
       "name": "MS DNS Extended Management",
-      "version": "1.1.1",
+      "version": "1.1.2",
       "description": "Manage Microsoft DNS servers: zones, records (IPv4 and IPv6), reverse lookup, aging/scavenging and a full configuration check.",
       "long_description": "Connects to one or more Microsoft DNS servers – domain controllers with AD-integrated zones as well as standalone servers outside a domain – with the current account, stored credentials or a different login. Every zone opens in its own tab with all records (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS and read-only display of all other types), general settings (dynamic updates, aging, zone transfers, notify) and its findings. Creating or changing an A/AAAA record keeps the matching PTR record in the reverse zone (IPv4 and ip6.arpa) in sync. New zones (primary, AD-integrated, secondary, stub, conditional forwarder) are created from a dialog, including IPv6 reverse zones. The check finds missing or orphaned PTR records, CNAME conflicts, dangling targets, duplicate addresses, risky zone settings (non-secure updates, transfers to any server, aging off), stale records and compares NS servers and forwarders by querying them (SOA serial, response). A scavenging preview shows which dynamic records would be deleted and whether the device still answers to ping. Optionally reads leases and reservations from a Microsoft DHCP server and compares them with DNS (missing, wrong or orphaned records). Search across all zones and servers, compare zones between servers, server settings, cache and the DNS server audit log with reading aids. With several servers connected, a column shows per record whether it has already replicated to the others, and replication can be triggered on demand (AD replication of the DNS partition or zone transfer to secondary servers). Changes made by others are detected through the SOA serial; every change runs as a transaction and is undone automatically if a step fails. Talks to the server via WMI (root\\MicrosoftDNS) – no PowerShell or RSAT needed.",
       "author": "KuroShiro",
@@ -333,9 +333,9 @@
           "screenshot.events": "DNS server audit log with reading aids"
         }
       },
-      "download_url": "packages/net.ms-dns-extended-1.1.1.zip",
-      "sha256": "61cffb1b1497d3f7a331db5a27b13bf8f809faa8e841ae6fe79fd5b024b06a43",
-      "size": 127082
+      "download_url": "packages/net.ms-dns-extended-1.1.2.zip",
+      "sha256": "b68225008aaca88d4264cc3d2e2e041bbbe554d4acf0b23ea5a0f0445d733e2d",
+      "size": 127181
     },
     {
       "id": "net.netprobe",

@@ -195,3 +195,7 @@
 - MicrosoftDNS_Zone.LastSuccessfulXfr / LastSuccessfulSoaCheck are seconds since 1970 (UTC), 0 = never.
 - MicrosoftDNS_Zone.GetDistinguishedName is `string GetDistinguishedName()`: the DN comes back in the out
   parameter object's ReturnValue, not in a parameter "Name" (Item("Name") -> 0x80041002, DNS tool 1.1.1).
+- Tool close deletes the widget tree while QTimer.singleShot callbacks / run_async results are still pending -> late
+  callbacks touch deleted widgets ("Internal C++ object … already deleted"). Bind timers to a widget
+  (`QTimer.singleShot(ms, self.root, fn)`) and set a `_closed` flag in shutdown() that every late callback checks
+  (DNS tool 1.1.2).

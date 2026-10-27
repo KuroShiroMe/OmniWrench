@@ -82,6 +82,7 @@ class MsDnsExtended(ToolBase):
         self._poll_busy = False
         self._ev_since: dict[str, str] = {}
         self._repl_busy: set[tuple[str, str]] = set()
+        self._closed = False      # nach shutdown(): späte Rückrufe (Timer, Hintergrund) nichts mehr anfassen lassen
 
         self.root = QWidget(parent)
         lay = QVBoxLayout(self.root)
@@ -371,6 +372,8 @@ class MsDnsExtended(ToolBase):
             self._progress(self.tr("status.ready"), 0, 0)
 
     def _busy(self, busy: bool, cancellable: bool) -> None:
+        if self._closed:
+            return
         self.main_area.setEnabled(not busy)
         self.logout_btn.setEnabled(not busy)
         self.login_btn.setEnabled(not busy)
@@ -391,6 +394,8 @@ class MsDnsExtended(ToolBase):
         self._progress(self.tr("status.cancelling"), 0, 0)
 
     def _progress(self, text: str, i: int, n: int) -> None:
+        if self._closed:
+            return
         if text:
             self.status.setText(text)
         if n:
@@ -398,6 +403,8 @@ class MsDnsExtended(ToolBase):
             self.pbar.setValue(i)
 
     def _append_log(self, text: str, is_error: bool) -> None:
+        if self._closed:
+            return
         self._step(text, is_error)
         stamp = time.strftime("%H:%M:%S")
         color = theme.current["danger"] if is_error else theme.current["text"]
@@ -805,7 +812,7 @@ class MsDnsExtended(ToolBase):
         False = läuft schon / nichts zu prüfen (then wird dann nicht aufgerufen)."""
         svc = self.svc
         key = (server, zone)
-        if key in self._repl_busy or server not in svc.servers:
+        if self._closed or key in self._repl_busy or server not in svc.servers:
             return False
         if not svc.repl_peers(server, zone) and not svc._unconnected_secondaries(server, zone):
             svc.repl.pop(key, None)
@@ -820,6 +827,8 @@ class MsDnsExtended(ToolBase):
 
         def done(st):
             self._repl_busy.discard(key)
+            if self._closed:
+                return
             t = self.tabs.get(key)
             if t:
                 t[0].set_repl(st)
@@ -832,6 +841,8 @@ class MsDnsExtended(ToolBase):
 
         def failed(text):
             self._repl_busy.discard(key)
+            if self._closed:
+                return
             t = self.tabs.get(key)
             if t:
                 t[0].repl_busy(False)
@@ -849,11 +860,11 @@ class MsDnsExtended(ToolBase):
         state = {"i": 0}
 
         def tick():
-            if server not in svc.servers:
+            if self._closed or server not in svc.servers:
                 return
             if self.runner.active or QApplication.activeModalWidget() is not None \
                     or not self.repl_check(server, zone, then=check):
-                QTimer.singleShot(5000, tick)
+                QTimer.singleShot(5000, self.root, tick)
 
         def check(st):
             pend = svc.repl_pending(st, present, absent)
@@ -863,10 +874,10 @@ class MsDnsExtended(ToolBase):
                 return
             state["i"] += 1
             if state["i"] < len(self.REPL_DELAYS):
-                QTimer.singleShot((self.REPL_DELAYS[state["i"]] - self.REPL_DELAYS[state["i"] - 1]) * 1000, tick)
+                QTimer.singleShot((self.REPL_DELAYS[state["i"]] - self.REPL_DELAYS[state["i"] - 1]) * 1000, self.root, tick)
             else:
                 svc.log(tr("log.repl_pending", zone=zone, list=", ".join(pend), min=max(1, sec // 60)), True)
-        QTimer.singleShot(self.REPL_DELAYS[0] * 1000, tick)
+        QTimer.singleShot(self.REPL_DELAYS[0] * 1000, self.root, tick)
 
     def replicate_flow(self, server: str, zone: str):
         tr, svc = self.tr, self.svc
@@ -879,7 +890,7 @@ class MsDnsExtended(ToolBase):
             info(self.root, tr("repl.title"), text + "\n\n" + tr("repl.recheck_hint"))
         self.repl_check(server, zone)
         # Übertragung/UpdateFromDS laufen im DNS-Dienst nach; später noch einmal nachsehen
-        QTimer.singleShot(15000, lambda: self.repl_check(server, zone))
+        QTimer.singleShot(15000, self.root, lambda: self.repl_check(server, zone))
 
     def new_zone_flow(self, server: str):
         tr, svc = self.tr, self.svc
@@ -978,7 +989,8 @@ class MsDnsExtended(ToolBase):
 
     def ping_many(self, ips: list[str], cb) -> None:
         self._progress(self.tr("sc.pinging", n=len(ips)), 0, 0)
-        run_async(lambda: pinger.ping_many(ips), lambda res: (cb(res), self._progress(self.tr("status.ready"), 0, 0)),
+        run_async(lambda: pinger.ping_many(ips),
+                  lambda res: None if self._closed else (cb(res), self._progress(self.tr("status.ready"), 0, 0)),
                   lambda text: self.svc.log(text, True))
 
     # --- Änderungen anderer (Auto-Refresh) ----------------------------------------------------------
@@ -1051,8 +1063,10 @@ class MsDnsExtended(ToolBase):
         return not self.runner.active
 
     def shutdown(self) -> None:
+        self._closed = True
         self.refresh_timer.stop()
         self._scan_gen += 1
+        self._poll_gen += 1
         self.svc.scan_cancel.set()
         try:
             self.backend.close()
