@@ -365,5 +365,19 @@
   "err.elevated_start": "Impossibile avviare la sessione di amministratore: {error}",
   "err.elevated_failed": "Esecuzione con diritti di amministratore non riuscita (codice di uscita {code}).",
   "err.feature_source_hint": "Windows non è riuscito a scaricare la funzionalità. Negli ambienti gestiti con WSUS, il criterio di gruppo «Specifica le impostazioni per l'installazione di componenti facoltativi e il ripristino dei componenti» deve consentire il download diretto da Windows Update, oppure la funzionalità deve essere installata da un'origine Funzionalità su richiesta.",
-  "home.server_notice": "Windows Server non è supportato. Alcune funzioni sono limitate, ad es. l'installazione automatica di requisiti come RSAT."
+  "home.server_notice": "Windows Server non è supportato. Alcune funzioni sono limitate, ad es. l'installazione automatica di requisiti come RSAT.",
+  "shots.next": "Screenshot successivo",
+  "shots.previous": "Screenshot precedente",
+  "shots.loading": "Caricamento anteprima …",
+  "details.installed_version": "Versione installata",
+  "details.available_version": "Versione disponibile",
+  "details.platforms": "Piattaforme",
+  "details.source": "Origine",
+  "home.view_full": "Vista completa",
+  "home.view_large": "Icone grandi",
+  "home.view_small": "Icone piccole",
+  "home.view_list": "Elenco con dettagli",
+  "home.col_name": "Nome",
+  "home.col_status": "Stato",
+  "home.col_description": "Descrizione"
 }

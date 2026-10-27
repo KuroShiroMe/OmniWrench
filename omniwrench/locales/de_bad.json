@@ -365,5 +365,19 @@
   "err.elevated_start": "D Admin-Sitzung hät nit gschtartet werre könne: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hät s nit klappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows hät d Funktion nit runterlade kenne. Bi WSUS muss d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Lade direkt vu Windows Update erlaube, oder d Funktion kummt us ere Features-on-Demand-Quell.",
-  "home.server_notice": "Windows Server wird nit unterstützt. E paar Funktione gehn nur eigschränkt, z. B. s automatische Druffmache vu Sache wie RSAT."
+  "home.server_notice": "Windows Server wird nit unterstützt. E paar Funktione gehn nur eigschränkt, z. B. s automatische Druffmache vu Sache wie RSAT.",
+  "shots.next": "Nägschter Screenshot",
+  "shots.previous": "Vorheriger Screenshot",
+  "shots.loading": "Vorschau wird glade …",
+  "details.installed_version": "Installierti Version",
+  "details.available_version": "Verfiegbari Version",
+  "details.platforms": "Plattforme",
+  "details.source": "Quelle",
+  "home.view_full": "Ganzi Aasicht",
+  "home.view_large": "Großi Symbole",
+  "home.view_small": "Kleini Symbole",
+  "home.view_list": "Lischt mit Details",
+  "home.col_name": "Name",
+  "home.col_status": "Status",
+  "home.col_description": "Beschriibung"
 }

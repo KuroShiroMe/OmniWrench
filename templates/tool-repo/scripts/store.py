@@ -3,7 +3,9 @@
     python scripts/store.py check            # alle Tools prüfen, nichts schreiben
     python scripts/store.py build            # geänderte Tools packen, store/index.json schreiben
 
-Gebaut werden nur Tools, die neu sind oder deren Version sich geändert hat. Wurde ein Tool geändert,
+Gebaut werden nur Tools, die neu sind oder deren Version sich geändert hat. Screenshots (tool.json
+"screenshots", erzeugt mit scripts/screenshots.py) stehen nicht im Paket, sondern unter store/screenshots/<id>/
+und werden bei jedem Build abgeglichen; neue Bilder brauchen keine neue Version. Wurde ein Tool geändert,
 ohne die Version in tool.json zu erhöhen, schlagen beide Befehle fehl: Installierte Clients würden die
 Änderung sonst nie bekommen.
 
@@ -20,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import zipfile
 from datetime import datetime, timezone
@@ -28,7 +31,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
 STORE = ROOT / "store"
-EXCLUDE_DIRS = {"__pycache__", "_lib", ".git"}
+EXCLUDE_DIRS = {"__pycache__", "_lib", ".git", "screenshots"}  # Screenshots liegen getrennt im Store
 EXCLUDE_SUFFIXES = {".pyc", ".pyo"}
 # Feste Zeitstempel im ZIP: gleicher Inhalt ergibt dieselbe Prüfsumme
 ZIP_DATE = (2020, 1, 1, 0, 0, 0)
@@ -79,6 +82,19 @@ def write_zip(path: Path, files: dict[str, bytes]) -> None:
             zf.writestr(info, normalized(data))
 
 
+def screenshot_entries(tool_dir: Path, manifest) -> list[dict]:
+    """Einträge für index.json: Angaben aus tool.json plus Adresse, Prüfsumme und Größe."""
+    result = []
+    for shot in manifest.raw.get("screenshots") or []:
+        src = tool_dir / shot["file"]
+        if not src.is_file():
+            raise FileNotFoundError(f"Screenshot fehlt: {shot['file']} (python scripts/screenshots.py)")
+        data = src.read_bytes()
+        result.append({**shot, "url": f"screenshots/{manifest.id}/{src.name}",
+                       "sha256": hashlib.sha256(data).hexdigest(), "size": len(data)})
+    return result
+
+
 def run(mode: str, store_name: str | None, omniwrench: str | None) -> int:
     sys.path.insert(0, str(find_omniwrench(omniwrench)))
     from omniwrench.core.manifest import validate_package
@@ -92,6 +108,7 @@ def run(mode: str, store_name: str | None, omniwrench: str | None) -> int:
     entries: list[dict] = []
     changed = name != index.get("name")
     seen: set[str] = set()
+    shot_sources: dict[str, Path] = {}
 
     tool_dirs = sorted(p for p in TOOLS.iterdir() if p.is_dir() and not p.name.startswith((".", "_"))) \
         if TOOLS.is_dir() else []
@@ -105,14 +122,27 @@ def run(mode: str, store_name: str | None, omniwrench: str | None) -> int:
             problems.append(f"{tool_dir.name}: Tool-ID {manifest.id} kommt mehrfach vor")
             continue
         seen.add(manifest.id)
+        try:
+            shots = screenshot_entries(tool_dir, manifest)
+        except FileNotFoundError as exc:
+            problems.append(f"{manifest.id}: {exc}")
+            continue
+        shot_sources[manifest.id] = tool_dir
         files = tool_files(tool_dir)
         prev = old.get(manifest.id)
         prev_zip = STORE / prev["download_url"] if prev else None
 
         if prev and prev.get("version") == manifest.version and prev_zip and prev_zip.is_file():
             if same_content(files, zip_files(prev_zip)):
-                entries.append(prev)
-                print(f"  {manifest.id} {manifest.version}: unverändert")
+                entry = {k: v for k, v in prev.items() if k != "screenshots"}
+                if shots:
+                    entry["screenshots"] = shots
+                if (prev.get("screenshots") or []) != shots:
+                    changed = True
+                    print(f"  {manifest.id} {manifest.version}: Screenshots geändert")
+                else:
+                    print(f"  {manifest.id} {manifest.version}: unverändert")
+                entries.append(entry)
             else:
                 problems.append(f"{manifest.id}: geändert, aber Version {manifest.version} nicht erhöht (tool.json)")
             continue
@@ -133,6 +163,8 @@ def run(mode: str, store_name: str | None, omniwrench: str | None) -> int:
             entry["icon_data"] = base64.b64encode(icon_file.read_bytes()).decode("ascii")
         if manifest.translations:
             entry["translations"] = manifest.translations
+        if shots:
+            entry["screenshots"] = shots
         entry["download_url"] = f"packages/{zip_name}"
         entry["sha256"] = hashlib.sha256(zip_path.read_bytes()).hexdigest()
         entry["size"] = zip_path.stat().st_size
@@ -151,6 +183,12 @@ def run(mode: str, store_name: str | None, omniwrench: str | None) -> int:
         for z in (STORE / "packages").glob("*.zip") if (STORE / "packages").is_dir() else []:
             if f"packages/{z.name}" not in used:
                 z.unlink()
+        shutil.rmtree(STORE / "screenshots", ignore_errors=True)
+        for entry in entries:
+            for shot in entry.get("screenshots") or []:
+                target = STORE / shot["url"]
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(shot_sources[entry["id"]] / shot["file"], target)
         index = {"format": 1, "name": name,
                  "generated": datetime.now(timezone.utc).isoformat(timespec="seconds"), "tools": entries}
         STORE.mkdir(exist_ok=True)

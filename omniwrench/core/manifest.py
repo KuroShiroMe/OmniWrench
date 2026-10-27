@@ -77,6 +77,9 @@ class ToolManifest:
     platforms: list[str] = field(default_factory=lambda: ["windows"])
     tags: list[str] = field(default_factory=list)  # Schlagwörter (Technologie, Aufgabe), sichtbar und durchsuchbar
     homepage: str = ""
+    # Screenshots für Store und Home: [{"file": "screenshots/overview.png", "caption": "…"}, …];
+    # der erste ist der Hauptscreenshot. Im Store-Katalog zusätzlich "url" + "sha256" (build_store.py)
+    screenshots: list[dict] = field(default_factory=list)
     single_instance: bool = False        # nur ein Tab gleichzeitig erlaubt
     # Einstiegspunkte, die das Hauptprogramm unabhängig von geöffneten Tabs aufruft:
     # {"startup": "modul:funktion"} -> funktion(ToolContext) nach dem Anmelden bzw. nach der Installation
@@ -113,6 +116,22 @@ class ToolManifest:
         return self.localized("long_description") or self.display_description
 
     @property
+    def screenshot_list(self) -> list[dict]:
+        """Gültige Screenshot-Einträge (Dicts mit "file")."""
+        return [s for s in self.screenshots if isinstance(s, dict) and s.get("file")]
+
+    def screenshot_caption(self, shot: dict) -> str:
+        """Übersetzte Bildunterschrift (Tool-Sprachdatei: "tool.screenshot.<Dateiname ohne Endung>")."""
+        return self.localized_extra(f"screenshot.{screenshot_key(shot)}") or shot.get("caption", "")
+
+    def localized_extra(self, key: str, chain: list[str] | None = None) -> str:
+        for code in chain if chain is not None else app_chain():
+            text = self.translations.get(code, {}).get(key)
+            if text:
+                return text
+        return ""
+
+    @property
     def category_path(self) -> list[str]:
         """Kategoriepfad (nur der Bereich) in der Sprache des Hauptprogramms."""
         return categories.category_path(self)
@@ -143,6 +162,12 @@ class ToolManifest:
 
 
 TRANSLATABLE_FIELDS = ("name", "description", "long_description", "category", "category_area")
+SCREENSHOTS_DIR = "screenshots"  # nicht im Tool-Paket; build_store.py legt die Bilder getrennt in den Store
+
+
+def screenshot_key(shot: dict) -> str:
+    """Schlüssel eines Screenshots für Übersetzungen: Dateiname ohne Endung."""
+    return Path(str(shot.get("file", ""))).stem
 
 
 def read_tool_translations(tool_dir: Path) -> dict[str, dict[str, str]]:
@@ -150,6 +175,9 @@ def read_tool_translations(tool_dir: Path) -> dict[str, dict[str, str]]:
     result: dict[str, dict[str, str]] = {}
     for code, table in load_locales(tool_dir / LOCALES_DIR).items():
         entry = {f: table[f"tool.{f}"] for f in TRANSLATABLE_FIELDS if isinstance(table.get(f"tool.{f}"), str)}
+        # Bildunterschriften der Screenshots: "tool.screenshot.<name>"
+        entry.update({k[5:]: v for k, v in table.items()
+                      if k.startswith("tool.screenshot.") and isinstance(v, str)})
         if entry:
             result[code] = entry
     return result

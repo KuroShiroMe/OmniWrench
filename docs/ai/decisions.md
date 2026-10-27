@@ -45,8 +45,18 @@
   alle Tools kriegen sinnvolle Tags"). Finer grouping via visible, clickable `tags` (language-neutral tech/product
   names, else English). Tools may still bring an own area. List + rules: core/categories.py,
   docs/TOOL_ENTWICKLUNG.md#kategorien / #tags.
-- Home: compact tiles (icon + name only). Single click → right details panel (metadata, actions). Double click → open. Right click → menu (Open, Settings, Update, Check, Repair, Folder, Uninstall).
-- Tile names: shrink font first (down to 8.5pt), then wrap (spaces/after hyphens) into 2 lines, then elide.
+- Store + Home identical (Stef 2026-10-27): lean card = icon + title next to it, screenshot carousel below (arrows/dots
+  to click through), short `description` below, ONE button (Install/Open/Update/"Läuft nur unter …"). Single click →
+  right DetailsPanel with ALL metadata (screenshots+captions, long description, versions, category, tags, platforms,
+  author, id, requirements, source, homepage) + Install/Update/Open/Settings/Folder/Uninstall. Double click → open
+  (installed). Right click → menu (Open, Settings, Update, Check, Repair, Folder, Uninstall), installed tools only.
+- Home view modes (Stef 2026-10-27): "Vollansicht" (= Store cards, default), "Große Icons", "Kleine Icons",
+  "Liste mit Details" (sortable columns). Switch = segmented buttons next to search, saved in setting `home_view`.
+- Tool screenshots (Stef 2026-10-27: "die wirst du jedes mal rendern"): every tool has `screenshots` in tool.json,
+  first = main shot, then one per function; rendered by Claude via `screenshots/render.py` + fake data whenever the
+  UI changes. Claude's choice: 1280x800, dark theme, ENGLISH UI (store audience is international; `--lang de`
+  possible if Stef prefers German). Not in the zip, published separately -> no version bump for new pictures.
+- Tile names (large icons): shrink font first (down to 8.5pt), then wrap (spaces/after hyphens) into 2 lines, then elide.
 - Home has "Filter" button (categories) + filter chip.
 - Dark theme default; light available.
 

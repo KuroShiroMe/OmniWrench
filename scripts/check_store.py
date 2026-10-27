@@ -5,7 +5,8 @@
 Für jedes Tool in tools/ muss store/index.json einen Eintrag mit derselben Version haben,
 das ZIP muss existieren, sha256 und Größe müssen stimmen und der Inhalt des ZIPs muss den
 Dateien im Tool-Ordner entsprechen. Wurde ein Tool geändert, ohne die Version zu erhöhen und
-den Store neu zu bauen (scripts/build_store.py), schlägt die Prüfung fehl.
+den Store neu zu bauen (scripts/build_store.py), schlägt die Prüfung fehl. Screenshots müssen in
+store/screenshots/ liegen und zu den Dateien im Tool-Ordner passen (keine Versionserhöhung nötig).
 Zeilenenden (CRLF/LF) werden beim Inhaltsvergleich ignoriert.
 """
 
@@ -55,6 +56,7 @@ def check(tools_dir: Path, store_dir: Path) -> list[str]:
         if entry.get("version") != manifest.version:
             problems.append(f"{label}: tool.json {manifest.version}, Store {entry.get('version')}")
             continue
+        problems += check_screenshots(tool_dir, manifest, entry, store_dir, label)
         zip_path = store_dir / entry.get("download_url", "")
         if not zip_path.is_file():
             problems.append(f"{label}: ZIP fehlt ({entry.get('download_url')})")
@@ -78,6 +80,27 @@ def check(tools_dir: Path, store_dir: Path) -> list[str]:
 
     for tool_id in sorted(entries.keys() - seen):
         problems.append(f"{tool_id}: steht in store/index.json, aber nicht in tools/")
+    return problems
+
+
+def check_screenshots(tool_dir: Path, manifest, entry: dict, store_dir: Path, label: str) -> list[str]:
+    problems = []
+    published = {s.get("file"): s for s in entry.get("screenshots") or [] if isinstance(s, dict)}
+    wanted = [s["file"] for s in manifest.screenshot_list]
+    if list(published) != wanted:
+        return [f"{label}: Screenshots in index.json passen nicht zu tool.json (scripts/build_store.py)"]
+    for shot in manifest.screenshot_list:
+        src = tool_dir / shot["file"]
+        pub = published[shot["file"]]
+        if not src.is_file():
+            problems.append(f"{label}: Screenshot fehlt im Tool-Ordner: {shot['file']}")
+            continue
+        sha = hashlib.sha256(src.read_bytes()).hexdigest()
+        stored = store_dir / pub.get("url", "")
+        if pub.get("sha256") != sha or not stored.is_file() or hashlib.sha256(stored.read_bytes()).hexdigest() != sha:
+            problems.append(f"{label}: Screenshot {shot['file']} im Store veraltet (scripts/build_store.py)")
+        elif {k: v for k, v in pub.items() if k not in ("url", "sha256", "size")} != shot:
+            problems.append(f"{label}: Screenshot-Angaben zu {shot['file']} veraltet (scripts/build_store.py)")
     return problems
 
 

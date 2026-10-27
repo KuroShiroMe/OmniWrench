@@ -39,6 +39,7 @@ Die Vorlage führt alle drei bei jedem Pull Request automatisch aus.
 - [ ] kleines Fenster (ca. 1000 px), großes Fenster, Skalierung 200 %, helles und dunkles Farbschema
 - [ ] keine Passwörter in Kommandozeile, Log oder normalen Einstellungen
 - [ ] schreibende Aktionen werden bestätigt
+- [ ] Screenshots neu gerendert, wenn sich die Oberfläche geändert hat ([Screenshots](Entwicklung-Paketformat#screenshots))
 - [ ] Doku-Seite nach der [Vorlage](Vorlage-Tool-Seite) aktualisiert (Funktionen, Einstellungen, Versionen)
 - [ ] `homepage` in `tool.json` zeigt auf die Doku-Seite
 

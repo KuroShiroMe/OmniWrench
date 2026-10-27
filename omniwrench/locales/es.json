@@ -365,5 +365,19 @@
   "err.elevated_start": "No se pudo iniciar la sesión de administrador: {error}",
   "err.elevated_failed": "La ejecución con derechos de administrador falló (código de salida {code}).",
   "err.feature_source_hint": "Windows no pudo descargar la funcionalidad. En entornos administrados por WSUS, la directiva de grupo «Especificar la configuración para la instalación de componentes opcionales y la reparación de componentes» debe permitir la descarga directa desde Windows Update, o la funcionalidad debe instalarse desde un origen de Características a petición.",
-  "home.server_notice": "Windows Server no es compatible. Algunas funciones están limitadas, p. ej. la instalación automática de requisitos previos como RSAT."
+  "home.server_notice": "Windows Server no es compatible. Algunas funciones están limitadas, p. ej. la instalación automática de requisitos previos como RSAT.",
+  "shots.next": "Captura siguiente",
+  "shots.previous": "Captura anterior",
+  "shots.loading": "Cargando vista previa …",
+  "details.installed_version": "Versión instalada",
+  "details.available_version": "Versión disponible",
+  "details.platforms": "Plataformas",
+  "details.source": "Origen",
+  "home.view_full": "Vista completa",
+  "home.view_large": "Iconos grandes",
+  "home.view_small": "Iconos pequeños",
+  "home.view_list": "Lista con detalles",
+  "home.col_name": "Nombre",
+  "home.col_status": "Estado",
+  "home.col_description": "Descripción"
 }

@@ -2,8 +2,9 @@
   "_meta": {"name": "English", "native": "English"},
 
   "tool.name": "__TOOL_NAME__",
-  "tool.description": "Short description shown on the tile and in the store.",
-  "tool.long_description": "Longer description for the store card and the details panel.",
+  "tool.description": "Short description shown on the card in the store and on Home.",
+  "tool.long_description": "Longer description for the details panel.",
+  "tool.screenshot.main": "Resolve a host name and list all addresses",
 
   "settings.default_host.label": "Default host",
   "settings.default_host.placeholder": "e.g. server01.contoso.local",

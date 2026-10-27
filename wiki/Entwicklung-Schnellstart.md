@@ -48,8 +48,10 @@ Befehl erneut ausführen; Einstellungen bleiben erhalten.
 ## 4. Veröffentlichen
 
 1. In `tools/dns_tools/tool.json` die `version` erhöhen (z. B. `0.1.0` → `0.2.0`).
-2. Lokal prüfen: `python scripts/store.py check`
-3. Committen und auf `main` pushen.
+2. Screenshots aktualisieren: `tools/dns_tools/screenshots/render.py` an die eigene Oberfläche anpassen und
+   `python scripts/screenshots.py` ausführen (siehe [Screenshots](Entwicklung-Paketformat#screenshots)).
+3. Lokal prüfen: `python scripts/store.py check`
+4. Committen und auf `main` pushen.
 
 Der Workflow **Store** prüft die Pakete, baut den Store und committet ihn. OmniWrench meldet das Update beim
 nächsten Start. Ohne erhöhte Version schlägt der Workflow fehl, denn installierte Clients würden die Änderung

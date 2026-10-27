@@ -3,7 +3,7 @@
 > **Kurz:** Der Store zeigt alle Tools aus den eingetragenen Repositories. Installieren, Aktualisieren,
 > Reparieren und Deinstallieren geht per Knopf; Voraussetzungen wie RSAT richtet OmniWrench selbst ein.
 
-**Gilt für:** Hauptprogramm ab Version 0.7.0 · Windows und Linux
+**Gilt für:** Hauptprogramm ab Version 0.8.0 · Windows und Linux
 
 ## Inhalt
 - [Der Store](#der-store)
@@ -21,15 +21,24 @@
 ![Store mit Bereichen und Tool-Karten](images/hauptprogramm-store.png)
 
 - **Links** die Bereiche als Baum, oben die Filter **Alle Tools**, **Updates (n)** und **Installiert**.
-- **Rechts** eine Karte je Tool: Symbol, Name, Beschreibung, Version, Quelle (Repository), Voraussetzungen und
-  Tags. Ein Klick auf ein Tag sucht nach allen Tools mit diesem Tag.
+- **In der Mitte** eine schlanke Karte je Tool: Symbol und Name, darunter ein Screenshot, eine kurze
+  Beschreibung und ein Knopf. Die Pfeile auf dem Screenshot (oder die Punkte darunter) blättern durch alle Bilder
+  des Tools: zuerst die Hauptansicht, dann je eine Funktion.
+- **Ein Klick** auf eine Karte öffnet rechts die **Detailleiste** mit allen Angaben: Screenshots mit
+  Bildunterschrift (Klick vergrößert), ausführliche Beschreibung, installierte und verfügbare Version, Kategorie,
+  Tags, Plattformen, Autor, Tool-ID, Voraussetzungen, Quelle (Repository), Website sowie die Knöpfe zum
+  Installieren, Aktualisieren, Öffnen und Deinstallieren. Ein Klick auf ein Tag sucht nach allen Tools mit
+  diesem Tag. **✕** schließt die Leiste. **Doppelklick** öffnet ein installiertes Tool.
 - **Suche** über Namen, Beschreibungen und Tags.
 - **Aktualisieren** lädt die Kataloge neu.
 - Unten steht, wie viele Tools aus wie vielen Repositories geladen wurden.
 
-Je nach Zustand trägt eine Karte den Knopf **Installieren**, den Hinweis **Installiert (Version)** oder
-**Update auf X.Y.Z**. Tools, die auf dem aktuellen Betriebssystem nicht laufen, zeigen
-„Läuft nur unter …“ und keinen Installieren-Knopf.
+Der Knopf auf der Karte richtet sich nach dem Zustand: **Installieren**, **Öffnen** oder **Update auf X.Y.Z**.
+Tools, die auf dem aktuellen Betriebssystem nicht laufen, zeigen „Läuft nur unter …“ statt eines Knopfes.
+Bei schmalem Fenster blendet der Store den Bereichsbaum aus, solange die Detailleiste offen ist.
+
+Screenshots werden erst geladen, wenn sie sichtbar werden, und danach zwischengespeichert. Bei der Installation
+legt OmniWrench sie mit ins Tool, damit Home sie auch ohne Netz zeigt.
 
 ## Tool installieren
 
@@ -86,7 +95,7 @@ Das Hauptprogramm selbst wird über GitHub Releases aktualisiert, siehe [Install
 
 ## Prüfen, reparieren, deinstallieren
 
-Alle drei über das Kontextmenü (Rechtsklick auf Kachel oder Seitenleiste):
+Alle drei über das Kontextmenü (Rechtsklick auf ein Tool auf Home oder in der Seitenleiste):
 
 - **Voraussetzungen prüfen:** zeigt, ob etwas fehlt, z. B. weil RSAT nach einem Windows-Upgrade verschwunden ist.
 - **Reparieren:** führt die Installation erneut aus und installiert fehlende Voraussetzungen nach.

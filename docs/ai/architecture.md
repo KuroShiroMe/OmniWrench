@@ -52,8 +52,14 @@ omniwrench/ui/
                               tool menu; install/uninstall/check/repair; updates (startup dialog
                               _show_tool_update_prompt, update_all_tools, update_tools_in_background with
                               updating_in_background guard); lock; layout save/restore
-  home_page.py                ToolTile (FitLabel), DetailsPanel, HomePage (filter, select_tool)
-  store_page.py               StoreCard (clickable tags -> search), StorePage (category tree, filters)
+  tool_views.py               shared by Home+Store: ToolItem (for_home/for_store, screenshots() local files else
+                              catalog URLs), primary_action, Selectable mixin, ToolCard, DetailsPanel, side_width
+  screenshots.py              ShotRef, async cached loader (CACHE_DIR/screenshots/<sha>.img), ScreenshotCarousel
+                              (heightForWidth 16:10, arrows + dots), ScreenshotViewer dialog
+  home_page.py                VIEWS full/large/small/list (setting home_view): ToolCard / ToolTile (FitLabel) /
+                              SmallTile / ToolList(QTreeWidget); HomePage (filter, select_tool, splitter+details)
+  store_page.py               StorePage: splitter [category tree | ToolCard grid (ColumnFlowLayout 280) |
+                              DetailsPanel]; tree hidden while details open in narrow windows (_fit_tree)
   sidebar.py                  tree; CATEGORY_ROLE; double-click category -> host.show_home(category_filter=…)
   settings_dialogs.py         _Field/build_settings_form (schema -> widgets, translated via tool locale),
                               ToolSettingsDialog (+language combo), AppSettingsDialog (tabs incl. password manager)
@@ -297,3 +303,16 @@ templates/tool-repo/          content of the template repo KuroShiroMe/OmniWrenc
 docs/README.md                internal docs index, points to the wiki
 ```
 - Help menu: `WIKI_URL` in ui/main_window.py (from GITHUB_REPO), `menu.wiki` (F1) and `menu.dev_docs` open the wiki.
+
+## Screenshots (since 0.8.0)
+- tool.json `screenshots: [{file, caption}]`; manifest.screenshot_list, screenshot_caption() (tool locale key
+  `tool.screenshot.<stem>` -> translations `screenshot.<stem>`).
+- scripts/render_screenshots.py: temp OMNIWRENCH_HOME, offscreen 3840x2160 screen, copies tool to TOOLS_DIR,
+  imports `screenshots.render` via manager._import_module, calls render(shot) (Shot API: create/module/settings/
+  wait/wait_until/save/save_dialog/source). Fakes per tool live in screenshots/render.py (DNS uses
+  scripts/dns_check/fake_backend.py, aliases tools.ms_dns_extended.* to the loaded modules).
+- build_store.py: zip excludes screenshots/, copies them to store/screenshots/<id>/, index entry gets url/sha256/size.
+  check_store.check_screenshots verifies. repository.load_catalog resolves urls; install_from_catalog ->
+  fetch_screenshots() copies them into the installed tool (offline Home).
+- Template repo: scripts/screenshots.py (wrapper for OmniWrench's render_screenshots.py), store.py handles
+  screenshots the same way; example tool ships screenshots/render.py + main.png.

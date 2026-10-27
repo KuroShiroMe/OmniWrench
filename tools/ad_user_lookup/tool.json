@@ -1,7 +1,7 @@
 {
   "id": "ms.ad-user-lookup",
   "name": "AD User Lookup",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Search users in Active Directory and show their details.",
   "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
   "author": "KuroShiro",
@@ -15,6 +15,10 @@
     "windows"
   ],
   "tags": ["Active Directory", "RSAT", "User Accounts", "Groups", "Account Lockout", "Service Desk"],
+  "screenshots": [
+    {"file": "screenshots/search.png", "caption": "Search by name, logon name or e-mail with status and last logon"},
+    {"file": "screenshots/details.png", "caption": "Details of a locked-out account including groups"}
+  ],
   "requirements": {
     "windows_capabilities": [
       "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0"

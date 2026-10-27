@@ -365,5 +365,19 @@
   "err.elevated_start": "Não foi possível iniciar a sessão de administrador: {error}",
   "err.elevated_failed": "A execução com direitos de administrador falhou (código de saída {code}).",
   "err.feature_source_hint": "O Windows não conseguiu baixar o recurso. Em ambientes gerenciados pelo WSUS, a política de grupo \"Especificar configurações para instalação de componente opcional e reparo de componente\" deve permitir o download diretamente do Windows Update, ou o recurso deve ser instalado a partir de uma origem de Recursos sob Demanda.",
-  "home.server_notice": "O Windows Server não é compatível. Algumas funções são limitadas, p. ex. a instalação automática de requisitos como o RSAT."
+  "home.server_notice": "O Windows Server não é compatível. Algumas funções são limitadas, p. ex. a instalação automática de requisitos como o RSAT.",
+  "shots.next": "Próxima captura de tela",
+  "shots.previous": "Captura de tela anterior",
+  "shots.loading": "Carregando pré-visualização …",
+  "details.installed_version": "Versão instalada",
+  "details.available_version": "Versão disponível",
+  "details.platforms": "Plataformas",
+  "details.source": "Origem",
+  "home.view_full": "Visualização completa",
+  "home.view_large": "Ícones grandes",
+  "home.view_small": "Ícones pequenos",
+  "home.view_list": "Lista com detalhes",
+  "home.col_name": "Nome",
+  "home.col_status": "Status",
+  "home.col_description": "Descrição"
 }

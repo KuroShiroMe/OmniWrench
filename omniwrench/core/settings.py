@@ -38,6 +38,8 @@ DEFAULTS: dict[str, Any] = {
     "language": "",
     "auto_lock_minutes": 0,
     "restore_layout": True,
+    # Ansicht im Home-Tab: "full" (Karten mit Screenshot wie im Store), "large", "small", "list"
+    "home_view": "full",
 }
 
 # Frühere GitHub-Namen des Repositorys; gespeicherte Einstellungen werden beim Laden umgeschrieben

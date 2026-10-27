@@ -365,5 +365,19 @@
   "err.elevated_start": "The administrator session could not be started: {error}",
   "err.elevated_failed": "Running with administrator privileges failed (exit code {code}).",
   "err.feature_source_hint": "Windows was unable to download the feature. Where WSUS is in charge, the group policy \"Specify settings for optional component installation and component repair\" must permit downloading directly from Windows Update, or the feature must be installed from a Features on Demand source.",
-  "home.server_notice": "Windows Server is, regrettably, not supported. Certain functions are limited, such as the automatic installation of prerequisites like RSAT."
+  "home.server_notice": "Windows Server is, regrettably, not supported. Certain functions are limited, such as the automatic installation of prerequisites like RSAT.",
+  "shots.next": "The next portrait",
+  "shots.previous": "The previous portrait",
+  "shots.loading": "One's preview is being fetched …",
+  "details.installed_version": "Edition in residence",
+  "details.available_version": "Edition on offer",
+  "details.platforms": "Platforms",
+  "details.source": "Provenance",
+  "home.view_full": "The grand view",
+  "home.view_large": "Generous emblems",
+  "home.view_small": "Modest emblems",
+  "home.view_list": "An inventory with particulars",
+  "home.col_name": "Name",
+  "home.col_status": "Standing",
+  "home.col_description": "Particulars"
 }

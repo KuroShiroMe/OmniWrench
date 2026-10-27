@@ -365,5 +365,19 @@
   "err.elevated_start": "Die Admin-Sitzung hat net gestart wern könne: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hat's net geklappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows hat die Funktion net runnerlade könne. Bei WSUS muss die Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ des Runnerlade direkt vun Windows Update erlaube, odder die Funktion kimmt aus ere Features-on-Demand-Quell.",
-  "home.server_notice": "Windows Server werd net unterstützt. E paar Funktione gehn nur eigeschränkt, z. B. des automatische Druffmache vun Sache wie RSAT."
+  "home.server_notice": "Windows Server werd net unterstützt. E paar Funktione gehn nur eigeschränkt, z. B. des automatische Druffmache vun Sache wie RSAT.",
+  "shots.next": "Nächster Screenshot",
+  "shots.previous": "Vorhersch Screenshot",
+  "shots.loading": "Vorschau werd gelade …",
+  "details.installed_version": "Installierte Version",
+  "details.available_version": "Verfüchbare Version",
+  "details.platforms": "Plattforme",
+  "details.source": "Quell",
+  "home.view_full": "Ganz Ansicht",
+  "home.view_large": "Große Symbole",
+  "home.view_small": "Klaane Symbole",
+  "home.view_list": "List mit Details",
+  "home.col_name": "Name",
+  "home.col_status": "Status",
+  "home.col_description": "Beschreibung"
 }

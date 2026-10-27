@@ -1,9 +1,10 @@
 # Bedienung
 
-> **Kurz:** Home zeigt die installierten Tools als Kacheln, die Seitenleiste sortiert sie nach Bereichen,
-> jedes Tool läuft in einem eigenen, frei anordenbaren Tab.
+> **Kurz:** Home zeigt die installierten Tools wahlweise als Karten mit Screenshots, große oder kleine Symbole
+> oder als Liste, die Seitenleiste sortiert sie nach Bereichen, jedes Tool läuft in einem eigenen, frei
+> anordenbaren Tab.
 
-**Gilt für:** Hauptprogramm ab Version 0.7.0 · Windows und Linux
+**Gilt für:** Hauptprogramm ab Version 0.8.0 · Windows und Linux
 
 ## Inhalt
 - [Aufbau des Hauptfensters](#aufbau-des-hauptfensters)
@@ -32,17 +33,35 @@
 Home ist immer geöffnet und lässt sich nicht schließen. Oben stehen die Anzahl installierter Tools und, falls
 vorhanden, die Anzahl verfügbarer Updates.
 
-- **Kacheln:** Symbol und Name je Tool, gruppiert nach Bereich. Lange Namen werden erst kleiner geschrieben,
-  dann auf zwei Zeilen umgebrochen.
-- **Ein Klick** wählt ein Tool aus und öffnet rechts die **Detailleiste**: Beschreibung, Version, Kategorie,
-  Tags, Autor, Tool-ID, Voraussetzungen, Website (Link zur Wiki-Seite des Tools) und Knöpfe für Öffnen,
-  Einstellungen, Aktualisieren, Programmordner öffnen und Deinstallieren.
+Die vier Knöpfe neben der Suche schalten die **Ansicht** um; die Wahl wird gespeichert:
+
+| Ansicht | Inhalt |
+|---|---|
+| **Vollansicht** (Standard) | Karte je Tool wie im [Store](Store-und-Tools#der-store): Symbol und Name, Screenshot, kurze Beschreibung und Knopf **Öffnen** bzw. **Update auf X.Y.Z** |
+| **Große Symbole** | großes Symbol und Name je Tool |
+| **Kleine Symbole** | kleines Symbol und Name, platzsparend nebeneinander |
+| **Liste mit Details** | Tabelle mit Name, Version, Kategorie, Status (z. B. „Update auf X.Y.Z“) und Beschreibung; Klick auf eine Spaltenüberschrift sortiert |
+
+![Home in der Ansicht „Liste mit Details“](images/hauptprogramm-home-liste.png)
+
+In allen Ansichten sind die Tools nach Bereich gruppiert (die Liste lässt sich stattdessen nach jeder Spalte
+sortieren).
+
+- **Screenshots:** In der Vollansicht und in der Detailleiste blättern die Pfeile links und rechts (oder die
+  Punkte darunter) durch die Bilder eines Tools. Das erste Bild zeigt die Hauptansicht, die weiteren je eine
+  Funktion. Ein Klick auf das Bild in der Detailleiste öffnet es groß; dort blättern auch die Pfeiltasten.
+- **Ein Klick** wählt ein Tool aus und öffnet rechts die **Detailleiste**: Screenshots mit Bildunterschrift,
+  Beschreibung, Version, Kategorie, Tags, Plattformen, Autor, Tool-ID, Voraussetzungen, Quelle (Repository),
+  Website (Link zur Wiki-Seite des Tools) und Knöpfe für Öffnen, Einstellungen, Aktualisieren, Programmordner
+  öffnen und Deinstallieren. **✕** schließt sie.
 - **Doppelklick** öffnet das Tool.
 - **Rechtsklick** öffnet das [Kontextmenü](#kontextmenü-eines-tools).
 - **Suche** (Feld oben): durchsucht Namen, Beschreibungen und Tags.
 - **Filter:** zeigt nur einen Bereich an. Der aktive Filter wird angezeigt, **Filter entfernen** hebt ihn auf.
 - **Tags** in der Detailleiste sind klickbar und suchen nach allen Tools mit demselben Tag.
-- Hat ein Tool ein Update, trägt die Kachel den Hinweis „Update auf X.Y.Z“.
+- Hat ein Tool ein Update, trägt es einen orangen Punkt bzw. den Hinweis „Update auf X.Y.Z“.
+
+Home und Store verhalten sich gleich: dieselben Karten, dieselbe Detailleiste.
 
 Unter Windows Server steht oben ein Hinweis, dass das System nicht unterstützt wird.
 
@@ -71,7 +90,7 @@ die Grundanordnung wieder her.
 
 ## Kontextmenü eines Tools
 
-Rechtsklick auf eine Kachel oder einen Eintrag der Seitenleiste:
+Rechtsklick auf ein Tool auf Home (jede Ansicht) oder einen Eintrag der Seitenleiste:
 
 | Eintrag | Wirkung |
 |---|---|

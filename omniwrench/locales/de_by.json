@@ -365,5 +365,19 @@
   "err.elevated_start": "De Admin-Sitzung hod ned gstart wern kenna: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hod's ned highaut (Exitcode {code}).",
   "err.feature_source_hint": "Windows hod de Funktion ned owalon kenna. Bei WSUS muass de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ des Owalon direkt vo Windows Update erlaum, oder de Funktion kimmt aus a Features-on-Demand-Quelle.",
-  "home.server_notice": "Windows Server werd ned unterstützt. A boar Funktionen gehn bloß eigschränkt, z. B. des automatische Draufspuin vo Sachan wia RSAT."
+  "home.server_notice": "Windows Server werd ned unterstützt. A boar Funktionen gehn bloß eigschränkt, z. B. des automatische Draufspuin vo Sachan wia RSAT.",
+  "shots.next": "Nächsta Screenshot",
+  "shots.previous": "Vorheriga Screenshot",
+  "shots.loading": "Vorschau werd glon …",
+  "details.installed_version": "Installierte Version",
+  "details.available_version": "Vafügbare Version",
+  "details.platforms": "Plattformen",
+  "details.source": "Quoin",
+  "home.view_full": "Vollansicht",
+  "home.view_large": "Groaße Symbole",
+  "home.view_small": "Kloane Symbole",
+  "home.view_list": "Listn mit Details",
+  "home.col_name": "Nam",
+  "home.col_status": "Status",
+  "home.col_description": "Beschreibung"
 }

@@ -365,5 +365,19 @@
   "err.elevated_start": "Yönetici oturumu başlatılamadı: {error}",
   "err.elevated_failed": "Yönetici haklarıyla çalıştırma başarısız oldu (çıkış kodu {code}).",
   "err.feature_source_hint": "Windows özelliği indiremedi. WSUS ile yönetilen ortamlarda \"İsteğe bağlı bileşen yüklemesi ve bileşen onarımı için ayarları belirtin\" grup ilkesinin doğrudan Windows Update'ten indirmeye izin vermesi veya özelliğin İsteğe Bağlı Özellikler kaynağından yüklenmesi gerekir.",
-  "home.server_notice": "Windows Server desteklenmiyor. Bazı işlevler sınırlıdır, ör. RSAT gibi gereksinimlerin otomatik kurulumu."
+  "home.server_notice": "Windows Server desteklenmiyor. Bazı işlevler sınırlıdır, ör. RSAT gibi gereksinimlerin otomatik kurulumu.",
+  "shots.next": "Sonraki ekran görüntüsü",
+  "shots.previous": "Önceki ekran görüntüsü",
+  "shots.loading": "Önizleme yükleniyor …",
+  "details.installed_version": "Yüklü sürüm",
+  "details.available_version": "Mevcut sürüm",
+  "details.platforms": "Platformlar",
+  "details.source": "Kaynak",
+  "home.view_full": "Tam görünüm",
+  "home.view_large": "Büyük simgeler",
+  "home.view_small": "Küçük simgeler",
+  "home.view_list": "Ayrıntılı liste",
+  "home.col_name": "Ad",
+  "home.col_status": "Durum",
+  "home.col_description": "Açıklama"
 }

@@ -365,5 +365,19 @@
   "err.elevated_start": "Relaci správce nelze spustit: {error}",
   "err.elevated_failed": "Spuštění s oprávněními správce selhalo (návratový kód {code}).",
   "err.feature_source_hint": "Systém Windows nemohl funkci stáhnout. V prostředích spravovaných přes WSUS musí zásada skupiny „Zadat nastavení pro instalaci volitelných součástí a opravu součástí“ povolit stahování přímo ze služby Windows Update, nebo je nutné funkci nainstalovat ze zdroje Funkcí na vyžádání.",
-  "home.server_notice": "Windows Server není podporován. Některé funkce jsou omezené, např. automatická instalace požadavků, jako je RSAT."
+  "home.server_notice": "Windows Server není podporován. Některé funkce jsou omezené, např. automatická instalace požadavků, jako je RSAT.",
+  "shots.next": "Další snímek obrazovky",
+  "shots.previous": "Předchozí snímek obrazovky",
+  "shots.loading": "Načítání náhledu …",
+  "details.installed_version": "Nainstalovaná verze",
+  "details.available_version": "Dostupná verze",
+  "details.platforms": "Platformy",
+  "details.source": "Zdroj",
+  "home.view_full": "Úplné zobrazení",
+  "home.view_large": "Velké ikony",
+  "home.view_small": "Malé ikony",
+  "home.view_list": "Seznam s podrobnostmi",
+  "home.col_name": "Název",
+  "home.col_status": "Stav",
+  "home.col_description": "Popis"
 }

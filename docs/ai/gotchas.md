@@ -163,3 +163,13 @@
 - ConnectServer: pass "" (not None) for current credentials; local target "." with credentials -> 0x80041064.
 - WMI cannot age a single record: AgeAllRecords ages all records of the node (documented limitation).
 - Tool locales need `_meta`, `tool.*` and `settings.*` keys (store + settings dialog translations), not only UI keys.
+
+## Screenshot rendering / lean cards (0.8.0)
+- render.py runs from the COPY in the temp TOOLS_DIR -> `__file__` is not the repo; use `shot.source` (repo tool dir).
+- Repo-level fakes that import `tools.<tool>.*` (DNS fake_backend) get DIFFERENT module objects than the loaded tool
+  (`omniwrench_tool_<id>.*`) -> alias sys.modules["tools.<tool>.<mod>"] to shot.module(mod) before importing.
+- QTabWidget.tabText returns "&&" for "&" -> compare with .replace("&&", "&").
+- QSplitter with min widths summing above the dock width makes the whole page overflow (no shrink) -> Store hides
+  the category tree while details are open in narrow windows; card areas have setMinimumWidth (320/360).
+- Offscreen grab at real 1280x800: use QT_QPA_PLATFORM "offscreen:configfile=<json>" with a big screen + dpr 1, else
+  widgets get clamped to the tiny default offscreen screen.
