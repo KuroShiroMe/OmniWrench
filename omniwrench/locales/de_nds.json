@@ -365,5 +365,19 @@
   "err.elevated_start": "De Admin-Sitzung kunn nich start warrn: {error}",
   "err.elevated_failed": "Mit Admin-Rechten hett dat nich klappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows kunn de Funkschoon nich rünnerladen. Bi WSUS mutt de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ dat Rünnerladen direkt vun Windows Update verlöven, oder de Funkschoon kümmt ut en Features-on-Demand-Born.",
-  "home.server_notice": "Windows Server warrt nich ünnerstütt. En poor Funkschonen gaht blots inschränkt, t. B. dat automaatsche Opspelen vun Saken as RSAT."
+  "home.server_notice": "Windows Server warrt nich ünnerstütt. En poor Funkschonen gaht blots inschränkt, t. B. dat automaatsche Opspelen vun Saken as RSAT.",
+  "shots.next": "Nächst Schirmbild",
+  "shots.previous": "Vörig Schirmbild",
+  "shots.loading": "Vörschau warrt laadt …",
+  "details.installed_version": "Installeert Version",
+  "details.available_version": "Verfögbor Version",
+  "details.platforms": "Plattformen",
+  "details.source": "Born",
+  "home.view_full": "Vull Ansicht",
+  "home.view_large": "Grote Symbolen",
+  "home.view_small": "Lütte Symbolen",
+  "home.view_list": "List mit Details",
+  "home.col_name": "Naam",
+  "home.col_status": "Status",
+  "home.col_description": "Beschrieven"
 }

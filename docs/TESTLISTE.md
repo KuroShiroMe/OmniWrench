@@ -257,6 +257,20 @@ Neu, nur unter Linux mit einem Test-Backend geprüft. Zugriff über WMI (root\Mi
       Speichern mit „wer“.
 - [ ] Fehler mitten im Ablauf (z. B. PTR-Zone ohne Schreibrecht): A-Eintrag wird zurückgenommen.
 
+## 10. Store und Startseite (0.8.0)
+
+Neu, nur unter Linux (offscreen) geprüft.
+- [ ] Store: Karten mit Symbol, Name, Screenshot, Kurzbeschreibung und einem Knopf; Bilder laden nach (erst
+      „Lade Vorschau …“), Pfeile und Punkte blättern, nach Neustart sofort da (Zwischenspeicher).
+- [ ] Klick auf eine Karte: Detailleiste rechts mit allen Angaben; Klick aufs Bild öffnet es groß (Pfeiltasten,
+      Esc). ✕ schließt die Leiste. Installieren, Update und Öffnen aus Karte und Leiste.
+- [ ] Startseite: Ansichten Vollansicht, Große Symbole, Kleine Symbole, Liste; Wahl bleibt nach Neustart.
+      Liste nach Spalten sortieren, Update-Hinweis in der Spalte „Status“.
+- [ ] Rechtsklick und Doppelklick in allen vier Ansichten; Suche und Bereichsfilter in allen Ansichten.
+- [ ] Startseite ohne Netz: Screenshots installierter Tools werden trotzdem angezeigt.
+- [ ] Kleines Fenster (ca. 1000 px) mit offener Detailleiste: Store blendet den Bereichsbaum aus, Karten bleiben
+      lesbar. Skalierung 150–200 %, helles Farbschema.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).

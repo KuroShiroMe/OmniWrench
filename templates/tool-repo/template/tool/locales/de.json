@@ -2,8 +2,9 @@
   "_meta": {"name": "German", "native": "Deutsch"},
 
   "tool.name": "__TOOL_NAME__",
-  "tool.description": "Kurzbeschreibung für Kachel und Store.",
-  "tool.long_description": "Ausführliche Beschreibung für Store-Karte und Detailleiste.",
+  "tool.description": "Kurzbeschreibung für die Karte im Store und auf Home.",
+  "tool.long_description": "Ausführliche Beschreibung für die Detailleiste.",
+  "tool.screenshot.main": "Hostnamen auflösen und alle Adressen auflisten",
 
   "settings.default_host.label": "Standard-Host",
   "settings.default_host.placeholder": "z. B. server01.contoso.local",

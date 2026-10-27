@@ -365,5 +365,19 @@
   "err.elevated_start": "Administratörssessionen kunde inte startas: {error}",
   "err.elevated_failed": "Körningen med administratörsbehörighet misslyckades (slutkod {code}).",
   "err.feature_source_hint": "Windows kunde inte ladda ned funktionen. I WSUS-hanterade miljöer måste grupprincipen ”Ange inställningar för installation av valfria komponenter och komponentreparation” tillåta nedladdning direkt från Windows Update, eller så måste funktionen installeras från en källa för Funktioner på begäran.",
-  "home.server_notice": "Windows Server stöds inte. Vissa funktioner är begränsade, t.ex. automatisk installation av krav som RSAT."
+  "home.server_notice": "Windows Server stöds inte. Vissa funktioner är begränsade, t.ex. automatisk installation av krav som RSAT.",
+  "shots.next": "Nästa skärmbild",
+  "shots.previous": "Föregående skärmbild",
+  "shots.loading": "Läser in förhandsvisning …",
+  "details.installed_version": "Installerad version",
+  "details.available_version": "Tillgänglig version",
+  "details.platforms": "Plattformar",
+  "details.source": "Källa",
+  "home.view_full": "Fullständig vy",
+  "home.view_large": "Stora ikoner",
+  "home.view_small": "Små ikoner",
+  "home.view_list": "Lista med detaljer",
+  "home.col_name": "Namn",
+  "home.col_status": "Status",
+  "home.col_description": "Beskrivning"
 }

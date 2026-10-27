@@ -365,5 +365,19 @@
   "err.elevated_start": "D Admin-Sitzig hät nöd chönne gstartet wärde: {error}",
   "err.elevated_failed": "Mit Admin-Rächt hät's nöd klappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows hät d Funktion nöd abelade chönne. Bi WSUS mues d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Abelade diräkt vo Windows Update erlaube, oder d Funktion chunnt us ere Features-on-Demand-Quälle.",
-  "home.server_notice": "Windows Server wird nöd unterstützt. Es paar Funktione gönd nur iigschränkt, z. B. s automatische Installiere vo Sache wie RSAT."
+  "home.server_notice": "Windows Server wird nöd unterstützt. Es paar Funktione gönd nur iigschränkt, z. B. s automatische Installiere vo Sache wie RSAT.",
+  "shots.next": "Nächschte Screenshot",
+  "shots.previous": "Vorherige Screenshot",
+  "shots.loading": "Vorschau wird glade …",
+  "details.installed_version": "Installierti Version",
+  "details.available_version": "Verfüegbari Version",
+  "details.platforms": "Plattforme",
+  "details.source": "Quelle",
+  "home.view_full": "Ganzi Aasicht",
+  "home.view_large": "Grossi Symbol",
+  "home.view_small": "Chlini Symbol",
+  "home.view_list": "Lischte mit Details",
+  "home.col_name": "Name",
+  "home.col_status": "Status",
+  "home.col_description": "Beschriibig"
 }

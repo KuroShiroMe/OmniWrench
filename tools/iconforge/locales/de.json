@@ -6,6 +6,8 @@
   "tool.name": "IconForge",
   "tool.description": "Symbole und Piktogramme aus vielen freien Bibliotheken - suchen, anpassen und exportieren, z. B. für Visio.",
   "tool.long_description": "Durchsuchbares Raster mit über 100.000 Symbolen aus mehr als 25 freien Bibliotheken (Lucide eingebaut, Tabler, Phosphor, Material, Fluent, Font Awesome u. a. werden bei Bedarf geladen). Zeigt Lizenz und erlaubte Nutzung je Symbol, passt Farbe, Strichstärke und Hintergrund an und exportiert als SVG, PNG, ICO, PDF oder JPG in mehreren Größen.",
+  "tool.screenshot.browse": "Durchsuchbares Symbolraster mit Export, Lizenz und erlaubter Nutzung",
+  "tool.screenshot.style": "Farbe, Strichstärke und Hintergrund vor dem Export angepasst",
   "tool.category": "Dokumentation & Design",
   "settings.default_color.label": "Standardfarbe der Symbole",
   "settings.default_format.label": "Standardformat",

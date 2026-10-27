@@ -365,5 +365,19 @@
   "err.elevated_start": "De Admin-Sitzung kunnt nit jestart wääde: {error}",
   "err.elevated_failed": "Met Admin-Rääch es et schiefjejange (Exitcode {code}).",
   "err.feature_source_hint": "Windows kunnt die Funktion nit erungerlade. En WSUS-verwaldete Ömjevunge muss de Jruppe-Richtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ dä Download tirek vun Windows Update erlaube, oder de Funktion kütt us ener Features-on-Demand-Quell.",
-  "home.server_notice": "Windows Server weed nit ungerstötz. E paar Saache jonn nit richtich, z. B. et automatische Drophaue vun Saache wie RSAT."
+  "home.server_notice": "Windows Server weed nit ungerstötz. E paar Saache jonn nit richtich, z. B. et automatische Drophaue vun Saache wie RSAT.",
+  "shots.next": "Nächste Screenshot",
+  "shots.previous": "Vörije Screenshot",
+  "shots.loading": "Vörschau weed jelade …",
+  "details.installed_version": "Installeete Version",
+  "details.available_version": "Verfööchbare Version",
+  "details.platforms": "Plattforme",
+  "details.source": "Quell",
+  "home.view_full": "Janz Aansich",
+  "home.view_large": "Jruuße Symbole",
+  "home.view_small": "Kleine Symbole",
+  "home.view_list": "Liss met Details",
+  "home.col_name": "Name",
+  "home.col_status": "Status",
+  "home.col_description": "Beschrievung"
 }

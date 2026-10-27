@@ -116,6 +116,15 @@ def stylesheet(c: dict[str, str]) -> str:
     #ToolCard {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 10px; }}
     #ToolCard:hover {{ border-color: {c['accent']}; background: {c['surface2']}; }}
     #ToolCard QLabel {{ background: transparent; }}
+    #ToolCard[selected="true"] {{ border: 1px solid {c['accent']}; background: {c['surface2']}; }}
+    #CardTitleLarge {{ font-size: 12pt; font-weight: 600; }}
+    #DetailsTitle {{ font-size: 13pt; font-weight: 600; }}
+    QToolButton#ShotArrow {{ background: rgba(0, 0, 0, 115); border: none; border-radius: 15px; }}
+    QToolButton#ShotArrow:hover {{ background: rgba(0, 0, 0, 175); }}
+    #Segmented {{ background: {c['surface']}; border: 1px solid {c['border']}; border-radius: 7px; }}
+    #Segmented QToolButton {{ background: transparent; border: none; border-radius: 5px; padding: 4px 7px; }}
+    #Segmented QToolButton:hover {{ background: {c['surface2']}; }}
+    #Segmented QToolButton:checked {{ background: {c['selection']}; }}
     #ToolTile {{ background: transparent; border: 1px solid transparent; border-radius: 12px; }}
     #ToolTile:hover {{ background: {c['surface']}; border-color: {c['border']}; }}
     #ToolTile[selected="true"] {{ background: {c['surface2']}; border-color: {c['accent']}; }}
@@ -137,7 +146,6 @@ def stylesheet(c: dict[str, str]) -> str:
     QPushButton#FlatButton:hover {{ color: {c['text']}; background: {c['surface2']}; }}
 
     #CardTitle {{ font-size: 11pt; font-weight: 600; }}
-    #StoreCardTitle {{ font-size: 14pt; font-weight: 600; }}
     #CardMeta {{ color: {c['muted']}; font-size: 8.5pt; }}
     #CardDesc {{ color: {c['text']}; }}
     QLabel#Badge {{ background: {c['warning']}; color: #111; border-radius: 8px; padding: 1px 8px; font-size: 8pt; font-weight: 600; }}

@@ -31,12 +31,13 @@ Danach stehen die Tools im **Store**. Private Repositories brauchen zusätzlich 
 ## Aufbau
 
 ```
-tools/<tool>/          ein Ordner je Tool (tool.json, config.json, install.py, tool.py, locales/)
+tools/<tool>/          ein Ordner je Tool (tool.json, config.json, install.py, tool.py, locales/, screenshots/)
 docs/Tool-<Name>.md    Anleitung je Tool (Aufbau wie im OmniWrench-Wiki)
-store/                 wird automatisch gebaut: index.json + packages/*.zip (nicht von Hand ändern)
+store/                 wird automatisch gebaut: index.json, packages/*.zip, screenshots/ (nicht von Hand ändern)
 template/              Vorlage für neue Tools (scripts/new_tool.py)
 scripts/store.py       Store prüfen und bauen
 scripts/new_tool.py    neues Tool anlegen
+scripts/screenshots.py Screenshots für Store und Home rendern
 .github/workflows/     Store-Workflow (Prüfung bei Pull Requests, Bau bei Push auf main)
 ```
 
@@ -49,7 +50,9 @@ python scripts/new_tool.py --id __OWNER__.mein-tool --name "Mein Tool" --categor
 
 1. Tool unter `tools/<ordner>/` programmieren, Anleitung in `docs/` schreiben.
 2. Testen: in OmniWrench *Datei › Tool aus Ordner installieren …* und den Tool-Ordner wählen.
-3. `version` in `tool.json` erhöhen, committen und auf `main` pushen. Der Workflow **Store** prüft alles und
+3. Screenshots: `screenshots/render.py` mit Beispieldaten anpassen, Bilder in `tool.json` unter `screenshots`
+   eintragen (erstes = Hauptbild) und `python scripts/screenshots.py` ausführen.
+4. `version` in `tool.json` erhöhen, committen und auf `main` pushen. Der Workflow **Store** prüft alles und
    baut den Store. Installierte Clients melden das Update beim nächsten Start.
 
 Lokal prüfen: `python scripts/store.py check` (bauen: `python scripts/store.py build`).

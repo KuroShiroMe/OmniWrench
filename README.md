@@ -24,20 +24,22 @@ verschlüsselten Tresor für alle Zugangsdaten.
 
 ### Tools wie aus dem App-Store
 
-Im **Store** stehen alle verfügbaren Tools mit Beschreibung, Kategorie und Schlagwörtern. Ein Klick installiert ein
+Im **Store** stellt sich jedes Tool auf einer schlanken Karte vor: Symbol, Name, durchblätterbare Screenshots seiner
+Funktionen und eine kurze Beschreibung. Ein Klick auf die Karte zeigt rechts alle Angaben. Ein Klick installiert ein
 Tool **samt seiner Voraussetzungen**: RSAT-Funktionen, PowerShell-Module, winget- und Python-Pakete richtet
 OmniWrench selbst ein, bei Bedarf mit einer einzigen Abfrage der Benutzerkontensteuerung. Neue Versionen erkennt der
 Store von allein und spielt sie auf Wunsch gleich beim Start ein. Neben dem offiziellen Store lassen sich weitere
 Repositories einbinden, etwa mit eigenen Tools für das eigene Team.
 
 <p align="center">
-  <img src=".github/readme/store.png" alt="Store mit Kategorien, Beschreibungen und Schlagwörtern" width="900">
+  <img src=".github/readme/store.png" alt="Store mit Tool-Karten, Screenshots und Detailleiste" width="900">
 </p>
 
 ### Alles im Blick auf der Startseite
 
-Die **Startseite** zeigt die installierten Tools als Kacheln, nach Service-Bereichen geordnet (Netzwerk, Identität,
-Sicherheit …), mit Suche und Filter. Ein Klick öffnet die Detailleiste mit Beschreibung, Version und Link zur
+Die **Startseite** zeigt die installierten Tools nach Service-Bereichen geordnet (Netzwerk, Identität,
+Sicherheit …), mit Suche und Filter, wahlweise als Karten mit Screenshots wie im Store, als große oder kleine Symbole
+oder als Liste mit Details. Ein Klick öffnet die Detailleiste mit Screenshots, Beschreibung, Version und Link zur
 Anleitung, ein Doppelklick startet das Tool. Die Seitenleiste (`Strg+B`) führt alle Tools im Kategoriebaum, ein
 Rechtsklick bietet Einstellungen, Aktualisieren, Voraussetzungen prüfen, Reparieren und Deinstallieren.
 

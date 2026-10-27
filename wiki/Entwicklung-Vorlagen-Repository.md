@@ -51,6 +51,7 @@ template/
 scripts/
   store.py                 Store prüfen und bauen
   new_tool.py              neues Tool anlegen
+  screenshots.py           Screenshots für Store und Home rendern
   setup_repo.py            Einrichtung (vom Workflow genutzt)
 tools/                     die Tools
 docs/                      die Doku-Seiten
@@ -59,7 +60,8 @@ README.md, LICENSE (MIT), .gitignore, .gitattributes
 
 Das Beispiel-Tool löst einen Hostnamen auf und zeigt die Adressen. Es enthält alle Bausteine eines echten Tools:
 `tool.json` mit Bereich, Tags, Symbol und Plattformen, `config.json` mit zwei Einstellungen, `install.py`,
-Sprachdateien `en.json`/`de.json`, Arbeit im Hintergrund mit `run_async` und eine Meldung in der Statusleiste.
+Sprachdateien `en.json`/`de.json`, Arbeit im Hintergrund mit `run_async`, eine Meldung in der Statusleiste und
+einen Screenshot samt `screenshots/render.py` (siehe [Screenshots](Entwicklung-Paketformat#screenshots)).
 
 ## Workflow „Store“
 
@@ -80,6 +82,7 @@ Lokal brauchen die Skripte den OmniWrench-Quellcode, z. B. als Nachbarordner
 
 ```bash
 python scripts/new_tool.py --id contoso.gpo-report --name "GPO Report" --category identity
+python scripts/screenshots.py            # braucht PySide6 + PySide6-QtAds (requirements.txt von OmniWrench)
 python scripts/store.py check
 python scripts/store.py build
 ```
@@ -87,6 +90,7 @@ python scripts/store.py build
 | Skript | Parameter |
 |---|---|
 | `new_tool.py` | `--id` (Pflicht), `--name` (Pflicht), `--category` (Standard `other`), `--folder`, `--author` |
+| `screenshots.py` | Tool-Ordner (Standard: alle mit `screenshots/render.py`), `--lang` (Standard `en`), `--theme` (`dark`/`light`), `--omniwrench PFAD` |
 | `store.py` | `check` oder `build`, `--name` (Anzeigename des Stores), `--omniwrench PFAD` |
 
 ## Häufige Fragen
@@ -95,8 +99,8 @@ python scripts/store.py build
 Ja, siehe [Eigenes Tool-Repository](Entwicklung-Eigenes-Repository). Die Vorlage spart nur Arbeit.
 
 **Bekomme ich Verbesserungen der Vorlage automatisch?**
-Nein, ein aus einer Vorlage erzeugtes Repository ist unabhängig. Neue Versionen von `scripts/store.py` und
-`.github/workflows/store.yml` lassen sich aus der Vorlage herüberkopieren.
+Nein, ein aus einer Vorlage erzeugtes Repository ist unabhängig. Neue Versionen von `scripts/store.py`,
+`scripts/screenshots.py` und `.github/workflows/store.yml` lassen sich aus der Vorlage herüberkopieren.
 
 **Muss das Repository öffentlich sein?**
 Nein. Private Repositories funktionieren, jeder Client braucht dann ein GitHub-Token

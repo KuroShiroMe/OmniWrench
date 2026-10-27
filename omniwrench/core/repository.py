@@ -17,6 +17,7 @@ Erzeugt wird die Datei mit scripts/build_store.py.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import logging
 import tempfile
@@ -66,6 +67,9 @@ def load_catalog(repositories: list[dict]) -> Catalog:
                 continue
             if not manifest.download_url:
                 continue
+            for shot in manifest.screenshot_list:  # Screenshots liegen getrennt vom Paket im Store
+                if shot.get("url"):
+                    shot["url"] = net.resolve(url, shot["url"])
             entry = CatalogEntry(manifest, name, net.resolve(url, manifest.download_url))
             existing = catalog.entries.get(manifest.id)
             # Bei mehreren Repos gewinnt die höchste Version
@@ -87,6 +91,26 @@ def install_from_catalog(entry: CatalogEntry, manager: ToolManager, progress: Ca
     with tempfile.TemporaryDirectory(prefix="omniwrench_dl_") as tmp:
         zip_path = net.download(entry.download_url, Path(tmp) / "package.zip")
         manager.install_zip(zip_path, progress, expected_sha256=entry.manifest.sha256)
+    fetch_screenshots(entry, manager)
+
+
+def fetch_screenshots(entry: CatalogEntry, manager: ToolManager) -> None:
+    """Legt die Screenshots aus dem Store in den Tool-Ordner (für Home, auch offline). Fehler sind egal."""
+    tool = manager.get(entry.manifest.id)
+    if tool is None:
+        return
+    for shot in entry.manifest.screenshot_list:
+        target = tool.path / shot["file"]
+        if not shot.get("url") or tool.path not in target.resolve().parents:
+            continue
+        try:
+            data = net.get_bytes(shot["url"])
+            if shot.get("sha256") and hashlib.sha256(data).hexdigest() != shot["sha256"]:
+                raise ValueError("sha256")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(data)
+        except Exception as exc:  # noqa: BLE001
+            log.info("Screenshot %s von %s nicht geladen: %s", shot["file"], entry.manifest.id, exc)
 
 
 def update_tools(entries: list[CatalogEntry], manager: ToolManager,

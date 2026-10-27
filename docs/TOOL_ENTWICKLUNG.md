@@ -18,6 +18,7 @@ mein_tool/
 │   ├── en.json
 │   └── de.json
 ├── icon.png       optional
+├── screenshots/   optional: PNGs für Store/Home + render.py (nicht im Paket, siehe Screenshots)
 └── ...            beliebige weitere Module/Dateien
 ```
 
@@ -31,8 +32,8 @@ falls eine Übersetzung fehlt.
 | `id` | ✔ | Eindeutige ID, `a-z0-9._-`, z. B. `net.subnet-calculator` |
 | `name` | ✔ | Anzeigename |
 | `version` | ✔ | `MAJOR.MINOR.PATCH`, steuert die Update-Erkennung |
-| `description` | | Kurzbeschreibung (Kachel) |
-| `long_description` | | Ausführliche Beschreibung (Store, Tooltip) |
+| `description` | | Kurzbeschreibung (Karte in Store/Home, Liste) |
+| `long_description` | | Ausführliche Beschreibung (Detailleiste) |
 | `author` | | |
 | `category` | | Bereich als ID, z. B. `identity`, siehe [Kategorien](#kategorien) |
 | `category_area` | | Nur für einen eigenen, neuen Bereich: Anzeigename (übersetzbar) |
@@ -43,9 +44,19 @@ falls eine Übersetzung fehlt.
 | `min_app_version` | | Mindestversion des Hauptprogramms |
 | `platforms` | | Betriebssysteme, Standard `["windows"]`; `["windows", "linux"]`, wenn das Tool auch unter Linux läuft (siehe [Plattformen](#plattformen)) |
 | `tags` | | Schlagwörter zur feineren Einordnung, siehe [Tags](#tags); sichtbar in Details und Store, durchsuchbar |
+| `screenshots` | | `[{"file": "screenshots/x.png", "caption": "…"}]`, erstes = Hauptbild; siehe [Screenshots](#screenshots) |
 | `single_instance` | | `true` = nur ein Tab gleichzeitig |
 | `hooks` | | Einstiegspunkte ohne geöffneten Tab, z. B. `{"startup": "modul:funktion"}` (siehe [Eigene Passwortmanager-Anbieter](#eigene-passwortmanager-anbieter)) |
 | `requirements` | | Voraussetzungen, siehe unten |
+
+### Screenshots
+Store und Home zeigen pro Tool-Karte einen durchblätterbaren Screenshot, die Detailleiste alle mit Unterschrift.
+- PNG 1280×800, dunkel, englische UI, nur Beispieldaten; erstes Bild = Hauptansicht, dann je Funktion eins.
+- Unterschrift übersetzt über `tool.screenshot.<dateiname ohne .png>` in den Tool-Locales.
+- Erzeugt von `screenshots/render.py` (`def render(shot)`, API in `scripts/render_screenshots.py`):
+  `python scripts/render_screenshots.py tools/<tool>` (ohne Argument alle; `--lang`, `--theme`).
+- Nicht im ZIP: `build_store.py` kopiert sie nach `store/screenshots/<id>/` und schreibt url/sha256/size in
+  index.json; neue Bilder brauchen keine Versionserhöhung. `check_store.py` prüft den Abgleich.
 
 ### Plattformen
 OmniWrench läuft unter Windows und (seit 0.7.0) unter Linux. Ein Tool läuft nur auf den Systemen aus `platforms`:

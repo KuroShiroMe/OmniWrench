@@ -1,21 +1,22 @@
-"""Store-Tab: Tools aus den konfigurierten Repositories durchsuchen und installieren."""
+"""Store-Tab: Tools aus den konfigurierten Repositories durchsuchen und installieren.
+
+Gleicher Aufbau wie die Vollansicht im Home-Tab: Karten mit Symbol, Titel, Screenshots,
+Kurzbeschreibung und einem Button; ein Klick zeigt rechts alle Details.
+"""
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from urllib.parse import unquote
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
-    QFrame, QHBoxLayout, QLineEdit, QScrollArea, QSplitter, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
+    QHBoxLayout, QLineEdit, QScrollArea, QSplitter, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
-from omniwrench.core import system
 from omniwrench.core.i18n import tr
-from omniwrench.core.repository import CatalogEntry
-from omniwrench.core.versioning import is_newer
 
-from .widgets import ColumnFlowLayout, ResponsiveRow, breakable, clear_layout, label, make_button, tag_links, tool_icon
+from .tool_views import DetailsPanel, ToolCard, ToolItem, side_width
+from .widgets import ColumnFlowLayout, ResponsiveRow, clear_layout, label, make_button
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
@@ -25,75 +26,12 @@ FILTER_UPDATES = "__updates__"
 FILTER_INSTALLED = "__installed__"
 
 
-def _search_text(entry: CatalogEntry) -> str:
-    m = entry.manifest
-    return (m.display_name + m.display_description + "/".join(m.category_path) + " ".join(m.tags)).lower()
-
-
-class StoreCard(QFrame):
-    def __init__(self, entry: CatalogEntry, host: "MainWindow"):
-        super().__init__()
-        self.setObjectName("ToolCard")
-        m = entry.manifest
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(16, 14, 16, 14)
-        lay = QHBoxLayout()
-        lay.setSpacing(14)
-
-        icon = label("")
-        icon.setPixmap(tool_icon(m, None, 52).pixmap(52, 52))
-        lay.addWidget(icon, alignment=Qt.AlignmentFlag.AlignTop)
-
-        info = QVBoxLayout()
-        info.setSpacing(4)
-        info.addWidget(label(m.display_name, "StoreCardTitle"))
-        meta = f"v{m.version} · {' › '.join(m.category_path)}"
-        if m.author:
-            meta += f" · {m.author}"
-        meta += " · " + tr("store.source", name=entry.repo_name)
-        info.addWidget(label(meta, "CardMeta", wrap=True))
-        info.addWidget(label(m.display_long_description, "CardDesc", wrap=True))
-        if m.tags:  # Klick auf ein Tag sucht danach
-            tags = label(tr("store.tags", items=tag_links(m.tags)), "CardMeta", wrap=True)
-            tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-            tags.linkActivated.connect(lambda tag: host.store_page.search.setText(unquote(tag)))
-            info.addWidget(tags)
-        reqs = m.requirements.summary()
-        if reqs:
-            info.addWidget(label(breakable(tr("store.requirements", items=", ".join(reqs))), "CardMeta", wrap=True))
-        lay.addLayout(info, 1)
-
-        installed = host.manager.get(m.id)
-        col = QVBoxLayout()
-        if installed is None and not system.supports_platform(m.platforms):
-            # Tool für ein anderes Betriebssystem (z. B. nur Windows): anzeigen, aber nicht installierbar
-            platforms = ", ".join(system.platform_name(p) for p in m.platforms)
-            col.addWidget(label(tr("store.platform_only", platforms=platforms), "CardMeta"),
-                          alignment=Qt.AlignmentFlag.AlignRight)
-            btn = None
-        elif installed is None:
-            btn = make_button(tr("store.install"), primary=True, on_click=lambda: host.install_entry(entry))
-        elif is_newer(m.version, installed.manifest.version):
-            col.addWidget(label(tr("store.installed_version", version=installed.manifest.version), "CardMeta"),
-                          alignment=Qt.AlignmentFlag.AlignRight)
-            btn = make_button(tr("store.update_to", version=m.version), primary=True,
-                              on_click=lambda: host.install_entry(entry))
-        else:
-            btn = make_button(tr("common.open"), on_click=lambda: host.open_tool(m.id))
-            col.addWidget(label(tr("store.installed"), "BadgeOk"), alignment=Qt.AlignmentFlag.AlignRight)
-        if btn is not None:
-            btn.setMinimumWidth(130)
-            col.addWidget(btn)
-        col.addStretch()
-        # Schmale Karte: Status und Button rutschen unter die Beschreibung
-        outer.addWidget(ResponsiveRow(lay, col, left_width=300, align=Qt.AlignmentFlag.AlignTop))
-        outer.addStretch()  # Karten einer Zeile sind gleich hoch - Inhalt bleibt oben
-
-
 class StorePage(QWidget):
     def __init__(self, host: "MainWindow"):
         super().__init__()
         self.host = host
+        self.selected: str | None = None
+        self.cards: dict[str, ToolCard] = {}
         root = QVBoxLayout(self)
         root.setContentsMargins(24, 20, 24, 12)
         root.setSpacing(12)
@@ -116,7 +54,8 @@ class StorePage(QWidget):
         controls.addWidget(self.refresh_btn)
         root.addWidget(ResponsiveRow(titles, controls))
 
-        splitter = QSplitter()
+        self.splitter = splitter = QSplitter()
+        splitter.setChildrenCollapsible(False)
         self.tree = QTreeWidget()
         self.tree.setHeaderHidden(True)
         self.tree.setMinimumWidth(150)
@@ -132,15 +71,20 @@ class StorePage(QWidget):
         outer.setContentsMargins(12, 0, 4, 0)
         # Karten in Spalten: schmale Fenster untereinander, große Monitore mehrere nebeneinander
         holder = QWidget()
-        self.list = ColumnFlowLayout(holder, min_width=520, spacing=10)
+        self.list = ColumnFlowLayout(holder, min_width=280, spacing=14)
         outer.addWidget(holder)
         self.empty = label(tr("store.empty"), "Muted")
         self.empty.hide()
         outer.addWidget(self.empty)
         outer.addStretch()
+        scroll.setMinimumWidth(320)  # mindestens eine Karte; sonst drückt der Splitter die Karten zusammen
         splitter.addWidget(scroll)
+        self.details = DetailsPanel(host, self.search)
+        self.details.closed.connect(self.clear_selection)
+        self.details.hide()
+        splitter.addWidget(self.details)
         splitter.setStretchFactor(1, 1)
-        splitter.setSizes([220, 800])
+        splitter.setSizes([220, 800, 0])
         root.addWidget(splitter, 1)
 
         host.catalogChanged.connect(self.refresh)
@@ -154,6 +98,45 @@ class StorePage(QWidget):
 
     def select_updates(self) -> None:
         self.tree.setCurrentItem(self.tree.topLevelItem(1))
+
+    # ------------------------------------------------------------ Auswahl
+    def select_tool(self, tool_id: str) -> None:
+        catalog = self.host.catalog
+        entry = catalog.entries.get(tool_id) if catalog else None
+        if entry is None:
+            return self.clear_selection()
+        self.selected = tool_id
+        for tid, card in self.cards.items():
+            card.set_selected(tid == tool_id)
+        self.details.show_item(ToolItem.for_store(entry, self.host))
+        if self.details.isHidden():
+            self.details.show()
+            self._fit_tree()
+            sizes = self.splitter.sizes()
+            whole = max(sum(sizes), 800)
+            side = side_width(whole)
+            tree = max(150, min(sizes[0], whole - side - 320)) if self.tree.isVisible() else 0
+            self.splitter.setSizes([tree, whole - tree - side, side])
+
+    def clear_selection(self) -> None:
+        self.selected = None
+        for card in self.cards.values():
+            card.set_selected(False)
+        self.details.hide()
+        self._fit_tree()
+
+    def _fit_tree(self) -> None:
+        # Schmales Fenster mit offenen Details: Kategorienbaum ausblenden statt die Karten zu quetschen
+        narrow = self.width() < 150 + 320 + side_width(self.width()) + 40
+        self.tree.setVisible(self.details.isHidden() or not narrow)
+
+    def resizeEvent(self, event) -> None:  # noqa: N802
+        super().resizeEvent(event)
+        self._fit_tree()
+
+    def _open(self, tool_id: str) -> None:
+        if self.host.manager.get(tool_id):
+            self.host.open_tool(tool_id)
 
     def refresh(self) -> None:
         catalog = self.host.catalog
@@ -216,7 +199,17 @@ class StorePage(QWidget):
             entries = [e for e in entries if ("/".join(e.manifest.category_path) + "/").startswith(key + "/")]
         query = self.search.text().strip().lower()
         if query:
-            entries = [e for e in entries if query in _search_text(e)]
+            entries = [e for e in entries if query in ToolItem.for_store(e, self.host).search_text()]
+        self.cards = {}
         for e in entries:
-            self.list.addWidget(StoreCard(e, self.host))
+            card = ToolCard(ToolItem.for_store(e, self.host), self.host, self.select_tool, self._open,
+                            self.host.show_tool_menu)
+            card.set_selected(e.manifest.id == self.selected)
+            self.cards[e.manifest.id] = card
+            self.list.addWidget(card)
         self.empty.setVisible(not entries)
+        # Detail-Leiste nach Installation/Update/Katalogwechsel neu aufbauen
+        if self.selected and self.selected in catalog.entries:
+            self.details.show_item(ToolItem.for_store(catalog.entries[self.selected], self.host))
+        elif self.selected:
+            self.clear_selection()

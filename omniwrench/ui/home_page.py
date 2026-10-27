@@ -1,172 +1,153 @@
-"""Home-Tab: installierte Tools als kompakte Kacheln (Symbol + Name), gruppiert nach Kategorie.
+"""Home-Tab: installierte Tools, gruppiert nach Kategorie, in wählbarer Ansicht.
 
-Ein Klick zeigt rechts eine Detail-Leiste mit Beschreibung und Metadaten,
+Ansichten (Einstellung "home_view"): Vollansicht (Karten mit Screenshots wie im Store),
+große Symbole, kleine Symbole und Liste mit Details. Ein Klick zeigt rechts die Detail-Leiste,
 ein Doppelklick startet das Tool, ein Rechtsklick öffnet das Kontextmenü.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from urllib.parse import unquote
 
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import (
-    QFormLayout, QFrame, QHBoxLayout, QLineEdit, QMenu, QScrollArea, QSplitter, QVBoxLayout, QWidget,
+    QAbstractItemView, QButtonGroup, QFrame, QHBoxLayout, QHeaderView, QLineEdit, QMenu, QScrollArea, QSplitter,
+    QToolButton, QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget,
 )
 
 from omniwrench.core.i18n import tr
 from omniwrench.core.system import is_windows_server
-from omniwrench.core.tool_manager import InstalledTool
 
-from .scaling import clamp
-from .widgets import FitLabel, FlowLayout, ResponsiveRow, breakable, clear_layout, label, library_icon, make_button, tag_links, tool_icon
+from .tool_views import DetailsPanel, Selectable, ToolCard, ToolItem, repolish, side_width
+from .widgets import ColumnFlowLayout, FitLabel, FlowLayout, ResponsiveRow, clear_layout, label, library_icon, make_button
 
 if TYPE_CHECKING:
     from .main_window import MainWindow
 
-
-def _repolish(widget: QWidget) -> None:
-    widget.style().unpolish(widget)
-    widget.style().polish(widget)
+VIEWS = ("full", "large", "small", "list")
+VIEW_ICONS = {"full": "gallery-vertical-end", "large": "grid-2x2", "small": "grid-3x3", "list": "layout-list"}
 
 
-class ToolTile(QFrame):
+class ToolTile(Selectable, QFrame):
+    """Große Symbole: Symbol mit Name darunter."""
+
     SIZE = QSize(128, 122)
     ICON = 56
 
-    def __init__(self, tool: InstalledTool, page: "HomePage", has_update: bool):
+    def __init__(self, item: ToolItem, page: "HomePage"):
         super().__init__()
-        self.tool = tool
-        self.page = page
+        self.item = item
+        self.activated_cb, self.opened_cb, self.menu_cb = page.select_tool, page.host.open_tool, page.host.show_tool_menu
         self.setObjectName("ToolTile")
         self.setFixedSize(self.SIZE)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setToolTip(tool.manifest.display_description)
+        self.setToolTip(item.manifest.display_description)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(8, 12, 8, 8)
         lay.setSpacing(6)
         icon = label("")
-        icon.setPixmap(tool_icon(tool.manifest, tool.path, self.ICON).pixmap(self.ICON, self.ICON))
+        icon.setPixmap(item.icon(self.ICON))
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(icon)
-        lay.addWidget(FitLabel(tool.manifest.display_name, max_pt=9.5, min_pt=7.5, single_min_pt=8.5), 1)
+        lay.addWidget(FitLabel(item.manifest.display_name, max_pt=9.5, min_pt=7.5, single_min_pt=8.5), 1)
 
-        if has_update:  # kleiner Punkt oben rechts
+        if item.update is not None:  # kleiner Punkt oben rechts
             dot = label("", "UpdateDot", parent=self)
             dot.setFixedSize(10, 10)
             dot.move(self.SIZE.width() - 18, 8)
-            dot.setToolTip(tr("home.update_badge", version=page.host.tool_updates[tool.id].manifest.version))
-
-    def set_selected(self, selected: bool) -> None:
-        self.setProperty("selected", selected)
-        _repolish(self)
-
-    def mousePressEvent(self, event):  # noqa: N802
-        if event.button() in (Qt.MouseButton.LeftButton, Qt.MouseButton.RightButton):
-            self.page.select_tool(self.tool.id)
-
-    def mouseDoubleClickEvent(self, event):  # noqa: N802
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.page.host.open_tool(self.tool.id)
-
-    def contextMenuEvent(self, event):  # noqa: N802
-        self.page.host.show_tool_menu(self.tool.id, event.globalPos())
+            dot.setToolTip(tr("home.update_badge", version=item.update.manifest.version))
 
 
-class DetailsPanel(QFrame):
-    """Rechte Seitenleiste mit Beschreibung, Metadaten und Aktionen des gewählten Tools."""
+class SmallTile(Selectable, QFrame):
+    """Kleine Symbole: Symbol links, Name rechts daneben."""
+
+    SIZE = QSize(210, 38)
+    ICON = 24
+
+    def __init__(self, item: ToolItem, page: "HomePage"):
+        super().__init__()
+        self.item = item
+        self.activated_cb, self.opened_cb, self.menu_cb = page.select_tool, page.host.open_tool, page.host.show_tool_menu
+        self.setObjectName("ToolTile")
+        self.setFixedSize(self.SIZE)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip(item.manifest.display_description)
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(8, 4, 8, 4)
+        lay.setSpacing(8)
+        icon = label("")
+        icon.setPixmap(item.icon(self.ICON))
+        lay.addWidget(icon)
+        name = label("", "TileName")
+        name.setText(name.fontMetrics().elidedText(item.manifest.display_name, Qt.TextElideMode.ElideRight,
+                                                   self.SIZE.width() - self.ICON - 40))
+        lay.addWidget(name, 1)
+        if item.update is not None:
+            dot = label("", "UpdateDot")
+            dot.setFixedSize(8, 8)
+            dot.setToolTip(tr("home.update_badge", version=item.update.manifest.version))
+            lay.addWidget(dot)
+
+
+class ToolList(QTreeWidget):
+    """Liste mit Details: eine Zeile je Tool, Spalten sortierbar."""
+
+    COLUMNS = ("home.col_name", "details.version", "details.category", "home.col_status", "home.col_description")
 
     def __init__(self, page: "HomePage"):
         super().__init__()
         self.page = page
-        self.host = page.host
-        self.setObjectName("DetailsPanel")
-        self.setMinimumWidth(260)
-        outer = QVBoxLayout(self)
-        outer.setContentsMargins(0, 0, 0, 0)
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        outer.addWidget(scroll)
-        self.content = QWidget()
-        self.content.setObjectName("DetailsContent")
-        scroll.setWidget(self.content)
-        self.lay = QVBoxLayout(self.content)
-        self.lay.setContentsMargins(20, 16, 20, 16)
-        self.lay.setSpacing(10)
+        self.setObjectName("ToolList")
+        self.setRootIsDecorated(False)
+        self.setUniformRowHeights(True)
+        self.setIconSize(QSize(22, 22))
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.setHeaderLabels([tr(k) for k in self.COLUMNS])
+        self.setSortingEnabled(True)
+        self.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        header = self.header()
+        header.setStretchLastSection(True)
+        for col in range(len(self.COLUMNS) - 1):
+            header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.customContextMenuRequested.connect(self._menu)
+        self.itemClicked.connect(lambda it, _c: page.select_tool(it.data(0, Qt.ItemDataRole.UserRole)))
+        self.itemDoubleClicked.connect(lambda it, _c: page.host.open_tool(it.data(0, Qt.ItemDataRole.UserRole)))
+        self.rows: dict[str, QTreeWidgetItem] = {}
 
-    def show_tool(self, tool: InstalledTool) -> None:
-        clear_layout(self.lay)
-        m = tool.manifest
-        host = self.host
+    def add(self, item: ToolItem) -> None:
+        m = item.manifest
+        status = tr("home.update_badge", version=item.update.manifest.version) if item.update else ""
+        row = QTreeWidgetItem([m.display_name, m.version, " › ".join(m.category_path), status,
+                               m.display_description])
+        row.setIcon(0, item.icon(22))
+        row.setData(0, Qt.ItemDataRole.UserRole, m.id)
+        row.setToolTip(4, m.display_description)
+        self.addTopLevelItem(row)
+        self.rows[m.id] = row
 
-        top = QHBoxLayout()
-        top.addStretch()
-        close = make_button("✕", on_click=self.page.clear_selection)
-        close.setObjectName("FlatButton")
-        close.setToolTip(tr("details.close"))
-        top.addWidget(close)
-        self.lay.addLayout(top)
+    def fit_height(self) -> None:
+        """Keine eigene Bildlaufleiste: die Seite scrollt als Ganzes."""
+        rows = self.topLevelItemCount()
+        row_h = self.sizeHintForRow(0) if rows else 24
+        self.setFixedHeight(self.header().sizeHint().height() + rows * row_h + 2 * self.frameWidth() + 2)
 
-        icon = label("")
-        icon.setPixmap(tool_icon(m, tool.path, 72).pixmap(72, 72))
-        icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lay.addWidget(icon)
-        title = label(m.display_name, "PageTitle", wrap=True)
-        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lay.addWidget(title)
-        sub = label(f"v{m.version} · {' › '.join(m.category_path)}", "Muted", wrap=True)
-        sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lay.addWidget(sub)
+    def set_selected_id(self, tool_id: str | None) -> None:
+        self.blockSignals(True)
+        self.clearSelection()
+        if tool_id in self.rows:
+            self.rows[tool_id].setSelected(True)
+        self.blockSignals(False)
 
-        actions = QHBoxLayout()
-        actions.addWidget(make_button(tr("common.open"), primary=True, on_click=lambda: host.open_tool(m.id)), 1)
-        actions.addWidget(make_button(tr("toolmenu.settings"), on_click=lambda: host.open_tool_settings(m.id)), 1)
-        self.lay.addLayout(actions)
-        upd = host.tool_updates.get(m.id)
-        if upd:
-            self.lay.addWidget(make_button(tr("toolmenu.update_to", version=upd.manifest.version), primary=True,
-                                           on_click=lambda: host.install_entry(upd)))
-
-        self.lay.addSpacing(6)
-        self.lay.addWidget(label(tr("details.description").upper(), "SectionTitle"))
-        self.lay.addWidget(label(m.display_long_description or "–", wrap=True))
-
-        self.lay.addSpacing(6)
-        self.lay.addWidget(label(tr("details.info").upper(), "SectionTitle"))
-        form = QFormLayout()
-        form.setLabelAlignment(Qt.AlignmentFlag.AlignLeft)
-        form.setVerticalSpacing(6)
-        reqs = m.requirements.summary()
-        rows = [
-            (tr("details.version"), m.version),
-            (tr("details.category"), " › ".join(m.category_path)),
-            (tr("details.author"), m.author or "–"),
-            (tr("details.id"), m.id),
-            (tr("details.requirements"), breakable("\n".join(reqs)) if reqs else tr("details.none")),
-        ]
-        if m.homepage:
-            rows.append((tr("details.homepage"), f"<a href='{m.homepage}'>{m.homepage}</a>"))
-        for key, value in rows:
-            val = label(value, wrap=True)
-            val.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-            val.setOpenExternalLinks(True)
-            form.addRow(label(key, "Muted"), val)
-        if m.tags:  # Klick auf ein Tag sucht danach
-            tags = label(tag_links(m.tags), wrap=True)
-            tags.setTextInteractionFlags(Qt.TextInteractionFlag.TextBrowserInteraction)
-            tags.linkActivated.connect(lambda tag: self.page.search.setText(unquote(tag)))
-            form.insertRow(2, label(tr("details.tags"), "Muted"), tags)
-        self.lay.addLayout(form)
-
-        self.lay.addStretch()
-        folder, uninstall = QHBoxLayout(), QHBoxLayout()
-        folder.addWidget(make_button(tr("toolmenu.open_folder"), on_click=lambda: host.open_tool_folder(m.id)))
-        folder.addStretch()
-        uninstall.addWidget(make_button(tr("toolmenu.uninstall"), danger=True,
-                                        on_click=lambda: host.uninstall_tool(m.id)))
-        self.lay.addWidget(ResponsiveRow(folder, uninstall))  # schmale Leiste: Buttons untereinander
+    def _menu(self, pos) -> None:
+        it = self.itemAt(pos)
+        if it is not None:
+            tool_id = it.data(0, Qt.ItemDataRole.UserRole)
+            self.page.select_tool(tool_id)
+            self.page.host.show_tool_menu(tool_id, self.viewport().mapToGlobal(pos))
 
 
 class HomePage(QWidget):
@@ -174,7 +155,11 @@ class HomePage(QWidget):
         super().__init__()
         self.host = host
         self.selected: str | None = None
-        self.tiles: dict[str, ToolTile] = {}
+        self.views: dict[str, Selectable] = {}
+        self.tool_list: ToolList | None = None
+        self.view = host.settings.get("home_view", "full")
+        if self.view not in VIEWS:
+            self.view = "full"
 
         root = QVBoxLayout(self)
         root.setContentsMargins(0, 0, 0, 0)
@@ -190,12 +175,8 @@ class HomePage(QWidget):
         self.body = QVBoxLayout(content)
         self.body.setContentsMargins(32, 28, 32, 28)
         self.body.setSpacing(12)
+        scroll.setMinimumWidth(360)  # mindestens eine Karte samt Rand
         self.splitter.addWidget(scroll)
-
-        self.details = DetailsPanel(self)
-        self.details.hide()
-        self.splitter.addWidget(self.details)
-        self.splitter.setStretchFactor(0, 1)
 
         titles = QVBoxLayout()
         titles.addWidget(label(tr("home.title"), "PageTitle"))
@@ -208,6 +189,7 @@ class HomePage(QWidget):
         self.search.setMaximumWidth(320)
         self.search.textChanged.connect(self.refresh)
         search_row.addWidget(self.search)
+        buttons.addWidget(self._view_switch())
         self.filter_btn = make_button(tr("home.filter"), on_click=self._show_filter_menu)
         self.filter_btn.setIcon(library_icon("list-filter", 16))
         buttons.addWidget(self.filter_btn)
@@ -217,6 +199,12 @@ class HomePage(QWidget):
         controls.addWidget(ResponsiveRow(search_row, buttons))
         # Kopfzeile: bei wenig Platz rutschen Suche und Buttons unter den Titel (und notfalls untereinander)
         self.body.addWidget(ResponsiveRow(titles, controls))
+
+        self.details = DetailsPanel(host, self.search)
+        self.details.closed.connect(self.clear_selection)
+        self.details.hide()
+        self.splitter.addWidget(self.details)
+        self.splitter.setStretchFactor(0, 1)
 
         # OmniWrench ist für Windows-Clients gedacht; auf Servern fehlen z. B. RSAT-Capabilities
         if is_windows_server():
@@ -239,27 +227,63 @@ class HomePage(QWidget):
         host.catalogChanged.connect(self.refresh)
         self.refresh()
 
+    # ------------------------------------------------------------ Ansicht
+    def _view_switch(self) -> QWidget:
+        box = QFrame()
+        box.setObjectName("Segmented")
+        lay = QHBoxLayout(box)
+        lay.setContentsMargins(2, 2, 2, 2)
+        lay.setSpacing(2)
+        self.view_group = QButtonGroup(self)
+        self.view_buttons: dict[str, QToolButton] = {}
+        for view in VIEWS:
+            btn = QToolButton()
+            btn.setCheckable(True)
+            btn.setChecked(view == self.view)
+            btn.setIcon(library_icon(VIEW_ICONS[view], 16))
+            btn.setIconSize(QSize(16, 16))
+            btn.setToolTip(tr(f"home.view_{view}"))
+            btn.setAccessibleName(tr(f"home.view_{view}"))
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.clicked.connect(lambda _c=False, v=view: self.set_view(v))
+            self.view_group.addButton(btn)
+            self.view_buttons[view] = btn
+            lay.addWidget(btn)
+        return box
+
+    def set_view(self, view: str) -> None:
+        if view not in VIEWS:
+            return
+        self.view_buttons[view].setChecked(True)
+        if view != self.view:
+            self.view = view
+            self.host.settings.set("home_view", view)
+            self.refresh()
+
     # ------------------------------------------------------------ Auswahl
     def select_tool(self, tool_id: str) -> None:
         tool = self.host.manager.get(tool_id)
         if tool is None:
             return self.clear_selection()
         self.selected = tool_id
-        for tid, tile in self.tiles.items():
-            tile.set_selected(tid == tool_id)
-        self.details.show_tool(tool)
+        self._mark_selection()
+        self.details.show_item(ToolItem.for_home(tool, self.host))
         if self.details.isHidden():
             self.details.show()
-            # Breite der Detail-Leiste wächst mit dem Fenster mit (klein: 300, große Monitore: bis 560)
             total = max(self.splitter.width(), 900)
-            side = clamp(total * 0.28, 300, 560)
+            side = side_width(total)
             self.splitter.setSizes([total - side, side])
 
     def clear_selection(self) -> None:
         self.selected = None
-        for tile in self.tiles.values():
-            tile.set_selected(False)
+        self._mark_selection()
         self.details.hide()
+
+    def _mark_selection(self) -> None:
+        for tid, widget in self.views.items():
+            widget.set_selected(tid == self.selected)
+        if self.tool_list is not None:
+            self.tool_list.set_selected_id(self.selected)
 
     # ------------------------------------------------------------ Filter
     def set_category_filter(self, path: tuple[str, ...] | list[str]) -> None:
@@ -271,7 +295,7 @@ class HomePage(QWidget):
         else:
             self.filter_chip.hide()
         self.filter_btn.setProperty("active", bool(self.category_filter))
-        _repolish(self.filter_btn)
+        repolish(self.filter_btn)
         self.refresh()
 
     def _show_filter_menu(self) -> None:
@@ -296,7 +320,8 @@ class HomePage(QWidget):
     # ------------------------------------------------------------ Aufbau
     def refresh(self) -> None:
         clear_layout(self.sections)
-        self.tiles = {}
+        self.views = {}
+        self.tool_list = None
         tools = list(self.host.manager.tools.values())
         updates = self.host.tool_updates
         n_upd = sum(1 for t in tools if t.id in updates)
@@ -316,35 +341,51 @@ class HomePage(QWidget):
         if self.category_filter:
             n = len(self.category_filter)
             tools = [t for t in tools if tuple(t.manifest.category_path[:n]) == self.category_filter]
+        items = [ToolItem.for_home(t, self.host) for t in tools]
         query = self.search.text().strip().lower()
         if query:
-            tools = [t for t in tools if query in (t.manifest.display_name + t.manifest.display_description
-                                                   + "/".join(t.manifest.category_path)
-                                                   + " ".join(t.manifest.tags)).lower()]
-        groups: dict[str, list[InstalledTool]] = {}
-        for t in sorted(tools, key=lambda t: t.manifest.display_name.lower()):
-            groups.setdefault(t.manifest.category_path[0], []).append(t)
+            items = [i for i in items if query in i.search_text()]
+        items.sort(key=lambda i: i.manifest.display_name.lower())
 
-        for category in sorted(groups):
-            self.sections.addSpacing(10)
-            self.sections.addWidget(label(category.upper(), "SectionTitle"))
-            holder = QWidget()
-            flow = FlowLayout(holder, spacing=10)
-            for t in groups[category]:
-                tile = ToolTile(t, self, t.id in updates)
-                self.tiles[t.id] = tile
-                flow.addWidget(tile)
-            self.sections.addWidget(holder)
-        if not groups:
+        if not items:
             self.sections.addWidget(label(tr("common.no_results"), "Muted"))
+        elif self.view == "list":
+            self.tool_list = ToolList(self)
+            for item in items:
+                self.tool_list.add(item)
+            self.tool_list.fit_height()
+            self.sections.addWidget(self.tool_list)
         else:
+            groups: dict[str, list[ToolItem]] = {}
+            for item in items:
+                groups.setdefault(item.manifest.category_path[0], []).append(item)
+            for category in sorted(groups):
+                self.sections.addSpacing(10)
+                self.sections.addWidget(label(category.upper(), "SectionTitle"))
+                holder = QWidget()
+                if self.view == "full":
+                    flow = ColumnFlowLayout(holder, min_width=280, spacing=14)
+                else:
+                    flow = FlowLayout(holder, spacing=6 if self.view == "small" else 10)
+                for item in groups[category]:
+                    widget = self._tile(item)
+                    self.views[item.id] = widget
+                    flow.addWidget(widget)
+                self.sections.addWidget(holder)
+        if items:
             self.sections.addSpacing(6)
             self.sections.addWidget(label(tr("home.hint"), "Muted"))
 
-        # Auswahl nach dem Neuaufbau beibehalten (z. B. nach Update oder Sprachwechsel)
-        if self.selected and self.host.manager.get(self.selected):
-            if self.selected in self.tiles:
-                self.tiles[self.selected].set_selected(True)
-            self.details.show_tool(self.host.manager.get(self.selected))
+        # Auswahl nach dem Neuaufbau beibehalten (z. B. nach Update, Ansichts- oder Sprachwechsel)
+        if self.selected and (tool := self.host.manager.get(self.selected)):
+            self._mark_selection()
+            self.details.show_item(ToolItem.for_home(tool, self.host))
         else:
             self.clear_selection()
+
+    def _tile(self, item: ToolItem) -> QWidget:
+        if self.view == "full":
+            return ToolCard(item, self.host, self.select_tool, self.host.open_tool, self.host.show_tool_menu)
+        if self.view == "small":
+            return SmallTile(item, self)
+        return ToolTile(item, self)

@@ -42,11 +42,11 @@ Aufbau des Fensters: [Bedienung](Bedienung).
 4. Ein Fenster zeigt den Fortschritt. Mit dem Haken „Dieses Fenster nach Abschluss schließen“ verschwindet es
    künftig von selbst.
 
-Das Tool erscheint danach als Kachel auf Home und in der Seitenleiste.
+Das Tool erscheint danach auf Home und in der Seitenleiste.
 
 ## 4. Tool öffnen und einstellen
 
-- **Doppelklick** auf die Kachel öffnet das Tool in einem eigenen Tab.
+- **Doppelklick** auf das Tool öffnet das Tool in einem eigenen Tab.
 - **Einfacher Klick** zeigt rechts die Details (Version, Kategorie, Tags, Voraussetzungen, Link zur Wiki-Seite).
 - **Rechtsklick › Einstellungen …** öffnet die Einstellungen des Tools, z. B. Server, Zugangsdaten,
   Export-Ordner oder die Sprache des Tools.

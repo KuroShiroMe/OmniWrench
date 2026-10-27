@@ -6,6 +6,8 @@
   "tool.name": "AD Benutzerabfrage",
   "tool.description": "Benutzer im Active Directory suchen und Details anzeigen.",
   "tool.long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
+  "tool.screenshot.search": "Suche über Name, Anmeldename oder E-Mail mit Status und letzter Anmeldung",
+  "tool.screenshot.details": "Details eines gesperrten Kontos mit Gruppen",
   "tool.category": "Identität & Zugriff",
   "settings.group.Connection": "Verbindung",
   "settings.group.Login": "Anmeldung",

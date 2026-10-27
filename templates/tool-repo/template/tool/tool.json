@@ -2,12 +2,15 @@
   "id": "__TOOL_ID__",
   "name": "__TOOL_NAME__",
   "version": "0.1.0",
-  "description": "Short description shown on the tile and in the store.",
-  "long_description": "Longer description for the store card and the details panel: what the tool does, what it needs and what it does not do.",
+  "description": "Short description shown on the card in the store and on Home.",
+  "long_description": "Longer description for the details panel: what the tool does, what it needs and what it does not do.",
   "author": "__AUTHOR__",
   "homepage": "__HOMEPAGE__",
   "category": "__CATEGORY__",
   "tags": ["Example"],
+  "screenshots": [
+    {"file": "screenshots/main.png", "caption": "Resolve a host name and list all addresses"}
+  ],
   "icon": "wrench",
   "color": "#6366f1",
   "entry": "tool:Tool",

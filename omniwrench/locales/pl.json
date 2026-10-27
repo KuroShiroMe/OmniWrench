@@ -365,5 +365,19 @@
   "err.elevated_start": "Nie można uruchomić sesji administratora: {error}",
   "err.elevated_failed": "Wykonywanie z uprawnieniami administratora nie powiodło się (kod zakończenia {code}).",
   "err.feature_source_hint": "System Windows nie mógł pobrać funkcji. W środowiskach zarządzanych przez WSUS zasady grupy „Określ ustawienia instalacji składników opcjonalnych i naprawy składników” muszą zezwalać na pobieranie bezpośrednio z usługi Windows Update albo funkcję należy zainstalować ze źródła Funkcji na żądanie.",
-  "home.server_notice": "Windows Server nie jest obsługiwany. Niektóre funkcje są ograniczone, np. automatyczna instalacja wymagań takich jak RSAT."
+  "home.server_notice": "Windows Server nie jest obsługiwany. Niektóre funkcje są ograniczone, np. automatyczna instalacja wymagań takich jak RSAT.",
+  "shots.next": "Następny zrzut ekranu",
+  "shots.previous": "Poprzedni zrzut ekranu",
+  "shots.loading": "Wczytywanie podglądu …",
+  "details.installed_version": "Zainstalowana wersja",
+  "details.available_version": "Dostępna wersja",
+  "details.platforms": "Platformy",
+  "details.source": "Źródło",
+  "home.view_full": "Widok pełny",
+  "home.view_large": "Duże ikony",
+  "home.view_small": "Małe ikony",
+  "home.view_list": "Lista ze szczegółami",
+  "home.col_name": "Nazwa",
+  "home.col_status": "Stan",
+  "home.col_description": "Opis"
 }

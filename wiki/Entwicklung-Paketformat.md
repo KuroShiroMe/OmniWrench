@@ -3,7 +3,7 @@
 > **Kurz:** Ein Tool ist ein Ordner mit `tool.json` (Metadaten), `config.json` (Einstellungen), `install.py`
 > (Installationsroutine), einem Einstiegsmodul (`tool.py`) und Sprachdateien in `locales/`.
 
-**Gilt für:** OmniWrench ab Version 0.7.0
+**Gilt für:** OmniWrench ab Version 0.7.0 (Screenshots ab 0.8.0)
 
 ## Inhalt
 - [Aufbau](#aufbau)
@@ -12,6 +12,7 @@
 - [Kategorien (Bereiche)](#kategorien-bereiche)
 - [Tags](#tags)
 - [Symbole](#symbole)
+- [Screenshots](#screenshots)
 - [Voraussetzungen (requirements)](#voraussetzungen-requirements)
 - [config.json](#configjson)
 - [install.py](#installpy)
@@ -29,11 +30,12 @@ mein_tool/
 │   ├── en.json
 │   └── de.json
 ├── icon.png       optional
+├── screenshots/   optional: Bilder für Store und Home (+ render.py, das sie erzeugt)
 └── …              weitere Module, Daten, Skripte
 ```
 
-Beim Packen ausgelassen werden `__pycache__`, `_lib` (dort landen die installierten Python-Pakete), `.git`
-sowie `*.pyc`/`*.pyo`. Ordner, deren Name mit `.` oder `_` beginnt, gelten nicht als Tool.
+Beim Packen ausgelassen werden `__pycache__`, `_lib` (dort landen die installierten Python-Pakete), `.git`,
+`screenshots` (werden getrennt veröffentlicht, siehe [Screenshots](#screenshots)) sowie `*.pyc`/`*.pyo`. Ordner, deren Name mit `.` oder `_` beginnt, gelten nicht als Tool.
 
 Texte in `tool.json` und `config.json` auf Englisch schreiben: Sie sind die letzte Rückfallstufe, wenn eine
 Übersetzung fehlt. Die eigentlichen Anzeigetexte kommen aus den [Sprachdateien](Entwicklung-Mehrsprachigkeit).
@@ -51,6 +53,10 @@ Texte in `tool.json` und `config.json` auf Englisch schreiben: Sie sind die letz
   "homepage": "https://github.com/contoso/omniwrench-tools/blob/main/docs/Tool-DNS-Cleanup.md",
   "category": "network",
   "tags": ["DNS", "Active Directory", "Cleanup", "RSAT"],
+  "screenshots": [
+    {"file": "screenshots/overview.png", "caption": "Stale records of all zones"},
+    {"file": "screenshots/cleanup.png", "caption": "Preview before deleting"}
+  ],
   "icon": "trash-2",
   "color": "#0ea5e9",
   "entry": "tool:DnsCleanup",
@@ -66,13 +72,14 @@ Texte in `tool.json` und `config.json` auf Englisch schreiben: Sie sind die letz
 | `id` | ✔ | eindeutige ID, nur `a-z0-9._-`; Muster `<herausgeber>.<tool>`, z. B. `contoso.dns-cleanup`. Nie mehr ändern: Einstellungen, Tresor-Einträge und Updates hängen daran. |
 | `name` | ✔ | Anzeigename (englisch; übersetzt über `tool.name`) |
 | `version` | ✔ | `MAJOR.MINOR.PATCH`; steuert die Update-Erkennung |
-| `description` | | Kurzbeschreibung (Kachel-Tooltip, Store) |
-| `long_description` | | ausführliche Beschreibung (Store-Karte, Detailleiste) |
+| `description` | | Kurzbeschreibung (Karte in Store und Home, Liste, Tooltip) |
+| `long_description` | | ausführliche Beschreibung (Detailleiste) |
 | `author` | | Autor oder Herausgeber |
 | `homepage` | | Link zur Doku-Seite; erscheint als „Website“ in der Detailleiste |
 | `category` | | Bereich als ID, siehe [Kategorien](#kategorien-bereiche) |
 | `category_area` | | nur bei eigenem Bereich: Anzeigename (übersetzbar) |
 | `tags` | | Schlagwörter, siehe [Tags](#tags) |
+| `screenshots` | | Bilder für Store und Home, siehe [Screenshots](#screenshots) |
 | `icon` | | Symbol, siehe [Symbole](#symbole) |
 | `icon_text` | | eigenes Kürzel für das erzeugte Symbol (max. 4 Zeichen), z. B. `"EXO"` |
 | `color` | | Hintergrundfarbe des Symbols, z. B. `#0ea5e9` |
@@ -142,6 +149,59 @@ Das Symbol der Kachel wird in dieser Reihenfolge bestimmt:
    (Bibliothek Lucide) oder *Extras › Symbol-Bibliothek* (Klick kopiert den Namen). Dargestellt weiß auf `color`.
 3. **Eigenes Kürzel:** `"icon_text": "EXO"`.
 4. **Nichts angegeben:** Anfangsbuchstaben des Namens („DNS Cleanup“ → „DC“).
+
+## Screenshots
+
+Store und Home zeigen auf jeder Tool-Karte einen Screenshot, durch den man blättern kann; die Detailleiste zeigt
+alle Bilder mit Bildunterschrift.
+
+- **Reihenfolge:** Der erste Eintrag ist der **Hauptscreenshot** (Hauptansicht des Tools), danach folgt je
+  wichtiger Funktion ein weiteres Bild.
+- **Format:** PNG, 1280 × 800 Pixel (16:10), dunkles Farbschema, englische Oberfläche, nur Beispieldaten
+  (keine echten Server-, Benutzer- oder Firmennamen).
+- **`caption`:** Bildunterschrift auf Englisch; übersetzt über den Sprachschlüssel `tool.screenshot.<Dateiname
+  ohne .png>`, z. B. `"tool.screenshot.overview": "Veraltete Einträge aller Zonen"` in `locales/de.json`.
+- Die Bilder gehören **nicht** ins Tool-Paket. Das Store-Skript legt sie getrennt ab (`store/screenshots/<id>/`)
+  und trägt sie mit Adresse, Größe und SHA-256 in die `index.json` ein. Neue Bilder brauchen deshalb keine neue
+  Tool-Version. OmniWrench lädt sie erst, wenn sie sichtbar werden, und legt sie bei der Installation mit ins
+  Tool (für Home ohne Netz).
+
+### Screenshots erzeugen
+
+Die Bilder werden nicht von Hand aufgenommen, sondern gerendert: `screenshots/render.py` baut die Oberfläche mit
+Beispieldaten auf und speichert jedes Bild.
+
+```python
+# screenshots/render.py
+def render(shot):
+    shot.module("backend").Backend = FakeBackend   # Netz/Server durch Beispieldaten ersetzen
+    tool, widget = shot.create()                    # Tool-Instanz mit Oberfläche in 1280 × 800
+    tool.search.setText("corp.example")
+    tool.start()
+    shot.wait_until(lambda: tool.done, 30, "Suche")
+    shot.save("overview")                           # -> screenshots/overview.png
+    tool.tabs.setCurrentIndex(1)
+    shot.save("cleanup")
+```
+
+| `shot.` | Wirkung |
+|---|---|
+| `create(width, height)` | neue Tool-Instanz samt Oberfläche (Standard 1280 × 800) → `(tool, widget)` |
+| `module("name")` | Modul aus dem eigenen Paket, z. B. um ein Backend zu ersetzen |
+| `settings` | Einstellungen des Tools (vor `create()` setzen) |
+| `wait(s)`, `wait_until(bedingung, timeout, text)` | Ereignisse verarbeiten, auf Hintergrundarbeit warten |
+| `save("name")` | Oberfläche als `screenshots/name.png` speichern |
+| `save_dialog("name", dialog)` | Dialog mittig über der abgedunkelten Oberfläche speichern |
+| `source` | Tool-Ordner im Repository |
+
+```
+python scripts/render_screenshots.py tools/mein_tool        # ein Tool (ohne Angabe: alle)
+python scripts/render_screenshots.py --lang de --theme light  # andere Sprache/Farbschema
+```
+
+Das Skript läuft ohne Bildschirm (Qt offscreen) in einem leeren Temp-Profil und meldet, wenn `tool.json` und die
+gespeicherten Bilder nicht zusammenpassen. Windows-Tools lassen sich so auch unter Linux rendern, solange
+`render.py` Netz- und Systemzugriffe durch Beispieldaten ersetzt.
 
 ## Voraussetzungen (requirements)
 

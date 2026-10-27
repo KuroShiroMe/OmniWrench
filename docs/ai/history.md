@@ -465,3 +465,17 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: PR #61 merged on Stef's request. Stef's test environment (EXE): DNS tool install failed with WinError 32
   on the pip log file -> sdk.pip_install leaked the mkstemp handle; now closed + unlink best-effort. Affects every
   pip install from the EXE build (app fix, ships with the next app release).
+
+## 2026-10-27 Store/Home lean cards + screenshots + Home view modes (app 0.8.0)
+- Stef: Store much leaner (icon, title, screenshot, short description, one button), click through screenshots,
+  single click -> right panel with all metadata + install/update, same for Home; Home gets views list/small/large/full.
+- Built ui/tool_views.py (shared card + DetailsPanel), ui/screenshots.py (carousel, cache, viewer), rewrote
+  home_page.py (4 views) and store_page.py; theme styles; 14 new app locale keys in all 23 locales.
+- Screenshots: tool.json field, scripts/render_screenshots.py, render.py + PNGs for all 7 tools (English, dark);
+  build_store/check_store/repository support; tool versions bumped (ad 1.3.5, iconforge 1.1.6, dhcp 1.5.1,
+  netprobe 1.2.5, omnivault 1.1.6, subnet 1.2.6, dns 1.0.1) because locales/tool.json changed.
+- Narrow windows: card area min 320/360 px, Store hides the category tree while details are open (<~1000 px).
+- Wiki (Bedienung, Store-und-Tools, Paketformat#screenshots, Vorlagen-Repository, Schnellstart, Testen), README
+  images, landing page images/texts, release notes v0.8.0, tool template (store.py, screenshots.py, example shot).
+- Tested on Linux: smoke_test, check_locales, check_store, offscreen renders 1600x1000 dark + 1100x720 light,
+  template flow (new_tool -> screenshots.py -> store.py build/check).

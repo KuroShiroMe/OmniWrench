@@ -365,5 +365,19 @@
   "err.elevated_start": "D Admin-Sitzung hot ed gstartet werda kenna: {error}",
   "err.elevated_failed": "Mit Admin-Rechte hot's ed klappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows hot d Funktion ed ronterlada kenna. Bei WSUS muass d Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ s Ronterlada direkt vo Windows Update erlauba, odr d Funktion kommt aus ra Features-on-Demand-Quell.",
-  "home.server_notice": "Windows Server wird ed unterstützt. A paar Funktiona gohet bloß eigschränkt, z. B. s automatische Druffmacha vo Sacha wie RSAT."
+  "home.server_notice": "Windows Server wird ed unterstützt. A paar Funktiona gohet bloß eigschränkt, z. B. s automatische Druffmacha vo Sacha wie RSAT.",
+  "shots.next": "Nächschder Screenshot",
+  "shots.previous": "Vorheriger Screenshot",
+  "shots.loading": "Vorschau wird glada …",
+  "details.installed_version": "Installierde Version",
+  "details.available_version": "Verfügbare Version",
+  "details.platforms": "Plattforma",
+  "details.source": "Quelle",
+  "home.view_full": "Ganze Aasicht",
+  "home.view_large": "Große Symbole",
+  "home.view_small": "Kloine Symbole",
+  "home.view_list": "Lischde mit Details",
+  "home.col_name": "Nama",
+  "home.col_status": "Status",
+  "home.col_description": "Beschreibong"
 }

@@ -4,6 +4,8 @@
   "tool.name": "Subnetzrechner",
   "tool.description": "IPv4/IPv6-Netze berechnen und in Subnetze aufteilen.",
   "tool.long_description": "Berechnet Netzadresse, Broadcast, Netzmaske, Wildcard, Hostbereich und Anzahl der Hosts. Teilt Netze in gleich große Subnetze auf und exportiert die Liste als CSV.",
+  "tool.screenshot.overview": "IPv4-Netz mit Details und Aufteilung in /20-Subnetze",
+  "tool.screenshot.ipv6": "IPv6-Präfix aufgeteilt in /52-Netze",
   "tool.category": "Netzwerk & Konnektivität",
 
   "settings.default_network.label": "Standard-Netz beim Start",

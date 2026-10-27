@@ -365,5 +365,19 @@
   "err.elevated_start": "De Admin-Sitzung hat nich gestartet wern gönn: {error}",
   "err.elevated_failed": "Mit Admin-Rechtn hat's nich geglappt (Exitcode {code}).",
   "err.feature_source_hint": "Windows hat de Funktion nich runnerladn gönn. Bei WSUS muss de Gruppenrichtlinie „Einstellungen für die Installation optionaler Komponenten und die Komponentenreparatur angeben“ das Runnerladn direkt von Windows Update erlaubn, oder de Funktion gommt aus ner Features-on-Demand-Quelle.",
-  "home.server_notice": "Windows Server wird nich unterstützt. Ä paar Funktionen gehn bloß eingeschränkt, z. B. das automatische Druffmachn von Sachn wie RSAT."
+  "home.server_notice": "Windows Server wird nich unterstützt. Ä paar Funktionen gehn bloß eingeschränkt, z. B. das automatische Druffmachn von Sachn wie RSAT.",
+  "shots.next": "Nächster Screenshot",
+  "shots.previous": "Vorheriger Screenshot",
+  "shots.loading": "Vorschau wird geladn …",
+  "details.installed_version": "Installierte Version",
+  "details.available_version": "Verfüchbare Version",
+  "details.platforms": "Plattformn",
+  "details.source": "Quelle",
+  "home.view_full": "Vollansicht",
+  "home.view_large": "Große Symbole",
+  "home.view_small": "Gleene Symbole",
+  "home.view_list": "Lisde mit Details",
+  "home.col_name": "Name",
+  "home.col_status": "Status",
+  "home.col_description": "Beschreibung"
 }

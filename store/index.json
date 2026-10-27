@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-23T14:56:28+00:00",
+  "generated": "2026-10-27T08:51:36+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.4",
+      "version": "1.3.5",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "KuroShiro",
@@ -27,6 +27,22 @@
         "Account Lockout",
         "Service Desk"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/search.png",
+          "caption": "Search by name, logon name or e-mail with status and last logon",
+          "url": "screenshots/ms.ad-user-lookup/search.png",
+          "sha256": "b1663b8a2ad414b0b9f06a6a6527fdb555032d9e57cc379f882a439e0103db74",
+          "size": 109200
+        },
+        {
+          "file": "screenshots/details.png",
+          "caption": "Details of a locked-out account including groups",
+          "url": "screenshots/ms.ad-user-lookup/details.png",
+          "sha256": "03e573fa60ba126e8a96706cc7e3fd1a5f708784199e879b400e71118be2a588",
+          "size": 107615
+        }
+      ],
       "requirements": {
         "windows_capabilities": [
           "Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0"
@@ -37,23 +53,27 @@
           "name": "AD Benutzerabfrage",
           "description": "Benutzer im Active Directory suchen und Details anzeigen.",
           "long_description": "Sucht Benutzerkonten über Name, Anmeldename oder E-Mail und zeigt Status, letzte Anmeldung, Sperrstatus und Gruppen. Benötigt die RSAT-Tools für Active Directory (werden bei der Installation automatisch hinzugefügt).",
-          "category": "Identität & Zugriff"
+          "category": "Identität & Zugriff",
+          "screenshot.search": "Suche über Name, Anmeldename oder E-Mail mit Status und letzter Anmeldung",
+          "screenshot.details": "Details eines gesperrten Kontos mit Gruppen"
         },
         "en": {
           "name": "AD User Lookup",
           "description": "Search users in Active Directory and show their details.",
           "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
-          "category": "Identity & Access"
+          "category": "Identity & Access",
+          "screenshot.search": "Search by name, logon name or e-mail with status and last logon",
+          "screenshot.details": "Details of a locked-out account including groups"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.4.zip",
-      "sha256": "b3e0e01b486b6c546f56bf976d44fbfa6b8bbe55b44c2af70261badc908be06e",
-      "size": 6082
+      "download_url": "packages/ms.ad-user-lookup-1.3.5.zip",
+      "sha256": "2f64925f55be0925a5e5f8dd3a617fea693819e3833a218715a6677e0a46bf86",
+      "size": 6262
     },
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "KuroShiro",
@@ -79,6 +99,22 @@
         "Fluent",
         "Font Awesome"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/browse.png",
+          "caption": "Searchable icon grid with export options, licence and permitted uses",
+          "url": "screenshots/gfx.iconforge/browse.png",
+          "sha256": "d9616c4c12c2cd073a805eb307f829cda389a82fa92ece8ab721016efc600c12",
+          "size": 109253
+        },
+        {
+          "file": "screenshots/style.png",
+          "caption": "Colour, stroke width and background adjusted before export",
+          "url": "screenshots/gfx.iconforge/style.png",
+          "sha256": "b0b3b0d131e0f80a7e8dcca3829172ac677fd27217e2a3ad9c90b8fa1bbec6fb",
+          "size": 104731
+        }
+      ],
       "single_instance": false,
       "requirements": {},
       "translations": {
@@ -86,23 +122,27 @@
           "name": "IconForge",
           "description": "Symbole und Piktogramme aus vielen freien Bibliotheken - suchen, anpassen und exportieren, z. B. für Visio.",
           "long_description": "Durchsuchbares Raster mit über 100.000 Symbolen aus mehr als 25 freien Bibliotheken (Lucide eingebaut, Tabler, Phosphor, Material, Fluent, Font Awesome u. a. werden bei Bedarf geladen). Zeigt Lizenz und erlaubte Nutzung je Symbol, passt Farbe, Strichstärke und Hintergrund an und exportiert als SVG, PNG, ICO, PDF oder JPG in mehreren Größen.",
-          "category": "Dokumentation & Design"
+          "category": "Dokumentation & Design",
+          "screenshot.browse": "Durchsuchbares Symbolraster mit Export, Lizenz und erlaubter Nutzung",
+          "screenshot.style": "Farbe, Strichstärke und Hintergrund vor dem Export angepasst"
         },
         "en": {
           "name": "IconForge",
           "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
           "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
-          "category": "Documentation & Design"
+          "category": "Documentation & Design",
+          "screenshot.browse": "Searchable icon grid with export options, licence and permitted uses",
+          "screenshot.style": "Colour, stroke width and background adjusted before export"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.5.zip",
-      "sha256": "08d9e3ee09fc8e25a26d87938cafa8f63e4faa7fb86507f8f92898deb65f59d9",
-      "size": 29599
+      "download_url": "packages/gfx.iconforge-1.1.6.zip",
+      "sha256": "468a5faea3c6023fb237bb4bcf91f51d57215fb2bb77c44c7926b8ccf3df8221",
+      "size": 29778
     },
     {
       "id": "net.ms-dhcp-extended",
       "name": "MS DHCP Extended Management",
-      "version": "1.5.0",
+      "version": "1.5.1",
       "description": "Manage Microsoft DHCP servers (IPv4 and IPv6): scopes, options, reservations, failover and a full configuration check.",
       "long_description": "Connects to a Microsoft DHCP server (IPv4 and DHCPv6) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address pool, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings that also compares everything with the failover partners (scopes, pools, exclusions, options, reservations, relationship settings, classes and definitions). Changes made by others (DHCP console, PowerShell, colleagues) are detected: before saving the tool checks whether the scope was changed since loading, an optional auto-refresh reloads the views, and the server's event log shows who changed what – also as its own page with reading aids (area, action, scope, object and a note per event). Every change runs as a transaction: if a step fails or the action is cancelled, everything already changed is undone automatically, on the server and on the partner. DHCPv6 with the same scope: prefixes, lifetimes, options, reservations by DUID and IAID, exclusions, leases, check, transactions and conflict detection; an IPv4/IPv6 switch selects the view. Optionally the check compares reservations and leases with DNS (name, address, PTR). Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
       "author": "KuroShiro",
@@ -127,6 +167,50 @@
         "RSAT",
         "Microsoft"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/overview.png",
+          "caption": "Scope overview with utilisation, findings and failover state",
+          "url": "screenshots/net.ms-dhcp-extended/overview.png",
+          "sha256": "8f58e9a1b22a625985d58ea7fa2af064113900cabfec0274d17871d42d1fb9a9",
+          "size": 157230
+        },
+        {
+          "file": "screenshots/scope.png",
+          "caption": "Every scope in its own tab with general settings, pool, options, reservations and leases",
+          "url": "screenshots/net.ms-dhcp-extended/scope.png",
+          "sha256": "3f8a8ffbf04fd7c92403b4587da9724be4f5e95dafeac0c5c1b8ffdea1a99ec4",
+          "size": 122899
+        },
+        {
+          "file": "screenshots/failover.png",
+          "caption": "Failover relationships with all scopes of both servers",
+          "url": "screenshots/net.ms-dhcp-extended/failover.png",
+          "sha256": "52df032ab105555fe75e49935a8a022578392e737049883ae4221ba650d0f38c",
+          "size": 166627
+        },
+        {
+          "file": "screenshots/server_options.png",
+          "caption": "Server options of all failover servers with sync state",
+          "url": "screenshots/net.ms-dhcp-extended/server_options.png",
+          "sha256": "a7673fdac9b9adeffbbb0ddd10a17e8600daa5e23a9459d93b0a52a9553d15c5",
+          "size": 134372
+        },
+        {
+          "file": "screenshots/check.png",
+          "caption": "Server-wide check with distribution of findings and partner comparison",
+          "url": "screenshots/net.ms-dhcp-extended/check.png",
+          "sha256": "a7b41ca8d495bef0e8aae2f6eca0c01e90c307f731836ea5193f0d960f38478e",
+          "size": 188226
+        },
+        {
+          "file": "screenshots/ipv6.png",
+          "caption": "DHCPv6 scopes in the same view (IPv4/IPv6 switch)",
+          "url": "screenshots/net.ms-dhcp-extended/ipv6.png",
+          "sha256": "0554c267a5070f763d1cee57e49a2ba3c85297c459a7f8505831e651b5213bb4",
+          "size": 95669
+        }
+      ],
       "single_instance": false,
       "requirements": {
         "windows_capabilities": [
@@ -138,23 +222,35 @@
           "name": "MS DHCP Extended Management",
           "description": "Microsoft-DHCP-Server verwalten (IPv4 und IPv6): Scopes, Optionen, Reservierungen, Failover und eine vollständige Konfigurationsprüfung.",
           "long_description": "Verbindet sich mit einem Microsoft-DHCP-Server (IPv4 und DHCPv6) über das angemeldete Konto, gespeicherte oder abweichende Anmeldedaten und behält die Failover-Partner im Blick. Jeder Scope öffnet sich in einem eigenen Tab mit Allgemein, Adresspool, Optionen, Reservierungen, Ausschlüssen, Leases und Failover-Status; Befunde (Fehler, Warnungen, Best Practice) entstehen schon während der Eingabe und markieren die betroffenen Felder. Neue Scopes entstehen aus einem Entwurf oder als Duplikat eines vorhandenen Scopes, Adressen werden dabei auf das neue Netz umgerechnet. Änderungen an Failover-Scopes lassen sich automatisch auf den Partner replizieren (auch wenn der Partner nur per RPC erreichbar ist, wie bei der DHCP-Konsole). Weitere Seiten: Server-Optionen jedes Failover-Servers mit Abgleichstatus, Failover-Beziehungen (aufklappbar auf beide Server) mit allen Scopes je Server, Optionsdefinitionen (Expertenmodus, standardmäßig gesperrt) und eine serverweite Prüfung mit Verteilung der Befunde, die auch alles mit den Failover-Partnern abgleicht (Scopes, Pools, Ausschlüsse, Optionen, Reservierungen, Beziehungseinstellungen, Klassen und Definitionen). DHCPv6 mit demselben Umfang: Präfixe, Gültigkeitsdauern, Optionen, Reservierungen über DUID und IAID, Ausschlüsse, Leases, Prüfung, Transaktionen und Konfliktprüfung; ein Umschalter IPv4/IPv6 wählt die Ansicht. Optional gleicht die Prüfung Reservierungen und Leases mit dem DNS ab (Name, Adresse, PTR). Erkennt reinen Lesezugriff (DHCP-Benutzer) und blendet Änderungsfunktionen dann aus. Spricht den Server direkt über die DHCP-Schnittstelle von Windows (RPC) an – ohne PowerShell oder WinRM. Die Replikation auf den Partner nutzt netsh dhcp aus den RSAT-DHCP-Tools (werden bei der Installation automatisch hinzugefügt).",
-          "category": "Netzwerk & Konnektivität"
+          "category": "Netzwerk & Konnektivität",
+          "screenshot.overview": "Scope-Übersicht mit Auslastung, Befunden und Failover-Status",
+          "screenshot.scope": "Jeder Scope im eigenen Tab mit Allgemein, Bereich, Optionen, Reservierungen und Leases",
+          "screenshot.failover": "Failover-Beziehungen mit allen Scopes beider Server",
+          "screenshot.server_options": "Serveroptionen aller Failover-Server mit Abgleichstatus",
+          "screenshot.check": "Serverweite Prüfung mit Verteilung der Befunde und Partnerabgleich",
+          "screenshot.ipv6": "DHCPv6-Scopes in derselben Ansicht (Umschalter IPv4/IPv6)"
         },
         "en": {
           "name": "MS DHCP Extended Management",
           "description": "Manage Microsoft DHCP servers (IPv4 and IPv6): scopes, options, reservations, failover and a full configuration check.",
           "long_description": "Connects to a Microsoft DHCP server (IPv4 and DHCPv6) with the current account, stored credentials or a different login and keeps the failover partners in view. Every scope opens in its own tab with general settings, address pool, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings that also compares everything with the failover partners (scopes, pools, exclusions, options, reservations, relationship settings, classes and definitions). DHCPv6 with the same scope: prefixes, lifetimes, options, reservations by DUID and IAID, exclusions, leases, check, transactions and conflict detection; an IPv4/IPv6 switch selects the view. Optionally the check compares reservations and leases with DNS (name, address, PTR). Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
-          "category": "Network & Connectivity"
+          "category": "Network & Connectivity",
+          "screenshot.overview": "Scope overview with utilisation, findings and failover state",
+          "screenshot.scope": "Every scope in its own tab with general settings, pool, options, reservations and leases",
+          "screenshot.failover": "Failover relationships with all scopes of both servers",
+          "screenshot.server_options": "Server options of all failover servers with sync state",
+          "screenshot.check": "Server-wide check with distribution of findings and partner comparison",
+          "screenshot.ipv6": "DHCPv6 scopes in the same view (IPv4/IPv6 switch)"
         }
       },
-      "download_url": "packages/net.ms-dhcp-extended-1.5.0.zip",
-      "sha256": "64dc30ebd69e497c08f608449ea0388e09abbb0e5ff58ad147ee1cfb780d350f",
-      "size": 227790
+      "download_url": "packages/net.ms-dhcp-extended-1.5.1.zip",
+      "sha256": "aee6503344a5bb3b430bc043ef697fcb27869a5c9534f883f58751602e0a5446",
+      "size": 228181
     },
     {
       "id": "net.ms-dns-extended",
       "name": "MS DNS Extended Management",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "description": "Manage Microsoft DNS servers: zones, records (IPv4 and IPv6), reverse lookup, aging/scavenging and a full configuration check.",
       "long_description": "Connects to one or more Microsoft DNS servers – domain controllers with AD-integrated zones as well as standalone servers outside a domain – with the current account, stored credentials or a different login. Every zone opens in its own tab with all records (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS and read-only display of all other types), general settings (dynamic updates, aging, zone transfers, notify) and its findings. Creating or changing an A/AAAA record keeps the matching PTR record in the reverse zone (IPv4 and ip6.arpa) in sync. New zones (primary, AD-integrated, secondary, stub, conditional forwarder) are created from a dialog, including IPv6 reverse zones. The check finds missing or orphaned PTR records, CNAME conflicts, dangling targets, duplicate addresses, risky zone settings (non-secure updates, transfers to any server, aging off), stale records and compares NS servers and forwarders by querying them (SOA serial, response). A scavenging preview shows which dynamic records would be deleted and whether the device still answers to ping. Optionally reads leases and reservations from a Microsoft DHCP server and compares them with DNS (missing, wrong or orphaned records). Search across all zones and servers, compare zones between servers, server settings, cache and the DNS server audit log with reading aids. Changes made by others are detected through the SOA serial; every change runs as a transaction and is undone automatically if a step fails. Talks to the server via WMI (root\\MicrosoftDNS) – no PowerShell or RSAT needed.",
       "author": "KuroShiro",
@@ -178,6 +274,36 @@
         "WMI",
         "Microsoft"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/overview.png",
+          "caption": "Zones of all connected DNS servers with findings at a glance",
+          "url": "screenshots/net.ms-dns-extended/overview.png",
+          "sha256": "7f499e02ad0bf596179298014fbfef1adfbd4de1c21d06d1a4e4572a3964cde2",
+          "size": 107952
+        },
+        {
+          "file": "screenshots/zone.png",
+          "caption": "Every zone in its own tab with records, settings and findings",
+          "url": "screenshots/net.ms-dns-extended/zone.png",
+          "sha256": "463f0075236dad86e6f512131712261579b52bb3d0e4dac0d2beac97bd87c6c3",
+          "size": 161744
+        },
+        {
+          "file": "screenshots/check.png",
+          "caption": "Configuration check: PTR records, CNAME conflicts, stale records and server comparison",
+          "url": "screenshots/net.ms-dns-extended/check.png",
+          "sha256": "cfe1fcbd5f3fc1ae48fc54b975f7de19b4839b6abe1407369532ef35cb4545fe",
+          "size": 229149
+        },
+        {
+          "file": "screenshots/events.png",
+          "caption": "DNS server audit log with reading aids",
+          "url": "screenshots/net.ms-dns-extended/events.png",
+          "sha256": "403763c52cc29fc61f75195bff6bde73c36f3e7f84679fac756b4707667d3d0f",
+          "size": 77053
+        }
+      ],
       "single_instance": false,
       "requirements": {
         "python": [
@@ -190,23 +316,31 @@
           "name": "MS DNS Extended Management",
           "description": "Microsoft-DNS-Server verwalten: Zonen, Einträge (IPv4 und IPv6), Reverse-Auflösung, Alterung/Aufräumen und eine vollständige Konfigurationsprüfung.",
           "long_description": "Verbindet sich mit einem oder mehreren Microsoft-DNS-Servern – Domänencontrollern mit AD-integrierten Zonen ebenso wie eigenständigen Servern außerhalb einer Domäne – über das angemeldete Konto, gespeicherte oder abweichende Anmeldedaten. Jede Zone öffnet sich in einem eigenen Tab mit allen Einträgen (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS; andere Typen werden angezeigt), allgemeinen Einstellungen (dynamische Updates, Alterung, Zonenübertragung, Benachrichtigung) und ihren Befunden. Beim Anlegen oder Ändern eines A-/AAAA-Eintrags wird der passende PTR-Eintrag in der Reverse-Zone mitgeführt (IPv4 und ip6.arpa). Neue Zonen (primär, AD-integriert, sekundär, Stub, bedingte Weiterleitung) entstehen über einen Dialog, auch IPv6-Reverse-Zonen. Die Prüfung findet fehlende oder verwaiste PTR-Einträge, CNAME-Konflikte, Ziele ohne Adresse, doppelte Adressen, riskante Zoneneinstellungen (nicht sichere Updates, Übertragung an jeden Server, Alterung aus) und veraltete Einträge und befragt Namensserver und Weiterleitungen (SOA-Seriennummer, Antwort). Eine Aufräum-Vorschau zeigt, welche dynamischen Einträge gelöscht würden und ob das Gerät noch auf Ping antwortet. Optional werden Leases und Reservierungen eines Microsoft-DHCP-Servers gelesen und mit DNS verglichen. Suche über alle Zonen und Server, Vergleich zwischen Servern, Servereinstellungen, Cache und das Überwachungsprotokoll des DNS-Servers mit Lesehilfe. Änderungen anderer werden über die SOA-Seriennummer erkannt; jede Änderung läuft als Transaktion und wird bei einem Fehler automatisch zurückgenommen. Spricht den Server über WMI an (root\\MicrosoftDNS) – ohne PowerShell oder RSAT.",
-          "category": "Netzwerk & Konnektivität"
+          "category": "Netzwerk & Konnektivität",
+          "screenshot.overview": "Zonen aller verbundenen DNS-Server mit Befunden auf einen Blick",
+          "screenshot.zone": "Jede Zone im eigenen Tab mit Einträgen, Einstellungen und Befunden",
+          "screenshot.check": "Konfigurationsprüfung: PTR-Einträge, CNAME-Konflikte, veraltete Einträge und Serverabgleich",
+          "screenshot.events": "Überwachungsprotokoll der DNS-Server mit Lesehilfen"
         },
         "en": {
           "name": "MS DNS Extended Management",
           "description": "Manage Microsoft DNS servers: zones, records (IPv4 and IPv6), reverse lookup, aging/scavenging and a full configuration check.",
           "long_description": "Connects to one or more Microsoft DNS servers – domain controllers with AD-integrated zones as well as standalone servers outside a domain – with the current account, stored credentials or a different login. Every zone opens in its own tab with all records (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS and read-only display of all other types), general settings (dynamic updates, aging, zone transfers, notify) and its findings. Creating or changing an A/AAAA record keeps the matching PTR record in the reverse zone (IPv4 and ip6.arpa) in sync. New zones (primary, AD-integrated, secondary, stub, conditional forwarder) are created from a dialog, including IPv6 reverse zones. The check finds missing or orphaned PTR records, CNAME conflicts, dangling targets, duplicate addresses, risky zone settings (non-secure updates, transfers to any server, aging off), stale records and compares NS servers and forwarders by querying them (SOA serial, response). A scavenging preview shows which dynamic records would be deleted and whether the device still answers to ping. Optionally reads leases and reservations from a Microsoft DHCP server and compares them with DNS (missing, wrong or orphaned records). Search across all zones and servers, compare zones between servers, server settings, cache and the DNS server audit log with reading aids. Changes made by others are detected through the SOA serial; every change runs as a transaction and is undone automatically if a step fails. Talks to the server via WMI (root\\MicrosoftDNS) – no PowerShell or RSAT needed.",
-          "category": "Network & Connectivity"
+          "category": "Network & Connectivity",
+          "screenshot.overview": "Zones of all connected DNS servers with findings at a glance",
+          "screenshot.zone": "Every zone in its own tab with records, settings and findings",
+          "screenshot.check": "Configuration check: PTR records, CNAME conflicts, stale records and server comparison",
+          "screenshot.events": "DNS server audit log with reading aids"
         }
       },
-      "download_url": "packages/net.ms-dns-extended-1.0.0.zip",
-      "sha256": "0481c06cbef2b58849d5c3f5e2b3650a5151c3081c0aada29bd4ad2d19207c7e",
-      "size": 113716
+      "download_url": "packages/net.ms-dns-extended-1.0.1.zip",
+      "sha256": "dd47d9341cc331eb05bd53ca6837385f00f086b028229efbc357772d5c996c19",
+      "size": 114013
     },
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.4",
+      "version": "1.2.5",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
       "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "KuroShiro",
@@ -236,6 +370,36 @@
         "Throughput",
         "Load Test"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/overview.png",
+          "caption": "Target list with network scan and the profile of a Windows server",
+          "url": "screenshots/net.netprobe/overview.png",
+          "sha256": "3161091322bc696c7f7fcd63b0ee16b91a11287d174415d3872b737fb8aa93ef",
+          "size": 128069
+        },
+        {
+          "file": "screenshots/ports.png",
+          "caption": "Open ports with explanation and typical usage",
+          "url": "screenshots/net.netprobe/ports.png",
+          "sha256": "1a843cd90a7d22f52d1378ee38bdbe446afdd9577987d2ef7c61552cbd2ceb22",
+          "size": 205219
+        },
+        {
+          "file": "screenshots/web.png",
+          "caption": "HTTP and TLS inspection with certificate and protocol versions",
+          "url": "screenshots/net.netprobe/web.png",
+          "sha256": "f01e563d5628ab1a328829c472d8bc7d925f14730a2542a0df5583ae2c1993bf",
+          "size": 175839
+        },
+        {
+          "file": "screenshots/findings.png",
+          "caption": "Findings: errors, warnings and best-practice notes per target",
+          "url": "screenshots/net.netprobe/findings.png",
+          "sha256": "67750ed6d0a2bc8b4d0af8ebc9f2a1db70a34996eb161192a8cf2b29ad338d08",
+          "size": 207363
+        }
+      ],
       "single_instance": false,
       "requirements": {
         "python": [
@@ -247,23 +411,31 @@
           "name": "NetProbe",
           "description": "Umfassendes Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS, Leitungstest zu einer Gegenstelle und eine Befundliste je Ziel.",
           "long_description": "Eingabe einer IP-Adresse, eines DNS-Namens, eines Netzes (CIDR) oder Bereichs samt Auswahl eines Testprofils. Einzeladressen landen direkt in der Liste, Netze werden abgescannt. Für jedes Ziel führt NetProbe zahlreiche Tests aus, die sich nach Kategorie ein- und ausschalten lassen: Ping mit Laufzeit, Jitter und TTL, parallel ausgeführtes Traceroute mit Analyse jedes Sprungpunkts, TCP-Portscan mit einer Bibliothek von über 130 Diensten samt typischen Einsatzszenarien, HTTP- und TLS-Prüfung, SMB/RDP/NTP sowie eine vollständige DNS-Diagnose für Namen (Einträge, Nameserver, SPF/DKIM/DMARC, DNSSEC). Der Leitungstest misst die echte Qualität der Verbindung zu einer Gegenstelle (wahre Latenz, Durchsatz in beide Richtungen, ein Lasttest und ein Pfad-Portscan) – gegen ein zweites NetProbe oder ein winziges exportiertes Mini-Tool. Jedes Ziel öffnet einen eigenen, frei anordenbaren Tab mit Ergebnissen je Kategorie und einem Tab „Befunde“ mit Fehlern, Warnungen und Best-Practice-Hinweisen. Keine Administratorrechte nötig.",
-          "category": "Netzwerk & Konnektivität"
+          "category": "Netzwerk & Konnektivität",
+          "screenshot.overview": "Zielliste mit Netzscan und dem Profil eines Windows-Servers",
+          "screenshot.ports": "Offene Ports mit Erklärung und typischer Nutzung",
+          "screenshot.web": "HTTP- und TLS-Prüfung mit Zertifikat und Protokollversionen",
+          "screenshot.findings": "Befunde: Fehler, Warnungen und Best-Practice-Hinweise je Ziel"
         },
         "en": {
           "name": "NetProbe",
           "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
           "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile. Single addresses go straight into the list, networks are scanned. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter and TTL, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names. The link test measures the real quality of the connection to a counterpart (true latency, throughput both ways, a load test and a path port scan) against another NetProbe or a tiny exported mini tool. Each target opens its own dockable tab with results per category plus a Findings tab. No admin rights required.",
-          "category": "Network & Connectivity"
+          "category": "Network & Connectivity",
+          "screenshot.overview": "Target list with network scan and the profile of a Windows server",
+          "screenshot.ports": "Open ports with explanation and typical usage",
+          "screenshot.web": "HTTP and TLS inspection with certificate and protocol versions",
+          "screenshot.findings": "Findings: errors, warnings and best-practice notes per target"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.4.zip",
-      "sha256": "a82884e01818fd13f971f4f5c7920734182cffd4ba49715568616fb786088708",
-      "size": 83437
+      "download_url": "packages/net.netprobe-1.2.5.zip",
+      "sha256": "5b5c1659bfc1ccfac69887d4177f56062d14b6a9b9fae771286dffbf07d4b76a",
+      "size": 83762
     },
     {
       "id": "sec.omnivault",
       "name": "OmniVault",
-      "version": "1.1.5",
+      "version": "1.1.6",
       "description": "Built-in password manager plus connectors to external password managers.",
       "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
       "author": "KuroShiro",
@@ -289,6 +461,29 @@
         "HashiCorp Vault",
         "OpenBao"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/manager.png",
+          "caption": "Built-in password manager with connected external managers",
+          "url": "screenshots/sec.omnivault/manager.png",
+          "sha256": "20b91f8c531e234cd98c0e4c81973c4eee52fbcad931820b0453e18721cd34c7",
+          "size": 75357
+        },
+        {
+          "file": "screenshots/search.png",
+          "caption": "One search across all managers at once",
+          "url": "screenshots/sec.omnivault/search.png",
+          "sha256": "1b915dd8f67e8ee6575b1eae1d68b24bdc08e5b262dc1d6f65718b39d67d5a23",
+          "size": 73936
+        },
+        {
+          "file": "screenshots/connector.png",
+          "caption": "Connector for HashiCorp Vault – fields adapt to the manager type",
+          "url": "screenshots/sec.omnivault/connector.png",
+          "sha256": "f42a7e906443f0c709fb358a960436f659f905f41187c6ce77ebdf3aab0d1571",
+          "size": 144852
+        }
+      ],
       "single_instance": true,
       "hooks": {
         "startup": "connectors:register_all"
@@ -303,7 +498,10 @@
           "name": "OmniVault",
           "description": "Eingebauter Passwortmanager mit Konnektoren zu externen Passwortmanagern.",
           "long_description": "Speichert Zugangsdaten im eingebauten OmniWrench-Passwortmanager und bindet externe Manager an (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Die Zugangsdaten-Auswahl in OmniWrench durchsucht anschließend alle verbundenen Manager. Passwörter externer Manager werden bei Bedarf abgerufen und nur für die laufende Sitzung im Arbeitsspeicher gehalten.",
-          "category": "Informationssicherheit"
+          "category": "Informationssicherheit",
+          "screenshot.manager": "Eingebauter Passwortmanager mit angebundenen externen Managern",
+          "screenshot.search": "Eine Suche über alle Manager gleichzeitig",
+          "screenshot.connector": "Konnektor für HashiCorp Vault – die Felder passen sich der Art des Managers an"
         },
         "de_bad": {
           "name": "OmniVault",
@@ -321,7 +519,10 @@
           "name": "OmniVault",
           "description": "Built-in password manager with connectors to external password managers.",
           "long_description": "Manage credentials in the built-in OmniWrench password manager and connect external managers (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Once connected, every credential picker in OmniWrench searches all managers at once. Passwords from external managers are only fetched when needed and kept in memory for the current session.",
-          "category": "Information Security"
+          "category": "Information Security",
+          "screenshot.manager": "Built-in password manager with connected external managers",
+          "screenshot.search": "One search across all managers at once",
+          "screenshot.connector": "Connector for HashiCorp Vault – fields adapt to the manager type"
         },
         "en_posh": {
           "name": "OmniVault",
@@ -339,23 +540,29 @@
           "name": "OmniVault",
           "description": "Gestor de contraseñas integrado con conectores a gestores externos.",
           "long_description": "Gestiona credenciales en el gestor de contraseñas integrado de OmniWrench y conecta gestores externos (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). Después, la selección de credenciales de OmniWrench busca en todos los gestores conectados. Las contraseñas de gestores externos solo se obtienen cuando se necesitan y se mantienen en memoria únicamente durante la sesión actual.",
-          "category": "Seguridad de la información"
+          "category": "Seguridad de la información",
+          "screenshot.manager": "Gestor de contraseñas integrado con gestores externos conectados",
+          "screenshot.search": "Una sola búsqueda en todos los gestores a la vez",
+          "screenshot.connector": "Conector para HashiCorp Vault: los campos se adaptan al tipo de gestor"
         },
         "fr": {
           "name": "OmniVault",
           "description": "Gestionnaire de mots de passe intégré avec connecteurs vers des gestionnaires externes.",
           "long_description": "Gère les identifiants dans le gestionnaire de mots de passe intégré d'OmniWrench et connecte des gestionnaires externes (Microsoft SecretManagement, KeePass, Netwrix Password Secure, Bitwarden, 1Password, HashiCorp Vault). La sélection d'identifiants d'OmniWrench recherche ensuite dans tous les gestionnaires connectés. Les mots de passe des gestionnaires externes ne sont récupérés qu'en cas de besoin et conservés en mémoire uniquement pour la session en cours.",
-          "category": "Sécurité de l'information"
+          "category": "Sécurité de l'information",
+          "screenshot.manager": "Gestionnaire de mots de passe intégré avec gestionnaires externes connectés",
+          "screenshot.search": "Une seule recherche dans tous les gestionnaires à la fois",
+          "screenshot.connector": "Connecteur pour HashiCorp Vault – les champs s'adaptent au type de gestionnaire"
         }
       },
-      "download_url": "packages/sec.omnivault-1.1.5.zip",
-      "sha256": "8f42e30e6f8c339c5318c236ade9a1d7475077cc08ae5b7dbe2d2860912bc40a",
-      "size": 36000
+      "download_url": "packages/sec.omnivault-1.1.6.zip",
+      "sha256": "80dc4d76ba0e44cdff8b9248fb20a3c163fbd30e4570049f72cc9a3a17446828",
+      "size": 36397
     },
     {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
-      "version": "1.2.5",
+      "version": "1.2.6",
       "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
       "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
       "author": "KuroShiro",
@@ -377,6 +584,22 @@
         "Netmask",
         "CSV"
       ],
+      "screenshots": [
+        {
+          "file": "screenshots/overview.png",
+          "caption": "IPv4 network with details and split into /20 subnets",
+          "url": "screenshots/net.subnet-calculator/overview.png",
+          "sha256": "1e91a1ff8ac2d0a3c9b7a19a415d8c267090bbcbf058df44e6636935baf4cdd6",
+          "size": 101707
+        },
+        {
+          "file": "screenshots/ipv6.png",
+          "caption": "IPv6 prefix split into /52 networks",
+          "url": "screenshots/net.subnet-calculator/ipv6.png",
+          "sha256": "ef5c88267fa3f5867539b8833440a6dce4206f5ae72522d21d86c6d228d53bad",
+          "size": 121342
+        }
+      ],
       "single_instance": false,
       "requirements": {},
       "translations": {
@@ -384,7 +607,9 @@
           "name": "Subnetzrechner",
           "description": "IPv4/IPv6-Netze berechnen und in Subnetze aufteilen.",
           "long_description": "Berechnet Netzadresse, Broadcast, Netzmaske, Wildcard, Hostbereich und Anzahl der Hosts. Teilt Netze in gleich große Subnetze auf und exportiert die Liste als CSV.",
-          "category": "Netzwerk & Konnektivität"
+          "category": "Netzwerk & Konnektivität",
+          "screenshot.overview": "IPv4-Netz mit Details und Aufteilung in /20-Subnetze",
+          "screenshot.ipv6": "IPv6-Präfix aufgeteilt in /52-Netze"
         },
         "de_bad": {
           "name": "Netzle-Rechner",
@@ -396,12 +621,14 @@
           "name": "Subnet Calculator",
           "description": "Calculate IPv4/IPv6 networks and split them into subnets.",
           "long_description": "Calculates network address, broadcast, netmask, wildcard, host range and number of hosts. Splits networks into equally sized subnets and exports the list as CSV.",
-          "category": "Network & Connectivity"
+          "category": "Network & Connectivity",
+          "screenshot.overview": "IPv4 network with details and split into /20 subnets",
+          "screenshot.ipv6": "IPv6 prefix split into /52 networks"
         }
       },
-      "download_url": "packages/net.subnet-calculator-1.2.5.zip",
-      "sha256": "8d76801520d74dc8f528b5c86abba9d6b0665fac317523d868314f31783605dc",
-      "size": 7581
+      "download_url": "packages/net.subnet-calculator-1.2.6.zip",
+      "sha256": "2d5b383cae788771602ee2ae04cf55b29b9b435f173da33554866a62071a6ba5",
+      "size": 7770
     }
   ]
 }

@@ -365,5 +365,19 @@
   "err.elevated_start": "De beheerderssessie kan niet worden gestart: {error}",
   "err.elevated_failed": "Uitvoeren met beheerdersrechten mislukt (afsluitcode {code}).",
   "err.feature_source_hint": "Windows kon het onderdeel niet downloaden. In door WSUS beheerde omgevingen moet het groepsbeleid 'Instellingen opgeven voor de installatie van optionele onderdelen en het herstellen van onderdelen' downloaden rechtstreeks van Windows Update toestaan, of moet het onderdeel worden geïnstalleerd vanuit een Features on Demand-bron.",
-  "home.server_notice": "Windows Server wordt niet ondersteund. Sommige functies zijn beperkt, bijv. de automatische installatie van vereisten zoals RSAT."
+  "home.server_notice": "Windows Server wordt niet ondersteund. Sommige functies zijn beperkt, bijv. de automatische installatie van vereisten zoals RSAT.",
+  "shots.next": "Volgende schermafbeelding",
+  "shots.previous": "Vorige schermafbeelding",
+  "shots.loading": "Voorbeeld wordt geladen …",
+  "details.installed_version": "Geïnstalleerde versie",
+  "details.available_version": "Beschikbare versie",
+  "details.platforms": "Platformen",
+  "details.source": "Bron",
+  "home.view_full": "Volledige weergave",
+  "home.view_large": "Grote pictogrammen",
+  "home.view_small": "Kleine pictogrammen",
+  "home.view_list": "Lijst met details",
+  "home.col_name": "Naam",
+  "home.col_status": "Status",
+  "home.col_description": "Beschrijving"
 }
