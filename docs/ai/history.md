@@ -483,3 +483,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   'pip._vendor.distlib'" (nt-only distlib path). Reproduced with a frozen test build on Linux, fixed in main._run_pip
   (register distlib ResourceFinder), Windows Build CI installs dnspython + pywin32 via the EXE. App 0.8.1 prepared
   (v0.8.0 already tagged): version, release notes, site download links.
+- 2026-10-27: Stef (first real test against a DC): login failed "Lesen … fehlgeschlagen: Unbekannter Fehler
+  (0x80004005)". Cause: wmidns._query used list() on a forward-only SWbemObjectSet (len() -> Count -> E_FAIL).
+  Fixed in DNS tool 1.0.2 + regression test (test_logic, 90 checks).

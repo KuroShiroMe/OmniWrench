@@ -285,6 +285,30 @@ def test_host_text():
         check("unbekannt" in str(e), str(e))
 
 
+def test_wmi_query_forward_only():
+    """ExecQuery mit wbemFlagForwardOnly kennt kein Count: list() würde vorab len() fragen und scheitern."""
+    from tools.ms_dns_extended import wmidns
+
+    class ForwardOnlySet:   # verhält sich wie CDispatch um SWbemObjectSet (Count -> E_FAIL)
+        def __init__(self, items):
+            self.items = items
+
+        def __len__(self):
+            raise RuntimeError("Count bei wbemFlagForwardOnly nicht verfügbar (0x80004005)")
+
+        def __getitem__(self, i):
+            return self.items[i]
+
+    class Svc:
+        def ExecQuery(self, wql, lang, flags):
+            check(flags == wmidns.WBEM_FLAGS, "Abfrage-Flags")
+            return ForwardOnlySet(["a", "b"])
+
+    w = wmidns.WmiServer("dc01")
+    w._svc = lambda: Svc()
+    check(w._query("SELECT * FROM MicrosoftDNS_Zone") == ["a", "b"], "Abfrage ohne Count")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

@@ -180,3 +180,6 @@
   `resources.finder()`, which has no finder for PyInstaller's PyiFrozenLoader -> "Unable to locate finder".
   main._run_pip registers `ResourceFinder` for that loader (pass the loader INSTANCE, register_finder takes type()).
   Linux is unaffected (code path is nt-only); Build CI now runs a real `OmniWrench.exe --pip install`.
+- pywin32 + WMI: never `list(svc.ExecQuery(..., 0x30))`. list() asks len() first, CDispatch.__len__ reads
+  SWbemObjectSet.Count, which forward-only result sets do not support -> com_error E_FAIL ("Unbekannter Fehler")
+  on the very first query. Iterate (`[o for o in res]`, `for o in res`) instead (DNS tool 1.0.2).
