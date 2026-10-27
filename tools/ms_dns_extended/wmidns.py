@@ -33,6 +33,20 @@ HRESULTS = {
 }
 
 
+# Parameter von CreateInstanceFromPropertyData je Typ (Namen laut MicrosoftDNS_<Typ>Type)
+PROPERTY_DATA = {
+    "A": lambda d: {"IPAddress": d["ip"]},
+    "AAAA": lambda d: {"IPv6Address": d["ip"]},
+    "CNAME": lambda d: {"PrimaryName": du.norm(d["host"]) + "."},
+    "PTR": lambda d: {"PTRDomainName": du.norm(d["host"]) + "."},
+    "NS": lambda d: {"NSHost": du.norm(d["host"]) + "."},
+    "MX": lambda d: {"Preference": int(d.get("pref", 10)), "MailExchange": du.norm(d["host"]) + "."},
+    "SRV": lambda d: {"Priority": int(d.get("priority", 0)), "Weight": int(d.get("weight", 0)),
+                      "Port": int(d.get("port", 0)), "DomainName": du.norm(d["host"]) + "."},
+    "TXT": lambda d: {"DescriptiveText": d.get("text", "")},
+}
+
+
 class HostError(Exception):
     """Fehlermeldung des Zugriffs (Text mit @WMI:/@ERR:-Präfix)."""
 
@@ -478,14 +492,42 @@ class WmiServer:
         return self._find(rec) is not None
 
     def create_record(self, rec: du.Rec) -> None:
+        """Bekannte Typen über CreateInstanceFromPropertyData der Typklasse, sonst über die Textdarstellung.
+        Meldet ein Weg "Allgemeiner Fehler" (0x80041001), folgt der nächste (auch mit dem Servernamen wie
+        eingegeben statt dem vom Dienst gemeldeten); vorher wird geprüft, ob der Eintrag doch angelegt wurde."""
         if not self.wmi_name:
             self.info()
-        text = du.text_representation(rec)
-        self._call("MicrosoftDNS_ResourceRecord", "CreateInstanceFromTextRepresentation",
-                   {"DnsServerName": self.wmi_name, "ContainerName": rec.zone, "TextRepresentation": text},
-                   op="create")
+        names = [self.wmi_name] + ([self.server] if du.norm(self.server) != du.norm(self.wmi_name) else [])
+        ways = [(n, self._create_props) for n in names if rec.type in PROPERTY_DATA] + \
+               [(n, self._create_text) for n in names]
+        first: HostError | None = None
+        for dns_name, way in ways:
+            try:
+                way(rec, dns_name)
+                break
+            except HostError as e:
+                if ":80041001:" not in str(e):
+                    raise
+                first = first or e
+                if self.exists(rec):
+                    break
+        else:
+            raise first
         if rec.dynamic:
             self.age_node(rec.zone, rec.name)
+
+    def _create_text(self, rec: du.Rec, dns_name: str) -> None:
+        self._call("MicrosoftDNS_ResourceRecord", "CreateInstanceFromTextRepresentation",
+                   {"DnsServerName": dns_name, "ContainerName": rec.zone,
+                    "TextRepresentation": du.text_representation(rec)}, op="create")
+
+    def _create_props(self, rec: du.Rec, dns_name: str) -> None:
+        cls = f"MicrosoftDNS_{du.WMI_CLASSES[rec.type]}"
+        params = {"DnsServerName": dns_name, "ContainerName": rec.zone, "OwnerName": rec.name, "RecordClass": 1}
+        if rec.ttl is not None:
+            params["TTL"] = int(rec.ttl)
+        params.update(PROPERTY_DATA[rec.type](rec.data))
+        self._call(cls, "CreateInstanceFromPropertyData", params, op="create")
 
     def delete_record(self, rec: du.Rec) -> None:
         o = self._find(rec)

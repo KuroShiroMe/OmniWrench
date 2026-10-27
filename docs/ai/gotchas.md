@@ -183,3 +183,6 @@
 - pywin32 + WMI: never `list(svc.ExecQuery(..., 0x30))`. list() asks len() first, CDispatch.__len__ reads
   SWbemObjectSet.Count, which forward-only result sets do not support -> com_error E_FAIL ("Unbekannter Fehler")
   on the very first query. Iterate (`[o for o in res]`, `for o in res`) instead (DNS tool 1.0.2).
+- DNS WMI create: CreateInstanceFromTextRepresentation gave "Allgemeiner Fehler" 0x80041001 on Stef's DC (cause not
+  proven). 1.0.3 creates known types via MicrosoftDNS_<Type>Type.CreateInstanceFromPropertyData first, then text, each
+  with the WMI server name and the typed name; checks exists() before the next try (no duplicates).

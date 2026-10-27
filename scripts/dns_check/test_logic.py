@@ -309,6 +309,42 @@ def test_wmi_query_forward_only():
     check(w._query("SELECT * FROM MicrosoftDNS_Zone") == ["a", "b"], "Abfrage ohne Count")
 
 
+def test_wmi_create_fallback():
+    """Eintrag anlegen: erst PropertyData, bei 0x80041001 weiter zur Textdarstellung bzw. zum eingegebenen Namen."""
+    from tools.ms_dns_extended import wmidns
+
+    w = wmidns.WmiServer("dc01")
+    w.wmi_name = "dc01.corp.example"
+    calls = []
+
+    def call(target, method, params=None, op="write", cls=None):
+        calls.append((target, method, params["DnsServerName"]))
+        if len(calls) < fail_until:
+            raise wmidns.HostError("@WMI:create:dc01:80041001:Allgemeiner Fehler")
+
+    w._call = call
+    w.exists = lambda rec: False
+    rec = du.Rec(zone=DOM, name="neu." + DOM, type="A", data={"ip": "10.10.9.9"}, ttl=3600)
+    fail_until = 2
+    w.create_record(rec)
+    check(calls[0][:2] == ("MicrosoftDNS_AType", "CreateInstanceFromPropertyData"), "zuerst PropertyData")
+    check(calls[1][2] == "dc01" and len(calls) == 2, "danach eingegebener Servername")
+    calls.clear()
+    fail_until = 99
+    try:
+        w.create_record(rec)
+        check(False, "Fehler erwartet")
+    except wmidns.HostError as e:
+        check("80041001" in str(e), str(e))
+    check([c[1] for c in calls].count("CreateInstanceFromTextRepresentation") == 2 and len(calls) == 4,
+          "alle Wege versucht")
+    calls.clear()
+    fail_until = 99
+    w.exists = lambda rec: True        # Server meldet Fehler, hat den Eintrag aber angelegt
+    w.create_record(rec)
+    check(len(calls) == 1, "kein zweiter Versuch, wenn der Eintrag existiert")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:
