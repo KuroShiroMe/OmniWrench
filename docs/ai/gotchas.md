@@ -189,3 +189,7 @@
 - QtAds CDockWidget.setWidget wraps non-scroll widgets in a QScrollArea: a tall page inside a QTabWidget raises the
   minimum height of the whole tab, so bottom button bars of the other tabs scroll out of view. Wrap tall tab pages in
   their own QScrollArea (DNS zone tab "Allgemein", 1.0.4; DHCP tool does the same).
+- DsReplicaSyncAllW returns DWORD (0 = ok) and needs a real callback (pFnCallBack is not optional); errors come as a
+  NULL-terminated array (free once with LocalFree). Denied = 5 or 8453 (ERROR_DS_DRA_ACCESS_DENIED). Replication
+  Synchronization right: Domain Admins for DomainDnsZones, Enterprise Admins for ForestDnsZones by default.
+- MicrosoftDNS_Zone.LastSuccessfulXfr / LastSuccessfulSoaCheck are seconds since 1970 (UTC), 0 = never.

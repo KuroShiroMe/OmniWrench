@@ -494,3 +494,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef: zone tab buttons only visible after scrolling down. Cause: "Allgemein" page (min height ~800 px)
   set the zone tab's minimum height inside the dock scroll area. Wrapped it in a QScrollArea, DNS tool 1.0.4.
   Also answered: replication is done by Windows (AD replication for AD-integrated zones, zone transfer otherwise).
+- 2026-10-27: Stef: replication indicator + manual trigger ("beides"), cover missing right; asked about standalone DNS
+  (answered: file zones, zone transfer). DNS tool 1.1.0: column "Repliziert", status line per peer, re-check after own
+  writes (log), "Replikation anstoßen" (AD: DsReplicaSyncAll push of the zone's partition + UpdateFromDS on peers;
+  file: ForceRefresh on secondaries), denied right -> warning with Detailansicht. Fake backend: ad_sync/zone_dn/
+  refresh copy; tests 134 checks. Wiki section "Replikation zwischen Servern", TESTLISTE 9a.

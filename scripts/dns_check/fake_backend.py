@@ -167,6 +167,7 @@ class FakeBackend:
         self.data = data or demo_data()
         self.connected: dict[str, tuple[str, str]] = {}
         self.fail = None
+        self.deny_repl = False          # AD-Replikation anstoßen -> "Recht fehlt" (8453)
         self.calls: list[str] = []
         self.lock = threading.Lock()
         def ev(delta, user, eid, text, fields, rec):
@@ -267,6 +268,37 @@ class FakeBackend:
         z = self._s(server)["zones"][zone]
         if action in ("pause", "resume"):
             z["paused"] = action == "pause"
+        if action == "refresh" and z["type"] in (du.ZONE_SECONDARY, du.ZONE_STUB):
+            for name, d in self.data.items():
+                if set(z.get("masters") or []) & set(d["info"]["server_addresses"]) and zone in d["recs"]:
+                    self._s(server)["recs"][zone] = copy.deepcopy(d["recs"][zone])
+                    z["last_xfr"] = z["last_soa_check"] = du.now_utc()
+
+    def zone_dn(self, server, zone):
+        self._hit("zone_dn", zone)
+        if not self._s(server)["zones"][zone].get("ds"):
+            raise HostError(f"@WMI:zone:{server}:80041001:not DS integrated")
+        return f"DC={zone},cn=MicrosoftDNS,DC=DomainDnsZones,DC=corp,DC=example"
+
+    def ad_sync(self, server, nc):
+        """AD-Replikation: alle AD-Zonen von server auf die anderen DCs mit derselben Zone kopieren."""
+        self._hit("ad_sync", nc)
+        src = self._s(server)
+        if self.deny_repl:
+            raise HostError(f"@ERR:repl_denied:{server}|8453|Replication access was denied.",
+                            [f"call: DsReplicaSyncAllW(DC={server!r}, NC={nc!r})", "errinfo: DC01 → DC02: 8453"])
+        out = []
+        for name, d in self.data.items():
+            if name == du.norm(server) or name not in self.connected:
+                continue
+            n = 0
+            for zn, z in src["zones"].items():
+                if z.get("ds") and (d["zones"].get(zn) or {}).get("ds"):
+                    d["recs"][zn] = copy.deepcopy(src["recs"].get(zn, []))
+                    n += 1
+            if n:
+                out.append(f"{server.split('.')[0].upper()} → {name.split('.')[0].upper()}")
+        return out
 
     def create_zone(self, server, name, ztype, ds, data_file="", masters=None, admin=""):
         self._hit("create_zone", name)

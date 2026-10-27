@@ -46,6 +46,8 @@ that are not plain test steps.
       assignment for forwarders/secondaries, audit log keywords in eventlog.classify (German server texts).
       Ideas: DHCPv6 leases in dhcpread (after PR #60), DNSSEC/policies/zone scopes read-only views, per-record aging via
       DNS RPC API (DnssrvUpdateRecord) instead of AgeAllRecords, virtualised record table for very large zones.
+      1.1.0 replication (TESTLISTE 9a) untested on Windows: DsReplicaSyncAllW via ctypes, GetDistinguishedName out
+      param name "Name", LastSuccessfulXfr units. Idea: repl column also in search results.
 
 ## Later (mentioned by user or proposed)
 - More password-manager connectors (Bitwarden, 1Password, HashiCorp Vault done in 1.1.0): KeePassXC (browser protocol),

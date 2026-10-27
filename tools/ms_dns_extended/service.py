@@ -16,6 +16,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
+from . import adrepl
 from . import checks as ck
 from . import dnsutil as du
 from . import eventlog
@@ -83,6 +84,7 @@ class DnsService:
         self.dhcp_secret = ""
         self._tx: Tx | None = None
         self.events_error: dict[str, str] = {}
+        self.repl: dict[tuple[str, str], dict] = {}  # (Server, Zone) -> letzter Replikationsstand (repl_status)
 
     # --- Protokoll ----------------------------------------------------------------------------------
     def log(self, text: str, is_error: bool = False) -> None:
@@ -610,6 +612,175 @@ class DnsService:
 
     def age_node(self, server: str, zone: str, node: str) -> None:
         self._b("age_node", server, zone, node)
+
+    # --- Replikation --------------------------------------------------------------------------------
+    def repl_peers(self, server: str, zone: str) -> list[str]:
+        """Weitere verbundene Server, die dieselbe Zone mit Einträgen halten (primär/sekundär; nicht Stub/Weiterleitung).
+        AD-integrierte Zonen zählen nur mit AD-integrierten Gegenstücken (gleiche Partition), dateibasierte mit allen."""
+        z = self.zones.get(server, {}).get(zone)
+        if z is None:
+            return []
+        out = []
+        for s in self.servers:
+            if s == server or s in self.errors:
+                continue
+            pz = self.zones.get(s, {}).get(zone)
+            if pz is None or pz["type"] not in (du.ZONE_PRIMARY, du.ZONE_SECONDARY):
+                continue
+            if z.get("ds") and pz["type"] == du.ZONE_PRIMARY and not pz.get("ds"):
+                continue
+            out.append(s)
+        return out
+
+    def _unconnected_secondaries(self, server: str, zone: str) -> list[str]:
+        """Eingetragene sekundäre Server / Benachrichtigungsziele (Adressen), die nicht in der Sitzung sind."""
+        z = self.zones.get(server, {}).get(zone) or {}
+        if z.get("ds") or z.get("type") != du.ZONE_PRIMARY:
+            return []
+        known = set()
+        for s, info in self.servers.items():
+            known.update(info.get("server_addresses") or [])
+        return [ip for ip in dict.fromkeys((z.get("secondaries") or []) + (z.get("notify_servers") or []))
+                if ip not in known]
+
+    def repl_status(self, server: str, zone: str) -> dict:
+        """Stand der Zone auf allen weiteren verbundenen Servern: deren Einträge (Schlüssel), Seriennummer,
+        letzte Übertragung; nicht verbundene sekundäre Server nur per SOA-Abfrage (ohne Anmeldung)."""
+        z = self.zones.get(server, {}).get(zone) or {}
+        own = self.cache.get((server, zone)) or {}
+        peers: dict[str, dict] = {}
+        for p in self.repl_peers(server, zone):
+            entry: dict = {"ok": False, "error": "", "keys": set(), "serial": None}
+            try:
+                pz = self._b("zone", p, zone)
+                self.zones.setdefault(p, {})[zone] = pz
+                recs = self.load_zone(p, zone)
+                entry.update(ok=True, keys={r.key for r in recs if r.type != "SOA"},
+                             serial=(self.cache.get((p, zone)) or {}).get("serial"), type=pz["type"], ds=pz.get("ds"),
+                             last_xfr=pz.get("last_xfr"), last_soa=pz.get("last_soa_check"))
+            except UserError as e:
+                entry["error"] = str(e)
+            peers[p] = entry
+        others = []
+        for ip in self._unconnected_secondaries(server, zone):
+            r = self.backend.probe(ip, zone, "SOA")
+            others.append({"ip": ip, "ok": bool(r.get("ok")) and r.get("serial") is not None, "serial": r.get("serial"),
+                           "error": r.get("error") or r.get("rcode") or ""})
+        serial = own.get("serial")
+        if not z.get("ds"):
+            try:    # nur zur Anzeige; der Zwischenspeicher behält seine Seriennummer (Konfliktprüfung)
+                serial = self.zone_serial(server, zone)
+            except UserError:
+                pass
+        st = {"server": server, "zone": zone, "time": du.now_utc(), "ds": bool(z.get("ds")),
+              "serial": serial, "own": {r.key for r in own.get("recs", []) if r.type != "SOA"},
+              "peers": peers, "others": others}
+        self.repl[(server, zone)] = st
+        return st
+
+    @staticmethod
+    def repl_of(st: dict | None, key: str) -> dict | None:
+        """Für einen Eintrag: {have: [Server], missing: [Server], unknown: [Server]} (eigener Server zählt mit)."""
+        if not st or not st["peers"]:
+            return None
+        have, missing, unknown = [st["server"]], [], []
+        for p, e in st["peers"].items():
+            if not e["ok"]:
+                unknown.append(p)
+            elif key in e["keys"]:
+                have.append(p)
+            else:
+                missing.append(p)
+        return {"have": have, "missing": missing, "unknown": unknown}
+
+    @staticmethod
+    def repl_diff(st: dict | None) -> dict:
+        """Zonenweit: Einträge, die auf mindestens einem Partner fehlen, und solche, die nur auf Partnern stehen."""
+        if not st:
+            return {"missing": {}, "extra": {}}
+        missing, extra = {}, {}
+        for p, e in st["peers"].items():
+            if e["ok"]:
+                missing[p] = st["own"] - e["keys"]
+                extra[p] = e["keys"] - st["own"]
+        return {"missing": missing, "extra": extra}
+
+    def repl_pending(self, st: dict, present: set[str], absent: set[str]) -> list[str]:
+        """Partner, auf denen eine eigene Änderung noch nicht angekommen ist (neue fehlen / gelöschte noch da)."""
+        out = []
+        for p, e in st["peers"].items():
+            if e["ok"] and ((present - e["keys"]) or (absent & e["keys"])):
+                out.append(p)
+        return out
+
+    def replicate(self, server: str, zone: str) -> dict:
+        """Replikation der Zone anstoßen. AD-integriert: AD-Replikation der Partition von server an alle Partner,
+        danach UpdateFromDS auf den Partnern (sonst lesen sie AD erst nach bis zu 180 s). Dateibasiert:
+        ForceRefresh (SOA prüfen, bei neuerer Seriennummer übertragen) auf den sekundären Servern.
+        Fehlt ein Recht, geht es mit dem Rest weiter; die Meldung nennt das fehlende Recht.
+        Ergebnis {done: [Zeilen], warnings: [Texte], details: [Zeilen], denied: bool}."""
+        tr = self.tr
+        z = self.zones.get(server, {}).get(zone)
+        if z is None:
+            z = self._b("zone", server, zone)
+        peers = self.repl_peers(server, zone)
+        done, warns, details, denied = [], [], [f"zone: {zone} @ {server}", f"peers: {', '.join(peers) or '-'}"], False
+        if z.get("ds"):
+            nc = ""
+            try:
+                dn = self._b("zone_dn", server, zone)
+                nc = adrepl.partition_of(dn)
+                details.append(f"zone DN: {dn}")
+                if not nc:
+                    raise UserError(tr("err.no_partition", value=dn))
+                details.append(f"partition: {nc}")
+                self.progress(tr("status.ad_sync", part=adrepl.partition_label(nc)))
+                try:
+                    synced = self.backend.ad_sync(server, nc)
+                except HostError as e:
+                    details += [f"raw: {e}"] + list(e.details)
+                    if str(e).startswith("@ERR:repl_denied:"):
+                        denied = True
+                        raise UserError(tr("repl.denied", server=server, part=adrepl.partition_label(nc),
+                                           user=self.users.get(server) or self.user or tr("repl.current_user"))) from None
+                    raise UserError(self.host_text(str(e))) from None
+                done.append(tr("repl.ad_done", server=server, part=adrepl.partition_label(nc), n=len(synced)))
+                details += [f"synced: {x}" for x in synced]
+            except UserError as e:
+                warns.append(str(e))
+                details += e.details
+            for p in peers:
+                if not (self.zones.get(p, {}).get(zone) or {}).get("ds"):
+                    continue
+                try:
+                    self._b("zone_action", p, zone, "from_ds")
+                    done.append(tr("repl.from_ds", server=p))
+                except UserError as e:
+                    warns.append(str(e))
+                    details += e.details
+        else:
+            targets = [p for p in peers if self.zones[p][zone]["type"] == du.ZONE_SECONDARY]
+            if z["type"] in (du.ZONE_SECONDARY, du.ZONE_STUB):
+                targets.insert(0, server)
+            for p in targets:
+                try:
+                    self._b("zone_action", p, zone, "refresh")
+                    done.append(tr("repl.refresh", server=p))
+                except UserError as e:
+                    warns.append(str(e))
+                    details += e.details
+            if not targets:
+                warns.append(tr("repl.no_secondaries", zone=zone))
+            other = self._unconnected_secondaries(server, zone)
+            if other:
+                warns.append(tr("repl.unconnected", list=", ".join(other)))
+        for line in done:
+            self.log(line)
+        for w in warns:
+            self.log(w, True)
+        if not done:
+            raise UserError("\n\n".join(warns) or tr("repl.nothing"), details)
+        return {"done": done, "warnings": warns, "details": details, "denied": denied}
 
     # --- Änderungen anderer -------------------------------------------------------------------------
     def zone_serial(self, server: str, zone: str) -> int | None:
