@@ -51,6 +51,12 @@ jobs:
         run: |
           $p = Start-Process dist\OmniWrench\OmniWrench.exe -ArgumentList '--pip','--version' -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "OmniWrench.exe --pip --version: Exitcode $($p.ExitCode)" }
+          # echte Installation wie bei einem Tool (sdk.pip_install), fängt z. B. fehlende distlib-Dateien ab
+          $target = Join-Path $env:RUNNER_TEMP 'pip-target'
+          $log = Join-Path $env:RUNNER_TEMP 'pip-install.log'
+          $p = Start-Process dist\OmniWrench\OmniWrench.exe -Wait -PassThru -ArgumentList '--pip','install','--disable-pip-version-check','--target',$target,'--prefer-binary','--log',$log,'dnspython>=2.6','pywin32>=306'
+          if ($p.ExitCode -ne 0) { Get-Content $log -Tail 40; throw "OmniWrench.exe --pip install: Exitcode $($p.ExitCode)" }
+          if (-not (Test-Path (Join-Path $target 'dns\resolver.py'))) { throw "dnspython nicht installiert" }
       - name: EXE starten (Anmeldefenster muss offen bleiben)
         shell: pwsh
         run: |
