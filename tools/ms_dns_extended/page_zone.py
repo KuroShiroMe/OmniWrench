@@ -6,8 +6,8 @@ import datetime as _dt
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget,
+    QApplication, QCheckBox, QComboBox, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
+    QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 
 from omniwrench.ui import theme
@@ -49,7 +49,13 @@ class ZoneTab(QWidget):
         lay.addLayout(head)
         self.tabs = QTabWidget()
         self.tabs.addTab(self._build_records(), tr("zt.records"))
-        self.tabs.addTab(self._build_general(), tr("zt.general"))
+        # eigener Scrollbereich: sonst bestimmt die hohe Seite die Mindesthöhe des ganzen Zonen-Tabs, und die
+        # Knöpfe unter der Eintragsliste rutschen aus dem sichtbaren Bereich (Dock scrollt dann den ganzen Tab)
+        general = QScrollArea()
+        general.setWidgetResizable(True)
+        general.setFrameShape(QFrame.Shape.NoFrame)
+        general.setWidget(self._build_general())
+        self.tabs.addTab(general, tr("zt.general"))
         self.find_view = FindingsView(tr, ctl.flt)
         self.find_view.activated.connect(self._finding)
         self.tabs.addTab(self.find_view, tr("zt.findings"))
@@ -76,13 +82,27 @@ class ZoneTab(QWidget):
         self.count.setStyleSheet(f"color:{theme.current['muted']};")
         top.addWidget(self.count)
         lay.addLayout(top)
+        # Replikation: Stand auf den weiteren verbundenen Servern (nur sichtbar, wenn es welche gibt)
+        self.repl_row = QWidget()
+        rr = QHBoxLayout(self.repl_row)
+        rr.setContentsMargins(0, 0, 0, 0)
+        self.repl_lbl = hint_label("")
+        self.repl_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        rr.addWidget(self.repl_lbl, 1)
+        self.repl_bar = ButtonBar([("ReplCheck", tr("zr.check")), ("Repl", tr("zr.trigger"))])
+        self.repl_bar.buttons["ReplCheck"].setToolTip(tr("zr.check_tip"))
+        self.repl_bar.buttons["Repl"].setToolTip(tr("zr.trigger_tip"))
+        self.repl_bar.action.connect(self._action)
+        rr.addWidget(self.repl_bar, 0, Qt.AlignmentFlag.AlignTop)
+        self.repl_row.setVisible(False)
+        lay.addWidget(self.repl_row)
         acts = [("Edit", tr("zt.edit"), ""), ("New", tr("zt.new"), "Ins"), "-", ("Ttl", tr("zt.ttl"), ""),
                 ("Static", tr("zt.static"), ""), ("Ptr", tr("zt.ptr"), ""), "-", ("Delete", tr("zt.delete"), "Del"), "-",
                 ("CopyRows", tr("zt.copy_rows"), "Ctrl+Shift+C"), ("CopyCell", tr("ui.copy_cell"), "Ctrl+C")]
         self.grid = Grid([("node", tr("zt.col.name"), "text"), ("type", tr("zt.col.type"), "text"),
                           ("value", tr("zt.col.value"), "text"), ("ttl_t", tr("zt.col.ttl"), "text"),
                           ("ts_t", tr("zt.col.ts"), "text"), ("age", tr("zt.col.age"), "int"),
-                          ("find", tr("zt.col.findings"), "text")],
+                          ("repl", tr("zt.col.repl"), "text"), ("find", tr("zt.col.findings"), "text")],
                          key_fn=lambda r: r["key"], actions=acts, default_action="Edit", stretch="value")
         self.grid.enable_layout(self.ctl.settings, "zone_columns", labels=(tr("ui.columns"), tr("ui.columns_reset")))
         self.grid.action.connect(self._action)
@@ -109,8 +129,9 @@ class ZoneTab(QWidget):
         self.g_state = QLabel("")
         self.g_masters = QLabel("")
         self.g_masters.setWordWrap(True)
+        self.g_xfr = QLabel("")
         for lbl, wid in ((tr("zg.type"), self.g_type), (tr("zg.store"), self.g_store), (tr("zg.state"), self.g_state),
-                         (tr("zg.masters"), self.g_masters)):
+                         (tr("zg.masters"), self.g_masters), (tr("zg.last_xfr"), self.g_xfr)):
             wid.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
             fi.addRow(lbl, wid)
         lay.addWidget(info_box)
@@ -248,6 +269,9 @@ class ZoneTab(QWidget):
         self.recheck()
         self.fill_general()
         self.apply_rights()
+        self._repl_ui()
+        if (self.server, self.zone) not in self.svc.repl:
+            self.ctl.repl_check(self.server, self.zone)
 
     def recheck(self) -> None:
         self.findings = self.svc.zone_findings(self.server, self.zone)
@@ -261,14 +285,90 @@ class ZoneTab(QWidget):
         self.fill()
         self.fill_scavenge()
 
+    # --- Replikation ----------------------------------------------------------------------------------
+    def _repl_ui(self) -> None:
+        svc = self.svc
+        peers = svc.repl_peers(self.server, self.zone)
+        others = svc._unconnected_secondaries(self.server, self.zone)
+        self.repl_row.setVisible(bool(peers or others))
+        self.repl_bar.set_visible("Repl", bool(peers))
+        self.grid.setColumnHidden(self._col("repl"), not peers or self._repl_hidden_by_user())
+        self.repl_lbl.setText(self._repl_text(svc.repl.get((self.server, self.zone))))
+
+    def _col(self, key: str) -> int:
+        return next(i for i, c in enumerate(self.grid.cols) if c[0] == key)
+
+    def _repl_hidden_by_user(self) -> bool:
+        saved = self.ctl.settings.get("zone_columns") or {}
+        return isinstance(saved, dict) and "repl" in (saved.get("hidden") or [])
+
+    def repl_busy(self, on: bool) -> None:
+        self.repl_bar.buttons["ReplCheck"].setEnabled(not on)
+        if on:
+            self.repl_lbl.setText(self.tr("zr.checking"))
+
+    def set_repl(self, st: dict | None) -> None:
+        self.repl_bar.buttons["ReplCheck"].setEnabled(True)
+        self._repl_ui()
+        self.fill()
+
+    def _repl_text(self, st: dict | None) -> str:
+        tr = self.tr
+        if st is None:
+            return tr("zr.unknown")
+        diff = self.svc.repl_diff(st)
+        parts = []
+        for p, e in st["peers"].items():
+            short = p.split(".")[0]
+            if not e["ok"]:
+                parts.append(tr("zr.peer_err", server=short, error=(e["error"].splitlines() or ["?"])[0][:160]))
+                continue
+            miss, extra = len(diff["missing"].get(p, ())), len(diff["extra"].get(p, ()))
+            diffs = ([tr("zr.peer_missing", n=miss)] if miss else []) + ([tr("zr.peer_extra", n=extra)] if extra else [])
+            line = f"{short}: " + ", ".join(diffs) if diffs else tr("zr.peer_ok", server=short)
+            if not st["ds"]:
+                line += ", " + tr("zr.serial", serial=e.get("serial") or "–")
+                if e.get("type") == du.ZONE_SECONDARY:
+                    line += ", " + tr("zr.last_xfr", time=du.fmt_local(e.get("last_xfr")) or tr("zr.never"))
+            parts.append(line)
+        for o in st["others"]:
+            parts.append(tr("zr.other", ip=o["ip"], serial=o["serial"]) if o["ok"]
+                         else tr("zr.other_err", ip=o["ip"], error=o["error"] or "?"))
+        head = tr("zr.head_ad") if st["ds"] else tr("zr.head_file", serial=st.get("serial") or "–")
+        return f"{head} ({du.fmt_local(st['time'])}): " + "  ·  ".join(parts)
+
+    def _repl_cell(self, r: du.Rec) -> tuple[str, dict | None]:
+        if r.type == "SOA":
+            return "", None
+        x = self.svc.repl_of(self.svc.repl.get((self.server, self.zone)), r.key)
+        if x is None:
+            return "", None
+        n = len(x["have"]) + len(x["missing"])
+        text = f"{len(x['have'])}/{n}" + (" ?" if x["unknown"] else "")
+        return ("✓ " + text if not x["missing"] else text), x
+
+    def _repl_tip(self, x: dict | None) -> str:
+        if not x:
+            return ""
+        tr = self.tr
+        short = lambda lst: ", ".join(s.split(".")[0] for s in lst)  # noqa: E731
+        out = [tr("zr.tip_have", list=short(x["have"]))]
+        if x["missing"]:
+            out.append(tr("zr.tip_missing", list=short(x["missing"])))
+        if x["unknown"]:
+            out.append(tr("zr.tip_unknown", list=short(x["unknown"])))
+        return "\n".join(out)
+
     def _row(self, r: du.Rec, fidx: dict, now: _dt.datetime) -> dict:
         fs = fidx.get(ck.rec_target(r), [])
+        repl_t, repl = self._repl_cell(r)
         ip = du.ip_from_ptr(r.name) if r.type == "PTR" else None
         # Reverse-Zonen: Adresse statt Nibble-/Oktett-Name anzeigen (voller Name steht im Tooltip)
         return {"key": r.key, "node": ip or r.node, "name": r.name, "type": r.type, "value": r.value,
                 "ttl_t": du.fmt_ttl(r.ttl), "ts_t": du.fmt_local(r.ts) if r.ts else self.tr("zt.static_t"),
                 "age": (now - r.ts).days if r.ts else None,
-                "find": "; ".join(f.text for f in fs[:2]) + (" …" if len(fs) > 2 else ""), "_rec": r, "_find": fs}
+                "find": "; ".join(f.text for f in fs[:2]) + (" …" if len(fs) > 2 else ""), "_rec": r, "_find": fs,
+                "repl": repl_t, "_repl": repl}
 
     def fill(self) -> None:
         recs = self.recs()
@@ -296,8 +396,11 @@ class ZoneTab(QWidget):
                                      bold=lvl == ck.ERROR)
             if row["_rec"].type == "SOA":
                 self.grid.style_row(row["key"], fore=c["muted"])
+            if row["_repl"] and row["_repl"]["missing"]:
+                self.grid.style_cell(row["key"], "repl", fore=c["warning"], bold=True)
         self.grid.set_tooltips(lambda r: (r["name"] + "\n" + r["_rec"].text + (
-            "\n\n" + finding_tip(self.tr, r["_find"]) if r["_find"] else "")).strip())
+            "\n\n" + finding_tip(self.tr, r["_find"]) if r["_find"] else "") + (
+            "\n\n" + self._repl_tip(r["_repl"]) if r["_repl"] else "")).strip())
         self.grid.autosize(320)
         self.grid.apply_filter(self.filter.text(), ["node", "type", "value", "name"])
         self._count()
@@ -317,6 +420,11 @@ class ZoneTab(QWidget):
             st.append(tr("zg.shutdown"))
         self.g_state.setText(", ".join(st) or tr("zg.running"))
         self.g_masters.setText(", ".join(z.get("masters") or []) or "–")
+        if z.get("type") in (du.ZONE_SECONDARY, du.ZONE_STUB):
+            self.g_xfr.setText(tr("zg.last_xfr_v", xfr=du.fmt_local(z.get("last_xfr")) or tr("zr.never"),
+                                  soa=du.fmt_local(z.get("last_soa_check")) or tr("zr.never")))
+        else:
+            self.g_xfr.setText("–")
         soa = next((r for r in self.recs() if r.type == "SOA"), None)
         d = soa.data if soa else {}
         for key, lbl in self.g_soa.items():
@@ -464,6 +572,12 @@ class ZoneTab(QWidget):
         tr = self.tr
         if a == "Reload":
             self.ctl.run(self.ctl.reload_zone_flow(self.server, self.zone))
+            return
+        if a == "ReplCheck":
+            self.ctl.repl_check(self.server, self.zone)
+            return
+        if a == "Repl":
+            self.ctl.run(self.ctl.replicate_flow(self.server, self.zone))
             return
         if a == "CopyRows":
             QApplication.clipboard().setText(self.grid.rows_as_text())

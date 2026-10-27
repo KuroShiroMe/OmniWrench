@@ -80,12 +80,12 @@ def warn(parent, title: str, text: str) -> None:
 
 
 def error(parent, title: str, text: str, details: str = "", details_label: str = "", details_title: str = "",
-          close_label: str = "", copy_label: str = "") -> None:
+          close_label: str = "", copy_label: str = "", icon=QMessageBox.Icon.Critical) -> None:
     """Fehlermeldung; mit details zusätzlich ein Knopf, der alle technischen Angaben in einem Fenster zeigt."""
     if not details:
-        _box(parent, QMessageBox.Icon.Critical, title, text, QMessageBox.StandardButton.Ok)
+        _box(parent, icon, title, text, QMessageBox.StandardButton.Ok)
         return
-    box = QMessageBox(QMessageBox.Icon.Critical, title, text, QMessageBox.StandardButton.Ok, parent)
+    box = QMessageBox(icon, title, text, QMessageBox.StandardButton.Ok, parent)
     box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
     more = box.addButton(details_label, QMessageBox.ButtonRole.ActionRole)
     box.setDefaultButton(QMessageBox.StandardButton.Ok)

@@ -257,6 +257,18 @@ Neu, nur unter Linux mit einem Test-Backend geprüft. Zugriff über WMI (root\Mi
       Speichern mit „wer“.
 - [ ] Fehler mitten im Ablauf (z. B. PTR-Zone ohne Schreibrecht): A-Eintrag wird zurückgenommen.
 
+### 9a. Replikation (net.ms-dns-extended 1.1.0)
+- [ ] Zwei DCs verbunden, AD-Zone öffnen: Zeile „Replikation (AD-integriert) … dc02: gleich“, Spalte „Repliziert“ ✓ 2/2.
+- [ ] Eintrag auf DC01 anlegen: Spalte zeigt erst 1/2 (orange), Protokoll meldet nach einiger Zeit „angekommen“.
+- [ ] „Replikation anstoßen“ als Domänen-Admin: Meldung „AD-Replikation … angestoßen, Abgleiche: n“ und „Zone neu aus
+      AD gelesen“; danach ✓ 2/2.
+- [ ] „Replikation anstoßen“ mit Konto nur in DnsAdmins (ohne Replikationsrecht): gelbe Meldung nennt das fehlende
+      Recht „Replikation synchronisieren“, Konto und Partition; „Detailansicht“ zeigt Code 8453/5. UpdateFromDS lief.
+- [ ] Zone in ForestDnsZones (_msdcs): Partition wird als ForestDnsZones erkannt.
+- [ ] Dateibasierte Zone mit sekundärem Server (z. B. Server ohne Domäne): beide verbinden, Seriennummer und letzte
+      Übertragung sichtbar; nach Änderung „Replikation anstoßen“ -> „Übertragung vom Master angefordert“, danach gleich.
+- [ ] Sekundärer Server eingetragen, aber nicht verbunden: wird mit Seriennummer per SOA-Abfrage angezeigt.
+
 ## 10. Store und Startseite (0.8.0)
 
 Neu, nur unter Linux (offscreen) geprüft.

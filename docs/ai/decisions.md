@@ -265,3 +265,6 @@
   always uses the logged-on account (WMI forbids local credentials).
 - DNS tool error popups (Stef 2026-10-27): every failure offers "Detailansicht" with the technical trail (all attempts,
   exact WMI messages) for troubleshooting; never include passwords.
+- DNS tool replication (Stef 2026-10-27): per-record "Repliziert" indicator + manual trigger, both. Missing replication
+  right must be handled with a clear message (who lacks which right on which partition), remaining steps still run.
+  Standalone DNS (no AD) is covered via zone transfer status/trigger.

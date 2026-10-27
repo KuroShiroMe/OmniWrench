@@ -381,6 +381,105 @@ def test_error_details():
         check(ue.details[:1] == [f"backend: create_record({DC1})"] and "call: y" in ue.details, str(ue.details))
 
 
+# --- Replikation -------------------------------------------------------------------------------------
+def test_repl_partition():
+    from tools.ms_dns_extended import adrepl
+    check(adrepl.partition_of("DC=corp.example,cn=MicrosoftDNS,DC=DomainDnsZones,DC=corp,DC=example")
+          == "DC=DomainDnsZones,DC=corp,DC=example", "partition domain")
+    check(adrepl.partition_of("DC=_msdcs.corp.example,CN=MicrosoftDNS,DC=ForestDnsZones,DC=corp,DC=example")
+          == "DC=ForestDnsZones,DC=corp,DC=example", "partition forest")
+    check(adrepl.partition_of("DC=old,CN=MicrosoftDNS,CN=System,DC=corp,DC=example") == "DC=corp,DC=example",
+          "partition w2k")
+    check(adrepl.partition_of("DC=x,DC=y") == "", "no partition")
+    check(adrepl.partition_label("DC=ForestDnsZones,DC=corp,DC=example") == "ForestDnsZones", "label")
+    check(adrepl.server_name("CN=NTDS Settings,CN=DC02,CN=Servers,CN=Site,CN=Sites") == "DC02", "server name")
+    check(adrepl.split_user("CORP\\admin") == ("admin", "CORP") and adrepl.split_user("a@corp") == ("a", "corp"),
+          "split user")
+
+
+def test_repl_ad():
+    svc, fb = svc_new()
+    DC2 = "dc02.corp.example"
+    svc.add_server(DC2)
+    check(svc.repl_peers(DC1, DOM) == [DC2], "peers AD")
+    check(svc.repl_peers(DC1, "legacy.example") == [], "file zone only on dc01")
+    check(svc.repl_peers(DC1, "partner.example") == [], "forwarder zone no peers")
+    st = svc.repl_status(DC1, DOM)
+    check(st["peers"][DC2]["ok"] and st["ds"], "status ok")
+    base_missing = set(svc.repl_diff(st)["missing"][DC2])
+    rec = du.Rec(zone=DOM, name=f"repl1.{DOM}", type="A", data={"ip": "10.10.7.1"}, ttl=3600)
+    svc.create_record(DC1, rec)
+    st = svc.repl_status(DC1, DOM)
+    x = svc.repl_of(st, rec.key)
+    check(x["missing"] == [DC2] and x["have"] == [DC1], "new record missing on dc02")
+    check(svc.repl_pending(st, {rec.key}, set()) == [DC2], "pending")
+    res = svc.replicate(DC1, DOM)
+    check(not res["warnings"] and len(res["done"]) == 2 and not res["denied"], f"replicate ok {res}")
+    check("ad_sync" in fb.calls and fb.calls.count("zone_action") >= 1, "ad_sync + from_ds")
+    st = svc.repl_status(DC1, DOM)
+    check(svc.repl_of(st, rec.key)["missing"] == [] and svc.repl_pending(st, {rec.key}, set()) == [], "arrived")
+    check(set(svc.repl_diff(st)["missing"][DC2]) <= base_missing, "nothing new missing")
+    # gelöschter Eintrag: auf dc02 noch vorhanden -> ausstehend
+    svc.delete_record(DC1, rec)
+    st = svc.repl_status(DC1, DOM)
+    check(svc.repl_pending(st, set(), {rec.key}) == [DC2], "delete pending")
+    check(len(svc.repl_diff(st)["extra"][DC2]) >= 1, "extra on dc02")
+    # Recht fehlt: AD-Sync scheitert, UpdateFromDS läuft trotzdem, Meldung nennt das Recht
+    fb.deny_repl = True
+    n_actions = fb.calls.count("zone_action")
+    res = svc.replicate(DC1, DOM)
+    check(res["denied"] and len(res["warnings"]) == 1, "denied flagged")
+    check("Replikation synchronisieren" in res["warnings"][0] and "DomainDnsZones" in res["warnings"][0], "right named")
+    check(fb.calls.count("zone_action") == n_actions + 1 and res["done"], "from_ds still done")
+    check(any("8453" in d for d in res["details"]), "details have code")
+    # UpdateFromDS scheitert auch -> nichts erledigt -> Fehler mit Details
+    fb.fail = "zone_action"
+    try:
+        svc.replicate(DC1, DOM)
+        check(False, "should fail")
+    except S.UserError as e:
+        check("Replikation synchronisieren" in str(e) and e.details, "all failed -> UserError with details")
+
+
+def test_repl_file():
+    data = __import__("scripts.dns_check.fake_backend", fromlist=["demo_data"]).demo_data()
+    src = data["dmz-dns01"]
+    z = "shop.example"
+    sec = copy.deepcopy(src)
+    sec["info"].update(name="dmz-dns02", wmi_name="DMZ-DNS02", server_addresses=["192.0.2.11"])
+    sec["zones"] = {z: dict(src["zones"][z], type=du.ZONE_SECONDARY, masters=["192.0.2.10"], secondaries=[],
+                            notify_servers=[], server="dmz-dns02")}
+    sec["recs"] = {z: copy.deepcopy(src["recs"][z])}
+    data["dmz-dns02"] = sec
+    fb = FakeBackend(data)
+    svc = S.DnsService(fb, tr)
+    svc.connect("dmz-dns01")
+    svc.load_all()
+    svc.load_zone("dmz-dns01", z)
+    svc.add_server("dmz-dns02")
+    check(svc.repl_peers("dmz-dns01", z) == ["dmz-dns02"], "file peers")
+    check(svc._unconnected_secondaries("dmz-dns01", z) == [], "connected secondary not listed as other")
+    rec = du.Rec(zone=z, name=f"new.{z}", type="A", data={"ip": "192.0.2.99"}, ttl=3600)
+    svc.create_record("dmz-dns01", rec)
+    st = svc.repl_status("dmz-dns01", z)
+    check(not st["ds"] and svc.repl_of(st, rec.key)["missing"] == ["dmz-dns02"], "file missing")
+    check(st["peers"]["dmz-dns02"]["serial"] != st["serial"], "serials differ")
+    res = svc.replicate("dmz-dns01", z)
+    check("ad_sync" not in fb.calls and res["done"] and not res["warnings"], f"refresh only {res}")
+    st = svc.repl_status("dmz-dns01", z)
+    check(svc.repl_of(st, rec.key)["missing"] == [] and st["peers"]["dmz-dns02"]["serial"] == st["serial"], "transferred")
+    # nicht verbundener Sekundärer: nur SOA-Abfrage
+    svc.remove_server("dmz-dns02")
+    check(svc.repl_peers("dmz-dns01", z) == [], "no peers after remove")
+    st = svc.repl_status("dmz-dns01", z)
+    check(st["others"] and st["others"][0]["ip"] == "192.0.2.11" and st["others"][0]["ok"], "other via SOA")
+    try:
+        svc.replicate("dmz-dns01", z)
+        check(False, "nothing to trigger")
+    except S.UserError as e:
+        check("192.0.2.11" in str(e), "hint unconnected")
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

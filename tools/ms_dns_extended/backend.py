@@ -15,6 +15,7 @@ import threading
 import time
 from pathlib import Path
 
+from . import adrepl
 from . import dhcpread
 from . import dnsutil as du
 from . import eventlog
@@ -137,6 +138,21 @@ class WmiBackend:
 
     def zone_action(self, server: str, zone: str, action: str) -> None:
         self._srv(server).zone_action(zone, action)
+
+    def zone_dn(self, server: str, zone: str) -> str:
+        return self._srv(server).zone_dn(zone)
+
+    def ad_sync(self, server: str, nc: str) -> list[str]:
+        """AD-Replikation der Partition nc von server an alle Partner anstoßen (Anmeldedaten der Sitzung)."""
+        with self._lock:
+            user, pw = self._creds.get(du.norm(server), ("", ""))
+        target = os.environ.get("COMPUTERNAME", server) if is_local(server) else server
+        try:
+            return adrepl.sync_all(target, nc, user, pw)
+        except adrepl.AdReplError as e:
+            raise HostError(str(e), e.details) from None
+        except OSError as e:
+            raise HostError(f"@ERR:no_ntdsapi:{e}") from None
 
     def create_zone(self, server: str, name: str, ztype: int, ds: bool, data_file: str = "",
                     masters: list[str] | None = None, admin: str = "") -> None:

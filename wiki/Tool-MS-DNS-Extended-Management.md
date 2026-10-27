@@ -37,6 +37,7 @@
   - [Vergleich mehrerer Server](#vergleich-mehrerer-server)
   - [Prüfung und Befunde](#prüfung-und-befunde)
   - [Abgleich mit DHCP](#abgleich-mit-dhcp)
+  - [Replikation zwischen Servern](#replikation-zwischen-servern)
   - [Änderungen anderer erkennen](#änderungen-anderer-erkennen)
   - [Ereignisprotokoll](#ereignisprotokoll)
   - [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten)
@@ -136,7 +137,9 @@ verschwindet dabei von allen Domänencontrollern ihres Replikationsbereichs.
 Kopfzeile: Typ, Server, Anzahl Einträge, SOA-Seriennummer und Ladezeit. Beim Öffnen werden die zugehörigen
 Reverse- und Forward-Zonen mitgeladen, damit PTR-Prüfungen und -Änderungen sofort möglich sind.
 
-**Einträge** – alle Einträge der Zone mit Name, Typ, Wert, TTL, Zeitstempel (oder „statisch“), Alter und Befunden.
+**Einträge** – alle Einträge der Zone mit Name, Typ, Wert, TTL, Zeitstempel (oder „statisch“), Alter, **Repliziert**
+(nur bei mehreren Servern mit dieser Zone, siehe [Replikation zwischen Servern](#replikation-zwischen-servern)) und
+Befunden.
 Zeilen mit Befunden sind farbig hinterlegt. Filter nach Text und Typ, **Nur mit Befunden**. Aktionen (Knöpfe und
 Rechtsklick):
 
@@ -252,6 +255,30 @@ Filter nach Stufe, Kategorie und Text. Doppelklick führt die Korrektur aus oder
 Das DHCP-Tool selbst muss dafür nicht installiert sein. Umgekehrt prüft
 [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management) ab 1.5.0 optional seine Leases gegen DNS.
 
+### Replikation zwischen Servern
+Windows repliziert DNS-Änderungen selbst; das Tool zeigt, wie weit sie gekommen sind, und kann nachhelfen. Es
+arbeitet mit allen Servern der Sitzung (weitere DCs werden nach der Anmeldung automatisch verbunden, andere über
+**Server hinzufügen …**).
+
+| Art der Zone | Wie Windows repliziert | Was „Replikation anstoßen“ macht |
+|---|---|---|
+| AD-integriert | über die AD-Replikation der Partition (DomainDnsZones, ForestDnsZones oder die Domäne); der DNS-Dienst liest AD etwa alle 3 Minuten neu | AD-Replikation der Partition vom Server dieses Tabs an alle Partner (auch über Standorte, wie `repadmin /syncall /P /e`), danach **Aus AD neu laden** auf den Partnern |
+| Dateibasiert (auch ohne Domäne) | Zonenübertragung (AXFR/IXFR) vom primären an die sekundären Server, sofort nach einer Benachrichtigung (NOTIFY) oder nach dem Aktualisierungsintervall aus dem SOA | **Von Master übertragen** auf allen verbundenen sekundären Servern |
+
+- **Spalte „Repliziert“**: `✓ 3/3` = der Eintrag ist auf allen Servern mit dieser Zone, `2/3` (orange) = er fehlt
+  auf einem; der Tooltip nennt die Server. `?` = ein Server ließ sich nicht abfragen.
+- **Zeile über der Tabelle**: Stand je Server („gleich“, „fehlt dort: n“, „nur dort: n“ – z. B. ein gelöschter
+  Eintrag, den der Partner noch hat). Bei dateibasierten Zonen zusätzlich Seriennummer und letzte Übertragung.
+  Eingetragene sekundäre Server, die nicht verbunden sind, werden ohne Anmeldung per SOA-Abfrage angezeigt.
+- **Replikation prüfen** fragt den Stand neu ab (passiert auch beim Öffnen der Zone).
+- **Nach jeder eigenen Änderung** prüft das Tool im Hintergrund nach (nach 15 s, 45 s, 1,5, 3 und 5 Minuten) und
+  schreibt ins Protokoll, wann die Änderung überall angekommen ist oder auf welchem Server sie noch fehlt.
+- **Rechte**: Das Anstoßen der AD-Replikation braucht das Recht **„Replikation synchronisieren“** auf der Partition.
+  Domänen-Admins haben es für DomainDnsZones, für ForestDnsZones standardmäßig nur Organisations-Admins; es lässt
+  sich gezielt delegieren. Fehlt es, meldet das Tool das mit Konto und Partition, führt die übrigen Schritte
+  trotzdem aus und die Änderung kommt mit der normalen AD-Replikation an. Für **Von Master übertragen** und **Aus
+  AD neu laden** reichen DnsAdmins bzw. lokale Administratorrechte auf dem jeweiligen Server.
+
 ### Änderungen anderer erkennen
 - Vor jedem Speichern vergleicht das Tool die **SOA-Seriennummer** der betroffenen Zonen. Hat sich die Zone seit dem
   Laden geändert (DNS-Konsole, PowerShell, Kollegen, dynamische Updates), lädt es sie neu und meldet, ob betroffene
@@ -327,6 +354,9 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 - Nicht zurücknehmbar und deshalb immer der letzte Schritt: **Zone löschen**, **Jetzt aufräumen**, **Cache leeren**.
 - Sehr große Zonen (zehntausende Einträge) brauchen beim Laden und Anzeigen einige Sekunden.
 - Der DHCP-Abgleich liest IPv4-Leases; IPv6-Adressen werden nur über die DNS-Einträge geprüft.
+- Der Replikationsstand umfasst nur verbundene Server (nicht verbundene sekundäre Server nur über die
+  Seriennummer). Die AD-Replikation wird über die Topologie angestoßen; DCs, die nur über andere DCs erreichbar
+  sind, bekommen die Änderung im zweiten Schritt.
 
 ## Fehlerbehebung
 
@@ -343,12 +373,15 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 | Hinweis auf der Seite „Ereignisprotokoll“ | siehe [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten) |
 | Namensserver „antwortet nicht“ in der Prüfung | Port 53 vom Arbeitsplatz zum Namensserver gesperrt oder Name nicht auflösbar; die Option „Namensserver und Weiterleitungen abfragen“ ausschalten, wenn das gewollt ist |
 | „… Alle n bereits durchgeführten Änderungen wurden zurückgenommen“ | die Aktion ist an der genannten Ursache gescheitert, der vorherige Stand ist wiederhergestellt |
+| „Replikation synchronisieren“ fehlt | siehe [Replikation zwischen Servern](#replikation-zwischen-servern), Abschnitt Rechte |
 | Unklare Fehlermeldung, z. B. „Allgemeiner Fehler“ (0x80041001) | im Fehlerfenster **Detailansicht** öffnen: Dort stehen alle Versuche mit den genauen WMI-Meldungen (HRESULT, Quelle, SWbemLastError), ohne Passwörter. Mit **Alles kopieren** lässt sich der Text weitergeben |
 
 ## Versionen
 
 | Version | Änderungen |
 |---|---|
+| 1.1.0 | Replikation: Spalte **Repliziert** je Eintrag, Stand je Server, Nachprüfen nach eigenen Änderungen, **Replikation anstoßen** (AD-Replikation der DNS-Partition bzw. Übertragung zu sekundären Servern) mit klarer Meldung bei fehlendem Recht |
+| 1.0.4 | Knöpfe unter der Eintragsliste waren bei kleineren Fenstern erst nach dem Scrollen sichtbar (behoben) |
 | 1.0.3 | Einträge werden über die Methode der jeweiligen Typklasse angelegt, mit weiteren Wegen bei „Allgemeiner Fehler“; Fehlerfenster mit **Detailansicht** |
 | 1.0.2 | Anmeldung scheiterte an jedem Server mit 0x80004005 (behoben) |
 | 1.0.0 | Erste Version: Zonen und Einträge (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS) bearbeiten mit PTR-Pflege (IPv4/IPv6), neue Zonen inkl. IPv6-Reverse, Server-Einstellungen, Aufräum-Vorschau mit Ping, Prüfung mit Abfrage der Namensserver und Weiterleitungen, Vergleich mehrerer Server, Suche, DHCP-Abgleich, Ereignisprotokoll, Erkennung von Änderungen anderer, Transaktionen mit Rücknahme |

@@ -20,7 +20,7 @@ import PySide6QtAds as ads
 from PySide6.QtCore import QObject, Qt, QTimer, Signal
 from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QApplication, QButtonGroup, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
+    QApplication, QButtonGroup, QCheckBox, QComboBox, QFrame, QGridLayout, QHBoxLayout, QLabel, QLineEdit, QMessageBox,
     QPlainTextEdit, QProgressBar, QPushButton, QRadioButton, QSplitter, QStackedWidget, QToolButton, QVBoxLayout,
     QWidget,
 )
@@ -81,6 +81,7 @@ class MsDnsExtended(ToolBase):
         self._poll_gen = 0
         self._poll_busy = False
         self._ev_since: dict[str, str] = {}
+        self._repl_busy: set[tuple[str, str]] = set()
 
         self.root = QWidget(parent)
         lay = QVBoxLayout(self.root)
@@ -409,13 +410,17 @@ class MsDnsExtended(ToolBase):
         self.login_status.setText("")
         if self.stack.currentIndex() == 2:
             self.stack.setCurrentIndex(0)
+        self.show_error(self.tr("ui.error"), text, details)
+
+    def show_error(self, title: str, text: str, details: str = "", warning: bool = False) -> None:
+        """Meldung mit „Detailansicht“ (Kopf: Tool, Version, Zeit, Meldung; darunter die technischen Zeilen)."""
         tr = self.tr
         if details:
             head = [f"{self.context.manifest.display_name} {self.context.manifest.version}",
                     time.strftime("%Y-%m-%d %H:%M:%S"), "", tr("err.details_hint"), "", text, "", "-" * 60]
             details = "\n".join(head) + "\n" + details
-        error(self.root, tr("ui.error"), text, details, tr("ui.details"), tr("ui.details_title"),
-              tr("ui.close"), tr("ui.copy_all"))
+        error(self.root, title, text, details, tr("ui.details"), tr("ui.details_title"),
+              tr("ui.close"), tr("ui.copy_all"), QMessageBox.Icon.Warning if warning else QMessageBox.Icon.Critical)
 
     def notify(self, text: str) -> None:
         self.svc.log(text)
@@ -745,6 +750,12 @@ class MsDnsExtended(ToolBase):
             yield from self._after_write_flow(server, zones, False)
             raise
         yield from self._after_write_flow(server, zones, True)
+        for z in zones:
+            own = {r.key for r in svc.records(server, z) or []}
+            present = {r.key for r in new if r.zone == z and r.key in own}
+            absent = {r.key for r in touched if r.zone == z and r.key not in own}
+            if present or absent:
+                self.repl_watch(server, z, present, absent)
 
     def _after_write_flow(self, server: str, zones: list[str], ok: bool):
         """Erfolg: eigene Änderung ist im Zwischenspeicher, nur die neue Seriennummer merken.
@@ -785,6 +796,90 @@ class MsDnsExtended(ToolBase):
         tr, svc = self.tr, self.svc
         yield Job(lambda: svc.zone_action(server, zone, action), tr(f"zact.{action}"))
         yield from self.reload_zone_flow(server, zone)
+
+    # --- Replikation ---------------------------------------------------------------------------------
+    REPL_DELAYS = (15, 45, 90, 180, 300)   # Sekunden nach einer eigenen Änderung bis zur nächsten Nachprüfung
+
+    def repl_check(self, server: str, zone: str, then=None) -> bool:
+        """Replikationsstand im Hintergrund prüfen (ohne Runner, blockiert die Oberfläche nicht).
+        False = läuft schon / nichts zu prüfen (then wird dann nicht aufgerufen)."""
+        svc = self.svc
+        key = (server, zone)
+        if key in self._repl_busy or server not in svc.servers:
+            return False
+        if not svc.repl_peers(server, zone) and not svc._unconnected_secondaries(server, zone):
+            svc.repl.pop(key, None)
+            t = self.tabs.get(key)
+            if t:
+                t[0].set_repl(None)
+            return False
+        self._repl_busy.add(key)
+        t = self.tabs.get(key)
+        if t:
+            t[0].repl_busy(True)
+
+        def done(st):
+            self._repl_busy.discard(key)
+            t = self.tabs.get(key)
+            if t:
+                t[0].set_repl(st)
+            for p in st["peers"]:
+                pt = self.tabs.get((p, zone))
+                if pt:
+                    pt[0].set_data()
+            if then:
+                then(st)
+
+        def failed(text):
+            self._repl_busy.discard(key)
+            t = self.tabs.get(key)
+            if t:
+                t[0].repl_busy(False)
+            svc.log(text.splitlines()[0] if text else "?", True)
+        run_async(lambda: svc.repl_status(server, zone), done, failed)
+        return True
+
+    def repl_watch(self, server: str, zone: str, present: set[str], absent: set[str]) -> None:
+        """Nach einer eigenen Änderung nachprüfen, bis sie auf allen verbundenen Partnern angekommen ist
+        (Ergebnis ins Protokoll)."""
+        svc, tr = self.svc, self.tr
+        if not svc.repl_peers(server, zone):
+            return
+        t0 = time.monotonic()
+        state = {"i": 0}
+
+        def tick():
+            if server not in svc.servers:
+                return
+            if self.runner.active or QApplication.activeModalWidget() is not None \
+                    or not self.repl_check(server, zone, then=check):
+                QTimer.singleShot(5000, tick)
+
+        def check(st):
+            pend = svc.repl_pending(st, present, absent)
+            sec = int(time.monotonic() - t0)
+            if not pend:
+                svc.log(tr("log.repl_arrived", zone=zone, n=len(st["peers"]), sec=sec))
+                return
+            state["i"] += 1
+            if state["i"] < len(self.REPL_DELAYS):
+                QTimer.singleShot((self.REPL_DELAYS[state["i"]] - self.REPL_DELAYS[state["i"] - 1]) * 1000, tick)
+            else:
+                svc.log(tr("log.repl_pending", zone=zone, list=", ".join(pend), min=max(1, sec // 60)), True)
+        QTimer.singleShot(self.REPL_DELAYS[0] * 1000, tick)
+
+    def replicate_flow(self, server: str, zone: str):
+        tr, svc = self.tr, self.svc
+        res = yield Job(lambda: svc.replicate(server, zone), tr("status.replicating", zone=zone))
+        text = "\n".join("• " + x for x in res["done"])
+        if res["warnings"]:
+            self.show_error(tr("repl.title"), text + "\n\n" + "\n\n".join(res["warnings"]),
+                            "\n".join(res["details"]), warning=True)
+        else:
+            info(self.root, tr("repl.title"), text + "\n\n" + tr("repl.recheck_hint"))
+        self.repl_check(server, zone)
+        # Übertragung/UpdateFromDS laufen im DNS-Dienst nach; später noch einmal nachsehen
+        QTimer.singleShot(15000, lambda: self.repl_check(server, zone))
 
     def new_zone_flow(self, server: str):
         tr, svc = self.tr, self.svc

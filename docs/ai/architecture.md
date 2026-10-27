@@ -289,6 +289,13 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   stored, after a failure/cancel the zones are reloaded (`_after_write_flow`).
 - Tests: scripts/dns_check/fake_backend.py (2 DCs + DMZ server) and test_logic.py; `MsDnsExtended.backend_factory`
   replaces the WMI backend for renders.
+- Replication (1.1.0): `service.repl_peers/repl_status/repl_of/repl_diff/repl_pending/replicate`, state in
+  `svc.repl[(server, zone)]` (peer record keys, serials, last xfr, unconnected secondaries via SOA probe).
+  `tool.repl_check` (run_async, no runner), `repl_watch` (QTimer re-checks after own writes, REPL_DELAYS),
+  `replicate_flow`. AD trigger: `adrepl.sync_all` = ntdsapi DsBindWithCredW + DsReplicaSyncAllW (push, cross-site,
+  ids by DN) on the partition from `MicrosoftDNS_Zone.GetDistinguishedName` (`adrepl.partition_of`), then
+  UpdateFromDS on peers; file zones: ForceRefresh on connected secondaries. `MsDnsExtended.show_error(..., warning)` =
+  popup with Detailansicht.
 
 ## Wiki and template (2026-10-22)
 ```

@@ -12,6 +12,7 @@ Fehler kommen als HostError mit "@WMI:op:server:hresult:text" bzw. "@ERR:key:arg
 
 from __future__ import annotations
 
+import datetime as _dt
 import os
 import socket
 import sys
@@ -156,6 +157,12 @@ def version_text(v) -> str:
     return f"{n & 0xFF}.{(n >> 8) & 0xFF}.{(n >> 16) & 0xFFFF}" if n else ""
 
 
+def _epoch(v) -> _dt.datetime | None:
+    """Sekunden seit 1970 (UTC, 0 = nie) -> datetime."""
+    n = _int(v)
+    return _dt.datetime.fromtimestamp(n, _dt.timezone.utc) if n > 0 else None
+
+
 def zone_from_props(p: dict, server: str) -> dict:
     zt = _int(p.get("ZoneType"), -1)
     return {
@@ -170,6 +177,7 @@ def zone_from_props(p: dict, server: str) -> dict:
         "local_masters": _ip_list(p.get("LocalMasterServers")), "data_file": _str(p.get("DataFile")),
         "forwarder_timeout": _int(p.get("ForwarderTimeout")), "forwarder_slave": bool(p.get("ForwarderSlave")),
         "use_wins": bool(p.get("UseWins")),
+        "last_soa_check": _epoch(p.get("LastSuccessfulSoaCheck")), "last_xfr": _epoch(p.get("LastSuccessfulXfr")),
     }
 
 
@@ -450,6 +458,14 @@ class WmiServer:
         method = {"reload": "ReloadZone", "refresh": "ForceRefresh", "from_ds": "UpdateFromDS",
                   "write_back": "WriteBackZone", "pause": "PauseZone", "resume": "ResumeZone"}[action]
         self._call(self._zone_obj(zone), method, op="zone")
+
+    def zone_dn(self, zone: str) -> str:
+        """Distinguished Name einer AD-integrierten Zone (MicrosoftDNS_Zone.GetDistinguishedName)."""
+        out = self._call(self._zone_obj(zone), "GetDistinguishedName", op="zone")
+        try:
+            return _str(out.Properties_.Item("Name").Value)
+        except Exception as e:  # noqa: BLE001
+            raise self._error("zone", e, "GetDistinguishedName -> Name") from None
 
     def age_node(self, zone: str, node: str) -> None:
         """Zeitstempel aller Einträge eines Knotens auf jetzt setzen (macht sie dynamisch/veraltbar).
