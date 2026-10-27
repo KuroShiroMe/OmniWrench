@@ -163,6 +163,9 @@
 - ConnectServer: pass "" (not None) for current credentials; local target "." with credentials -> 0x80041064.
 - WMI cannot age a single record: AgeAllRecords ages all records of the node (documented limitation).
 - Tool locales need `_meta`, `tool.*` and `settings.*` keys (store + settings dialog translations), not only UI keys.
+- `tempfile.mkstemp` returns an OPEN fd: close it (`os.close(fd)`) before handing the path to another process or
+  deleting it, otherwise Windows raises WinError 32 on unlink (broke every pip install in the EXE until 2026-10-27).
+
 
 ## Screenshot rendering / lean cards (0.8.0)
 - render.py runs from the COPY in the temp TOOLS_DIR -> `__file__` is not the repo; use `shot.source` (repo tool dir).

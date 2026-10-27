@@ -89,7 +89,7 @@ that are not plain test steps.
       draft images (current ones are 1.0.0 cropped; a fake backend via MsDhcpExtended.backend_factory would allow it).
 
 ## Store/Home 0.8.0 (2026-10-27)
-- [ ] Windows test by Stef: TESTLISTE section "Store und Startseite (0.8.0)"; release v0.8.0 (tag by Stef).
+- [x] Windows test by Stef OK (2026-10-27). [ ] Tag v0.8.0 by Stef (release notes + site links prepared).
 - [ ] When a tool's UI changes: re-render its screenshots (`scripts/render_screenshots.py tools/<x>`), rebuild store.
 - Idea: landing page could show each tool's main screenshot in the tool list (store/screenshots via raw URL).
 - Idea: German screenshot set (`--lang de`) shown when the UI language is German (needs per-language files).

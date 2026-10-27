@@ -462,6 +462,10 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - The DHCP-IPv6 thread added the reverse direction (DNS check in the DHCP tool, PR #60) without importing the DNS tool.
 - Tested on Linux only: scripts/dns_check/test_logic.py (88 checks, fake backend), offscreen renders, UI flows
   (create with PTR, edit, rollback, conflict, delete with PTR). Windows tests: TESTLISTE section 9.
+- 2026-10-27: PR #61 merged on Stef's request. Stef's test environment (EXE): DNS tool install failed with WinError 32
+  on the pip log file -> sdk.pip_install leaked the mkstemp handle; now closed + unlink best-effort. Affects every
+  pip install from the EXE build (app fix, ships with the next app release).
+
 ## 2026-10-27 Store/Home lean cards + screenshots + Home view modes (app 0.8.0)
 - Stef: Store much leaner (icon, title, screenshot, short description, one button), click through screenshots,
   single click -> right panel with all metadata + install/update, same for Home; Home gets views list/small/large/full.
