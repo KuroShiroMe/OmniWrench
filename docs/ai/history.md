@@ -499,3 +499,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   writes (log), "Replikation anstoßen" (AD: DsReplicaSyncAll push of the zone's partition + UpdateFromDS on peers;
   file: ForceRefresh on secondaries), denied right -> warning with Detailansicht. Fake backend: ad_sync/zone_dn/
   refresh copy; tests 134 checks. Wiki section "Replikation zwischen Servern", TESTLISTE 9a.
+- 2026-10-27: Stef's DC test of 1.1.0: record creation works; "Replikation anstoßen" failed with 0x80041002 reading
+  GetDistinguishedName out param "Name". 1.1.1 reads ReturnValue (or any DN-like out property) and falls back to the
+  default partition guessed from the domain (DomainDnsZones / ForestDnsZones for _msdcs.*).

@@ -462,10 +462,18 @@ class WmiServer:
     def zone_dn(self, zone: str) -> str:
         """Distinguished Name einer AD-integrierten Zone (MicrosoftDNS_Zone.GetDistinguishedName)."""
         out = self._call(self._zone_obj(zone), "GetDistinguishedName", op="zone")
+        # laut MOF "string GetDistinguishedName()": der DN steht in ReturnValue (nicht in einem Parameter "Name")
+        seen = []
         try:
-            return _str(out.Properties_.Item("Name").Value)
+            props = [(p.Name, p.Value) for p in out.Properties_]
         except Exception as e:  # noqa: BLE001
-            raise self._error("zone", e, "GetDistinguishedName -> Name") from None
+            raise self._error("zone", e, "GetDistinguishedName -> Properties_") from None
+        props.sort(key=lambda kv: kv[0] != "ReturnValue")
+        for name, value in props:
+            seen.append(f"{name}={value!r}")
+            if isinstance(value, str) and "=" in value:
+                return value
+        raise HostError(f"@ERR:no_partition:{zone}", [f"GetDistinguishedName out: {', '.join(seen) or '(leer)'}"])
 
     def age_node(self, zone: str, node: str) -> None:
         """Zeitstempel aller Einträge eines Knotens auf jetzt setzen (macht sie dynamisch/veraltbar).

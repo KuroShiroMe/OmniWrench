@@ -184,6 +184,19 @@ def partition_of(zone_dn: str) -> str:
     return ""
 
 
+def guess_partition(zone: str, server_fqdn: str) -> str:
+    """Partition ohne DN der Zone schätzen: _msdcs.<Gesamtstruktur> liegt in ForestDnsZones der Gesamtstruktur,
+    alles andere in DomainDnsZones der Domäne des Servers (Standard beim Anlegen über die DNS-Konsole)."""
+    z = zone.strip(".").lower()
+    if z.startswith("_msdcs."):
+        dom, part = z[len("_msdcs."):], "ForestDnsZones"
+    else:
+        dom, part = server_fqdn.strip(".").lower().partition(".")[2], "DomainDnsZones"
+    if not dom:
+        return ""
+    return f"DC={part}," + ",".join(f"DC={x}" for x in dom.split("."))
+
+
 def partition_label(nc: str) -> str:
     first = nc.split(",", 1)[0].upper()
     if first == "DC=DOMAINDNSZONES":
