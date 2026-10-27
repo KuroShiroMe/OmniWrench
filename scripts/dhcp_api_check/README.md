@@ -9,8 +9,9 @@ Prüft `tools/ms_dhcp_extended/dhcpapi.py` ohne Windows:
    ```
 2. Abläufe gegen eine Fake-dhcpsapi (gleiche Layouts, Testdaten):
    ```
-   gcc -shared -fPIC -o libfake.so fake_dhcpsapi.c
+   gcc -shared -fPIC -o libfake.so fake_dhcpsapi.c fake_dhcpsapi6.c
    python3 test_api.py ./libfake.so
+   python3 test_api6.py ./libfake.so     # DHCPv6: Scopes, Optionen, Reservierungen, Leases, Rücknahme, Konflikt
    python3 test_tx.py                    # Transaktionen: Fehler mitten im Ablauf, Rücknahme, Abbruch
    python3 test_conflict.py              # Änderungen anderer: Ereignis-XML, Vergleich, Filter je Scope
    ```

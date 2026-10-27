@@ -238,6 +238,12 @@
   (GITHUB_TOKEN may not modify workflows), only the marker `.github/template-setup.json` is deleted.
 - Help menu: "Online-Hilfe (Wiki)" (F1) opens the wiki, "Tool-Entwicklung" opens wiki/Entwicklung; docs/ no longer
   shipped next to the EXE.
+- DHCP tool IPv6 (1.5.0, Stef 2026-10-23: "beide Tools eigenständig, Zusammenarbeit wo sinnvoll"):
+  one tool for both families, segmented IPv4|IPv6 switch (setting "family") instead of a second tool. Overview,
+  server options and definitions follow the switch; check and event log always cover both. v6 scopes are created via
+  a dialog (no draft tab: no pool, no failover). Clipboard carries "Family"; cross-family paste is rejected.
+- DHCP <-> DNS tool cooperation: the DHCP tool only checks DNS via the system resolver (dnscheck.py, optional
+  "DNS-Abgleich"); it never imports the DNS tool. The DNS tool does not touch tools/ms_dhcp_extended.
 
 ## MS DNS Extended Management (2026-10-23)
 - Stef: name "MS DNS Extended Management", id net.ms-dns-extended; editing in the first version; support every kind of

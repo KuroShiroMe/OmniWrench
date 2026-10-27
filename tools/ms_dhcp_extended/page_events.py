@@ -201,7 +201,8 @@ class EventsPage(QWidget):
     def _context(self) -> tuple[list[tuple[str, str]], dict[str, str], dict[int, str]]:
         svc = self.svc
         scopes = [(s["id"], s["mask"]) for s in svc.scopes if s.get("id") and s.get("mask")]
-        names = {s["id"]: s.get("name") or "" for s in svc.scopes}
+        scopes += [(s["id"], str(s["plen"])) for s in svc.scopes6 if s.get("id")]     # DHCPv6: (Präfix, Länge)
+        names = {s["id"]: s.get("name") or "" for s in svc.all_scopes()}
         opts = {k[1]: d["name"] for k, d in svc.defs.items() if not k[0] and d.get("name")}   # Standardklasse
         return scopes, names, opts
 

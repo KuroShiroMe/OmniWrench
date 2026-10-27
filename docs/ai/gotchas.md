@@ -147,6 +147,13 @@
   (focus loss while typing). Never poll while a modal dialog is open or the runner is busy.
 - DHCP tool: long reads that need no write lock (event log) do not belong in the Runner - every non-quiet Job disables
   the main area. Use `run_async` directly with a generation counter and a data snapshot for the worker thread.
+- DhcpServerSetConfigV6 sets exactly ONE field per call (FieldsToSet bit); the server rejects preferred >= valid
+  after every single call -> when growing set valid first, when shrinking set preferred first (`scope6_set` orders).
+- DHCPv6 option lists contain hidden internal options (ids 0x10000+, e.g. 0x20001); filter them (V6_INTERNAL_MIN).
+- DHCP_IPV6_ADDRESS is two QWORDs HighOrderBits/LowOrderBits (network order split into halves), not 16 bytes.
+- Qt item sort keys are int64: IPv6 ints overflow -> DHCP grid "ip" sort key is a 33-hex-digit string.
+- ScopeTab6 inherits guard() from page_scope, which calls page_scope.choose: tests must patch page_scope.choose,
+  not page_scope6.choose.
 
 ## DNS tool (WMI via pywin32)
 - `pip --target` ignores pywin32's .pth: add _lib, _lib/win32, _lib/win32/lib, _lib/pywin32_system32 to sys.path and
