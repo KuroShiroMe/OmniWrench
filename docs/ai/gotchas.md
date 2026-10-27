@@ -176,3 +176,7 @@
   the category tree while details are open in narrow windows; card areas have setMinimumWidth (320/360).
 - Offscreen grab at real 1280x800: use QT_QPA_PLATFORM "offscreen:configfile=<json>" with a big screen + dpr 1, else
   widgets get clamped to the tiny default offscreen screen.
+- EXE pip on Windows: distlib (pip/_vendor/distlib/scripts.py) loads its launcher .exe files via
+  `resources.finder()`, which has no finder for PyInstaller's PyiFrozenLoader -> "Unable to locate finder".
+  main._run_pip registers `ResourceFinder` for that loader (pass the loader INSTANCE, register_finder takes type()).
+  Linux is unaffected (code path is nt-only); Build CI now runs a real `OmniWrench.exe --pip install`.

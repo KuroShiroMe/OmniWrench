@@ -8,7 +8,7 @@ LEGACY_VENDORS = ("DarkMatter",)
 # Name des Mutex, an dem das Windows-Installationsprogramm ein laufendes OmniWrench erkennt
 # (installer/windows/OmniWrench.iss, AppMutexName)
 APP_MUTEX = "KuroShiro.OmniWrench"
-__version__ = "0.8.0"
+__version__ = "0.8.1"
 
 # GitHub-Repository: Updates des Hauptprogramms und offizieller Tool-Store
 GITHUB_REPO = "KuroShiroMe/OmniWrench"

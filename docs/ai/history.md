@@ -479,3 +479,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   images, landing page images/texts, release notes v0.8.0, tool template (store.py, screenshots.py, example shot).
 - Tested on Linux: smoke_test, check_locales, check_store, offscreen renders 1600x1000 dark + 1100x720 light,
   template flow (new_tool -> screenshots.py -> store.py build/check).
+- 2026-10-27: After #62 Stef's EXE install of the DNS tool failed with "Unable to locate finder for
+  'pip._vendor.distlib'" (nt-only distlib path). Reproduced with a frozen test build on Linux, fixed in main._run_pip
+  (register distlib ResourceFinder), Windows Build CI installs dnspython + pywin32 via the EXE. App 0.8.1 prepared
+  (v0.8.0 already tagged): version, release notes, site download links.
