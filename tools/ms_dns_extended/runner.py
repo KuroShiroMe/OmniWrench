@@ -37,7 +37,7 @@ class Job:
 class Runner(QObject):
     busy_changed = Signal(bool, bool)     # (beschäftigt, abbrechbar)
     status = Signal(str)
-    failed = Signal(str)                  # Fehlertext eines unbehandelten Fehlers
+    failed = Signal(str, str)             # Fehlertext eines unbehandelten Fehlers, technische Details
 
     def __init__(self):
         super().__init__()
@@ -69,12 +69,12 @@ class Runner(QObject):
             return
         except UserError as e:
             self._end()
-            self.failed.emit(str(e))
+            self.failed.emit(str(e), "\n".join(getattr(e, "details", [])))
             return
         except Exception as e:  # noqa: BLE001 - Programmfehler sichtbar machen statt still abzubrechen
             log.exception("DNS-Ablauf")
             self._end()
-            self.failed.emit(f"{e}\n\n{traceback.format_exc(limit=6)}")
+            self.failed.emit(f"{e}\n\n{traceback.format_exc(limit=6)}", traceback.format_exc())
             return
         if not isinstance(job, Job):
             # Generator lieferte etwas anderes: unmittelbar zurückgeben (erlaubt "yield" ohne Job)

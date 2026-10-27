@@ -486,3 +486,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef (first real test against a DC): login failed "Lesen … fehlgeschlagen: Unbekannter Fehler
   (0x80004005)". Cause: wmidns._query used list() on a forward-only SWbemObjectSet (len() -> Count -> E_FAIL).
   Fixed in DNS tool 1.0.2 + regression test (test_logic, 90 checks).
+- 2026-10-27: Stef: login OK with 1.0.2, but creating a record failed "Allgemeiner Fehler (0x80041001)". DNS tool 1.0.3:
+  PropertyData path + fallbacks (wmidns.create_record), test_logic 95 checks. Real cause still to be confirmed on the DC.
+- 2026-10-27: Stef: error popup needs a "Detailansicht" with all attempts and exact messages. HostError/UserError/TxError
+  carry `details` (call, HRESULT, excepinfo, scode, SWbemLastError props, create attempts; no passwords), Runner.failed
+  is Signal(str, str), ui_base.error shows a "Detailansicht" button -> text dialog with "Alles kopieren". Part of 1.0.3.

@@ -404,12 +404,18 @@ class MsDnsExtended(ToolBase):
         self.log_view.appendHtml(f"<span style='color:{theme.current['muted']}'>{stamp}</span> "
                                  f"<span style='color:{color}'>{body}</span>")
 
-    def _failed(self, text: str) -> None:
+    def _failed(self, text: str, details: str = "") -> None:
         self._append_log(text, True)
         self.login_status.setText("")
         if self.stack.currentIndex() == 2:
             self.stack.setCurrentIndex(0)
-        error(self.root, self.tr("ui.error"), text)
+        tr = self.tr
+        if details:
+            head = [f"{self.context.manifest.display_name} {self.context.manifest.version}",
+                    time.strftime("%Y-%m-%d %H:%M:%S"), "", tr("err.details_hint"), "", text, "", "-" * 60]
+            details = "\n".join(head) + "\n" + details
+        error(self.root, tr("ui.error"), text, details, tr("ui.details"), tr("ui.details_title"),
+              tr("ui.close"), tr("ui.copy_all"))
 
     def notify(self, text: str) -> None:
         self.svc.log(text)

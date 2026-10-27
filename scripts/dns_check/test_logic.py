@@ -309,6 +309,78 @@ def test_wmi_query_forward_only():
     check(w._query("SELECT * FROM MicrosoftDNS_Zone") == ["a", "b"], "Abfrage ohne Count")
 
 
+def test_wmi_create_fallback():
+    """Eintrag anlegen: erst PropertyData, bei 0x80041001 weiter zur Textdarstellung bzw. zum eingegebenen Namen."""
+    from tools.ms_dns_extended import wmidns
+
+    w = wmidns.WmiServer("dc01")
+    w.wmi_name = "dc01.corp.example"
+    calls = []
+
+    def call(target, method, params=None, op="write", cls=None):
+        calls.append((target, method, params["DnsServerName"]))
+        if len(calls) < fail_until:
+            raise wmidns.HostError("@WMI:create:dc01:80041001:Allgemeiner Fehler")
+
+    w._call = call
+    w.exists = lambda rec: False
+    rec = du.Rec(zone=DOM, name="neu." + DOM, type="A", data={"ip": "10.10.9.9"}, ttl=3600)
+    fail_until = 2
+    w.create_record(rec)
+    check(calls[0][:2] == ("MicrosoftDNS_AType", "CreateInstanceFromPropertyData"), "zuerst PropertyData")
+    check(calls[1][2] == "dc01" and len(calls) == 2, "danach eingegebener Servername")
+    calls.clear()
+    fail_until = 99
+    try:
+        w.create_record(rec)
+        check(False, "Fehler erwartet")
+    except wmidns.HostError as e:
+        check("80041001" in str(e), str(e))
+    check([c[1] for c in calls].count("CreateInstanceFromTextRepresentation") == 2 and len(calls) == 4,
+          "alle Wege versucht")
+    calls.clear()
+    fail_until = 99
+    w.exists = lambda rec: True        # Server meldet Fehler, hat den Eintrag aber angelegt
+    w.create_record(rec)
+    check(len(calls) == 1, "kein zweiter Versuch, wenn der Eintrag existiert")
+
+
+def test_error_details():
+    """Fehler tragen technische Details (Aufruf, HRESULT, excepinfo, Versuche) bis zur Detailansicht."""
+    from tools.ms_dns_extended import wmidns
+
+    w = wmidns.WmiServer("dc01", "corp\\admin", "geheim")
+    w.wmi_name = "dc01.corp.example"
+    w._last_error_props = lambda: {"Description": "Zone nicht gefunden", "StatusCode": 0x80041001}
+    com = Exception(-2147352567, "Ausnahmefehler", (0, "SWbemServicesEx", "Allgemeiner Fehler", None, 0, -2147217407), None)
+    e = w._error("create", com, "MicrosoftDNS_AType.CreateInstanceFromPropertyData({...})")
+    text = "\n".join(e.details)
+    check("80041001" in str(e) and "CreateInstanceFromPropertyData" in text and "scode: 0x80041001" in text, text)
+    check("SWbemLastError" in text and "Zone nicht gefunden" in text, "SWbemLastError in Details")
+    check("geheim" not in text, "kein Passwort in Details")
+    # alle Wege scheitern: jeder Versuch steht in den Details
+    w._call = lambda *a, **k: (_ for _ in ()).throw(wmidns.HostError("@WMI:create:dc01:80041001:Allgemeiner Fehler",
+                                                                     ["call: x"]))
+    w.exists = lambda rec: False
+    rec = du.Rec(zone=DOM, name="neu." + DOM, type="A", data={"ip": "10.10.9.9"}, ttl=3600)
+    try:
+        w.create_record(rec)
+        check(False, "Fehler erwartet")
+    except wmidns.HostError as err:
+        text = "\n".join(err.details)
+        check(text.count("#") == 4 and "#4 CreateInstanceFromTextRepresentation DnsServerName='dc01'" in text, text)
+        check("record: neu." + DOM in text, "Eintrag in Details")
+    # Service reicht die Details an UserError weiter
+    svc, fb = svc_new()
+    fb.create_record = lambda server, r: (_ for _ in ()).throw(wmidns.HostError("@WMI:create:dc01:80041001:x",
+                                                                                ["call: y"]))
+    try:
+        svc._b("create_record", DC1, rec)
+        check(False, "Fehler erwartet")
+    except S.UserError as ue:
+        check(ue.details[:1] == [f"backend: create_record({DC1})"] and "call: y" in ue.details, str(ue.details))
+
+
 if __name__ == "__main__":
     tests = [v for k, v in sorted(globals().items()) if k.startswith("test_")]
     for t in tests:

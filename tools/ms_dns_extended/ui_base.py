@@ -79,8 +79,21 @@ def warn(parent, title: str, text: str) -> None:
     _box(parent, QMessageBox.Icon.Warning, title, text, QMessageBox.StandardButton.Ok)
 
 
-def error(parent, title: str, text: str) -> None:
-    _box(parent, QMessageBox.Icon.Critical, title, text, QMessageBox.StandardButton.Ok)
+def error(parent, title: str, text: str, details: str = "", details_label: str = "", details_title: str = "",
+          close_label: str = "", copy_label: str = "") -> None:
+    """Fehlermeldung; mit details zusätzlich ein Knopf, der alle technischen Angaben in einem Fenster zeigt."""
+    if not details:
+        _box(parent, QMessageBox.Icon.Critical, title, text, QMessageBox.StandardButton.Ok)
+        return
+    box = QMessageBox(QMessageBox.Icon.Critical, title, text, QMessageBox.StandardButton.Ok, parent)
+    box.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+    more = box.addButton(details_label, QMessageBox.ButtonRole.ActionRole)
+    box.setDefaultButton(QMessageBox.StandardButton.Ok)
+    while True:
+        box.exec()
+        if box.clickedButton() is not more:
+            return
+        text_dialog(box, details_title or title, details, close_label or "OK", copy_label)
 
 
 def confirm(parent, title: str, text: str) -> bool:
@@ -110,7 +123,7 @@ def ask3(parent, title: str, text: str) -> str:
     return "yes" if r == b.Yes else "no" if r == b.No else "cancel"
 
 
-def text_dialog(parent, title: str, text: str, close_label: str) -> None:
+def text_dialog(parent, title: str, text: str, close_label: str, copy_label: str = "") -> None:
     dlg = QDialog(parent)
     dlg.setWindowTitle(title)
     dlg.resize(980, 640)
@@ -121,6 +134,9 @@ def text_dialog(parent, title: str, text: str, close_label: str) -> None:
     ed.setLineWrapMode(QPlainTextEdit.LineWrapMode.NoWrap)
     lay.addWidget(ed)
     bb = QDialogButtonBox()
+    if copy_label:
+        bb.addButton(copy_label, QDialogButtonBox.ButtonRole.ActionRole).clicked.connect(
+            lambda: QApplication.clipboard().setText(text))
     bb.addButton(close_label, QDialogButtonBox.ButtonRole.RejectRole)
     bb.rejected.connect(dlg.reject)
     lay.addWidget(bb)

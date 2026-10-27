@@ -33,8 +33,27 @@ HRESULTS = {
 }
 
 
+# Parameter von CreateInstanceFromPropertyData je Typ (Namen laut MicrosoftDNS_<Typ>Type)
+PROPERTY_DATA = {
+    "A": lambda d: {"IPAddress": d["ip"]},
+    "AAAA": lambda d: {"IPv6Address": d["ip"]},
+    "CNAME": lambda d: {"PrimaryName": du.norm(d["host"]) + "."},
+    "PTR": lambda d: {"PTRDomainName": du.norm(d["host"]) + "."},
+    "NS": lambda d: {"NSHost": du.norm(d["host"]) + "."},
+    "MX": lambda d: {"Preference": int(d.get("pref", 10)), "MailExchange": du.norm(d["host"]) + "."},
+    "SRV": lambda d: {"Priority": int(d.get("priority", 0)), "Weight": int(d.get("weight", 0)),
+                      "Port": int(d.get("port", 0)), "DomainName": du.norm(d["host"]) + "."},
+    "TXT": lambda d: {"DescriptiveText": d.get("text", "")},
+}
+
+
 class HostError(Exception):
-    """Fehlermeldung des Zugriffs (Text mit @WMI:/@ERR:-Präfix)."""
+    """Fehlermeldung des Zugriffs (Text mit @WMI:/@ERR:-Präfix). details = technische Zeilen für die
+    Detailansicht (Aufruf, HRESULT, excepinfo, SWbemLastError, Versuche); nie Passwörter."""
+
+    def __init__(self, msg: str = "", details: list[str] | None = None):
+        super().__init__(msg)
+        self.details = list(details or [])
 
 
 # --- pywin32 laden (liegt beim installierten Tool im privaten _lib-Ordner) -----------------------------
@@ -253,47 +272,64 @@ class WmiServer:
                 # leere Zeichenfolgen = aktuelles Konto (wie in VBScript); None würde als VT_NULL übergeben
                 svc = loc.ConnectServer(target, NAMESPACE, self.user or "", self._password or "")
             except Exception as e:  # noqa: BLE001
-                raise self._error("connect", e) from None
+                call = (f"SWbemLocator.ConnectServer({target!r}, {NAMESPACE!r}, user={self.user or '(current account)'!r}, "
+                        f"password={'***' if self._password else '(empty)'})")
+                raise self._error("connect", e, call) from None
             self._tls.svc = svc
         return svc
 
-    def _error(self, op: str, e: Exception) -> HostError:
+    def _error(self, op: str, e: Exception, call: str = "") -> HostError:
         if isinstance(e, HostError):
             return e
         hr, text = 0, str(e)
+        details = [f"server: {self.server} (WMI-Name: {self.wmi_name or '?'})", f"operation: {op}"]
+        if call:
+            details.append(f"call: {call}")
+        details.append(f"exception: {type(e).__module__}.{type(e).__name__}: {e!r}")
         args = getattr(e, "args", ())
         if args and isinstance(args[0], int):
             hr = args[0] & 0xFFFFFFFF
             text = str(args[1]) if len(args) > 1 else text
+            details.append(f"hresult: 0x{hr:08X} {text}")
             exc = args[2] if len(args) > 2 else None
             if exc and isinstance(exc, tuple):
+                details.append("excepinfo: " + ", ".join(
+                    f"{k}={v!r}" for k, v in zip(("wcode", "source", "description", "helpfile", "helpcontext", "scode"),
+                                                 exc)))
                 if len(exc) > 5 and isinstance(exc[5], int) and exc[5]:
                     hr = exc[5] & 0xFFFFFFFF
+                    details.append(f"scode: 0x{hr:08X}")
                 if len(exc) > 2 and exc[2]:
                     text = str(exc[2])
-        detail = self._last_error()
+            if len(args) > 3 and args[3] is not None:
+                details.append(f"argerror: {args[3]!r}")
+        last = self._last_error_props()
+        if last:
+            details.append("SWbemLastError: " + ", ".join(f"{k}={v!r}" for k, v in last.items()))
+        detail = next((str(last[k]) for k in ("Description", "StatusCode", "ErrorCode") if last.get(k) not in (None, "", 0)), "")
         if detail:
             text = f"{text} ({detail})" if text and detail not in text else detail
         key = HRESULTS.get(hr)
         if key:
-            return HostError(f"@ERR:{key}:{self.server}|{hr:08X}|{text.strip()}")
-        return HostError(f"@WMI:{op}:{self.server}:{hr:08X}:{' '.join(text.split())}")
+            return HostError(f"@ERR:{key}:{self.server}|{hr:08X}|{text.strip()}", details)
+        return HostError(f"@WMI:{op}:{self.server}:{hr:08X}:{' '.join(text.split())}", details)
 
-    def _last_error(self) -> str:
-        """Zusatztext des DNS-WMI-Anbieters (SWbemLastError), falls vorhanden."""
+    def _last_error_props(self) -> dict:
+        """Alle Eigenschaften des letzten WMI-Fehlerobjekts (SWbemLastError), falls vorhanden."""
+        out: dict = {}
         try:
             _pc, dynamic, _pt = load()
             le = dynamic.Dispatch("WbemScripting.SWbemLastError")
-            for name in ("Description", "StatusCode", "ErrorCode"):
+            for p in le.Properties_:
                 try:
-                    v = le.Properties_(name).Value
+                    v = p.Value
                 except Exception:  # noqa: BLE001
                     continue
-                if v not in (None, "", 0):
-                    return str(v)
-        except Exception:  # noqa: BLE001 - kein Zusatztext
-            return ""
-        return ""
+                if v not in (None, ""):
+                    out[p.Name] = v
+        except Exception:  # noqa: BLE001 - kein Fehlerobjekt
+            return {}
+        return out
 
     @staticmethod
     def _props(obj) -> dict:
@@ -312,7 +348,7 @@ class WmiServer:
         except HostError:
             raise
         except Exception as e:  # noqa: BLE001
-            raise self._error(op, e) from None
+            raise self._error(op, e, f"ExecQuery({wql!r}, flags=0x{WBEM_FLAGS:X})") from None
 
     def _call(self, target, method: str, params: dict | None = None, op: str = "write", cls: str | None = None):
         """Methode an einem Objekt (target = SWbemObject) oder statisch an einer Klasse (target = Klassenname)."""
@@ -333,7 +369,8 @@ class WmiServer:
         except HostError:
             raise
         except Exception as e:  # noqa: BLE001
-            raise self._error(op, e) from None
+            where = target if isinstance(target, str) else f"{cls or '?'} (Instanz)"
+            raise self._error(op, e, f"{where}.{method}({params!r})") from None
 
     def close(self) -> None:
         self._tls = threading.local()
@@ -478,14 +515,46 @@ class WmiServer:
         return self._find(rec) is not None
 
     def create_record(self, rec: du.Rec) -> None:
+        """Bekannte Typen über CreateInstanceFromPropertyData der Typklasse, sonst über die Textdarstellung.
+        Meldet ein Weg "Allgemeiner Fehler" (0x80041001), folgt der nächste (auch mit dem Servernamen wie
+        eingegeben statt dem vom Dienst gemeldeten); vorher wird geprüft, ob der Eintrag doch angelegt wurde."""
         if not self.wmi_name:
             self.info()
-        text = du.text_representation(rec)
-        self._call("MicrosoftDNS_ResourceRecord", "CreateInstanceFromTextRepresentation",
-                   {"DnsServerName": self.wmi_name, "ContainerName": rec.zone, "TextRepresentation": text},
-                   op="create")
+        names = [self.wmi_name] + ([self.server] if du.norm(self.server) != du.norm(self.wmi_name) else [])
+        ways = [(n, self._create_props) for n in names if rec.type in PROPERTY_DATA] + \
+               [(n, self._create_text) for n in names]
+        first: HostError | None = None
+        tried: list[str] = []
+        for n, (dns_name, way) in enumerate(ways, 1):
+            label = f"#{n} {'CreateInstanceFromPropertyData' if way == self._create_props else 'CreateInstanceFromTextRepresentation'}" \
+                    f" DnsServerName={dns_name!r}"
+            try:
+                way(rec, dns_name)
+                break
+            except HostError as e:
+                tried += [f"{label}: {e}"] + ["    " + d for d in e.details]
+                if ":80041001:" not in str(e):
+                    raise HostError(str(e), tried) from None
+                first = first or e
+                if self.exists(rec):
+                    break
+        else:
+            raise HostError(str(first), [f"record: {du.text_representation(rec)}"] + tried)
         if rec.dynamic:
             self.age_node(rec.zone, rec.name)
+
+    def _create_text(self, rec: du.Rec, dns_name: str) -> None:
+        self._call("MicrosoftDNS_ResourceRecord", "CreateInstanceFromTextRepresentation",
+                   {"DnsServerName": dns_name, "ContainerName": rec.zone,
+                    "TextRepresentation": du.text_representation(rec)}, op="create")
+
+    def _create_props(self, rec: du.Rec, dns_name: str) -> None:
+        cls = f"MicrosoftDNS_{du.WMI_CLASSES[rec.type]}"
+        params = {"DnsServerName": dns_name, "ContainerName": rec.zone, "OwnerName": rec.name, "RecordClass": 1}
+        if rec.ttl is not None:
+            params["TTL"] = int(rec.ttl)
+        params.update(PROPERTY_DATA[rec.type](rec.data))
+        self._call(cls, "CreateInstanceFromPropertyData", params, op="create")
 
     def delete_record(self, rec: du.Rec) -> None:
         o = self._find(rec)
