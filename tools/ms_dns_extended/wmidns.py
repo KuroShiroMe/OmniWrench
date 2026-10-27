@@ -307,7 +307,8 @@ class WmiServer:
 
     def _query(self, wql: str, op: str = "read") -> list:
         try:
-            return list(self._svc().ExecQuery(wql, "WQL", WBEM_FLAGS))
+            # nicht list(): das fragt vorab Count ab, und das gibt es bei wbemFlagForwardOnly nicht (E_FAIL)
+            return [o for o in self._svc().ExecQuery(wql, "WQL", WBEM_FLAGS)]
         except HostError:
             raise
         except Exception as e:  # noqa: BLE001
