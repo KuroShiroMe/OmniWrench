@@ -6,8 +6,8 @@ import datetime as _dt
 
 from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
-    QApplication, QCheckBox, QComboBox, QFormLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
-    QSpinBox, QTabWidget, QVBoxLayout, QWidget,
+    QApplication, QCheckBox, QComboBox, QFormLayout, QFrame, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPlainTextEdit,
+    QScrollArea, QSpinBox, QTabWidget, QVBoxLayout, QWidget,
 )
 
 from omniwrench.ui import theme
@@ -49,7 +49,13 @@ class ZoneTab(QWidget):
         lay.addLayout(head)
         self.tabs = QTabWidget()
         self.tabs.addTab(self._build_records(), tr("zt.records"))
-        self.tabs.addTab(self._build_general(), tr("zt.general"))
+        # eigener Scrollbereich: sonst bestimmt die hohe Seite die Mindesthöhe des ganzen Zonen-Tabs, und die
+        # Knöpfe unter der Eintragsliste rutschen aus dem sichtbaren Bereich (Dock scrollt dann den ganzen Tab)
+        general = QScrollArea()
+        general.setWidgetResizable(True)
+        general.setFrameShape(QFrame.Shape.NoFrame)
+        general.setWidget(self._build_general())
+        self.tabs.addTab(general, tr("zt.general"))
         self.find_view = FindingsView(tr, ctl.flt)
         self.find_view.activated.connect(self._finding)
         self.tabs.addTab(self.find_view, tr("zt.findings"))

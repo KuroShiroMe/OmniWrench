@@ -491,3 +491,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef: error popup needs a "Detailansicht" with all attempts and exact messages. HostError/UserError/TxError
   carry `details` (call, HRESULT, excepinfo, scode, SWbemLastError props, create attempts; no passwords), Runner.failed
   is Signal(str, str), ui_base.error shows a "Detailansicht" button -> text dialog with "Alles kopieren". Part of 1.0.3.
+- 2026-10-27: Stef: zone tab buttons only visible after scrolling down. Cause: "Allgemein" page (min height ~800 px)
+  set the zone tab's minimum height inside the dock scroll area. Wrapped it in a QScrollArea, DNS tool 1.0.4.
+  Also answered: replication is done by Windows (AD replication for AD-integrated zones, zone transfer otherwise).

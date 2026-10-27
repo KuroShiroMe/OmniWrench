@@ -186,3 +186,6 @@
 - DNS WMI create: CreateInstanceFromTextRepresentation gave "Allgemeiner Fehler" 0x80041001 on Stef's DC (cause not
   proven). 1.0.3 creates known types via MicrosoftDNS_<Type>Type.CreateInstanceFromPropertyData first, then text, each
   with the WMI server name and the typed name; checks exists() before the next try (no duplicates).
+- QtAds CDockWidget.setWidget wraps non-scroll widgets in a QScrollArea: a tall page inside a QTabWidget raises the
+  minimum height of the whole tab, so bottom button bars of the other tabs scroll out of view. Wrap tall tab pages in
+  their own QScrollArea (DNS zone tab "Allgemein", 1.0.4; DHCP tool does the same).

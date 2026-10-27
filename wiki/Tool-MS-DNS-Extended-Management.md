@@ -349,6 +349,7 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 
 | Version | Änderungen |
 |---|---|
+| 1.0.4 | Knöpfe unter der Eintragsliste waren bei kleineren Fenstern erst nach dem Scrollen sichtbar (behoben) |
 | 1.0.3 | Einträge werden über die Methode der jeweiligen Typklasse angelegt, mit weiteren Wegen bei „Allgemeiner Fehler“; Fehlerfenster mit **Detailansicht** |
 | 1.0.2 | Anmeldung scheiterte an jedem Server mit 0x80004005 (behoben) |
 | 1.0.0 | Erste Version: Zonen und Einträge (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS) bearbeiten mit PTR-Pflege (IPv4/IPv6), neue Zonen inkl. IPv6-Reverse, Server-Einstellungen, Aufräum-Vorschau mit Ping, Prüfung mit Abfrage der Namensserver und Weiterleitungen, Vergleich mehrerer Server, Suche, DHCP-Abgleich, Ereignisprotokoll, Erkennung von Änderungen anderer, Transaktionen mit Rücknahme |
