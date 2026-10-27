@@ -193,3 +193,5 @@
   NULL-terminated array (free once with LocalFree). Denied = 5 or 8453 (ERROR_DS_DRA_ACCESS_DENIED). Replication
   Synchronization right: Domain Admins for DomainDnsZones, Enterprise Admins for ForestDnsZones by default.
 - MicrosoftDNS_Zone.LastSuccessfulXfr / LastSuccessfulSoaCheck are seconds since 1970 (UTC), 0 = never.
+- MicrosoftDNS_Zone.GetDistinguishedName is `string GetDistinguishedName()`: the DN comes back in the out
+  parameter object's ReturnValue, not in a parameter "Name" (Item("Name") -> 0x80041002, DNS tool 1.1.1).

@@ -345,6 +345,45 @@ def test_wmi_create_fallback():
     check(len(calls) == 1, "kein zweiter Versuch, wenn der Eintrag existiert")
 
 
+def test_wmi_zone_dn():
+    """GetDistinguishedName liefert den DN als ReturnValue (Echttest 1.1.0: Item("Name") -> 0x80041002)."""
+    from tools.ms_dns_extended import wmidns
+
+    class P:
+        def __init__(self, name, value):
+            self.Name, self.Value = name, value
+
+    class Out:
+        def __init__(self, props):
+            self.Properties_ = props
+
+    w = wmidns.WmiServer("dc01")
+    w._zone_obj = lambda zone: object()
+    dn = "DC=corp.example,cn=MicrosoftDNS,DC=DomainDnsZones,DC=corp,DC=example"
+    w._call = lambda *a, **k: Out([P("ReturnValue", dn)])
+    check(w.zone_dn(DOM) == dn, "ReturnValue")
+    w._call = lambda *a, **k: Out([P("ReturnValue", 0), P("DistinguishedName", dn)])
+    check(w.zone_dn(DOM) == dn, "other out param")
+    w._call = lambda *a, **k: Out([P("ReturnValue", 0)])
+    try:
+        w.zone_dn(DOM)
+        check(False, "should fail")
+    except wmidns.HostError as e:
+        check(str(e).startswith("@ERR:no_partition:") and "ReturnValue=0" in e.details[0], "details list props")
+    from tools.ms_dns_extended import adrepl
+    check(adrepl.guess_partition("zzz.mediclin.wan", "zzz-dc01.zzz.mediclin.wan")
+          == "DC=DomainDnsZones,DC=zzz,DC=mediclin,DC=wan", "guess domain")
+    check(adrepl.guess_partition("_msdcs.mediclin.wan", "zzz-dc01.zzz.mediclin.wan")
+          == "DC=ForestDnsZones,DC=mediclin,DC=wan", "guess forest")
+    # Fake: DN nicht lesbar -> geschätzte Partition, Anstoßen klappt trotzdem
+    svc, fb = svc_new()
+    svc.add_server("dc02.corp.example")
+    fb.fail = "zone_dn"
+    res = svc.replicate(DC1, DOM)
+    check(not res["warnings"] and any("partition guessed: DC=DomainDnsZones,DC=corp,DC=example" in d
+                                      for d in res["details"]), f"guessed {res}")
+
+
 def test_error_details():
     """Fehler tragen technische Details (Aufruf, HRESULT, excepinfo, Versuche) bis zur Detailansicht."""
     from tools.ms_dns_extended import wmidns

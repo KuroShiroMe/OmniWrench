@@ -728,11 +728,18 @@ class DnsService:
         if z.get("ds"):
             nc = ""
             try:
-                dn = self._b("zone_dn", server, zone)
-                nc = adrepl.partition_of(dn)
-                details.append(f"zone DN: {dn}")
+                try:
+                    dn = self._b("zone_dn", server, zone)
+                    nc = adrepl.partition_of(dn)
+                    details.append(f"zone DN: {dn}")
+                except UserError as e:
+                    details += [f"zone DN not readable: {e}"] + e.details
                 if not nc:
-                    raise UserError(tr("err.no_partition", value=dn))
+                    # Ersatz: Standardpartition aus dem Domänennamen (Zone _msdcs.<Gesamtstruktur> -> ForestDnsZones)
+                    nc = adrepl.guess_partition(zone, self.servers.get(server, {}).get("name") or server)
+                    details.append(f"partition guessed: {nc or '-'}")
+                if not nc:
+                    raise UserError(tr("err.no_partition", value=zone))
                 details.append(f"partition: {nc}")
                 self.progress(tr("status.ad_sync", part=adrepl.partition_label(nc)))
                 try:
