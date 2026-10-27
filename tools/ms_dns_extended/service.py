@@ -23,7 +23,11 @@ from .wmidns import HostError
 
 
 class UserError(Exception):
-    """Verständliche Meldung für den Benutzer (ohne Traceback)."""
+    """Verständliche Meldung für den Benutzer (ohne Traceback); details = technische Zeilen für die Detailansicht."""
+
+    def __init__(self, text: str = "", details: list[str] | None = None):
+        super().__init__(text)
+        self.details = list(details or [])
 
 
 class TxError(UserError):
@@ -110,7 +114,9 @@ class DnsService:
         try:
             return getattr(self.backend, fn)(*args, **kw)
         except HostError as e:
-            raise UserError(self.host_text(str(e))) from None
+            target = args[0] if args and isinstance(args[0], str) else ""
+            raise UserError(self.host_text(str(e)),
+                            [f"backend: {fn}({target})", f"raw: {e}"] + list(getattr(e, "details", []))) from None
 
     # --- Anmeldung ----------------------------------------------------------------------------------
     def hello(self) -> dict:
@@ -458,7 +464,10 @@ class DnsService:
             text = self.tr("tx.partial", error=raw, n=len(fails), list=short_list(fails, 10))
         else:
             text = self.tr("tx.rolled_back", error=raw, n=n)
-        return TxError(text, raw, n, fails)
+        err = TxError(text, raw, n, fails)
+        err.details = [f"transaction: {tx.title}"] + list(getattr(e, "details", [])) + \
+            ([f"rollback failed: {f}" for f in fails] if fails else [])
+        return err
 
     def tx_message_cancel(self, tx: Tx, fails: list[str]) -> str:
         if fails:

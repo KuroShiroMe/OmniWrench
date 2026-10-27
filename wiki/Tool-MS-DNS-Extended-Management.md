@@ -343,11 +343,14 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 | Hinweis auf der Seite „Ereignisprotokoll“ | siehe [Ereignisprotokoll einrichten](#ereignisprotokoll-einrichten) |
 | Namensserver „antwortet nicht“ in der Prüfung | Port 53 vom Arbeitsplatz zum Namensserver gesperrt oder Name nicht auflösbar; die Option „Namensserver und Weiterleitungen abfragen“ ausschalten, wenn das gewollt ist |
 | „… Alle n bereits durchgeführten Änderungen wurden zurückgenommen“ | die Aktion ist an der genannten Ursache gescheitert, der vorherige Stand ist wiederhergestellt |
+| Unklare Fehlermeldung, z. B. „Allgemeiner Fehler“ (0x80041001) | im Fehlerfenster **Detailansicht** öffnen: Dort stehen alle Versuche mit den genauen WMI-Meldungen (HRESULT, Quelle, SWbemLastError), ohne Passwörter. Mit **Alles kopieren** lässt sich der Text weitergeben |
 
 ## Versionen
 
 | Version | Änderungen |
 |---|---|
+| 1.0.3 | Einträge werden über die Methode der jeweiligen Typklasse angelegt, mit weiteren Wegen bei „Allgemeiner Fehler“; Fehlerfenster mit **Detailansicht** |
+| 1.0.2 | Anmeldung scheiterte an jedem Server mit 0x80004005 (behoben) |
 | 1.0.0 | Erste Version: Zonen und Einträge (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS) bearbeiten mit PTR-Pflege (IPv4/IPv6), neue Zonen inkl. IPv6-Reverse, Server-Einstellungen, Aufräum-Vorschau mit Ping, Prüfung mit Abfrage der Namensserver und Weiterleitungen, Vergleich mehrerer Server, Suche, DHCP-Abgleich, Ereignisprotokoll, Erkennung von Änderungen anderer, Transaktionen mit Rücknahme |
 
 ## Siehe auch

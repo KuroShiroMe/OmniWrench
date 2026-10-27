@@ -263,3 +263,5 @@
 - My choices: WMI (root\MicrosoftDNS) instead of PowerShell/dnscmd (Python-only rule, no RSAT); editing = delete +
   create as one transaction; zone delete, scavenge now, clear cache are final and need confirmation; local server
   always uses the logged-on account (WMI forbids local credentials).
+- DNS tool error popups (Stef 2026-10-27): every failure offers "Detailansicht" with the technical trail (all attempts,
+  exact WMI messages) for troubleshooting; never include passwords.

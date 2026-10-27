@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-27T11:34:10+00:00",
+  "generated": "2026-10-27T11:40:14+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -334,8 +334,8 @@
         }
       },
       "download_url": "packages/net.ms-dns-extended-1.0.3.zip",
-      "sha256": "e276aa74aed64c095cadee4ccde3e51e8f4a5804ac82acdb1e440cd9ef208f2f",
-      "size": 114713
+      "sha256": "81981aacc4dba0826759a29454cdfcfc1c67388c5e8691f96160bdc653e4e2a7",
+      "size": 116121
     },
     {
       "id": "net.netprobe",
