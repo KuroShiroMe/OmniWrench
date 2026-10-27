@@ -502,3 +502,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef's DC test of 1.1.0: record creation works; "Replikation anstoßen" failed with 0x80041002 reading
   GetDistinguishedName out param "Name". 1.1.1 reads ReturnValue (or any DN-like out property) and falls back to the
   default partition guessed from the domain (DomainDnsZones / ForestDnsZones for _msdcs.*).
+- 2026-10-27: Stef: error popup on closing the DNS tool (QPushButton already deleted). Cause: replication re-check timer
+  fired after shutdown and touched the deleted zone tab. 1.1.2: `_closed` flag (repl_check/tick/poll/ping/log/
+  progress/busy) and timers bound to self.root; reproduced offscreen with shiboken6.delete(root) before/after.
