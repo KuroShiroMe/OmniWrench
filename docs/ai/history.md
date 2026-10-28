@@ -505,3 +505,9 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef: error popup on closing the DNS tool (QPushButton already deleted). Cause: replication re-check timer
   fired after shutdown and touched the deleted zone tab. 1.1.2: `_closed` flag (repl_check/tick/poll/ping/log/
   progress/busy) and timers bound to self.root; reproduced offscreen with shiboken6.delete(root) before/after.
+- 2026-10-28: Stef (via KI feasibility doc, answer A3): favourites list in the DHCP and DNS tool for servers and
+  connection settings, later also AI settings per server. Built server favourites (DHCP 1.6.0, DNS 1.2.0): shared
+  favorites.py copy, login row "Favorit", save/overwrite/manage, no passwords (credential reference only), DHCP keeps
+  IPv4/IPv6 view, DNS further servers + DHCP server for the comparison. "ai" section agreed with the KI thread.
+  Tests: scripts/fav_check (39 checks), dns_check/test_logic, smoke_test, check_locales, check_store. Wiki sections
+  "Favoriten" + new login images, TESTLISTE 11. Landing page checked: tool list is generated, nothing else to add.

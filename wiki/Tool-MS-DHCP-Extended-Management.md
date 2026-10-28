@@ -24,6 +24,7 @@
 - [Erste Schritte](#erste-schritte)
 - [Funktionen im Detail](#funktionen-im-detail)
   - [Anmeldung](#anmeldung)
+  - [Favoriten](#favoriten)
   - [Aufbau des Hauptfensters](#aufbau-des-hauptfensters)
   - [Übersicht](#übersicht)
   - [Scope-Tab](#scope-tab)
@@ -88,6 +89,7 @@ Nur unter Windows verfügbar.
 
 | Feld | Bedeutung |
 |---|---|
+| Favorit | gespeicherter Server mit Anmeldeart und Verbindungseinstellungen, siehe [Favoriten](#favoriten) |
 | Server | Name oder IP-Adresse; zuletzt verwendete Server zur Auswahl |
 | Aus AD laden | listet die im Active Directory autorisierten DHCP-Server |
 | Anmeldung | **Angemeldeter Benutzer**, **Gespeicherte Anmeldedaten** (aus den Einstellungen bzw. dem Passwortmanager) oder **Andere Anmeldedaten** (Benutzer `DOMÄNE\Benutzer` + Passwort, nur für diese Sitzung) |
@@ -99,6 +101,26 @@ Während der Anmeldung zeigt eine Ladeansicht die Schritte; bei Fehlern geht es 
 
 Ist ein **Failover-Partner** mit den Anmeldedaten nicht erreichbar, fragt das Tool:
 **Wiederholen**, **Andere Anmeldedaten …**, **Nur Primärserver** oder **Später**.
+
+### Favoriten
+Server, die regelmäßig verwaltet werden, lassen sich als **Favorit** speichern (Zeile „Favorit“ oben auf der Anmeldeseite). Ein Favorit merkt sich zusätzlich die Ansicht **IPv4/IPv6**, die nach der Anmeldung eingestellt wird.
+Eine Auswahl füllt Server, Anmeldeart, Benutzer bzw. gespeicherte Anmeldedaten und die Verbindungseinstellungen
+aus. Der zuletzt gewählte Favorit ist beim nächsten Öffnen wieder eingestellt. Wird der Server von Hand geändert,
+springt die Auswahl auf „Kein Favorit“.
+
+| Aktion | So geht es |
+|---|---|
+| Favorit anlegen | Anmeldemaske ausfüllen, ☆ (Als Favorit speichern) › Name und Notiz vergeben |
+| Favorit ändern | Favorit wählen, Anmeldemaske anpassen, ☆ › **Favorit „…“ mit den aktuellen Einstellungen überschreiben** |
+| Name, Server, Notiz | **Verwalten …** › **Bearbeiten …** (oder Doppelklick) |
+| Reihenfolge, löschen | **Verwalten …** › **Nach oben**, **Nach unten**, **Löschen** |
+
+![Favoriten verwalten](images/ms-dhcp-favoriten.png)
+
+Kennwörter werden **nie** im Favoriten gespeichert: Bei „Andere Anmeldedaten“ nur der Benutzer, bei „Gespeicherte
+Anmeldedaten“ nur der Verweis auf den Eintrag (das Kennwort bleibt im Tresor bzw. Passwortmanager). Fehlt der
+Eintrag später, weist die Anmeldeseite darauf hin. Favoriten sind für weitere Einstellungen je Server vorbereitet
+(z. B. die geplanten KI-Einstellungen).
 
 ### Aufbau des Hauptfensters
 Das Hauptfenster hat ein eigenes Dock-System: feste Seiten **Übersicht**, **Server-Optionen**, **Failover**,
@@ -430,7 +452,8 @@ Replikation); **Leeren** löscht die Anzeige.
   „↶“ bzw. „✗“ aufgeführt.
 - Abweichende Anmeldedaten gelten nur für die Sitzung und nur für die Serververbindungen; Passwörter werden nicht
   auf der Kommandozeile übergeben.
-- Gespeichert werden nur die Einstellungen, die Spaltenanordnung und, falls gewünscht, die Zugangsdaten im Tresor.
+- Gespeichert werden nur die Einstellungen, die Favoriten (ohne Kennwörter), die Spaltenanordnung und, falls gewünscht,
+  die Zugangsdaten im Tresor.
 
 ## Grenzen und bekannte Einschränkungen
 - DHCPv6: kein Failover (unter Windows nicht vorhanden), keine DNS-Einstellungen je Scope, Präfix immer /64.
@@ -466,6 +489,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
+| 1.6.0 | **Favoriten**: Server mit Anmeldeart, Verbindungseinstellungen und Ansicht IPv4/IPv6 speichern, auf der Anmeldeseite auswählen und verwalten (ohne Kennwörter) |
 | 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |

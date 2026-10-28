@@ -25,6 +25,7 @@
 - [Erste Schritte](#erste-schritte)
 - [Funktionen im Detail](#funktionen-im-detail)
   - [Anmeldung](#anmeldung)
+  - [Favoriten](#favoriten)
   - [Aufbau des Hauptfensters](#aufbau-des-hauptfensters)
   - [Übersicht](#übersicht)
   - [Zonen-Tab](#zonen-tab)
@@ -93,6 +94,7 @@ beide können gemeinsam oder einzeln verwendet werden.
 
 | Feld | Bedeutung |
 |---|---|
+| **Favorit** | gespeicherter Server mit Anmeldeart und Verbindungseinstellungen, siehe [Favoriten](#favoriten) |
 | **Server** | Name oder IP-Adresse des DNS-Servers; die zuletzt verwendeten Server stehen in der Liste |
 | **Angemeldeter Benutzer** | Windows-Anmeldung des Arbeitsplatzes (Kerberos/NTLM) |
 | **Gespeicherte Anmeldedaten** | Zugangsdaten aus dem Tresor oder einem Passwortmanager |
@@ -102,6 +104,26 @@ beide können gemeinsam oder einzeln verwendet werden.
 
 Für den **lokalen Computer** verwendet Windows immer das angemeldete Konto; andere Anmeldedaten werden dort
 ignoriert (Hinweis im Protokoll).
+
+### Favoriten
+Server, die regelmäßig verwaltet werden, lassen sich als **Favorit** speichern (Zeile „Favorit“ oben auf der Anmeldeseite). Zusätzlich kann ein Favorit **weitere Server** (durch Komma getrennt, z. B. ein DNS-Server in der DMZ, der nicht über die NS-Einträge gefunden wird) und den **DHCP-Server für den Abgleich** enthalten. Beide werden nach der Anmeldung mit denselben Anmeldedaten verbunden bzw. eingestellt; nicht erreichbare Server stehen nur im Protokoll.
+Eine Auswahl füllt Server, Anmeldeart, Benutzer bzw. gespeicherte Anmeldedaten und die Verbindungseinstellungen
+aus. Der zuletzt gewählte Favorit ist beim nächsten Öffnen wieder eingestellt. Wird der Server von Hand geändert,
+springt die Auswahl auf „Kein Favorit“.
+
+| Aktion | So geht es |
+|---|---|
+| Favorit anlegen | Anmeldemaske ausfüllen, ☆ (Als Favorit speichern) › Name und Notiz vergeben |
+| Favorit ändern | Favorit wählen, Anmeldemaske anpassen, ☆ › **Favorit „…“ mit den aktuellen Einstellungen überschreiben** |
+| Name, Server, Notiz, weitere Server, DHCP-Server | **Verwalten …** › **Bearbeiten …** (oder Doppelklick) |
+| Reihenfolge, löschen | **Verwalten …** › **Nach oben**, **Nach unten**, **Löschen** |
+
+![Favoriten verwalten](images/ms-dns-favoriten.png)
+
+Kennwörter werden **nie** im Favoriten gespeichert: Bei „Andere Anmeldedaten“ nur der Benutzer, bei „Gespeicherte
+Anmeldedaten“ nur der Verweis auf den Eintrag (das Kennwort bleibt im Tresor bzw. Passwortmanager). Fehlt der
+Eintrag später, weist die Anmeldeseite darauf hin. Favoriten sind für weitere Einstellungen je Server vorbereitet
+(z. B. die geplanten KI-Einstellungen).
 
 ### Aufbau des Hauptfensters
 - Oben: verbundener Server (mit Anzahl weiterer Server), **Aktualisieren** (automatische Aktualisierung),
@@ -338,8 +360,8 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
   abgebrochen, nimmt das Tool alle bereits gemachten Änderungen rückwärts zurück (Einträge, Zonen- und
   Servereinstellungen, neu angelegte Zonen). Schritte, die beim Zurücknehmen scheitern, werden einzeln genannt.
 - Kennwörter gelten nur für die Sitzung, liegen nur im Arbeitsspeicher und werden nirgends protokolliert.
-- Gespeichert werden nur die Einstellungen, die zuletzt verwendeten Server, die Spaltenanordnung und, falls
-  gewünscht, die Zugangsdaten im Tresor.
+- Gespeichert werden nur die Einstellungen, die zuletzt verwendeten Server, die Favoriten (ohne Kennwörter), die
+  Spaltenanordnung und, falls gewünscht, die Zugangsdaten im Tresor.
 
 ## Grenzen und bekannte Einschränkungen
 - Nur Windows (WMI über DCOM). Windows Server als Arbeitsplatz wird von OmniWrench nicht unterstützt, als
@@ -380,6 +402,7 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 
 | Version | Änderungen |
 |---|---|
+| 1.2.0 | **Favoriten**: Server mit Anmeldeart, Verbindungseinstellungen, weiteren Servern und DHCP-Server für den Abgleich speichern, auf der Anmeldeseite auswählen und verwalten (ohne Kennwörter) |
 | 1.1.2 | Fehlermeldung „Internal C++ object … already deleted“ beim Schließen, wenn noch eine Replikations-Nachprüfung ausstand (behoben) |
 | 1.1.1 | „Replikation anstoßen“ scheiterte an AD-Zonen mit „Objekt nicht gefunden“ (0x80041002) beim Ermitteln der Partition (behoben) |
 | 1.1.0 | Replikation: Spalte **Repliziert** je Eintrag, Stand je Server, Nachprüfen nach eigenen Änderungen, **Replikation anstoßen** (AD-Replikation der DNS-Partition bzw. Übertragung zu sekundären Servern) mit klarer Meldung bei fehlendem Recht |

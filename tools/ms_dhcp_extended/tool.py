@@ -34,6 +34,7 @@ from omniwrench.ui.widgets import make_button
 from . import checks as ck
 from . import dialogs as dlg
 from . import eventlog
+from . import favorites as fv
 from . import ip6calc as ip6
 from .page_draft import DraftTab
 from .page_events import EventsPage
@@ -77,6 +78,7 @@ class MsDhcpExtended(ToolBase):
         self.runner.failed.connect(self._failed)
         self.scanner = Scanner(self._new_backend, lambda: self.svc, lambda t, e=False: self.bridge.log.emit(t, e))
         self.queue: list = []
+        self._login_fav: dict | None = None   # Favorit der laufenden Anmeldung (Ansicht IPv4/IPv6)
         self.tabs: dict[QWidget, ads.CDockWidget] = {}
         self.scan: dict | None = None
         self._classes: dict[bool, tuple[list[str], list[str]]] = {}     # v6? -> (Hersteller-, Benutzerklassen)
@@ -177,17 +179,23 @@ class MsDhcpExtended(ToolBase):
         cl.addLayout(th)
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
-        grid.addWidget(QLabel(tr("login.server")), 0, 0)
+        grid.addWidget(QLabel(tr("fav.label")), 0, 0)
+        self.favs = fv.FavoriteStore(self.settings)
+        self.fav_bar = fv.FavoritesBar(tr, self.favs, self.fav_capture)
+        self.fav_bar.applied.connect(self.fav_apply)
+        grid.addWidget(self.fav_bar, 0, 1, 1, 2)
+        grid.addWidget(QLabel(tr("login.server")), 1, 0)
         self.server = QComboBox()
         self.server.setEditable(True)
         self.server.addItems(self.settings.get("servers") or [])
         self.server.setEditText(self.settings.get("last_server") or "")
         self.server.lineEdit().setPlaceholderText(tr("login.server_ph"))
         self.server.lineEdit().returnPressed.connect(self._login_clicked)
-        grid.addWidget(self.server, 0, 1)
+        self.server.editTextChanged.connect(self.fav_bar.server_edited)
+        grid.addWidget(self.server, 1, 1)
         self.ad_btn = make_button(tr("login.from_ad"), on_click=lambda: self.run(self.ad_flow()))
-        grid.addWidget(self.ad_btn, 0, 2)
-        grid.addWidget(QLabel(tr("login.auth")), 1, 0, Qt.AlignmentFlag.AlignTop)
+        grid.addWidget(self.ad_btn, 1, 2)
+        grid.addWidget(QLabel(tr("login.auth")), 2, 0, Qt.AlignmentFlag.AlignTop)
         modes = QVBoxLayout()
         self.mode_group = QButtonGroup(page)
         who = os.environ.get("USERDOMAIN", "") + ("\\" if os.environ.get("USERDOMAIN") else "") + os.environ.get("USERNAME", "")
@@ -214,7 +222,7 @@ class MsDhcpExtended(ToolBase):
         mode = self.settings.get("login_mode") or "sso"
         {"sso": self.m_sso, "vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
         self.mode_group.idToggled.connect(lambda *_: self._mode_changed())
-        grid.addLayout(modes, 1, 1, 1, 2)
+        grid.addLayout(modes, 2, 1, 1, 2)
         cl.addLayout(grid)
         self.auto_partner = QCheckBox(tr("login.auto_partner"))
         self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
@@ -234,10 +242,46 @@ class MsDhcpExtended(ToolBase):
         row.addWidget(self.login_status, 1)
         cl.addLayout(row)
         self._mode_changed()
+        self.fav_bar.restore()
         return page
 
     def _mode_changed(self) -> None:
         self.cred_field.setEnabled(self.m_vault.isChecked())
+
+    # --- Favoriten -----------------------------------------------------------------------------------
+    def fav_capture(self) -> dict:
+        """Anmeldemaske als Favorit (ohne Passwort; gespeicherte Zugänge nur als Verweis)."""
+        mode = "vault" if self.m_vault.isChecked() else "manual" if self.m_manual.isChecked() else "sso"
+        login: dict = {"mode": mode}
+        if mode == "manual":
+            login["user"] = self.user.text().strip()
+        elif mode == "vault":
+            login["cred"] = fv.cred_key(self.cred_field.selected_item())
+        return {"server": self.server.currentText().strip(), "login": login,
+                "options": {"auto_partner": self.auto_partner.isChecked(), "auto_scan": self.auto_scan.isChecked(),
+                            "family": self.family}}
+
+    def fav_apply(self, fav: dict | None) -> None:
+        if not fav:
+            return
+        login, opts = fav.get("login") or {}, fav.get("options") or {}
+        self.server.setEditText(fav.get("server", ""))
+        mode = login.get("mode", "sso")
+        {"vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
+        self.login_status.setText("")
+        if mode == "manual":
+            self.user.setText(login.get("user", ""))
+            self.password.clear()
+            self.password.setFocus()
+        elif mode == "vault":
+            idx = fv.match_cred(self.cred_field.value()["items"], login.get("cred"))
+            if idx >= 0:
+                self.cred_field.combo.setCurrentIndex(idx)
+            else:
+                self.login_status.setText(self.tr("fav.cred_missing"))
+        for key, box in (("auto_partner", self.auto_partner), ("auto_scan", self.auto_scan)):
+            if key in opts:
+                box.setChecked(bool(opts[key]))
         self.user.setEnabled(self.m_manual.isChecked())
         self.password.setEnabled(self.m_manual.isChecked())
 
@@ -479,6 +523,8 @@ class MsDhcpExtended(ToolBase):
         if not server:
             warn(self.root, self.tr("login.title"), self.tr("login.err_server"))
             return
+        fav = self.fav_bar.current()
+        self._login_fav = fav if fav and fav["server"].lower() == server.lower() else None
         if self.m_vault.isChecked():
             self.login_status.setText(self.tr("login.cred_loading"))
             self.cred_field.resolve_async(lambda cred: self.run(self.login_flow(server, cred, True)))
@@ -532,6 +578,9 @@ class MsDhcpExtended(ToolBase):
         self._ev_seen = set()
         self._poll_error = ""
         self._apply_refresh_timer()
+        fav = self._login_fav
+        if fav and (fav.get("options") or {}).get("family") in (4, 6):
+            self.set_family(fav["options"]["family"])
         if self.auto_scan.isChecked():
             self.start_scan()
 

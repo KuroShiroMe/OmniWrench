@@ -268,3 +268,12 @@
 - DNS tool replication (Stef 2026-10-27): per-record "Repliziert" indicator + manual trigger, both. Missing replication
   right must be handled with a clear message (who lacks which right on which partition), remaining steps still run.
   Standalone DNS (no AD) is covered via zone transfer status/trigger.
+
+## Server favourites (2026-10-28)
+- Stef (KI feasibility doc, A3): DHCP and DNS tool get a favourites list storing servers + connection settings;
+  AI settings per server will live there too (section "ai", KI thread). Every tool gets an AI setting inherited from
+  the main program, login tools get a dropdown at login (KI thread's job).
+- My choices: favourites never store passwords (manual login = user only, stored credentials = reference to the
+  CredentialField entry); saved in plain tool settings (no secrets); one identical favorites.py per tool (tools stay
+  independent); DHCP favourite also restores the IPv4/IPv6 view, DNS favourite can add further servers and the DHCP
+  server for the comparison; manual server edit deselects the favourite; last favourite preselected on open.

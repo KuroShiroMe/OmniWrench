@@ -32,6 +32,7 @@ from omniwrench.ui.widgets import make_button
 from . import dialogs as dlg
 from . import dnsutil as du
 from . import eventlog
+from . import favorites as fv
 from . import ping as pinger
 from .backend import WmiBackend
 from .page_zone import ZoneTab
@@ -73,6 +74,7 @@ class MsDnsExtended(ToolBase):
         self.runner.status.connect(lambda t: self._progress(t, 0, 0) if t != "busy" else None)
         self.runner.failed.connect(self._failed)
         self.queue: list = []
+        self._login_fav: dict | None = None   # Favorit der laufenden Anmeldung (weitere Server, DHCP-Abgleich)
         self.tabs: dict[tuple[str, str], tuple[ZoneTab, ads.CDockWidget]] = {}
         self._markers: dict[int, Markers] = {}
         self.scans: dict[str, dict] = {}
@@ -165,15 +167,23 @@ class MsDnsExtended(ToolBase):
         cl.addLayout(th)
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
-        grid.addWidget(QLabel(tr("login.server")), 0, 0)
+        grid.addWidget(QLabel(tr("fav.label")), 0, 0)
+        self.favs = fv.FavoriteStore(self.settings)
+        self.fav_bar = fv.FavoritesBar(tr, self.favs, self.fav_capture, [
+            {"key": "servers", "label": tr("fav.extra_servers"), "type": "list"},
+            {"key": "dhcp_server", "label": tr("fav.dhcp_server")}])
+        self.fav_bar.applied.connect(self.fav_apply)
+        grid.addWidget(self.fav_bar, 0, 1)
+        grid.addWidget(QLabel(tr("login.server")), 1, 0)
         self.server = QComboBox()
         self.server.setEditable(True)
         self.server.addItems(self.settings.get("servers") or [])
         self.server.setEditText(self.settings.get("last_server") or "")
         self.server.lineEdit().setPlaceholderText(tr("login.server_ph"))
         self.server.lineEdit().returnPressed.connect(self._login_clicked)
-        grid.addWidget(self.server, 0, 1)
-        grid.addWidget(QLabel(tr("login.auth")), 1, 0, Qt.AlignmentFlag.AlignTop)
+        self.server.editTextChanged.connect(self.fav_bar.server_edited)
+        grid.addWidget(self.server, 1, 1)
+        grid.addWidget(QLabel(tr("login.auth")), 2, 0, Qt.AlignmentFlag.AlignTop)
         modes = QVBoxLayout()
         self.mode_group = QButtonGroup(page)
         who = os.environ.get("USERDOMAIN", "") + ("\\" if os.environ.get("USERDOMAIN") else "") + os.environ.get("USERNAME", "")
@@ -200,7 +210,7 @@ class MsDnsExtended(ToolBase):
         mode = self.settings.get("login_mode") or "sso"
         {"sso": self.m_sso, "vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
         self.mode_group.idToggled.connect(lambda *_: self._mode_changed())
-        grid.addLayout(modes, 1, 1)
+        grid.addLayout(modes, 2, 1)
         cl.addLayout(grid)
         self.auto_discover = QCheckBox(tr("login.auto_discover"))
         self.auto_discover.setChecked(bool(self.settings.get("auto_discover", True)))
@@ -220,12 +230,48 @@ class MsDnsExtended(ToolBase):
         row.addWidget(self.login_status, 1)
         cl.addLayout(row)
         self._mode_changed()
+        self.fav_bar.restore()
         return page
 
     def _mode_changed(self) -> None:
         self.cred_field.setEnabled(self.m_vault.isChecked())
         self.user.setEnabled(self.m_manual.isChecked())
         self.password.setEnabled(self.m_manual.isChecked())
+
+    # --- Favoriten -----------------------------------------------------------------------------------
+    def fav_capture(self) -> dict:
+        """Anmeldemaske als Favorit (ohne Passwort; gespeicherte Zugänge nur als Verweis).
+        Weitere Server und der DHCP-Server werden nur im Favoriten-Dialog gepflegt."""
+        mode = "vault" if self.m_vault.isChecked() else "manual" if self.m_manual.isChecked() else "sso"
+        login: dict = {"mode": mode}
+        if mode == "manual":
+            login["user"] = self.user.text().strip()
+        elif mode == "vault":
+            login["cred"] = fv.cred_key(self.cred_field.selected_item())
+        return {"server": self.server.currentText().strip(), "login": login,
+                "options": {"auto_discover": self.auto_discover.isChecked(), "auto_scan": self.auto_scan.isChecked()}}
+
+    def fav_apply(self, fav: dict | None) -> None:
+        if not fav:
+            return
+        login, opts = fav.get("login") or {}, fav.get("options") or {}
+        self.server.setEditText(fav.get("server", ""))
+        mode = login.get("mode", "sso")
+        {"vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
+        self.login_status.setText("")
+        if mode == "manual":
+            self.user.setText(login.get("user", ""))
+            self.password.clear()
+            self.password.setFocus()
+        elif mode == "vault":
+            idx = fv.match_cred(self.cred_field.value()["items"], login.get("cred"))
+            if idx >= 0:
+                self.cred_field.combo.setCurrentIndex(idx)
+            else:
+                self.login_status.setText(self.tr("fav.cred_missing"))
+        for key, box in (("auto_discover", self.auto_discover), ("auto_scan", self.auto_scan)):
+            if key in opts:
+                box.setChecked(bool(opts[key]))
 
     def _build_main(self) -> QWidget:
         tr = self.tr
@@ -441,6 +487,8 @@ class MsDnsExtended(ToolBase):
         if not server:
             warn(self.root, self.tr("login.title"), self.tr("login.err_server"))
             return
+        fav = self.fav_bar.current()
+        self._login_fav = fav if fav and fav["server"].lower() == server.lower() else None
         if self.m_vault.isChecked():
             self.login_status.setText(self.tr("login.cred_loading"))
             self.cred_field.resolve_async(lambda cred: self.run(self.login_flow(server, cred, True)))
@@ -485,6 +533,8 @@ class MsDnsExtended(ToolBase):
         yield Job(svc.load_all, tr("status.loading_server", server=server))
         if self.auto_discover.isChecked():
             yield from self.discover_connect_flow(silent=True)
+        if self._login_fav:
+            yield from self.fav_login_flow(self._login_fav)
         self.login_status.setText("")
         self.scans = {}
         self.refresh_pages()
@@ -507,6 +557,34 @@ class MsDnsExtended(ToolBase):
             return
         if not silent and not confirm(self.root, tr("cmp.discover"), tr("cmp.discover_q", list=short_list(found))):
             return
+        ok = yield from self.connect_servers_flow(found, tr("status.discover_connect", n=len(found)))
+        if ok:
+            svc.log(tr("log.discover_ok", n=len(ok), list=", ".join(ok)))
+        self.refresh_pages()
+
+    def fav_login_flow(self, fav: dict):
+        """Nach der Anmeldung über einen Favoriten: weitere Server verbinden, DHCP-Server für den Abgleich setzen."""
+        tr, svc = self.tr, self.svc
+        opts = fav.get("options") or {}
+        more = []
+        for s in opts.get("servers") or []:
+            n = du.norm(str(s))
+            if n and n not in svc.servers and n not in more:
+                more.append(n)
+        more = more[: max(0, MAX_SERVERS - len(svc.servers))]
+        if more:
+            ok = yield from self.connect_servers_flow(more, tr("status.fav_connect", n=len(more)))
+            if ok:
+                svc.log(tr("log.fav_connected", n=len(ok), list=", ".join(ok)))
+        dhcp = du.norm(str(opts.get("dhcp_server") or ""))
+        if dhcp:
+            svc.dhcp_server = dhcp
+            svc.dhcp_user, svc.dhcp_secret = svc.user, svc.secrets.get(svc.primary, "")
+            svc.log(tr("log.fav_dhcp", server=dhcp))
+
+    def connect_servers_flow(self, servers: list[str], status: str):
+        """Server parallel mit der Anmeldung des ersten Servers verbinden; Fehler nur ins Protokoll. Liefert die verbundenen."""
+        tr, svc = self.tr, self.svc
         user, pw = svc.user, svc.secrets.get(svc.primary, "")
 
         def work():
@@ -519,15 +597,13 @@ class MsDnsExtended(ToolBase):
                 except UserError as e:
                     return s, str(e)
             with ThreadPoolExecutor(max_workers=6, thread_name_prefix="dnsconn") as ex:
-                for s, err in ex.map(one, found):
+                for s, err in ex.map(one, servers):
                     (bad if err else ok).append((s, err))
             return ok, bad
-        ok, bad = yield Job(work, tr("status.discover_connect", n=len(found)))
+        ok, bad = yield Job(work, status)
         for s, err in bad:
             svc.log(tr("log.discover_failed", server=s, error=err))
-        if ok:
-            svc.log(tr("log.discover_ok", n=len(ok), list=", ".join(s for s, _e in ok)))
-        self.refresh_pages()
+        return [s for s, _e in ok]
 
     def discover_flow(self):
         yield from self.discover_connect_flow(silent=False)

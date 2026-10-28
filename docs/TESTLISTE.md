@@ -283,6 +283,24 @@ Neu, nur unter Linux (offscreen) geprüft.
 - [ ] Kleines Fenster (ca. 1000 px) mit offener Detailleiste: Store blendet den Bereichsbaum aus, Karten bleiben
       lesbar. Skalierung 150–200 %, helles Farbschema.
 
+## 11. Server-Favoriten (DHCP 1.6.0, DNS 1.2.0)
+
+Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorites.py). In beiden Tools gleich testen.
+- [ ] Anmeldeseite: Zeile „Favorit“ oben. Maske ausfüllen (Server, Gespeicherte Anmeldedaten), ☆ › Name vergeben:
+      Favorit erscheint in der Liste und ist ausgewählt.
+- [ ] Zweiter Favorit mit „Andere Anmeldedaten“: Benutzer gespeichert, Kennwort NICHT (Feld beim Wählen leer).
+      In `tool_settings\net.ms-dhcp-extended.json` bzw. `net.ms-dns-extended.json` unter "favorites" kein Kennwort.
+- [ ] Favorit wählen: Server, Anmeldeart, Zugang und Häkchen werden gesetzt; Tool schließen und neu öffnen:
+      zuletzt gewählter Favorit ist wieder da.
+- [ ] Server von Hand ändern: Auswahl springt auf „Kein Favorit“.
+- [ ] ☆ › „überschreiben“ übernimmt geänderte Häkchen/Anmeldeart; „Verwalten …“: bearbeiten, Reihenfolge, löschen.
+- [ ] Gespeicherten Zugang in den Einstellungen löschen, dann Favorit wählen: Hinweis „nicht mehr vorhanden“.
+- [ ] DHCP: Favorit mit Ansicht IPv6 speichern (vorher nach der Anmeldung auf IPv6 umschalten, abmelden, überschreiben),
+      erneut anmelden: Ansicht steht auf IPv6.
+- [ ] DNS: Favorit › Verwalten › Bearbeiten: „Weitere Server“ (z. B. Server außerhalb der Domäne) und
+      „DHCP-Server für den Abgleich“ eintragen. Anmelden: weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“
+      nennt den DHCP-Server. Nicht erreichbarer weiterer Server: nur Protokolleintrag, Anmeldung läuft durch.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).
