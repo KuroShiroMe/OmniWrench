@@ -24,6 +24,8 @@ from . import workspace as wsm
 from .ai import StudioAI
 from .chats import ChatList
 from .explorer import WorkspacePanel
+from .grouptab import GroupTab
+from .images import ImagesTab
 from .viewer import FileViewer
 
 MAX_VIEW = 400_000
@@ -53,6 +55,12 @@ class Clank(ToolBase):
         self.modes.setDocumentMode(True)
         lay.addWidget(self.modes, 1)
         self.modes.addTab(self._build_chat(), "💬 " + tr("mode.chat"))
+        self.images = ImagesTab(self)
+        self.images.to_chat.connect(self.image_to_chat)
+        self.modes.addTab(self.images, "🖼 " + tr("mode.images"))
+        self.group = GroupTab(self)
+        self.modes.addTab(self.group, "👥 " + tr("mode.group"))
+        self.modes.currentChanged.connect(self._mode_changed)
 
         self.ai = StudioAI(self)
         self._level_timer = QTimer(self.root)
@@ -104,6 +112,16 @@ class Clank(ToolBase):
         v.show_diff.connect(lambda: self.show_diff(self.viewer.path))
         v.reveal.connect(lambda: self.reveal(self.viewer.path))
         return split
+
+    def _mode_changed(self, idx: int) -> None:
+        w = self.modes.widget(idx)
+        if hasattr(w, "refresh"):
+            w.refresh()
+
+    def image_to_chat(self, path: str) -> None:
+        self.panel.add_attachment(Path(path))
+        self.modes.setCurrentIndex(0)
+        self.panel.focus_input()
 
     # --- Projekte und Chats --------------------------------------------------------------------------
     def set_project(self, pid: str) -> None:
@@ -336,7 +354,9 @@ class Clank(ToolBase):
     # --- Lebenszyklus --------------------------------------------------------------------------------
     def can_close(self) -> bool:
         panel = getattr(self, "panel", None)
-        if panel is not None and panel._running:
+        busy = panel is not None and panel._running
+        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "group"))
+        if busy:
             return QMessageBox.question(self.root, self.tr("tool.name"), self.tr("ui.close_running")) \
                 == QMessageBox.StandardButton.Yes
         return True
@@ -345,6 +365,10 @@ class Clank(ToolBase):
         panel = getattr(self, "panel", None)
         if panel is not None and panel._running:
             panel.stop()
+        for name in ("images", "group"):
+            tab = getattr(self, name, None)
+            if tab is not None and tab.running:
+                tab.stop()
         timer = getattr(self, "_level_timer", None)
         if timer is not None:
             timer.stop()

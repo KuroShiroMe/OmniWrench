@@ -528,3 +528,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   for local folders + GitHub/GitLab/Azure DevOps repos (browse via API, clone with token header), file viewer with
   highlighting, AI functions for list/read/search/git/write/run command (diff resp. command + explanation in the
   confirmation). App version 0.9.0 (min_app of Clank). R&C name list docs/ai/rc-names.md. Test test_studio.py (36).
+- 2026-10-28: Etappe 5: Clank tabs "Bilder" (ai/media.py with 9 image API kinds, gallery, reference images, to chat)
+  and "Gruppenchat" (2-6 assistants, modes, brakes, interjections, summary, saved encrypted). Provider check: Gemini
+  image models now gemini-nano-banana-2.1 (GA 2026-10-06, replaces deprecated gemini-3.1-flash-image), OpenAI
+  gpt-image-1-mini/1.5/chatgpt-image-latest shut down 2026-12-01 (not in catalog). Test test_media_group.py (68).

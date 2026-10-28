@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-28T20:02:05+00:00",
+  "generated": "2026-10-28T20:38:22+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -107,20 +107,20 @@
       "translations": {
         "de": {
           "name": "Clank – KI-Studio",
-          "description": "KI-Studio: Chats mit Projekten, freigegebene Ordner und Repositories, Dateiansicht, Befehle mit Bestätigung.",
-          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Optionen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online lesen oder lokal klonen). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Änderungen sehen, Dateiänderungen vorschlagen (als Diff angezeigt) und Befehle ausführen (mit Erklärung angezeigt) – beides erst nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, regelt wie bei jedem Tool die Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen.",
+          "description": "KI-Studio: Chats mit Projekten, Ordner und Repositories, Befehle mit Bestätigung, Bilder erzeugen, Gruppenchat mehrerer Assistenten.",
+          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Optionen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online lesen oder lokal klonen). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Änderungen sehen, Dateiänderungen vorschlagen (als Diff angezeigt) und Befehle ausführen (mit Erklärung angezeigt) – beides erst nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, regelt wie bei jedem Tool die Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Im Reiter „Bilder“ entstehen Bilder mit den verbundenen Bild-Anbietern (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), auf Wunsch mit Vorlagebildern; die Galerie zeigt die Bilder der KI-Datenablage. Im „Gruppenchat“ besprechen mehrere Assistenten ein Thema der Reihe nach – mit Bremsen für Runden, Beiträge, Länge, Zeit und Token, Pause je Runde, Ende bei Einigkeit oder Wiederholung, Einwürfen und Zusammenfassung.",
           "category": "Automatisierung & Entwicklung"
         },
         "en": {
           "name": "Clank – AI Studio",
-          "description": "AI studio: chats with projects, shared folders and repositories, file view, commands with confirmation.",
-          "long_description": "Works with the assistants connected in OmniWrench (options > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat.",
+          "description": "AI studio: chats with projects, folders and repositories, commands with confirmation, image generation, group chat of several assistants.",
+          "long_description": "Works with the assistants connected in OmniWrench (options > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary.",
           "category": "Automation & Development"
         }
       },
       "download_url": "packages/ai.clank-1.0.0.zip",
-      "sha256": "b738d10983375140f2c9c5f6799b3c22730f5bb39a12f9145afa72b66b6a5859",
-      "size": 29680
+      "sha256": "7f3b0b7ec5cc3008cec42c6b744206000a15c80b0a643f7601706878e84726e1",
+      "size": 51285
     },
     {
       "id": "gfx.iconforge",

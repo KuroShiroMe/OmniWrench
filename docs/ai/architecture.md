@@ -418,3 +418,19 @@ docs/README.md                internal docs index, points to the wiki
 - App side for embedding: ui/ai_services.py AIServices(window); AIPanel(embedded=True, system_extra) hides history
   button + project combo, set_project(), add_text_attachment(), signal threadSaved(thread_id, project_id).
 - Test: scripts/ai_check/test_studio.py (fake scripted server, 36 checks, CI Linux). R&C name list: docs/ai/rc-names.md.
+- Etappe 5 (images + group chat): app `ai/media.py` (Media/Request, ImageGen per catalog media.image.api:
+  openai_images (+ /images/edits for reference images), chatgpt_image (Responses + image_generation tool for
+  ChatGPT sign-in), gemini_image (native generateContent, base without /openai, x-goog-api-key), bfl (polling_url),
+  fal (queue status_url/response_url), replicate (Prefer: wait, then poll), stability_image + ideogram (multipart),
+  minimax_image; _poll with stop + timeout; save() = file + <file>.json in the images folder, never encrypted;
+  list_files/read_meta). SUPPORTED["music"/"video"] still empty (Etappe 6). Image prompts are NOT pseudonymized
+  (placeholders make no sense in pictures; hint text in the tab).
+  Clank `images.py` ImagesTab (NoBotPage greyed hint + button when no capable connection, gallery from storage,
+  preview with meta, context menu open/reveal/copy/reuse/as reference/to chat/delete). `group.py` (Qt-free):
+  options() with limits, GroupRun(thread, chat_fn, GroupHooks, stop) with brakes max_messages/time_limit/
+  token_budget/agree ([DONE] marker from all in a round)/repeat (difflib >= 0.9, min 60 chars)/cut (per-turn stop
+  event at 1.2 x max_chars)/pause_each_round, interjections via pending_user, final summary by participant 1;
+  history per participant: own = assistant, others "[Name]: text" as user (merged). No functions. GroupStore at
+  <chats>/groups/<id>/thread (write_doc -> encrypted like chats; list_threads ignores the folder). `grouptab.py`
+  GroupTab (collapsible Section widgets, participants table, transcript QTextBrowser with colored names,
+  pseudonymization per tool setting via Pseudonymizer(thread.state.pseudo)). Test scripts/ai_check/test_media_group.py.
