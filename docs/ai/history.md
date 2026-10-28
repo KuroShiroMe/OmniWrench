@@ -505,3 +505,10 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-27: Stef: error popup on closing the DNS tool (QPushButton already deleted). Cause: replication re-check timer
   fired after shutdown and touched the deleted zone tab. 1.1.2: `_closed` flag (repl_check/tick/poll/ping/log/
   progress/busy) and timers bound to self.root; reproduced offscreen with shiboken6.delete(root) before/after.
+- 2026-10-28: KI-Integration planned with Stef (feasibility doc, mockups, provider research, question tables A1-A15,
+  B1-B12, answers in decisions.md). Stef: implement all stages automatically, she tests the end product.
+  Etappe 1 (branch claude/project-thread-ie207t): omniwrench/ai/ (providers catalog 63 entries, connections + vault
+  secrets, browser sign-in ChatGPT/OpenRouter/Entra/custom OAuth, adapters OpenAI Chat/Responses/Anthropic/Graph
+  Copilot, chat loop with function calls, local storage 3 modes + AES-GCM encryption), settings tabs KI-Assistenten /
+  KI-Datenablage, dockable chat panel with bot switch, detail level, projects, history. Tested against a local fake
+  server (all 3 protocols incl. tool calls), smoke test extended.

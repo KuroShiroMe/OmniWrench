@@ -19,6 +19,7 @@ from omniwrench.core.tool_manager import InstalledTool
 from omniwrench.core.vault import Vault
 from omniwrench.sdk import LANGUAGE_KEY
 
+from .ai_settings import AIConnectionsPage, AIStoragePage
 from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
 from .scaling import SCALE_CHOICES, fit_min_width, fit_to_screen, normalize
@@ -264,7 +265,8 @@ class ToolSettingsDialog(QDialog):
 # ============================================================ Hauptprogramm
 class AppSettingsDialog(QDialog):
     def __init__(self, settings: AppSettings, vault: Vault, parent: QWidget | None = None,
-                 tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None):
+                 tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None,
+                 initial_tab: str = ""):
         super().__init__(parent)
         self.settings = settings
         self.vault = vault
@@ -285,6 +287,12 @@ class AppSettingsDialog(QDialog):
         pwm_lay = QVBoxLayout(pwm)
         pwm_lay.addWidget(PasswordManagerWidget(pwm))
         tabs.addTab(pwm, tr("pwm.title"))
+        self.ai_connections = AIConnectionsPage(settings, vault)
+        tabs.addTab(self.ai_connections, tr("ai.tab_assistants"))
+        self.ai_storage = AIStoragePage(settings, vault)
+        tabs.addTab(self.ai_storage, tr("ai.tab_storage"))
+        if initial_tab == "ai":
+            tabs.setCurrentWidget(self.ai_connections)
         self.tabs = tabs
         lay.addWidget(tabs, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
@@ -531,6 +539,7 @@ class AppSettingsDialog(QDialog):
         s.set("auto_update_tools", self.auto_update.isChecked(), save=False)
         s.set("close_update_window", self.close_update_window.isChecked(), save=False)
         s.save()
+        self.ai_storage.save()
         token = self.token.text().strip()
         if token != (self.vault.get("app:github_token", "") or ""):
             self.vault.set("app:github_token", token or None)

@@ -30,6 +30,8 @@ from omniwrench.core.vault import Vault
 from omniwrench.sdk import ToolBase
 
 from . import scaling, theme
+from .ai_panel import AIPanel
+from .ai_settings import ensure_catalog_update
 from .home_page import HomePage
 from .login_dialog import LoginDialog
 from .settings_dialogs import AppSettingsDialog, ToolSettingsDialog
@@ -100,6 +102,7 @@ class MainWindow(QMainWindow):
 
         if not force_restore:
             QTimer.singleShot(300, lambda: self.check_updates(manual=False))
+            QTimer.singleShot(2000, lambda: ensure_catalog_update(self.settings))
 
     # ================================================================ Aufbau
     def _build_dock_manager(self) -> None:
@@ -140,6 +143,16 @@ class MainWindow(QMainWindow):
         self.store_dock.toggleView(False)
         self.home_dock.setAsCurrentTab()
 
+        # KI-Assistent (rechts, bei Bedarf eingeblendet)
+        self.ai_panel = AIPanel(self)
+        self.ai_dock = ads.CDockWidget(self.dm, tr("ai.panel.title"))
+        self.ai_dock.setObjectName("ai-assistant")
+        self.ai_dock.setWidget(self.ai_panel)
+        self.ai_dock.setMinimumSizeHintMode(ads.CDockWidget.eMinimumSizeHintMode.MinimumSizeHintFromContent)
+        self.ai_area = self.dm.addDockWidget(ads.RightDockWidgetArea, self.ai_dock)
+        self.ai_dock.toggleView(False)
+        self.ai_dock.viewToggled.connect(lambda on: self.ai_button.setChecked(on))
+
         self.sidebar = Sidebar(self)
         splitter.addWidget(self.sidebar)
         splitter.addWidget(dock_host)
@@ -165,6 +178,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_sidebar)
         m.addAction(tr("nav.home"), QKeySequence("Ctrl+H"), self.show_home)
         m.addAction(tr("nav.store"), QKeySequence("Ctrl+Shift+S"), self.show_store)
+        m.addAction("✦ " + tr("ai.panel.title"), QKeySequence("Ctrl+Shift+A"), self.toggle_assistant)
         m.addSeparator()
         m.addAction(tr("menu.reset_layout"), self.reset_layout)
 
@@ -183,6 +197,16 @@ class MainWindow(QMainWindow):
         m.addAction(tr("menu.log_folder"), lambda: self._open_path(LOG_DIR))
         m.addSeparator()
         m.addAction(tr("menu.about"), self._about)
+
+        # Schaltfläche „Assistent“ rechts in der Menüleiste
+        self.ai_button = QPushButton("✦ " + tr("ai.panel.button"))
+        self.ai_button.setObjectName("AIButton")
+        self.ai_button.setCheckable(True)
+        self.ai_button.setFlat(True)
+        self.ai_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.ai_button.setToolTip(tr("ai.panel.button_tip"))
+        self.ai_button.clicked.connect(lambda: self.toggle_assistant())
+        mb.setCornerWidget(self.ai_button, Qt.Corner.TopRightCorner)
 
     def _build_statusbar(self) -> None:
         sb = self.statusBar()
@@ -707,12 +731,28 @@ class MainWindow(QMainWindow):
             self._force_quit = True
             self.close()
 
+    # ======================================================= Assistent
+    def toggle_assistant(self, show: bool | None = None) -> None:
+        show = self.ai_dock.isClosed() if show is None else show
+        if show:
+            if self.ai_dock.isClosed():
+                self.ai_dock.toggleView(True)
+            self.ai_dock.setAsCurrentTab()
+            self.ai_dock.raise_()
+            self.ai_panel.refresh()
+            QTimer.singleShot(0, self.ai_panel.focus_input)
+        else:
+            self.ai_dock.toggleView(False)
+        self.ai_button.setChecked(not self.ai_dock.isClosed())
+
     # ======================================================= Einstellungen
-    def open_app_settings(self) -> None:
+    def open_app_settings(self, initial_tab: str = "") -> None:
         old_repos = self.settings.get("repositories")
         dlg = AppSettingsDialog(self.settings, self.vault, self, tool_updates=lambda: len(self.tool_updates),
-                                update_all=self.update_all_tools)
-        if not dlg.exec():
+                                update_all=self.update_all_tools, initial_tab=initial_tab)
+        accepted = dlg.exec()
+        self.ai_panel.refresh()   # Verbindungen gelten sofort, auch bei „Abbrechen“
+        if not accepted:
             return
         theme.apply_theme(QApplication.instance(), self.settings.get("theme", "dark"))
         self.dm.setStyleSheet(self._ads_base_style + theme.ads_stylesheet())

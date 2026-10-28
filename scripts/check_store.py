@@ -80,6 +80,11 @@ def check(tools_dir: Path, store_dir: Path) -> list[str]:
 
     for tool_id in sorted(entries.keys() - seen):
         problems.append(f"{tool_id}: steht in store/index.json, aber nicht in tools/")
+    source = ROOT / "omniwrench" / "resources" / "ai" / "providers.json"
+    published = store_dir / "ai" / "providers.json"
+    if source.is_file() and (not published.is_file() or normalized(published.read_bytes())
+                             != normalized(source.read_bytes())):
+        problems.append("KI-Anbieterliste: store/ai/providers.json fehlt oder ist veraltet (scripts/build_store.py)")
     return problems
 
 

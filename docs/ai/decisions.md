@@ -268,3 +268,31 @@
 - DNS tool replication (Stef 2026-10-27): per-record "Repliziert" indicator + manual trigger, both. Missing replication
   right must be handled with a clear message (who lacks which right on which partition), remaining steps still run.
   Standalone DNS (no AD) is covered via zone transfer status/trigger.
+
+## AI assistants (KI-Integration, 2026-10-28, Stef's answers A1-A15 / B1-B12 in the planning doc)
+- Everything local and readable (JSON/Markdown/PNG/MP3/MP4). Storage dropdown with 3 modes: "Eigene Dateien"
+  (Documents/Pictures/Music/Videos + OmniWrench subfolder), "Zentraler Speicherort" (one folder, subfolders per type),
+  "Je Typ" (folder per type). Encryption of chats/projects/transcripts ON by default with notice that other programs
+  can't read them; media never encrypted.
+- Any number of connections, also several accounts of one provider; one primary assistant (★). Browser sign-in where
+  officially possible (Sign in with ChatGPT, OpenRouter OAuth, Entra for M365 Copilot, custom OAuth), else API key
+  (vault or password manager reference). NO Claude subscription OAuth (forbidden since 02/2026, legal/GitHub risk) -
+  custom OAuth instead. No unofficial Grok OAuth. Stef tests only with Claude (API key) + ChatGPT subscription, no
+  extra costs. M365 Copilot: no alpha tag, experiences via wiki (Stef has no license).
+- Provider list via the store mechanism (store/ai/providers.json, built from omniwrench/resources/ai/providers.json).
+  Providers are never deleted: status "removed" -> red in lists + notice when used. **Rule: every time I build
+  something for OmniWrench, check providers for additions/removals/changed conditions and update providers.json.**
+- KI-Zugriff page for main program AND every tool without exception; tools inherit the main program level unless
+  changed; levels Nichts..Ändern mit Bestätigung; main default level 1 (Beschreibung); per-assistant exceptions.
+  Tools that log in (DHCP/DNS) get an AI level dropdown at login (favorites "ai" section: {"level": null|int,
+  "pseudo": null|bool}, null = inherit). Pseudonymization ON for everything by default.
+- Chat panel: dockable (right), minimal (bot dropdown switchable mid-chat, detail Kurz/Normal/Ausführlich, history,
+  projects). No bot -> message with "Optionen öffnen". Context menu "Assistent fragen …" with setting: always primary /
+  active / always ask (picker).
+- Tool (KI-Studio): Ratchet & Clank name; also keep a R&C name list for future tools. Greyed tabs with hint + button
+  when no capable bot. Repos: Git, GitHub, GitLab, Azure DevOps. Commands: window with command + short explanation,
+  confirmation with "remember answer" (per session). ffmpeg asked at install; music/video tabs greyed until present.
+  Group chat with brakes, many options grouped and collapsible. Extras: templates, documents, screenshot, scheduling,
+  MCP client/server (server last), live transcription tab (system audio + mic, summary, speaker recognition with
+  named long-term profiles, prominent consent notice at start), live voice agent with wake word ("Hey <name>").
+- Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.

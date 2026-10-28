@@ -3,6 +3,10 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
+- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 2-7 open
+      (knowledge + KI-Zugriff + pseudonymization; tool functions + context menu; KI-Studio tool; images + group chat;
+      music/video; transcription, voice agent, MCP, templates, scheduling). App locales: only en/de have the ai.* keys
+      so far, other 21 locales get translated in one pass at the end. Wiki pages + landing page + TESTLISTE at the end.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file

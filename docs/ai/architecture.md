@@ -323,3 +323,33 @@ docs/README.md                internal docs index, points to the wiki
   fetch_screenshots() copies them into the installed tool (offline Home).
 - Template repo: scripts/screenshots.py (wrapper for OmniWrench's render_screenshots.py), store.py handles
   screenshots the same way; example tool ships screenshots/render.py + main.png.
+
+## AI assistants (omniwrench/ai/, since 0.9.0)
+- `providers.py` catalog from resources/ai/providers.json (63 providers, categories, auth kinds, capabilities, media
+  APIs). Newer copy from `<repo>/ai/providers.json` (store) cached in CACHE_DIR/ai, newest "updated" wins, entries
+  of the bundled file missing in the newer one are kept. build_store copies it to store/ai/, check_store verifies.
+- `connections.py` settings "ai_connections" (no secrets) + vault "app:ai:conn:<id>" ({api_key} or OAuth tokens,
+  ChatGPT issued client_id, account). key_ref = password manager reference. "ai_primary" = primary id.
+- `oauth.py` loopback http.server on 127.0.0.1 + PKCE: ChatGPT (dynamic client, ext_agent_host_id = settings
+  "ai_host_id", /auth/callback), OpenRouter (key exchange), Entra (default client Microsoft Graph CLI tools, tenant
+  organizations, redirect http://localhost:<port>/), custom OAuth (client secret in vault). access_token() refreshes.
+- `http.py` urllib + truststore SSL, SSE parser, AIError(kind auth/limit/quota/network/server/request/removed);
+  localhost/127.x bypass proxies.
+- `adapters.py` OpenAIChat (chat/completions, most providers), OpenAIResponses (OpenAI + ChatGPT sign-in, store
+  false), Anthropic (messages), GraphCopilot (beta copilot/conversations, no tools, conversation id in thread state).
+  Unified message format: user {content, images[{mime,data}]}, assistant {content, tool_calls[{id,name,arguments}]},
+  tool {tool_call_id, name, content}.
+- `chat.py` run(): loop up to 12 rounds with function calls, RunHooks (on_text/on_tool/on_message/confirm/level_for/
+  encode/decode for pseudonymization), system prompt with detail level + project instructions, trimming 200k chars.
+- `functions.py` registry Function(name, description, handler(args, ctx), parameters, source app|tool id, level 1-4,
+  confirm). available(level_for) filters by access level.
+- `storage.py` modes documents/central/per_type, Windows known folders via SHGetKnownFolderPath, XDG user-dirs.
+  Docs written as <base>.json (+.md) or encrypted <base>.owai (b"OWAI1"+nonce+AES-GCM, key vault "app:ai:data_key").
+  Chats <chats>/<id>/thread.*, projects <projects>/<pid>/project.* + files/ + threads/<id>/. convert_all() on toggle.
+- UI: `ui/ai_panel.py` AIPanel in CDockWidget "ai-assistant" (right area, hidden by default; menu bar corner button
+  "✦ Assistent", View menu, Ctrl+Shift+A). Background run works on a copy of the thread, merged on finish (stop
+  discards). Rounds after function calls continue in the same bubble. `ui/ai_settings.py` tabs "KI-Assistenten"
+  (AIConnectionsPage, changes apply at once) and "KI-Datenablage" (AIStoragePage, saved with the dialog) in
+  AppSettingsDialog (initial_tab="ai"). ConnectionDialog: ProviderPicker (categories, search, capability/auth/region
+  filters, removed red) -> form per auth kind, load models, test.
+- Smoke test: fake OpenAI server, empty-state check per language, real chat round trip in "de".

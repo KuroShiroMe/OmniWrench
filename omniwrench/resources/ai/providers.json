@@ -1,0 +1,1862 @@
+{
+ "format": 1,
+ "updated": "2026-10-28",
+ "categories": [
+  "recommended",
+  "chat",
+  "enterprise",
+  "eu",
+  "router",
+  "local",
+  "image",
+  "music",
+  "video",
+  "speech",
+  "custom",
+  "unavailable"
+ ],
+ "providers": [
+  {
+   "id": "openai",
+   "name": "ChatGPT / OpenAI",
+   "vendor": "OpenAI",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai_responses",
+   "base_url": "https://api.openai.com/v1",
+   "auth": [
+    "oauth_chatgpt",
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image",
+    "web_search",
+    "speech"
+   ],
+   "models": [
+    "gpt-5.5",
+    "gpt-5.5-mini",
+    "gpt-5.5-nano"
+   ],
+   "key_url": "https://platform.openai.com/api-keys",
+   "docs_url": "https://platform.openai.com/docs",
+   "status": "active",
+   "recommended": true,
+   "media": {
+    "image": {
+     "api": "openai_images",
+     "models": [
+      "gpt-image-2",
+      "gpt-image-1"
+     ]
+    },
+    "speech": {
+     "api": "openai_audio",
+     "models": [
+      "gpt-4o-transcribe-diarize",
+      "gpt-4o-transcribe",
+      "gpt-4o-mini-tts"
+     ]
+    }
+   }
+  },
+  {
+   "id": "anthropic",
+   "name": "Claude",
+   "vendor": "Anthropic",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "anthropic",
+   "base_url": "https://api.anthropic.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "web_search"
+   ],
+   "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "claude-haiku-5-5"
+   ],
+   "key_url": "https://console.anthropic.com/settings/keys",
+   "docs_url": "https://docs.claude.com",
+   "status": "active",
+   "recommended": true,
+   "note": "subscription_oauth_forbidden"
+  },
+  {
+   "id": "gemini",
+   "name": "Gemini",
+   "vendor": "Google",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image",
+    "music",
+    "video",
+    "web_search"
+   ],
+   "models": [
+    "gemini-3.1-pro",
+    "gemini-3.1-flash",
+    "gemini-3.1-flash-lite"
+   ],
+   "key_url": "https://aistudio.google.com/apikey",
+   "docs_url": "https://ai.google.dev/gemini-api/docs",
+   "status": "active",
+   "recommended": true,
+   "media": {
+    "image": {
+     "api": "gemini_image",
+     "models": [
+      "gemini-3.1-flash-image",
+      "gemini-3-pro-image"
+     ]
+    },
+    "music": {
+     "api": "gemini_lyria",
+     "models": [
+      "lyria-3.5",
+      "lyria-3-clip-preview"
+     ]
+    },
+    "video": {
+     "api": "gemini_veo",
+     "models": [
+      "veo-3.1-generate-preview",
+      "veo-3.1-fast-generate-preview"
+     ]
+    }
+   }
+  },
+  {
+   "id": "xai",
+   "name": "Grok",
+   "vendor": "xAI",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.x.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image",
+    "video"
+   ],
+   "models": [
+    "grok-4.3",
+    "grok-4.20",
+    "grok-code-fast"
+   ],
+   "key_url": "https://console.x.ai",
+   "docs_url": "https://docs.x.ai",
+   "status": "active",
+   "recommended": true,
+   "media": {
+    "image": {
+     "api": "openai_images",
+     "models": [
+      "grok-imagine-image",
+      "grok-imagine-image-quality"
+     ]
+    },
+    "video": {
+     "api": "xai_video",
+     "models": [
+      "grok-imagine-video"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mistral",
+   "name": "Mistral (Le Chat)",
+   "vendor": "Mistral AI",
+   "country": "FR",
+   "categories": [
+    "chat",
+    "eu"
+   ],
+   "api": "openai",
+   "base_url": "https://api.mistral.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [
+    "mistral-large-latest",
+    "mistral-medium-latest",
+    "mistral-small-latest",
+    "codestral-latest"
+   ],
+   "key_url": "https://console.mistral.ai/api-keys",
+   "docs_url": "https://docs.mistral.ai",
+   "status": "active",
+   "recommended": true
+  },
+  {
+   "id": "m365copilot",
+   "name": "Microsoft 365 Copilot",
+   "vendor": "Microsoft",
+   "country": "US",
+   "categories": [
+    "chat",
+    "enterprise"
+   ],
+   "api": "graph_copilot",
+   "base_url": "https://graph.microsoft.com/beta",
+   "auth": [
+    "entra"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://learn.microsoft.com/microsoft-365/copilot/extensibility/api/ai-services/chat/overview",
+   "status": "active",
+   "note": "m365_license"
+  },
+  {
+   "id": "perplexity",
+   "name": "Perplexity Sonar",
+   "vendor": "Perplexity",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.perplexity.ai",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "web_search"
+   ],
+   "models": [
+    "sonar-pro",
+    "sonar",
+    "sonar-reasoning-pro"
+   ],
+   "key_url": "https://www.perplexity.ai/settings/api",
+   "docs_url": "https://docs.perplexity.ai",
+   "status": "active"
+  },
+  {
+   "id": "cohere",
+   "name": "Cohere Command",
+   "vendor": "Cohere",
+   "country": "CA",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.cohere.ai/compatibility/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [
+    "command-a-03-2025",
+    "command-r-plus"
+   ],
+   "key_url": "https://dashboard.cohere.com/api-keys",
+   "docs_url": "https://docs.cohere.com",
+   "status": "active"
+  },
+  {
+   "id": "deepseek",
+   "name": "DeepSeek",
+   "vendor": "DeepSeek",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.deepseek.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [
+    "deepseek-chat",
+    "deepseek-reasoner"
+   ],
+   "key_url": "https://platform.deepseek.com/api_keys",
+   "docs_url": "https://api-docs.deepseek.com",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "qwen",
+   "name": "Qwen (Alibaba Cloud)",
+   "vendor": "Alibaba",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image"
+   ],
+   "models": [
+    "qwen-max",
+    "qwen-plus",
+    "qwen-turbo"
+   ],
+   "key_url": "https://modelstudio.console.alibabacloud.com",
+   "docs_url": "https://www.alibabacloud.com/help/en/model-studio",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "moonshot",
+   "name": "Kimi (Moonshot)",
+   "vendor": "Moonshot AI",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.moonshot.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [
+    "kimi-k2",
+    "kimi-latest"
+   ],
+   "key_url": "https://platform.moonshot.ai",
+   "docs_url": "https://platform.moonshot.ai/docs",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "zhipu",
+   "name": "GLM (Z.ai)",
+   "vendor": "Zhipu AI",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.z.ai/api/paas/v4",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [
+    "glm-5.3",
+    "glm-5.3-flash"
+   ],
+   "key_url": "https://z.ai/manage-apikey/apikey-list",
+   "docs_url": "https://docs.z.ai",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "minimax",
+   "name": "MiniMax",
+   "vendor": "MiniMax",
+   "country": "CN",
+   "categories": [
+    "chat",
+    "music",
+    "video"
+   ],
+   "api": "openai",
+   "base_url": "https://api.minimax.io/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "image",
+    "music",
+    "video",
+    "speech"
+   ],
+   "models": [
+    "MiniMax-M2"
+   ],
+   "key_url": "https://www.minimax.io/platform",
+   "docs_url": "https://www.minimax.io/platform/document",
+   "status": "active",
+   "note": "privacy_cn",
+   "media": {
+    "music": {
+     "api": "minimax_music",
+     "models": [
+      "music-2.6",
+      "music-2.5"
+     ]
+    },
+    "video": {
+     "api": "minimax_video",
+     "models": [
+      "MiniMax-Hailuo-2.3",
+      "MiniMax-Hailuo-02"
+     ]
+    },
+    "image": {
+     "api": "minimax_image",
+     "models": [
+      "image-01"
+     ]
+    }
+   }
+  },
+  {
+   "id": "azure_openai",
+   "name": "Azure OpenAI / AI Foundry",
+   "vendor": "Microsoft",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<ressource>.openai.azure.com/openai/v1",
+   "auth": [
+    "api_key",
+    "oauth_custom"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image"
+   ],
+   "models": [
+    "gpt-5.5",
+    "gpt-5.5-mini"
+   ],
+   "key_url": "https://portal.azure.com",
+   "docs_url": "https://learn.microsoft.com/azure/ai-foundry/openai/",
+   "status": "active",
+   "key_header": "api-key",
+   "base_url_editable": true,
+   "media": {
+    "image": {
+     "api": "openai_images",
+     "models": [
+      "gpt-image-1"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bedrock",
+   "name": "Amazon Bedrock",
+   "vendor": "Amazon",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://bedrock-runtime.eu-central-1.amazonaws.com/openai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://console.aws.amazon.com/bedrock",
+   "docs_url": "https://docs.aws.amazon.com/bedrock/",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "vertex",
+   "name": "Google Vertex AI",
+   "vendor": "Google",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<region>-aiplatform.googleapis.com/v1/projects/<projekt>/locations/<region>/endpoints/openapi",
+   "auth": [
+    "api_key",
+    "oauth_custom"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [
+    "google/gemini-3.1-pro"
+   ],
+   "key_url": "https://console.cloud.google.com/vertex-ai",
+   "docs_url": "https://cloud.google.com/vertex-ai/docs",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "watsonx",
+   "name": "IBM watsonx",
+   "vendor": "IBM",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<region>.ml.cloud.ibm.com/ml/gateway/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "https://cloud.ibm.com/iam/apikeys",
+   "docs_url": "https://www.ibm.com/docs/en/watsonx",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "ionos",
+   "name": "IONOS AI Model Hub",
+   "vendor": "IONOS",
+   "country": "DE",
+   "categories": [
+    "eu",
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://openai.inference.de-txl.ionos.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://dcd.ionos.com",
+   "docs_url": "https://docs.ionos.com/cloud/ai/ai-model-hub",
+   "status": "active"
+  },
+  {
+   "id": "stackit",
+   "name": "STACKIT AI Model Serving",
+   "vendor": "STACKIT",
+   "country": "DE",
+   "categories": [
+    "eu",
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.openai-compat.model-serving.eu01.onstackit.cloud/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://portal.stackit.cloud",
+   "docs_url": "https://docs.stackit.cloud/products/data-and-ai/ai-model-serving/",
+   "status": "active"
+  },
+  {
+   "id": "tsystems",
+   "name": "T-Systems AI Foundation Services",
+   "vendor": "T-Systems",
+   "country": "DE",
+   "categories": [
+    "eu",
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://llm-server.llmhub.t-systems.net/v2",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://www.t-systems.com",
+   "docs_url": "https://docs.llmhub.t-systems.net",
+   "status": "active"
+  },
+  {
+   "id": "mittwald",
+   "name": "mittwald AI Hosting",
+   "vendor": "mittwald",
+   "country": "DE",
+   "categories": [
+    "eu",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://llm.aihosting.mittwald.de/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://studio.mittwald.de",
+   "docs_url": "https://developer.mittwald.de",
+   "status": "active"
+  },
+  {
+   "id": "scaleway",
+   "name": "Scaleway Generative APIs",
+   "vendor": "Scaleway",
+   "country": "FR",
+   "categories": [
+    "eu",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.scaleway.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://console.scaleway.com",
+   "docs_url": "https://www.scaleway.com/en/docs/generative-apis/",
+   "status": "active"
+  },
+  {
+   "id": "ovhcloud",
+   "name": "OVHcloud AI Endpoints",
+   "vendor": "OVHcloud",
+   "country": "FR",
+   "categories": [
+    "eu",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://oai.endpoints.kepler.ai.cloud.ovh.net/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://www.ovh.com/manager",
+   "docs_url": "https://help.ovhcloud.com",
+   "status": "active"
+  },
+  {
+   "id": "aleph_alpha",
+   "name": "Aleph Alpha PhariaAI",
+   "vendor": "Aleph Alpha",
+   "country": "DE",
+   "categories": [
+    "eu",
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<ihre-installation>/v1",
+   "auth": [
+    "api_key",
+    "oauth_custom"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.aleph-alpha.com",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "openrouter",
+   "name": "OpenRouter",
+   "vendor": "OpenRouter",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://openrouter.ai/api/v1",
+   "auth": [
+    "oauth_openrouter",
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image",
+    "web_search"
+   ],
+   "models": [
+    "anthropic/claude-sonnet-5.5",
+    "openai/gpt-5.5",
+    "google/gemini-3.1-pro",
+    "x-ai/grok-4.3"
+   ],
+   "key_url": "https://openrouter.ai/settings/keys",
+   "docs_url": "https://openrouter.ai/docs",
+   "status": "active",
+   "recommended": true
+  },
+  {
+   "id": "together",
+   "name": "Together AI",
+   "vendor": "Together AI",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.together.xyz/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://api.together.ai/settings/api-keys",
+   "docs_url": "https://docs.together.ai",
+   "status": "active"
+  },
+  {
+   "id": "fireworks",
+   "name": "Fireworks AI",
+   "vendor": "Fireworks",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.fireworks.ai/inference/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://fireworks.ai/account/api-keys",
+   "docs_url": "https://docs.fireworks.ai",
+   "status": "active"
+  },
+  {
+   "id": "deepinfra",
+   "name": "DeepInfra",
+   "vendor": "DeepInfra",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.deepinfra.com/v1/openai",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://deepinfra.com/dash/api_keys",
+   "docs_url": "https://deepinfra.com/docs",
+   "status": "active"
+  },
+  {
+   "id": "groq",
+   "name": "Groq",
+   "vendor": "Groq",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.groq.com/openai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "speech"
+   ],
+   "models": [],
+   "key_url": "https://console.groq.com/keys",
+   "docs_url": "https://console.groq.com/docs",
+   "status": "active"
+  },
+  {
+   "id": "cerebras",
+   "name": "Cerebras",
+   "vendor": "Cerebras",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.cerebras.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://cloud.cerebras.ai",
+   "docs_url": "https://inference-docs.cerebras.ai",
+   "status": "active"
+  },
+  {
+   "id": "huggingface",
+   "name": "Hugging Face Inference Providers",
+   "vendor": "Hugging Face",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://router.huggingface.co/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://huggingface.co/settings/tokens",
+   "docs_url": "https://huggingface.co/docs/inference-providers",
+   "status": "active"
+  },
+  {
+   "id": "vercel",
+   "name": "Vercel AI Gateway",
+   "vendor": "Vercel",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://ai-gateway.vercel.sh/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://vercel.com/dashboard",
+   "docs_url": "https://vercel.com/docs/ai-gateway",
+   "status": "active"
+  },
+  {
+   "id": "fal",
+   "name": "fal.ai",
+   "vendor": "fal",
+   "country": "US",
+   "categories": [
+    "router",
+    "image",
+    "music",
+    "video"
+   ],
+   "api": "media_only",
+   "base_url": "https://queue.fal.run",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image",
+    "music",
+    "video"
+   ],
+   "models": [],
+   "key_url": "https://fal.ai/dashboard/keys",
+   "docs_url": "https://docs.fal.ai",
+   "status": "active",
+   "key_header": "Authorization",
+   "key_prefix": "Key ",
+   "media": {
+    "image": {
+     "api": "fal",
+     "models": [
+      "fal-ai/flux-2-pro",
+      "fal-ai/recraft/v4/text-to-image",
+      "fal-ai/ideogram/v3"
+     ]
+    },
+    "music": {
+     "api": "fal",
+     "models": [
+      "fal-ai/elevenlabs/music",
+      "fal-ai/minimax-music/v2",
+      "fal-ai/ace-step"
+     ]
+    },
+    "video": {
+     "api": "fal",
+     "models": [
+      "fal-ai/kling-video/v3/pro/text-to-video",
+      "fal-ai/bytedance/seedance/v2/pro/text-to-video",
+      "fal-ai/luma-dream-machine/ray-2"
+     ]
+    }
+   }
+  },
+  {
+   "id": "replicate",
+   "name": "Replicate",
+   "vendor": "Replicate",
+   "country": "US",
+   "categories": [
+    "router",
+    "image",
+    "music",
+    "video"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.replicate.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image",
+    "music",
+    "video"
+   ],
+   "models": [],
+   "key_url": "https://replicate.com/account/api-tokens",
+   "docs_url": "https://replicate.com/docs",
+   "status": "active",
+   "media": {
+    "image": {
+     "api": "replicate",
+     "models": [
+      "black-forest-labs/flux-2-pro",
+      "ideogram-ai/ideogram-v3-turbo"
+     ]
+    },
+    "music": {
+     "api": "replicate",
+     "models": [
+      "stability-ai/stable-audio-2.5",
+      "minimax/music-2.6"
+     ]
+    },
+    "video": {
+     "api": "replicate",
+     "models": [
+      "kwaivgi/kling-v3.0",
+      "wan-video/wan-2.5-t2v"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ollama",
+   "name": "Ollama",
+   "vendor": "Ollama",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:11434/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://ollama.com",
+   "status": "active",
+   "recommended": true,
+   "list_models": true
+  },
+  {
+   "id": "lmstudio",
+   "name": "LM Studio",
+   "vendor": "LM Studio",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:1234/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://lmstudio.ai/docs",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "llamacpp",
+   "name": "llama.cpp-Server",
+   "vendor": "ggml",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:8080/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://github.com/ggml-org/llama.cpp",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "vllm",
+   "name": "vLLM",
+   "vendor": "vLLM",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:8000/v1",
+   "auth": [
+    "none",
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.vllm.ai",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "localai",
+   "name": "LocalAI",
+   "vendor": "LocalAI",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat",
+    "image"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:8080/v1",
+   "auth": [
+    "none",
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision",
+    "image"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://localai.io",
+   "status": "active",
+   "list_models": true,
+   "media": {
+    "image": {
+     "api": "openai_images",
+     "models": [
+      "stablediffusion"
+     ]
+    }
+   }
+  },
+  {
+   "id": "jan",
+   "name": "Jan",
+   "vendor": "Jan",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:1337/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://jan.ai/docs",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "gpt4all",
+   "name": "GPT4All",
+   "vendor": "Nomic",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:4891/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.gpt4all.io",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "koboldcpp",
+   "name": "KoboldCpp",
+   "vendor": "KoboldCpp",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:5001/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://github.com/LostRuins/koboldcpp",
+   "status": "active",
+   "list_models": true
+  },
+  {
+   "id": "comfyui",
+   "name": "ComfyUI",
+   "vendor": "Comfy",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "image",
+    "video"
+   ],
+   "api": "media_only",
+   "base_url": "http://127.0.0.1:8188",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "image",
+    "video"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.comfy.org",
+   "status": "active",
+   "media": {
+    "image": {
+     "api": "comfyui",
+     "models": [
+      "workflow"
+     ]
+    },
+    "video": {
+     "api": "comfyui",
+     "models": [
+      "workflow"
+     ]
+    }
+   }
+  },
+  {
+   "id": "bfl",
+   "name": "FLUX (Black Forest Labs)",
+   "vendor": "Black Forest Labs",
+   "country": "DE",
+   "categories": [
+    "image",
+    "eu"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.bfl.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://dashboard.bfl.ai",
+   "docs_url": "https://docs.bfl.ai",
+   "status": "active",
+   "key_header": "x-key",
+   "key_prefix": "",
+   "media": {
+    "image": {
+     "api": "bfl",
+     "models": [
+      "flux-2-pro",
+      "flux-2-max",
+      "flux-2-klein",
+      "flux-kontext-pro"
+     ]
+    }
+   }
+  },
+  {
+   "id": "recraft",
+   "name": "Recraft",
+   "vendor": "Recraft",
+   "country": "US",
+   "categories": [
+    "image"
+   ],
+   "api": "media_only",
+   "base_url": "https://external.api.recraft.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://www.recraft.ai/profile/api",
+   "docs_url": "https://www.recraft.ai/docs",
+   "status": "active",
+   "media": {
+    "image": {
+     "api": "openai_images",
+     "models": [
+      "recraftv4",
+      "recraftv4_vector",
+      "recraftv3"
+     ]
+    }
+   }
+  },
+  {
+   "id": "stability",
+   "name": "Stability AI",
+   "vendor": "Stability AI",
+   "country": "GB",
+   "categories": [
+    "image",
+    "music"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.stability.ai/v2beta",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image",
+    "music"
+   ],
+   "models": [],
+   "key_url": "https://platform.stability.ai/account/keys",
+   "docs_url": "https://platform.stability.ai/docs",
+   "status": "active",
+   "media": {
+    "image": {
+     "api": "stability_image",
+     "models": [
+      "ultra",
+      "core",
+      "sd3.5-large"
+     ]
+    },
+    "music": {
+     "api": "stability_audio",
+     "models": [
+      "stable-audio-2.5"
+     ]
+    }
+   }
+  },
+  {
+   "id": "ideogram",
+   "name": "Ideogram",
+   "vendor": "Ideogram",
+   "country": "US",
+   "categories": [
+    "image"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.ideogram.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://ideogram.ai/manage-api",
+   "docs_url": "https://developer.ideogram.ai",
+   "status": "active",
+   "key_header": "Api-Key",
+   "key_prefix": "",
+   "media": {
+    "image": {
+     "api": "ideogram",
+     "models": [
+      "V_3",
+      "V_3_TURBO"
+     ]
+    }
+   }
+  },
+  {
+   "id": "midjourney",
+   "name": "Midjourney",
+   "vendor": "Midjourney",
+   "country": "US",
+   "categories": [
+    "image",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://www.midjourney.com",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "adobe_firefly",
+   "name": "Adobe Firefly",
+   "vendor": "Adobe",
+   "country": "US",
+   "categories": [
+    "image",
+    "enterprise"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [
+    "image"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://developer.adobe.com/firefly-services/docs/",
+   "status": "unavailable",
+   "status_note": "enterprise_contract"
+  },
+  {
+   "id": "elevenlabs",
+   "name": "ElevenLabs",
+   "vendor": "ElevenLabs",
+   "country": "US",
+   "categories": [
+    "music",
+    "speech"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.elevenlabs.io/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "music",
+    "speech"
+   ],
+   "models": [],
+   "key_url": "https://elevenlabs.io/app/settings/api-keys",
+   "docs_url": "https://elevenlabs.io/docs",
+   "status": "active",
+   "key_header": "xi-api-key",
+   "key_prefix": "",
+   "media": {
+    "music": {
+     "api": "elevenlabs_music",
+     "models": [
+      "music_v1"
+     ]
+    },
+    "speech": {
+     "api": "elevenlabs_speech",
+     "models": [
+      "scribe_v2",
+      "eleven_multilingual_v2"
+     ]
+    }
+   }
+  },
+  {
+   "id": "mureka",
+   "name": "Mureka",
+   "vendor": "Kunlun Tech",
+   "country": "CN",
+   "categories": [
+    "music"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.mureka.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "music"
+   ],
+   "models": [],
+   "key_url": "https://platform.mureka.ai",
+   "docs_url": "https://platform.mureka.ai/docs",
+   "status": "active",
+   "media": {
+    "music": {
+     "api": "mureka",
+     "models": [
+      "auto",
+      "mureka-7.5"
+     ]
+    }
+   }
+  },
+  {
+   "id": "suno",
+   "name": "Suno",
+   "vendor": "Suno",
+   "country": "US",
+   "categories": [
+    "music",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://suno.com",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "udio",
+   "name": "Udio",
+   "vendor": "Udio",
+   "country": "US",
+   "categories": [
+    "music",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://www.udio.com",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "runway",
+   "name": "Runway",
+   "vendor": "Runway",
+   "country": "US",
+   "categories": [
+    "video"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.dev.runwayml.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "video",
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://dev.runwayml.com",
+   "docs_url": "https://docs.dev.runwayml.com",
+   "status": "active",
+   "media": {
+    "video": {
+     "api": "runway",
+     "models": [
+      "gen4_turbo",
+      "gen4.5",
+      "veo3.1"
+     ]
+    }
+   }
+  },
+  {
+   "id": "luma",
+   "name": "Luma Dream Machine",
+   "vendor": "Luma AI",
+   "country": "US",
+   "categories": [
+    "video",
+    "image"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.lumalabs.ai/dream-machine/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "video",
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://lumalabs.ai/dream-machine/api/keys",
+   "docs_url": "https://docs.lumalabs.ai",
+   "status": "active",
+   "media": {
+    "video": {
+     "api": "luma",
+     "models": [
+      "ray-2",
+      "ray-flash-2"
+     ]
+    }
+   }
+  },
+  {
+   "id": "kling",
+   "name": "Kling",
+   "vendor": "Kuaishou",
+   "country": "CN",
+   "categories": [
+    "video"
+   ],
+   "api": "media_only",
+   "base_url": "https://api-singapore.klingai.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "video"
+   ],
+   "models": [],
+   "key_url": "https://app.klingai.com/global/dev",
+   "docs_url": "https://app.klingai.com/global/dev/document-api",
+   "status": "active",
+   "key_format": "access_secret",
+   "note": "privacy_cn",
+   "media": {
+    "video": {
+     "api": "kling",
+     "models": [
+      "kling-v3",
+      "kling-v2-6"
+     ]
+    }
+   }
+  },
+  {
+   "id": "seedance",
+   "name": "Seedance (ByteDance)",
+   "vendor": "ByteDance",
+   "country": "CN",
+   "categories": [
+    "video",
+    "image"
+   ],
+   "api": "media_only",
+   "base_url": "https://ark.ap-southeast.bytepluses.com/api/v3",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "video",
+    "image"
+   ],
+   "models": [],
+   "key_url": "https://console.byteplus.com",
+   "docs_url": "https://docs.byteplus.com/en/docs/ModelArk",
+   "status": "active",
+   "note": "privacy_cn",
+   "media": {
+    "video": {
+     "api": "seedance",
+     "models": [
+      "seedance-2-0-pro",
+      "seedance-2-0-fast"
+     ]
+    }
+   }
+  },
+  {
+   "id": "sora",
+   "name": "Sora",
+   "vendor": "OpenAI",
+   "country": "US",
+   "categories": [
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://openai.com/sora",
+   "status": "removed",
+   "status_note": "sora_discontinued"
+  },
+  {
+   "id": "deepgram",
+   "name": "Deepgram",
+   "vendor": "Deepgram",
+   "country": "US",
+   "categories": [
+    "speech"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.deepgram.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "speech"
+   ],
+   "models": [],
+   "key_url": "https://console.deepgram.com",
+   "docs_url": "https://developers.deepgram.com",
+   "status": "active",
+   "key_header": "Authorization",
+   "key_prefix": "Token ",
+   "media": {
+    "speech": {
+     "api": "deepgram",
+     "models": [
+      "nova-3"
+     ]
+    }
+   }
+  },
+  {
+   "id": "assemblyai",
+   "name": "AssemblyAI",
+   "vendor": "AssemblyAI",
+   "country": "US",
+   "categories": [
+    "speech"
+   ],
+   "api": "media_only",
+   "base_url": "https://api.assemblyai.com/v2",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "speech"
+   ],
+   "models": [],
+   "key_url": "https://www.assemblyai.com/app/api-keys",
+   "docs_url": "https://www.assemblyai.com/docs",
+   "status": "active",
+   "key_header": "Authorization",
+   "key_prefix": "",
+   "media": {
+    "speech": {
+     "api": "assemblyai",
+     "models": [
+      "universal"
+     ]
+    }
+   }
+  },
+  {
+   "id": "copilot_consumer",
+   "name": "Microsoft Copilot (privat)",
+   "vendor": "Microsoft",
+   "country": "US",
+   "categories": [
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://copilot.microsoft.com",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "custom",
+   "name": "Benutzerdefiniert (OpenAI-kompatibel)",
+   "vendor": "",
+   "country": "",
+   "categories": [
+    "custom"
+   ],
+   "api": "openai",
+   "base_url": "",
+   "auth": [
+    "api_key",
+    "none",
+    "oauth_custom"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "",
+   "status": "active",
+   "recommended": true,
+   "base_url_editable": true
+  },
+  {
+   "id": "custom_anthropic",
+   "name": "Benutzerdefiniert (Anthropic-Format)",
+   "vendor": "",
+   "country": "",
+   "categories": [
+    "custom"
+   ],
+   "api": "anthropic",
+   "base_url": "",
+   "auth": [
+    "api_key",
+    "oauth_custom"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "",
+   "status": "active",
+   "base_url_editable": true
+  }
+ ]
+}
