@@ -512,3 +512,4 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   Copilot, chat loop with function calls, local storage 3 modes + AES-GCM encryption), settings tabs KI-Assistenten /
   KI-Datenablage, dockable chat panel with bot switch, detail level, projects, history. Tested against a local fake
   server (all 3 protocols incl. tool calls), smoke test extended.
+- 2026-10-28: Etappe 2: wiki knowledge (FTS5), app functions, KI-Zugriff page for app + every tool (inheritance, exceptions), pseudonymization (on for everything), confirmation dialog with remember; scripts/test_ai.py in CI.

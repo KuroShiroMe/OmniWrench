@@ -115,7 +115,7 @@ def api_messages(thread: dict) -> list[dict]:
 @dataclass
 class RunHooks:
     """Rückrufe des Chat-Ablaufs (laufen im Hintergrund-Thread)."""
-    on_text: Callable[[str], None] = lambda t: None
+    on_text: Callable[[str], None] = lambda t: None               # Teiltext, noch nicht zurückübersetzt
     on_tool: Callable[[dict], None] = lambda c: None              # Aufruf angekündigt
     on_tool_done: Callable[[dict, str, bool], None] = lambda c, r, ok: None
     on_message: Callable[[dict], None] = lambda m: None           # Nachricht fertig im Verlauf
@@ -123,6 +123,8 @@ class RunHooks:
     level_for: Callable[[str], int] = lambda source: functions.LEVEL_DESCRIBE
     encode: Callable[[str], str] = lambda t: t                    # Verfremdung zum Assistenten hin
     decode: Callable[[str], str] = lambda t: t                    # Rückübersetzung
+    # Funktionsergebnis -> Text für den Assistenten (Verfremdung je nach Einstellung der Quelle)
+    encode_result: Callable[[str, Any], str] = lambda source, value: functions.format_result(value)
     call_context: functions.CallContext = field(default_factory=functions.CallContext)
 
 
@@ -143,11 +145,12 @@ def run(store: ConnectionStore, conn: Connection, thread: dict, system: str, hoo
         enc = []
         for m in msgs:
             m = dict(m)
-            if m.get("content"):
+            # Funktionsergebnisse wurden beim Ausführen schon passend aufbereitet
+            if m.get("content") and m["role"] != "tool":
                 m["content"] = hooks.encode(m["content"])
             enc.append(m)
         result = adapter.chat(system, enc, schemas,
-                              lambda kind, data: hooks.on_text(hooks.decode(data)) if kind == "text" else None,
+                              lambda kind, data: hooks.on_text(data) if kind == "text" else None,
                               stop, state)
         usage = thread.setdefault("usage", {}).setdefault(conn.id, {"input": 0, "output": 0})
         for k in ("input", "output"):
@@ -189,7 +192,7 @@ def _execute(call: dict, allowed: set[str], hooks: RunHooks) -> tuple[str, bool]
     except Exception as err:  # noqa: BLE001 - Fehler geht als Text an den Assistenten
         logging.getLogger(__name__).info("Funktion %s fehlgeschlagen: %s", fn.name, err)
         return f"Error: {err}", False
-    return hooks.encode(functions.format_result(value)), True
+    return hooks.encode_result(fn.source, value), True
 
 
 def error_text(err: Exception) -> str:

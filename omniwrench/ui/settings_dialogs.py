@@ -19,7 +19,7 @@ from omniwrench.core.tool_manager import InstalledTool
 from omniwrench.core.vault import Vault
 from omniwrench.sdk import LANGUAGE_KEY
 
-from .ai_settings import AIConnectionsPage, AIStoragePage
+from .ai_settings import AIAccessPage, AIConnectionsPage, AIStoragePage
 from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
 from .scaling import SCALE_CHOICES, fit_min_width, fit_to_screen, normalize
@@ -196,7 +196,8 @@ def build_settings_form(schema: list[SettingDef], values: dict[str, Any],
 
 
 class ToolSettingsDialog(QDialog):
-    def __init__(self, tool: InstalledTool, parent: QWidget | None = None):
+    def __init__(self, tool: InstalledTool, parent: QWidget | None = None, app_settings: AppSettings | None = None,
+                 vault: Vault | None = None):
         super().__init__(parent)
         self.tool = tool
         self.language_changed = False
@@ -215,6 +216,10 @@ class ToolSettingsDialog(QDialog):
                               "CardMeta"))
         head.addLayout(title, 1)
         lay.addLayout(head)
+        outer_lay = lay
+        general = QWidget()
+        lay = QVBoxLayout(general)
+        lay.setContentsMargins(0, 6, 0, 0)
 
         # --- Sprache des Tools
         lang_row = QFormLayout()
@@ -242,11 +247,25 @@ class ToolSettingsDialog(QDialog):
             lay.addWidget(form, 1)
             if any(f.sdef.is_secret for f in self.fields):
                 lay.addWidget(label("🔒 " + tr("settings.secrets_hint"), "Muted"))
+        if not tool.schema:
+            lay.addStretch()
+
+        # --- KI-Zugriff (jedes Tool, erbt vom Hauptprogramm)
+        self.ai_access = None
+        if app_settings is not None and vault is not None:
+            tabs = QTabWidget()
+            tabs.addTab(general, tr("appsettings.tab_general"))
+            self.ai_access = AIAccessPage(app_settings, vault, tool.id)
+            tabs.addTab(self.ai_access, tr("ai.tab_access"))
+            outer_lay.addWidget(tabs, 1)
+            fit_min_width(self, 860)
+        else:
+            outer_lay.addWidget(general, 1)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._save)
         buttons.rejected.connect(self.reject)
-        lay.addWidget(buttons)
+        outer_lay.addWidget(buttons)
 
     def _save(self) -> None:
         missing = [f.text("label") for f in self.fields if f.sdef.required and f.is_empty()]
@@ -259,6 +278,8 @@ class ToolSettingsDialog(QDialog):
         self.language_changed = new_lang != (self.tool.settings.get(LANGUAGE_KEY) or AUTO)
         values[LANGUAGE_KEY] = new_lang
         self.tool.settings.update(values)
+        if self.ai_access is not None:
+            self.ai_access.save()
         self.accept()
 
 
@@ -275,7 +296,7 @@ class AppSettingsDialog(QDialog):
         self.language_changed = False
         self.scale_changed = False
         self.setWindowTitle(tr("appsettings.title"))
-        fit_to_screen(self, 760, 540)
+        fit_to_screen(self, 980, 600)
         lay = QVBoxLayout(self)
         tabs = QTabWidget()
         tabs.addTab(self._general_tab(), tr("appsettings.tab_general"))
@@ -291,6 +312,8 @@ class AppSettingsDialog(QDialog):
         tabs.addTab(self.ai_connections, tr("ai.tab_assistants"))
         self.ai_storage = AIStoragePage(settings, vault)
         tabs.addTab(self.ai_storage, tr("ai.tab_storage"))
+        self.ai_access = AIAccessPage(settings, vault, "app")
+        tabs.addTab(self.ai_access, tr("ai.tab_access"))
         if initial_tab == "ai":
             tabs.setCurrentWidget(self.ai_connections)
         self.tabs = tabs
@@ -540,6 +563,7 @@ class AppSettingsDialog(QDialog):
         s.set("close_update_window", self.close_update_window.isChecked(), save=False)
         s.save()
         self.ai_storage.save()
+        self.ai_access.save()
         token = self.token.text().strip()
         if token != (self.vault.get("app:github_token", "") or ""):
             self.vault.set("app:github_token", token or None)

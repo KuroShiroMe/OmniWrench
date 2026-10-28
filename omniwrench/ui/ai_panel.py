@@ -20,7 +20,9 @@ from PySide6.QtWidgets import (
     QStackedWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
-from omniwrench.ai import chat, functions, providers
+from omniwrench.ai import access, chat, functions, providers
+from omniwrench.ai.app_functions import register_app_functions
+from omniwrench.ai.pseudo import Pseudonymizer
 from omniwrench.ai.connections import Connection, ConnectionStore
 from omniwrench.ai.http import AIError, Cancelled
 from omniwrench.ai.storage import Storage
@@ -148,6 +150,8 @@ class MessageWidget(QFrame):
             self.body.setVisible(bool(msg.get("content")))
         self._buffer = msg.get("content", "") if role == "assistant" else ""
         self._new_round = False
+        self._raw = self._buffer
+        self.decoder = lambda text: text
 
     def add_chip(self, call: dict) -> None:
         if call.get("id") and call["id"] in self._chip_ids:
@@ -161,11 +165,19 @@ class MessageWidget(QFrame):
         self.chips.addStretch()
 
     def append(self, delta: str) -> None:
-        """Gestreamter Text. Text einer neuen Runde (nach Funktionsaufrufen) kommt als neuer Absatz."""
-        if self._new_round and self._buffer:
-            self._buffer += "\n\n"
+        """Gestreamter Text. Text einer neuen Runde (nach Funktionsaufrufen) kommt als neuer Absatz.
+
+        Der Rohtext kann Platzhalter der Verfremdung enthalten (auch über Teilstücke verteilt),
+        angezeigt wird immer die vollständig zurückübersetzte Fassung.
+        """
+        if self._new_round and self._raw:
+            self._raw += "\n\n"
         self._new_round = False
-        self._buffer += delta
+        self._raw += delta
+        try:
+            self._buffer = self.decoder(self._raw)
+        except RuntimeError:   # Zuordnung wurde gerade im Hintergrund erweitert
+            self._buffer = self._raw
         self.body.setText(self._buffer)
         self.body.setVisible(True)
 
@@ -185,6 +197,29 @@ class MessageWidget(QFrame):
             self._new_round = True
             self.append(msg["content"])
         self.end_round(msg)
+
+
+class ConfirmDialog(QDialog):
+    """Rückfrage vor einer Änderung durch den Assistenten, mit „für diese Sitzung merken“."""
+
+    def __init__(self, title: str, text: str, parent=None):
+        from PySide6.QtWidgets import QCheckBox
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumWidth(420)
+        lay = QVBoxLayout(self)
+        lay.addWidget(label("✦ " + tr("ai.panel.confirm_intro"), "Muted", wrap=True))
+        body = label(text, "CardTitle", wrap=True)
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        lay.addWidget(body)
+        self.remember = QCheckBox(tr("ai.panel.remember_session"))
+        lay.addWidget(self.remember)
+        buttons = QDialogButtonBox()
+        buttons.addButton(tr("ai.panel.allow"), QDialogButtonBox.ButtonRole.AcceptRole)
+        buttons.addButton(tr("ai.panel.deny"), QDialogButtonBox.ButtonRole.RejectRole)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        lay.addWidget(buttons)
 
 
 class ProjectDialog(QDialog):
@@ -231,6 +266,8 @@ class AIPanel(QWidget):
         self._stop = threading.Event()
         self._running = False
         self._live: MessageWidget | None = None
+        self._remembered: dict[str, bool] = {}     # Bestätigungen „für diese Sitzung merken“
+        register_app_functions(window)
         self.setObjectName("AIPanel")
         self.setStyleSheet(panel_stylesheet())
         self.setMinimumWidth(300)
@@ -749,10 +786,21 @@ class AIPanel(QWidget):
         self._work = (thread, work)
         system = chat.system_prompt(thread.get("detail", "normal"), self.project)
         b = self.bridge
+        settings = self.settings
+        pstate = work["state"].setdefault("pseudo", {})
+        kinds = access.pseudo_kinds(settings)
+        chat_pseudo = Pseudonymizer(pstate, kinds, enabled=access.pseudo_enabled(settings, "app"))
+
+        def encode_result(source: str, value) -> str:
+            p = Pseudonymizer(pstate, kinds, enabled=access.pseudo_enabled(settings, source))
+            return functions.format_result(p.encode_value(value))
+
+        self._decoder = chat_pseudo.decode
         hooks = chat.RunHooks(
             on_text=b.text.emit, on_tool=b.tool.emit, on_tool_done=b.tool_done.emit,
             on_message=lambda m: b.message.emit(dict(m)),
-            confirm=self._confirm_in_gui, level_for=self.level_for,
+            confirm=self._confirm_in_gui, level_for=lambda source: access.level(settings, source, conn.id),
+            encode=chat_pseudo.encode, decode=chat_pseudo.decode, encode_result=encode_result,
             call_context=functions.CallContext(window=self.window, connection=conn,
                                                in_gui=lambda fn: self._in_gui(fn), stop=self._stop))
         stop = self._stop
@@ -769,19 +817,22 @@ class AIPanel(QWidget):
 
         run_async(task)
 
-    def level_for(self, source: str) -> int:
-        """Zugriffsstufe einer Quelle; wird mit der Seite „KI-Zugriff“ erweitert."""
-        return functions.LEVEL_DESCRIBE
-
     def _in_gui(self, fn):
         result = []
         call_in_gui(lambda: result.append(fn()))
         return result[0] if result else None
 
     def _confirm_in_gui(self, fn: functions.Function, args: dict) -> bool:
+        if fn.name in self._remembered:
+            return self._remembered[fn.name]
+
         def ask():
             text = fn.summary(args) if fn.summary else f"{fn.name}\n{args}"
-            return QMessageBox.question(self, tr("ai.panel.confirm_title"), text) == QMessageBox.StandardButton.Yes
+            dlg = ConfirmDialog(tr("ai.panel.confirm_title"), text, self)
+            ok = dlg.exec() == QDialog.DialogCode.Accepted
+            if dlg.remember.isChecked():
+                self._remembered[fn.name] = ok
+            return ok
         return bool(self._in_gui(ask))
 
     def stop(self) -> None:
@@ -815,6 +866,7 @@ class AIPanel(QWidget):
             self._live = self._add_message_widget({"role": "assistant", "content": "", "ts": int(time.time()),
                                                    "connection_name": conn.name if conn else "",
                                                    "model": conn.model if conn else ""})
+            self._live.decoder = self._decoder
         return self._live
 
     def _on_text(self, delta: str) -> None:

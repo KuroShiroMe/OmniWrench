@@ -124,6 +124,12 @@ def _check_assistant(window, code: str, fake_url: str) -> None:
     dlg.show()
     pump(0.1)
     dlg.reject()
+    from omniwrench.ui.settings_dialogs import ToolSettingsDialog
+    for tool in window.manager.tools.values():
+        tdlg = ToolSettingsDialog(tool, window, app_settings=window.settings, vault=window.vault)
+        tdlg.show()
+        pump(0.05)
+        tdlg.reject()
     if code != "de":
         window.toggle_assistant(False)
         return

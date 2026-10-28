@@ -138,6 +138,8 @@ def pyinstaller_args(console: bool) -> list[str]:
         # Programmdaten (Pfade wie im Quellordner, paths.py/i18n.py finden sie über __file__)
         "--add-data", f"{ROOT / 'omniwrench' / 'resources'}{SEP}omniwrench/resources",
         "--add-data", f"{ROOT / 'omniwrench' / 'locales'}{SEP}omniwrench/locales",
+        # Wiki-Texte als Wissen für den KI-Assistenten (ohne Bilder)
+        "--add-data", f"{ROOT / 'wiki' / '*.md'}{SEP}wiki",
         # Komplettes Paket: Tools importieren auch Module, die main.py nicht lädt
         "--collect-submodules", "omniwrench",
         # pip für Tool-Abhängigkeiten (OmniWrench.exe --pip …, siehe main.py)

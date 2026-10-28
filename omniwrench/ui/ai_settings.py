@@ -763,3 +763,157 @@ class AIStoragePage(QWidget):
                 storage.Storage.move_tree(self.old_paths[k], new_paths[k])
         if old_encrypt != self.encrypt.isChecked():
             self.storage.convert_all(self.encrypt.isChecked())
+
+
+# ================================================================ KI-Zugriff
+class AIAccessPage(QWidget):
+    """Was Assistenten sehen dürfen: Stufe, Verfremdung, Ausnahmen je Assistent.
+
+    source "app" = Hauptprogramm, sonst Tool-ID (erbt ohne eigene Einstellung vom Hauptprogramm).
+    Gespeichert wird mit save() (beim Speichern des Dialogs).
+    """
+
+    def __init__(self, settings, vault, source: str = "app", parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QButtonGroup, QFrame, QRadioButton, QScrollArea
+        from omniwrench.ai import access
+        self.settings = settings
+        self.source = source
+        self.access = access
+        self.store = ConnectionStore(settings, vault)
+        is_app = source == "app"
+        self.cfg = access.app_config(settings) if is_app else access.tool_config(settings, source)
+        app_level = access.app_config(settings)["level"]
+        outer = QHBoxLayout(self)
+
+        left = QVBoxLayout()
+        left.addWidget(label(tr("ai.access.title_app") if is_app else tr("ai.access.title_tool"), "CardTitle"))
+        left.addWidget(label(tr("ai.access.hint"), "Muted", wrap=True))
+        self.group = QButtonGroup(self)
+        options = [] if is_app else [(None, tr("ai.access.inherit", level=tr(f"ai.level.{app_level}")),
+                                      tr("ai.access.inherit_desc"))]
+        options += [(lv, tr(f"ai.level.{lv}"), tr(f"ai.level.{lv}_desc")) for lv in access.LEVELS]
+        current = self.cfg.get("level")
+        for value, text, desc in options:
+            box = QFrame()
+            box.setObjectName("ToolCard")
+            bl = QVBoxLayout(box)
+            bl.setContentsMargins(10, 6, 10, 6)
+            bl.setSpacing(0)
+            rb = QRadioButton(text)
+            rb.setProperty("level", -1 if value is None else value)
+            rb.setChecked(value == current)
+            self.group.addButton(rb)
+            bl.addWidget(rb)
+            d = label(desc, "Muted", wrap=True)
+            d.setContentsMargins(24, 0, 0, 0)
+            bl.addWidget(d)
+            left.addWidget(box)
+        left.addStretch()
+        outer.addLayout(left, 3)
+
+        right = QVBoxLayout()
+        right.addWidget(label(tr("ai.access.pseudo"), "CardTitle"))
+        right.addWidget(label(tr("ai.access.pseudo_hint"), "Muted", wrap=True))
+        self.kind_boxes: dict[str, QCheckBox] = {}
+        if is_app:
+            self.pseudo = QCheckBox(tr("ai.access.pseudo_on"))
+            self.pseudo.setChecked(bool(self.cfg.get("pseudo", True)))
+            right.addWidget(self.pseudo)
+            for kind in access.PSEUDO_KINDS:
+                cb = QCheckBox(tr(f"ai.pseudo.{kind}"))
+                cb.setChecked(bool(self.cfg["pseudo_kinds"].get(kind, True)))
+                cb.setContentsMargins(18, 0, 0, 0)
+                cb.toggled.connect(self._preview)
+                self.kind_boxes[kind] = cb
+                right.addWidget(cb)
+            self.pseudo.toggled.connect(lambda on: [c.setEnabled(on) for c in self.kind_boxes.values()])
+            self.pseudo.toggled.connect(self._preview)
+            for c in self.kind_boxes.values():
+                c.setEnabled(self.pseudo.isChecked())
+        else:
+            self.pseudo = QComboBox()
+            app_on = access.app_config(settings).get("pseudo", True)
+            self.pseudo.addItem(tr("ai.access.pseudo_inherit",
+                                   state=tr("ai.access.on") if app_on else tr("ai.access.off")), None)
+            self.pseudo.addItem(tr("ai.access.on"), True)
+            self.pseudo.addItem(tr("ai.access.off"), False)
+            self.pseudo.setCurrentIndex(max(self.pseudo.findData(self.cfg.get("pseudo")), 0))
+            self.pseudo.currentIndexChanged.connect(self._preview)
+            right.addWidget(self.pseudo)
+        right.addWidget(label(tr("ai.access.preview"), "CardTitle"))
+        self.preview = label("", "", wrap=True)
+        self.preview.setTextFormat(Qt.TextFormat.PlainText)
+        self.preview.setStyleSheet(f"font-family: Consolas, monospace; background: {theme.current['surface']};"
+                                   f" border: 1px solid {theme.current['border']}; border-radius: 6px; padding: 6px;")
+        right.addWidget(self.preview)
+        right.addWidget(label(tr("ai.access.preview_hint"), "Muted", wrap=True))
+        right.addStretch()
+        self.exceptions = dict(self.cfg.get("exceptions") or {})
+        self.exc_btn = make_button("", on_click=self._edit_exceptions)
+        right.addWidget(self.exc_btn)
+        self._update_exc_button()
+        outer.addLayout(right, 2)
+        self._preview()
+
+    def _pseudo_on(self) -> bool:
+        if self.source == "app":
+            return self.pseudo.isChecked()
+        value = self.pseudo.currentData()
+        return bool(self.access.app_config(self.settings).get("pseudo", True)) if value is None else bool(value)
+
+    def _preview(self, *_):
+        from omniwrench.ai.pseudo import Pseudonymizer
+        kinds = ({k: c.isChecked() for k, c in self.kind_boxes.items()} if self.kind_boxes
+                 else self.access.pseudo_kinds(self.settings))
+        p = Pseudonymizer({}, kinds, enabled=self._pseudo_on())
+        sample = ("Lease 192.168.20.57 · dc01.corp.contoso.local\n"
+                  "MAC 00-15-5D-0A-12-34 · CONTOSO\\m.muster\n"
+                  "Server 192.168.20.10 · Maske 255.255.255.0")
+        self.preview.setText(p.encode(sample))
+
+    def _update_exc_button(self) -> None:
+        n = len(self.exceptions)
+        self.exc_btn.setText(tr("ai.access.exceptions_count", count=n) if n else tr("ai.access.exceptions"))
+
+    def _edit_exceptions(self) -> None:
+        dlg = QDialog(self)
+        dlg.setWindowTitle(tr("ai.access.exceptions"))
+        lay = QVBoxLayout(dlg)
+        lay.addWidget(label(tr("ai.access.exceptions_hint"), "Muted", wrap=True))
+        form = QFormLayout()
+        combos = {}
+        for c in self.store.list():
+            combo = QComboBox()
+            combo.addItem(tr("ai.access.no_exception"), None)
+            for lv in self.access.LEVELS:
+                combo.addItem(tr(f"ai.level.{lv}"), lv)
+            combo.setCurrentIndex(max(combo.findData(self.exceptions.get(c.id)), 0))
+            combos[c.id] = combo
+            form.addRow(c.name, combo)
+        if not combos:
+            lay.addWidget(label(tr("ai.access.no_assistants"), "Muted", wrap=True))
+        lay.addLayout(form)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        buttons.accepted.connect(dlg.accept)
+        buttons.rejected.connect(dlg.reject)
+        lay.addWidget(buttons)
+        if dlg.exec():
+            self.exceptions = {cid: cb.currentData() for cid, cb in combos.items() if cb.currentData() is not None}
+            self._update_exc_button()
+
+    def save(self) -> None:
+        btn = self.group.checkedButton()
+        lv = btn.property("level") if btn else None
+        cfg = dict(self.cfg)
+        cfg["level"] = None if lv in (None, -1) else int(lv)
+        cfg["exceptions"] = self.exceptions
+        if self.source == "app":
+            cfg["pseudo"] = self.pseudo.isChecked()
+            cfg["pseudo_kinds"] = {k: c.isChecked() for k, c in self.kind_boxes.items()}
+            if cfg["level"] is None:
+                cfg["level"] = self.access.DEFAULT_LEVEL
+            self.access.set_app_config(self.settings, cfg)
+        else:
+            cfg["pseudo"] = self.pseudo.currentData()
+            self.access.set_tool_config(self.settings, self.source, cfg)

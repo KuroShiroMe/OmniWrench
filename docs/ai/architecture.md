@@ -353,3 +353,16 @@ docs/README.md                internal docs index, points to the wiki
   AppSettingsDialog (initial_tab="ai"). ConnectionDialog: ProviderPicker (categories, search, capability/auth/region
   filters, removed red) -> form per auth kind, load models, test.
 - Smoke test: fake OpenAI server, empty-state check per language, real chat round trip in "de".
+- Etappe 2: `knowledge.py` wiki/*.md (APP_DIR/wiki or _MEIPASS/wiki, build_exe add-data) split at headings into
+  SQLite FTS5 (LOCAL_DIR/ai-index/knowledge.db, rebuilt on fingerprint change; word-count fallback).
+  `app_functions.py` registers source "app": program_info, list_installed_tools, list_store_tools,
+  search_documentation, read_documentation_page (level 1), list_open_tabs (2), open_tool/install_tool (4, confirm).
+  `access.py` settings "ai_access" (level, pseudo, pseudo_kinds, exceptions per connection) and "ai_access_tools"
+  {tool_id: {level|null, pseudo|null, exceptions}}; level(): tool exception > runtime (set_runtime from favorites) >
+  tool level > app exception > app level. `pseudo.py` Pseudonymizer(state=thread.state.pseudo): IPv4 (NETn.x keeps
+  /24), IPv6, MAC, email, FQDN (HOST-n.DOMAIN-m), DOMAIN\user; skips masks/loopback/public domains/file names;
+  encode_value() maps dict keys host*/server*/user* too; known values replaced in free text; rev map for exact decode.
+  Tool results are encoded at execution per tool pseudo setting (RunHooks.encode_result) and not re-encoded.
+  Streamed text is decoded on the whole raw buffer (placeholders split across chunks). UI: AIAccessPage (app tab
+  "KI-Zugriff" + tab in every ToolSettingsDialog), ConfirmDialog with "remember for this session".
+- `scripts/test_ai.py` (CI): fake server for all 3 protocols, pseudonymization, access, storage, wiki search.

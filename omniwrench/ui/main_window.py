@@ -391,7 +391,7 @@ class MainWindow(QMainWindow):
         tool = self.manager.get(tool_id)
         if tool is None:
             return
-        dlg = ToolSettingsDialog(tool, self)
+        dlg = ToolSettingsDialog(tool, self, app_settings=self.settings, vault=self.vault)
         if dlg.exec() and dlg.language_changed:
             self.reload_tool_tabs(tool_id)
 
