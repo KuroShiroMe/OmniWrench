@@ -524,3 +524,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   1.4.0, AI level/pseudonymization per server favourite on the DHCP/DNS login page, context menus in tool tables.
   Tests: scripts/ai_check/test_tool_ai.py (47 checks), fav_check adjusted, smoke test asks via context dialog.
 
+- 2026-10-28: Etappe 4: new tool "Clank – KI-Studio" (ai.clank 1.0.0): chat with projects/threads, workspace explorer
+  for local folders + GitHub/GitLab/Azure DevOps repos (browse via API, clone with token header), file viewer with
+  highlighting, AI functions for list/read/search/git/write/run command (diff resp. command + explanation in the
+  confirmation). App version 0.9.0 (min_app of Clank). R&C name list docs/ai/rc-names.md. Test test_studio.py (36).

@@ -3,8 +3,8 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 1-3 done, 4-7 open
-      (KI-Studio tool; images + group chat;
+- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 1-4 done (app 0.9.0, Clank 1.0.0), 5-7 open
+      (Clank tabs: images + group chat;
       music/video; transcription, voice agent, MCP, templates, scheduling). App locales: only en/de have the ai.* keys
       so far, other 21 locales get translated in one pass at the end. Wiki pages + landing page + TESTLISTE at the end.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).

@@ -645,5 +645,6 @@
   "ai.fav.pseudo_inherit": "Verfremdung wie im Tool eingestellt",
   "ai.fav.pseudo_on": "Verfremdung an",
   "ai.fav.pseudo_off": "Verfremdung aus",
-  "ai.fav.hint": "Was Assistenten von diesem Server sehen dürfen, solange Sie angemeldet sind. Wird mit dem Favoriten gespeichert. Ausnahmen je Assistent aus den Tool-Einstellungen gelten weiterhin."
+  "ai.fav.hint": "Was Assistenten von diesem Server sehen dürfen, solange Sie angemeldet sind. Wird mit dem Favoriten gespeichert. Ausnahmen je Assistent aus den Tool-Einstellungen gelten weiterhin.",
+  "ai.panel.confirm_explanation": "Erklärung des Assistenten:"
 }

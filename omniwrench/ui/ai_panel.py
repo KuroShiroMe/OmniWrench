@@ -13,7 +13,9 @@ import time
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QSize, Qt, QUrl, Signal
-from PySide6.QtGui import QBrush, QColor, QDesktopServices, QGuiApplication, QKeyEvent
+from PySide6.QtGui import (
+    QBrush, QColor, QDesktopServices, QGuiApplication, QKeyEvent, QSyntaxHighlighter, QTextCharFormat,
+)
 from PySide6.QtWidgets import (
     QButtonGroup, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMenu, QMessageBox, QPlainTextEdit, QScrollArea, QSizePolicy,
@@ -199,6 +201,18 @@ class MessageWidget(QFrame):
         self.end_round(msg)
 
 
+class _DiffHighlighter(QSyntaxHighlighter):
+    def highlightBlock(self, text: str) -> None:  # noqa: N802
+        c = theme.current
+        color = (c.get("success", "#10b981") if text.startswith("+") and not text.startswith("+++") else
+                 c.get("danger", "#ef4444") if text.startswith("-") and not text.startswith("---") else
+                 c.get("accent", "#3b82f6") if text.startswith("@@") else None)
+        if color:
+            f = QTextCharFormat()
+            f.setForeground(QColor(color))
+            self.setFormat(0, len(text), f)
+
+
 class ConfirmDialog(QDialog):
     """Rückfrage vor einer Änderung durch den Assistenten, mit „für diese Sitzung merken“.
 
@@ -224,6 +238,9 @@ class ConfirmDialog(QDialog):
             font = code.font()
             font.setFamilies(["Cascadia Mono", "Consolas", "DejaVu Sans Mono", "monospace"])
             code.setFont(font)
+            if info["code"].startswith(("--- ", "diff ")):
+                self._hl = _DiffHighlighter(code.document())
+                self._hl.rehighlight()
             lines = min(max(info["code"].count("\n") + 1, 2), 14)
             code.setFixedHeight(int(lines * code.fontMetrics().lineSpacing() + 18))
             lay.addWidget(code)

@@ -297,7 +297,8 @@
 - Chat panel: dockable (right), minimal (bot dropdown switchable mid-chat, detail Kurz/Normal/Ausführlich, history,
   projects). No bot -> message with "Optionen öffnen". Context menu "Assistent fragen …" with setting: always primary /
   active / always ask (picker).
-- Tool (KI-Studio): Ratchet & Clank name; also keep a R&C name list for future tools. Greyed tabs with hint + button
+- Tool (KI-Studio): Ratchet & Clank name -> **Clank – KI-Studio** (ai.clank, chosen 2026-10-28); R&C name list for
+  future tools in docs/ai/rc-names.md. Greyed tabs with hint + button
   when no capable bot. Repos: Git, GitHub, GitLab, Azure DevOps. Commands: window with command + short explanation,
   confirmation with "remember answer" (per session). ffmpeg asked at install; music/video tabs greyed until present.
   Group chat with brakes, many options grouped and collapsible. Extras: templates, documents, screenshot, scheduling,

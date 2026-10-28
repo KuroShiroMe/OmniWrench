@@ -1,0 +1,22 @@
+{
+  "id": "ai.clank",
+  "name": "Clank – AI Studio",
+  "version": "1.0.0",
+  "description": "AI studio: chats with projects, shared folders and repositories, file view, commands with confirmation.",
+  "long_description": "Works with the assistants connected in OmniWrench (options > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Clank-KI-Studio",
+  "category": "automation",
+  "icon": "bot",
+  "color": "#8b5cf6",
+  "entry": "tool:Clank",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": ["AI", "KI", "Chat", "ChatGPT", "Claude", "Copilot", "Ollama", "Git", "GitHub", "GitLab", "Azure DevOps", "Projects"],
+  "screenshots": [],
+  "single_instance": false,
+  "requirements": {}
+}

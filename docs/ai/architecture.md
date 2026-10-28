@@ -402,3 +402,19 @@ docs/README.md                internal docs index, points to the wiki
   inherit/on/off, app texts ai.fav.*), stored in favourite "ai", applied after login, cleared on logout/shutdown.
   ui_base.set_ask_hook(context): Grid/FindingsView context menus get "Assistent fragen …" with the selected rows
   as "Column: value" text (Grid.selection_text). Test: scripts/ai_check/test_tool_ai.py (fake backends, CI Linux).
+
+## Clank – KI-Studio (ai.clank, tools/clank, since 0.9.0, min_app 0.9.0)
+- `tool.py` Clank: QTabWidget `modes` (stage 4: "💬 Chat"; later images, group chat, media …). Chat tab = splitter
+  sidebar (ChatList "Chats" / WorkspacePanel "Arbeitsbereich") | embedded AIPanel (ctx.ai_services().chat_widget(
+  system_extra)) | FileViewer. Workspace roots per project (project["workspace"]) or settings "workspace" without
+  project. Repo tokens in ctx.secrets (remote.token_key). can_close asks while a run is active.
+- `workspace.py` Workspace(roots): "<root>/<rel>" paths, resolve() refuses escapes, list_dir/read (size cap, binary
+  check)/search/diff/write (keeps CRLF). git()/run_command(command, cwd, shell auto|powershell|cmd|bash, timeout).
+- `remote.py` parse_url GitHub/GitLab/Azure DevOps, Remote(info, token, branch): tree/list_dir/read/search_paths via
+  REST; clone() passes the token via `-c http.extraHeader` (never in the URL or .git/config).
+- `ai.py` StudioAI: studio_workspace L2; studio_list/read/search/git (read-only subcommands) L3; studio_write_file L4
+  (summary = diff, ConfirmDialog highlights it); studio_run_command L4 (summary = code + explanation from the model).
+  Default level 1 hides them -> hint bar in WorkspacePanel with button to the tool's KI-Zugriff tab.
+- App side for embedding: ui/ai_services.py AIServices(window); AIPanel(embedded=True, system_extra) hides history
+  button + project combo, set_project(), add_text_attachment(), signal threadSaved(thread_id, project_id).
+- Test: scripts/ai_check/test_studio.py (fake scripted server, 36 checks, CI Linux). R&C name list: docs/ai/rc-names.md.

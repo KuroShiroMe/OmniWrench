@@ -79,3 +79,5 @@ jobs:
         run: |
           python -m pip install dnspython
           python scripts/ai_check/test_tool_ai.py
+      - name: KI-Studio (Clank) mit Fake-Assistent
+        run: python scripts/ai_check/test_studio.py
