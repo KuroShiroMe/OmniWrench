@@ -199,3 +199,5 @@
   callbacks touch deleted widgets ("Internal C++ object … already deleted"). Bind timers to a widget
   (`QTimer.singleShot(ms, self.root, fn)`) and set a `_closed` flag in shutdown() that every late callback checks
   (DNS tool 1.1.2).
+- MCP 2026-07-28 is stateless and NOT wire-compatible with 2025-11-25 (no initialize, _meta per request, required
+  HTTP headers). Clients must probe and fall back; a server answering only one era breaks the other. Keep both.

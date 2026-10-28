@@ -647,5 +647,6 @@
   "ai.fav.pseudo_off": "Verfremdung aus",
   "ai.fav.hint": "Was Assistenten von diesem Server sehen dürfen, solange Sie angemeldet sind. Wird mit dem Favoriten gespeichert. Ausnahmen je Assistent aus den Tool-Einstellungen gelten weiterhin.",
   "ai.panel.confirm_explanation": "Erklärung des Assistenten:",
-  "ai.store.type_documents": "Dokumente"
+  "ai.store.type_documents": "Dokumente",
+  "ai.access.mcp_server": "MCP-Server (externe KI-Programme)"
 }

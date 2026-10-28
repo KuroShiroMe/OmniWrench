@@ -30,6 +30,7 @@ from .images import ImagesTab
 from .schedule import ScheduleTab
 from .screenshot import Screenshot
 from .templates import TemplatesPanel
+from .mcptab import MCPTab
 from .mediatab import MediaTab
 from .viewer import FileViewer
 
@@ -73,6 +74,8 @@ class Clank(ToolBase):
         self.modes.addTab(self.docs, "📄 " + tr("mode.docs"))
         self.plans = ScheduleTab(self)
         self.modes.addTab(self.plans, "⏰ " + tr("mode.plans"))
+        self.mcp = MCPTab(self)
+        self.modes.addTab(self.mcp, "🔌 " + tr("mode.mcp"))
         shot = QToolButton(text="📷 " + tr("shot.button"))
         shot.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         shot_menu = QMenu(shot)
@@ -408,7 +411,7 @@ class Clank(ToolBase):
             tab = getattr(self, name, None)
             if tab is not None and tab.running:
                 tab.stop()
-        for name in ("docs", "plans"):
+        for name in ("docs", "plans", "mcp"):
             tab = getattr(self, name, None)
             if tab is not None:
                 tab.shutdown()

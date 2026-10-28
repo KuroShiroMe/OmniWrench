@@ -28,9 +28,23 @@ def _register_distlib_finder() -> None:
         resources.register_finder(loader, resources.ResourceFinder)
 
 
+def _run_mcp_stdio() -> int:
+    """"OmniWrench --mcp-stdio": MCP über stdin/stdout an den laufenden Server im KI-Studio weiterleiten."""
+    import os
+
+    from omniwrench.ai.mcp_server import stdio_bridge
+
+    # Fensterprogramm (EXE): sys.stdin/stdout fehlen, die Pipes des aufrufenden Programms gibt es trotzdem
+    stdin = sys.stdin.buffer if sys.stdin is not None else os.fdopen(0, "rb")
+    stdout = sys.stdout.buffer if sys.stdout is not None else os.fdopen(1, "wb")
+    return stdio_bridge(stdin, stdout)
+
+
 if __name__ == "__main__":
     if getattr(sys, "frozen", False) and sys.argv[1:2] == ["--pip"]:
         sys.exit(_run_pip(sys.argv[2:]))
+    if sys.argv[1:2] == ["--mcp-stdio"]:
+        sys.exit(_run_mcp_stdio())
     from omniwrench.app import main
 
     sys.exit(main())

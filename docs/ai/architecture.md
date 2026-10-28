@@ -460,3 +460,18 @@ docs/README.md                internal docs index, points to the wiki
   to chat (Wayland may deliver blank -> hint). `schedule.py` tab "Planung": jobs (once/daily/weekly/interval) in
   tool setting "schedules", QTimer 30 s, catch-up of missed runs on open, run via chat.run without confirmation
   (level-4 changes refused), result saved as thread "⏰ name · date"; only one Clank instance (`_owner`) runs jobs.
+- MCP (stage 7b): `omniwrench/ai/mcp.py` client, Qt-free, dual-era: modern 2026-07-28 (no session, `_meta` with
+  io.modelcontextprotocol/protocolVersion|clientInfo|clientCapabilities in every request, HTTP headers
+  MCP-Protocol-Version/Mcp-Method/Mcp-Name/Mcp-Param-* from x-mcp-header, base64 sentinel) and legacy initialize
+  (2025-11-25..2025-03-26, Mcp-Session-Id). Probe: stdio server/discover (PROBE_TIMEOUT, unknown error/timeout ->
+  initialize); HTTP 400/404/405 without modern error code (-32022/-32020/-32021) -> initialize. Only tools; input_required
+  (elicitation/sampling) answered with decline once. `omniwrench/ai/mcp_server.py`: FunctionHost (functions.available
+  with conn id "mcp-server" -> exceptions on KI-Zugriff page list it as pseudo assistant, never exposes mcp_* functions,
+  confirm for level 4, own Pseudonymizer state while running), Core (JSON-RPC both eras, resultType "complete" only for
+  modern), Server = ThreadingHTTPServer 127.0.0.1:<port>/mcp, Bearer token (Clank vault "mcp_server_token"), Origin
+  check, GET/DELETE 405, header validation; writes CONFIG_DIR/mcp_server.json {port, token, pid} for
+  `main.py --mcp-stdio` (stdio_bridge, forwards lines via HTTP). Clank `mcptab.py` tab "MCP": server list (tool
+  setting "mcp_servers", token in vault "mcp:<id>"), tools registered via ctx.ai_function as mcp_<server>_<tool>
+  (source ai.clank; read-only only if server "trusted" + readOnlyHint, else level 4 + confirm with JSON args),
+  per-tool disable, server switch (settings mcp_server_on/port, one owner), copy setup (stdio/VS Code/HTTP).
+  Test test_mcp.py (fake stdio server modern/legacy/silent, legacy HTTP fake, own server, bridge subprocess).

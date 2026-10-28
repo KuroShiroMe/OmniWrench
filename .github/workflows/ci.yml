@@ -89,3 +89,5 @@ jobs:
           python scripts/ai_check/test_music_video.py
       - name: Clank Vorlagen, Dokumente, Bildschirmfoto und Zeitpläne
         run: python scripts/ai_check/test_extras.py
+      - name: MCP-Client und -Server (Fake-Server, stdio-Brücke)
+        run: python scripts/ai_check/test_mcp.py

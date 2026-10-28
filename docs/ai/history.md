@@ -539,3 +539,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-28: Etappe 7a: Clank templates (8 built-in, own with {{placeholders}}), tab "Dokumente" (write/revise with
   AI, export HTML/PDF/ODT, new storage type documents), screenshot (region/full screen to chat), tab "Planung"
   (scheduled prompts while Clank is open). Test test_extras.py (40 checks).
+- 2026-10-28: Etappe 7b: MCP. Spec check: current MCP revision is 2026-07-28 (stateless, server/discover, per-request
+  _meta, new HTTP headers) -> client speaks it plus legacy initialize; Clank tab "MCP" (connect stdio/HTTP servers,
+  tools for assistants) and OmniWrench as MCP server (localhost HTTP + token, stdio bridge `--mcp-stdio`). Test
+  test_mcp.py (72 checks).

@@ -58,6 +58,11 @@ def register(fn: Function) -> None:
         _registry[fn.name] = fn
 
 
+def unregister(name: str) -> None:
+    with _lock:
+        _registry.pop(name, None)
+
+
 def unregister_source(source: str) -> None:
     with _lock:
         for name in [n for n, f in _registry.items() if f.source == source]:

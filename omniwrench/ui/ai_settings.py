@@ -893,15 +893,18 @@ class AIAccessPage(QWidget):
         lay.addWidget(label(tr("ai.access.exceptions_hint"), "Muted", wrap=True))
         form = QFormLayout()
         combos = {}
-        for c in self.store.list():
+        from omniwrench.ai.mcp_server import CONN_ID as MCP_ID
+        # Externe Programme über den MCP-Server des KI-Studios zählen wie ein eigener Assistent
+        entries = [(c.id, c.name) for c in self.store.list()] + [(MCP_ID, tr("ai.access.mcp_server"))]
+        for cid, name in entries:
             combo = QComboBox()
             combo.addItem(tr("ai.access.no_exception"), None)
             for lv in self.access.LEVELS:
                 combo.addItem(tr(f"ai.level.{lv}"), lv)
-            combo.setCurrentIndex(max(combo.findData(self.exceptions.get(c.id)), 0))
-            combos[c.id] = combo
-            form.addRow(c.name, combo)
-        if not combos:
+            combo.setCurrentIndex(max(combo.findData(self.exceptions.get(cid)), 0))
+            combos[cid] = combo
+            form.addRow(name, combo)
+        if len(combos) == 1:
             lay.addWidget(label(tr("ai.access.no_assistants"), "Muted", wrap=True))
         lay.addLayout(form)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)

@@ -304,4 +304,8 @@
   Group chat with brakes, many options grouped and collapsible. Extras: templates, documents, screenshot, scheduling,
   MCP client/server (server last), live transcription tab (system audio + mic, summary, speaker recognition with
   named long-term profiles, prominent consent notice at start), live voice agent with wake word ("Hey <name>").
+- MCP (my choices 2026-10-28, stage 7b): client + server live in Clank (run only while Clank is open, like
+  schedules). Server only on 127.0.0.1 with mandatory token, same access levels/pseudonymization/confirmation as
+  built-in assistants (exception key "mcp-server"); never re-exports foreign MCP tools. Client: tool annotations only
+  trusted when the user ticks "Server vertrauen", otherwise every MCP tool = level 4 with confirmation.
 - Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.

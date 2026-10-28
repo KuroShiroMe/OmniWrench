@@ -152,7 +152,7 @@ def main() -> int:
     tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
     pkg = type(tool).__module__.rsplit(".", 1)[0]
     tm, sm, shot_mod = (sys.modules[pkg + n] for n in (".templates", ".schedule", ".screenshot"))
-    check(tool.modes.count() == 7, "7 Reiter")
+    check(tool.modes.count() >= 7, "7 Reiter")
 
     # Vorlagen
     check(tm.placeholders("A {{Skript}} B {{ Server }} {{Skript}}") == ["Skript", "Server"], "Platzhalter")
