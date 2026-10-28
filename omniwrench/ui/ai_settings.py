@@ -9,7 +9,7 @@ from PySide6.QtCore import QTimer, Qt, QUrl
 from PySide6.QtGui import QBrush, QColor, QDesktopServices
 from PySide6.QtWidgets import (
     QAbstractItemView, QCheckBox, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QHBoxLayout,
-    QHeaderView, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QSplitter, QStackedWidget, QTableWidget,
+    QHeaderView, QLabel, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QSplitter, QStackedWidget, QTableWidget,
     QTableWidgetItem, QToolButton, QVBoxLayout, QWidget,
 )
 
@@ -96,6 +96,16 @@ class AIConnectionsPage(QWidget):
         row.addStretch()
         row.addWidget(make_button(tr("common.remove"), danger=True, on_click=self.remove))
         lay.addLayout(row)
+        ask_row = QHBoxLayout()
+        ask_row.addWidget(QLabel(tr("ai.ask.mode")))
+        self.ask_mode = QComboBox()
+        for mode in ("primary", "active", "ask"):
+            self.ask_mode.addItem(tr(f"ai.ask.mode_{mode}"), mode)
+        self.ask_mode.setCurrentIndex(max(self.ask_mode.findData(settings.get("ai_ask_mode", "primary")), 0))
+        self.ask_mode.currentIndexChanged.connect(
+            lambda *_: settings.set("ai_ask_mode", self.ask_mode.currentData()))
+        ask_row.addWidget(self.ask_mode, 1)
+        lay.addLayout(ask_row)
         self.catalog_info = label("", "Muted", wrap=True)
         lay.addWidget(self.catalog_info)
         self.refresh()

@@ -300,6 +300,21 @@ def fmt_cell(kind: str, value) -> str:
     return str(value)
 
 
+_ask_context = None     # ToolContext mit add_ask_action (KI, ab OmniWrench 0.9.0)
+
+
+def set_ask_hook(context) -> None:
+    """Kontextmenüs der Tabellen bekommen „Assistent fragen …“, wenn das Hauptprogramm es anbietet."""
+    global _ask_context
+    _ask_context = context if hasattr(context, "add_ask_action") else None
+
+
+def add_ask_action(menu, text_fn) -> None:
+    if _ask_context is not None:
+        menu.addSeparator()
+        _ask_context.add_ask_action(menu, text_fn)
+
+
 class Grid(QTableWidget):
     """Tabelle aus Zeilen-Dicts. cols: [(key, titel, art)], art = text|ip|int|float|opt."""
 
@@ -370,8 +385,20 @@ class Grid(QTableWidget):
                 m.addSeparator()
             else:
                 m.addAction(self._qactions[spec[0]])
-        if self._actions:
+        if self.selected_rows():
+            add_ask_action(m, self.selection_text)
+        if not m.isEmpty():
             m.exec(self.viewport().mapToGlobal(pos))
+
+    def selection_text(self, limit: int = 200) -> str:
+        """Markierte Zeilen als Text (sichtbare Spalten „Titel: Wert“), z. B. für den Assistenten."""
+        vis = [(k, t, kind) for i, (k, t, kind) in enumerate(self.cols) if not self.isColumnHidden(i)]
+        rows = self.selected_rows()
+        lines = ["; ".join(f"{t}: {fmt_cell(kind, r.get(k))}" for k, t, kind in vis if r.get(k) not in (None, ""))
+                 for r in rows[:limit]]
+        if len(rows) > limit:
+            lines.append(f"… (+{len(rows) - limit})")
+        return "\n".join(lines)
 
     def keyPressEvent(self, e) -> None:  # noqa: N802
         if e.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter) and self.default_action and self.state() != QAbstractItemView.State.EditingState:
@@ -837,9 +864,10 @@ class FindingsView(QWidget):
         m.addSeparator()
         m.addAction(tr("find.menu.copy"), lambda: self.copy(False))
         m.addAction(tr("find.menu.copy_all"), lambda: self.copy(True))
+        add_ask_action(m, lambda: self.copy(False, to_clipboard=False))
         m.exec(self.table.viewport().mapToGlobal(pos))
 
-    def copy(self, all_rows: bool) -> None:
+    def copy(self, all_rows: bool, to_clipboard: bool = True) -> str:
         shown = getattr(self, "_shown", [])
         rows = range(len(shown)) if all_rows else sorted({i.row() for i in self.table.selectedIndexes()})
         lines = []
@@ -851,8 +879,9 @@ class FindingsView(QWidget):
                     parts.append(f.scope_id)
                 parts += [f.obj, f.text]
                 lines.append("\t".join(parts))
-        if lines:
+        if lines and to_clipboard:
             QApplication.clipboard().setText("\r\n".join(lines))
+        return "\n".join(lines)
 
 
 class FindingsToolbar(QWidget):

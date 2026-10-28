@@ -385,3 +385,20 @@ docs/README.md                internal docs index, points to the wiki
   Streamed text is decoded on the whole raw buffer (placeholders split across chunks). UI: AIAccessPage (app tab
   "KI-Zugriff" + tab in every ToolSettingsDialog), ConfirmDialog with "remember for this session".
 - `scripts/test_ai.py` (CI): fake server for all 3 protocols, pseudonymization, access, storage, wiki search.
+- Etappe 3 (tool SDK, 2026-10-28): ToolContext.ai_function(name, description, handler, parameters, level=AI_READ,
+  confirm, summary) registers with source=tool id, owner=context (MainWindow._shutdown_instance -> unregister_owner);
+  ai_set_access(level, pseudo) = access.set_runtime; ai_level(); ask_assistant(context, title); add_ask_action(menu,
+  text|fn). Tools check `hasattr/getattr(ctx, ...)` so they still run on older apps. MainWindow.ask_assistant ->
+  AIPanel.ask_about: AskDialog (question, context preview, assistant combo in mode "ask"), setting "ai_ask_mode"
+  primary|active|ask (combo on KI-Assistenten page), context capped at 60k chars, sent as new chat.
+  Tool modules `ai.py`: DhcpAI (dhcp_status L1, dhcp_overview L2, dhcp_findings/scope/find_client/failover/
+  server_options L3, dhcp_add_reservation/remove_reservation L4 via svc.atomic + after_change replication), DnsAI
+  (dns_status, dns_overview, dns_findings/records/search/server_settings, dns_add_record/delete_record via write_flow;
+  result checked against cache because write_flow returns silently on conflict cancel), NetProbeAI (results, result,
+  netprobe_start L4 because it sends traffic), IconForgeAI (packs, search, show), AD lookup (ad_user_results L3).
+  Live reads/writes run as flows on the tool's Runner (`_flow`: wrapper generator + threading.Event, waits for queued
+  UI flows, stop/timeout 600 s) so they never race the UI; cached data is read via call.in_gui.
+  favorites.AIAccessRow (shared copy in both server tools): login row "KI-Zugriff" (level inherit/0-4 + pseudo
+  inherit/on/off, app texts ai.fav.*), stored in favourite "ai", applied after login, cleared on logout/shutdown.
+  ui_base.set_ask_hook(context): Grid/FindingsView context menus get "Assistent fragen …" with the selected rows
+  as "Column: value" text (Grid.selection_text). Test: scripts/ai_check/test_tool_ai.py (fake backends, CI Linux).

@@ -12,7 +12,7 @@ import threading
 import time
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QObject, QSize, Qt, QUrl, Signal
 from PySide6.QtGui import QBrush, QColor, QDesktopServices, QGuiApplication, QKeyEvent
 from PySide6.QtWidgets import (
     QButtonGroup, QComboBox, QDialog, QDialogButtonBox, QFileDialog, QFormLayout, QFrame, QHBoxLayout, QLabel,
@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
-from omniwrench.ai import access, chat, functions, providers
+from omniwrench.ai import access, chat, functions
 from omniwrench.ai.app_functions import register_app_functions
 from omniwrench.ai.pseudo import Pseudonymizer
 from omniwrench.ai.connections import Connection, ConnectionStore
@@ -200,18 +200,36 @@ class MessageWidget(QFrame):
 
 
 class ConfirmDialog(QDialog):
-    """Rückfrage vor einer Änderung durch den Assistenten, mit „für diese Sitzung merken“."""
+    """Rückfrage vor einer Änderung durch den Assistenten, mit „für diese Sitzung merken“.
 
-    def __init__(self, title: str, text: str, parent=None):
+    text: Satz („Reservierung … anlegen?“) oder dict {"text", "code", "explanation"} für Befehle:
+    der Befehl erscheint in Festbreitenschrift, darunter die kurze Erklärung des Assistenten.
+    """
+
+    def __init__(self, title: str, text, parent=None):
         from PySide6.QtWidgets import QCheckBox
         super().__init__(parent)
         self.setWindowTitle(title)
-        self.setMinimumWidth(420)
+        self.setMinimumWidth(480)
+        info = text if isinstance(text, dict) else {"text": str(text)}
         lay = QVBoxLayout(self)
         lay.addWidget(label("✦ " + tr("ai.panel.confirm_intro"), "Muted", wrap=True))
-        body = label(text, "CardTitle", wrap=True)
+        body = label(info.get("text", ""), "CardTitle", wrap=True)
         body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         lay.addWidget(body)
+        if info.get("code"):
+            code = QPlainTextEdit(info["code"])
+            code.setReadOnly(True)
+            code.setObjectName("AICode")
+            font = code.font()
+            font.setFamilies(["Cascadia Mono", "Consolas", "DejaVu Sans Mono", "monospace"])
+            code.setFont(font)
+            lines = min(max(info["code"].count("\n") + 1, 2), 14)
+            code.setFixedHeight(int(lines * code.fontMetrics().lineSpacing() + 18))
+            lay.addWidget(code)
+        if info.get("explanation"):
+            lay.addWidget(label(tr("ai.panel.confirm_explanation"), "Muted"))
+            lay.addWidget(label(info["explanation"], "", wrap=True))
         self.remember = QCheckBox(tr("ai.panel.remember_session"))
         lay.addWidget(self.remember)
         buttons = QDialogButtonBox()
@@ -220,6 +238,53 @@ class ConfirmDialog(QDialog):
         buttons.accepted.connect(self.accept)
         buttons.rejected.connect(self.reject)
         lay.addWidget(buttons)
+
+
+ASK_MODE_KEY = "ai_ask_mode"
+ASK_MODES = ("primary", "active", "ask")
+MAX_CONTEXT_CHARS = 60000
+
+
+class AskDialog(QDialog):
+    """„Assistent fragen …“ aus einem Kontextmenü: Frage eingeben, mitgeschickten Inhalt ansehen,
+    im Modus „nachfragen“ zusätzlich den Assistenten wählen."""
+
+    def __init__(self, title: str, context: str, connections: list[Connection], selected: str,
+                 choose: bool, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("✦ " + tr("ai.ask.title"))
+        self.resize(560, 460)
+        lay = QVBoxLayout(self)
+        lay.addWidget(label(tr("ai.ask.about", title=title) if title else tr("ai.ask.intro"), "CardTitle",
+                            wrap=True))
+        self.question = QPlainTextEdit()
+        self.question.setPlaceholderText(tr("ai.ask.placeholder"))
+        self.question.setFixedHeight(80)
+        lay.addWidget(self.question)
+        self.bot = QComboBox()
+        for c in connections:
+            info = c.info
+            self.bot.addItem(c.name + ("" if info and not info.removed else " ⚠"), c.id)
+        self.bot.setCurrentIndex(max(self.bot.findData(selected), 0))
+        if choose:
+            form = QFormLayout()
+            form.addRow(tr("ai.ask.assistant"), self.bot)
+            lay.addLayout(form)
+        lay.addWidget(label(tr("ai.ask.context"), "Muted"))
+        preview = QPlainTextEdit(context)
+        preview.setReadOnly(True)
+        lay.addWidget(preview, 1)
+        lay.addWidget(label(tr("ai.ask.notice"), "Muted", wrap=True))
+        buttons = QDialogButtonBox()
+        buttons.addButton("✦ " + tr("ai.ask.send"), QDialogButtonBox.ButtonRole.AcceptRole)
+        buttons.addButton(tr("common.cancel"), QDialogButtonBox.ButtonRole.RejectRole)
+        buttons.accepted.connect(self.accept)
+        buttons.rejected.connect(self.reject)
+        lay.addWidget(buttons)
+        self.question.setFocus()
+
+    def text(self) -> str:
+        return self.question.toPlainText().strip() or tr("ai.ask.default_question")
 
 
 class ProjectDialog(QDialog):
@@ -252,11 +317,17 @@ class ProjectDialog(QDialog):
 
 
 class AIPanel(QWidget):
-    PAGE_EMPTY, PAGE_CHAT, PAGE_HISTORY = range(3)
+    """Chat mit einem Assistenten. embedded=True: eingebettet in ein Tool (KI-Studio), ohne eigenen Verlauf und
+    Projektauswahl - das Tool steuert Projekt und Chat über set_project()/open_thread()/new_chat()."""
 
-    def __init__(self, window):
+    PAGE_EMPTY, PAGE_CHAT, PAGE_HISTORY = range(3)
+    threadSaved = Signal(str, str)      # (Chat-ID, Projekt-ID) nach dem Speichern
+
+    def __init__(self, window, embedded: bool = False, system_extra=None):
         super().__init__()
         self.window = window
+        self.embedded = embedded
+        self.system_extra = system_extra      # Funktion -> zusätzlicher Systemtext (z. B. Arbeitsbereich)
         self.settings = window.settings
         self.store = ConnectionStore(window.settings, window.vault)
         self.storage = Storage(window.settings, window.vault)
@@ -267,7 +338,8 @@ class AIPanel(QWidget):
         self._running = False
         self._live: MessageWidget | None = None
         self._remembered: dict[str, bool] = {}     # Bestätigungen „für diese Sitzung merken“
-        register_app_functions(window)
+        if hasattr(window, "manager"):
+            register_app_functions(window)
         self.setObjectName("AIPanel")
         self.setStyleSheet(panel_stylesheet())
         self.setMinimumWidth(300)
@@ -448,6 +520,9 @@ class AIPanel(QWidget):
         has = bool(conns)
         for w in (self.bot, self.new_btn, self.hist_btn, self.more_btn, self.project_combo, self.detail_bar):
             w.setVisible(has)
+        if self.embedded:
+            self.hist_btn.setVisible(False)
+            self.project_combo.setVisible(False)
         if not has:
             self.stack.setCurrentIndex(self.PAGE_EMPTY)
         elif self.stack.currentIndex() == self.PAGE_EMPTY:
@@ -632,6 +707,13 @@ class AIPanel(QWidget):
         if self.stack.currentIndex() == self.PAGE_HISTORY:
             self._fill_history()
 
+    def set_project(self, project: dict | None) -> None:
+        """Projekt von außen setzen (eingebettet); ein Chat eines anderen Projekts wird geschlossen."""
+        self.project = project
+        self._fill_projects()
+        if not self.thread or self.thread.get("project", "") != (project or {}).get("id", ""):
+            self.new_chat()
+
     def _edit_project(self) -> None:
         if not self.project:
             return
@@ -736,6 +818,27 @@ class AIPanel(QWidget):
         self.input.setPlainText(text)
         self.send()
 
+    def ask_about(self, context: str, title: str = "", source: str = "") -> bool:
+        """Kontextmenü „Assistent fragen …“. Wählt den Assistenten nach Einstellung ai_ask_mode."""
+        self.refresh()
+        conns = self.store.chat_connections()
+        if not conns:
+            return False
+        mode = self.settings.get(ASK_MODE_KEY, "primary")
+        if mode == "active" and self.connection() is not None:
+            selected = self.connection().id
+        else:
+            selected = self.store.primary_id() or conns[0].id
+        if len(context) > MAX_CONTEXT_CHARS:
+            context = context[:MAX_CONTEXT_CHARS] + "\n… " + tr("ai.ask.truncated")
+        dlg = AskDialog(title, context, conns, selected, mode == "ask", self.window)
+        if dlg.exec() != QDialog.DialogCode.Accepted:
+            return True
+        head = tr("ai.ask.context_head", title=title) if title else tr("ai.ask.context_head_plain")
+        text = f"{dlg.text()}\n\n--- {head} ---\n{context}"
+        self.ask(text, connection_id=dlg.bot.currentData() or "")
+        return True
+
     def _send_or_stop(self) -> None:
         if self._running:
             self.stop()
@@ -784,7 +887,13 @@ class AIPanel(QWidget):
         work = dict(thread, messages=list(thread["messages"]), usage=dict(thread.get("usage") or {}),
                     state=dict(thread.get("state") or {}))
         self._work = (thread, work)
-        system = chat.system_prompt(thread.get("detail", "normal"), self.project)
+        extra = ""
+        if self.system_extra is not None:
+            try:
+                extra = self.system_extra() or ""
+            except Exception:  # noqa: BLE001 - Zusatztext ist optional
+                extra = ""
+        system = chat.system_prompt(thread.get("detail", "normal"), self.project, extra)
         b = self.bridge
         settings = self.settings
         pstate = work["state"].setdefault("pseudo", {})
@@ -823,15 +932,20 @@ class AIPanel(QWidget):
         return result[0] if result else None
 
     def _confirm_in_gui(self, fn: functions.Function, args: dict) -> bool:
-        if fn.name in self._remembered:
-            return self._remembered[fn.name]
+        try:
+            text = fn.summary(args) if fn.summary else f"{fn.name}\n{args}"
+        except Exception:  # noqa: BLE001 - Zusammenfassung ist nur Anzeige
+            text = f"{fn.name}\n{args}"
+        # Befehle merken sich die Antwort je Befehlstext, alles andere je Funktion
+        key = fn.name + ("\0" + text["code"] if isinstance(text, dict) and text.get("code") else "")
+        if key in self._remembered:
+            return self._remembered[key]
 
         def ask():
-            text = fn.summary(args) if fn.summary else f"{fn.name}\n{args}"
             dlg = ConfirmDialog(tr("ai.panel.confirm_title"), text, self)
             ok = dlg.exec() == QDialog.DialogCode.Accepted
             if dlg.remember.isChecked():
-                self._remembered[fn.name] = ok
+                self._remembered[key] = ok
             return ok
         return bool(self._in_gui(ask))
 
@@ -975,3 +1089,5 @@ class AIPanel(QWidget):
                 self.storage.save_thread(self.thread, chat.thread_markdown(self.thread))
             except OSError as err:
                 self.status.setText("⚠ " + tr("ai.panel.save_failed", error=str(err)))
+                return
+            self.threadSaved.emit(self.thread["id"], self.thread.get("project", ""))

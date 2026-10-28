@@ -161,12 +161,15 @@ class ToolManager(QObject):
             pass  # Passwortmanager noch nicht initialisiert (z. B. in Skripten)
 
     def create_instance(self, tool_id: str, notify: Callable[[str], None] | None = None,
-                        open_settings: Callable[[], None] | None = None) -> ToolBase:
+                        open_settings: Callable[[], None] | None = None,
+                        ask_assistant: Callable[..., None] | None = None,
+                        ai_services: Callable[[], object] | None = None) -> ToolBase:
         tool = self.tools[tool_id]
         cls = self._import_entry(tool)
         tool.data_dir.mkdir(parents=True, exist_ok=True)
         ctx = ToolContext(tool.manifest, tool.path, tool.data_dir, tool.settings, self.vault,
-                          notify=notify, open_settings=open_settings)
+                          notify=notify, open_settings=open_settings, ask_assistant=ask_assistant,
+                          ai_services=ai_services)
         return cls(ctx)
 
     def _unload_modules(self, tool_id: str) -> None:

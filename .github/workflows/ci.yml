@@ -75,3 +75,7 @@ jobs:
         run: python scripts/smoke_test.py
       - name: Server-Favoriten (DHCP- und DNS-Tool mit Fake-Backends)
         run: python scripts/fav_check/test_favorites.py
+      - name: KI-Funktionen der Tools (DHCP, DNS, NetProbe, IconForge mit Fake-Backends)
+        run: |
+          python -m pip install dnspython
+          python scripts/ai_check/test_tool_ai.py

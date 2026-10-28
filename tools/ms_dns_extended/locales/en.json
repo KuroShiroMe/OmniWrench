@@ -737,5 +737,7 @@
   "fav.dhcp_server": "DHCP server for the comparison",
   "status.fav_connect": "Connecting {n} further servers from the favourite …",
   "log.fav_connected": "Connected {n} further servers from the favourite: {list}",
-  "log.fav_dhcp": "DHCP server for the comparison from the favourite: {server}"
+  "log.fav_dhcp": "DHCP server for the comparison from the favourite: {server}",
+  "ai.fn.rec_add": "Create record {rec} in zone {zone} on {server}?",
+  "ai.fn.rec_delete": "Delete record {rec} from zone {zone} on {server}?"
 }

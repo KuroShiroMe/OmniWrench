@@ -737,5 +737,7 @@
   "fav.dhcp_server": "DHCP-Server für den Abgleich",
   "status.fav_connect": "Verbinde {n} weitere Server aus dem Favoriten …",
   "log.fav_connected": "{n} weitere Server aus dem Favoriten verbunden: {list}",
-  "log.fav_dhcp": "DHCP-Server für den Abgleich aus dem Favoriten: {server}"
+  "log.fav_dhcp": "DHCP-Server für den Abgleich aus dem Favoriten: {server}",
+  "ai.fn.rec_add": "Eintrag {rec} in Zone {zone} auf {server} anlegen?",
+  "ai.fn.rec_delete": "Eintrag {rec} aus Zone {zone} auf {server} löschen?"
 }

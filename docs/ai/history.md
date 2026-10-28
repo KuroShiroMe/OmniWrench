@@ -519,3 +519,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   KI-Datenablage, dockable chat panel with bot switch, detail level, projects, history. Tested against a local fake
   server (all 3 protocols incl. tool calls), smoke test extended.
 - 2026-10-28: Etappe 2: wiki knowledge (FTS5), app functions, KI-Zugriff page for app + every tool (inheritance, exceptions), pseudonymization (on for everything), confirmation dialog with remember; scripts/test_ai.py in CI.
+- 2026-10-28: Etappe 3: tool SDK for AI (ToolContext.ai_function/ai_set_access/ask_assistant/add_ask_action), "Assistent
+  fragen …" dialog + mode setting, AI functions in DHCP 1.7.0, DNS 1.3.0, NetProbe 1.3.0, IconForge 1.2.0, AD lookup
+  1.4.0, AI level/pseudonymization per server favourite on the DHCP/DNS login page, context menus in tool tables.
+  Tests: scripts/ai_check/test_tool_ai.py (47 checks), fav_check adjusted, smoke test asks via context dialog.
+

@@ -3,8 +3,8 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 2-7 open
-      (knowledge + KI-Zugriff + pseudonymization; tool functions + context menu; KI-Studio tool; images + group chat;
+- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 1-3 done, 4-7 open
+      (KI-Studio tool; images + group chat;
       music/video; transcription, voice agent, MCP, templates, scheduling). App locales: only en/de have the ai.* keys
       so far, other 21 locales get translated in one pass at the end. Wiki pages + landing page + TESTLISTE at the end.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
@@ -53,7 +53,7 @@ that are not plain test steps.
       1.1.0 replication (TESTLISTE 9a) untested on Windows: DsReplicaSyncAllW via ctypes, GetDistinguishedName out
       param name "Name", LastSuccessfulXfr units. Idea: repl column also in search results.
 - [ ] Server favourites (DHCP 1.6.0, DNS 1.2.0): Windows tests open (TESTLISTE 11). Ideas: export/import of
-      favourites (share with colleagues), favourite name in the top bar after login, AI level per favourite (KI thread).
+      favourites (share with colleagues), favourite name in the top bar after login. AI level per favourite: done (Etappe 3).
 
 ## Later (mentioned by user or proposed)
 - More password-manager connectors (Bitwarden, 1Password, HashiCorp Vault done in 1.1.0): KeePassXC (browser protocol),

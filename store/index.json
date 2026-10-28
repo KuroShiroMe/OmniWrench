@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-28T16:08:35+00:00",
+  "generated": "2026-10-28T19:50:33+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.5",
+      "version": "1.4.0",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "KuroShiro",
@@ -66,14 +66,14 @@
           "screenshot.details": "Details of a locked-out account including groups"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.5.zip",
-      "sha256": "2f64925f55be0925a5e5f8dd3a617fea693819e3833a218715a6677e0a46bf86",
-      "size": 6262
+      "download_url": "packages/ms.ad-user-lookup-1.4.0.zip",
+      "sha256": "bf99998b2316dadbc0f26f22095e5e0927a126eee5416ff263953597b2fbdbba",
+      "size": 6724
     },
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.6",
+      "version": "1.2.0",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "KuroShiro",
@@ -135,14 +135,14 @@
           "screenshot.style": "Colour, stroke width and background adjusted before export"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.6.zip",
-      "sha256": "468a5faea3c6023fb237bb4bcf91f51d57215fb2bb77c44c7926b8ccf3df8221",
-      "size": 29778
+      "download_url": "packages/gfx.iconforge-1.2.0.zip",
+      "sha256": "c70b02b1514fb6934c629179a39de7fe9a1ab3e5a1f4dba7597927aeb6aa0a2e",
+      "size": 31238
     },
     {
       "id": "net.ms-dhcp-extended",
       "name": "MS DHCP Extended Management",
-      "version": "1.6.0",
+      "version": "1.7.0",
       "description": "Manage Microsoft DHCP servers (IPv4 and IPv6): scopes, options, reservations, failover and a full configuration check.",
       "long_description": "Connects to a Microsoft DHCP server (IPv4 and DHCPv6) with the current account, stored credentials or a different login and keeps the failover partners in view. Servers used regularly are saved as favourites with login method and connection settings (never passwords) and picked on the login page. Every scope opens in its own tab with general settings, address pool, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings that also compares everything with the failover partners (scopes, pools, exclusions, options, reservations, relationship settings, classes and definitions). Changes made by others (DHCP console, PowerShell, colleagues) are detected: before saving the tool checks whether the scope was changed since loading, an optional auto-refresh reloads the views, and the server's event log shows who changed what – also as its own page with reading aids (area, action, scope, object and a note per event). Every change runs as a transaction: if a step fails or the action is cancelled, everything already changed is undone automatically, on the server and on the partner. DHCPv6 with the same scope: prefixes, lifetimes, options, reservations by DUID and IAID, exclusions, leases, check, transactions and conflict detection; an IPv4/IPv6 switch selects the view. Optionally the check compares reservations and leases with DNS (name, address, PTR). Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
       "author": "KuroShiro",
@@ -243,14 +243,14 @@
           "screenshot.ipv6": "DHCPv6 scopes in the same view (IPv4/IPv6 switch)"
         }
       },
-      "download_url": "packages/net.ms-dhcp-extended-1.6.0.zip",
-      "sha256": "926777a14a53edc6d06181faed208b8f68dd15b3edd4673640225406f918ac6b",
-      "size": 235381
+      "download_url": "packages/net.ms-dhcp-extended-1.7.0.zip",
+      "sha256": "928426a86e69a4f335ce2089abff677914f4e97c20b322787804bdf8a288223a",
+      "size": 240894
     },
     {
       "id": "net.ms-dns-extended",
       "name": "MS DNS Extended Management",
-      "version": "1.2.0",
+      "version": "1.3.0",
       "description": "Manage Microsoft DNS servers: zones, records (IPv4 and IPv6), reverse lookup, aging/scavenging and a full configuration check.",
       "long_description": "Connects to one or more Microsoft DNS servers – domain controllers with AD-integrated zones as well as standalone servers outside a domain – with the current account, stored credentials or a different login. Servers used regularly are saved as favourites with login method, connection settings, further servers and the DHCP server for the comparison (never passwords) and picked on the login page. Every zone opens in its own tab with all records (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS and read-only display of all other types), general settings (dynamic updates, aging, zone transfers, notify) and its findings. Creating or changing an A/AAAA record keeps the matching PTR record in the reverse zone (IPv4 and ip6.arpa) in sync. New zones (primary, AD-integrated, secondary, stub, conditional forwarder) are created from a dialog, including IPv6 reverse zones. The check finds missing or orphaned PTR records, CNAME conflicts, dangling targets, duplicate addresses, risky zone settings (non-secure updates, transfers to any server, aging off), stale records and compares NS servers and forwarders by querying them (SOA serial, response). A scavenging preview shows which dynamic records would be deleted and whether the device still answers to ping. Optionally reads leases and reservations from a Microsoft DHCP server and compares them with DNS (missing, wrong or orphaned records). Search across all zones and servers, compare zones between servers, server settings, cache and the DNS server audit log with reading aids. With several servers connected, a column shows per record whether it has already replicated to the others, and replication can be triggered on demand (AD replication of the DNS partition or zone transfer to secondary servers). Changes made by others are detected through the SOA serial; every change runs as a transaction and is undone automatically if a step fails. Talks to the server via WMI (root\\MicrosoftDNS) – no PowerShell or RSAT needed.",
       "author": "KuroShiro",
@@ -333,14 +333,14 @@
           "screenshot.events": "DNS server audit log with reading aids"
         }
       },
-      "download_url": "packages/net.ms-dns-extended-1.2.0.zip",
-      "sha256": "f1739ec139fd1e2787a8ed2bb205d7b1510358b1b7b6d2ff71293ff06fc3ba2f",
-      "size": 134867
+      "download_url": "packages/net.ms-dns-extended-1.3.0.zip",
+      "sha256": "2f073180070a4fe731e63bd2ae809f40868653f8a9d1294b65e6e840beb9ff41",
+      "size": 140779
     },
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.5",
+      "version": "1.3.0",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
       "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "KuroShiro",
@@ -428,9 +428,9 @@
           "screenshot.findings": "Findings: errors, warnings and best-practice notes per target"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.5.zip",
-      "sha256": "5b5c1659bfc1ccfac69887d4177f56062d14b6a9b9fae771286dffbf07d4b76a",
-      "size": 83762
+      "download_url": "packages/net.netprobe-1.3.0.zip",
+      "sha256": "193d9c902709e59c6debd5ebcd620523efca9618a85531a323c0b90cc225c6bf",
+      "size": 85952
     },
     {
       "id": "sec.omnivault",
@@ -556,7 +556,7 @@
         }
       },
       "download_url": "packages/sec.omnivault-1.1.6.zip",
-      "sha256": "80dc4d76ba0e44cdff8b9248fb20a3c163fbd30e4570049f72cc9a3a17446828",
+      "sha256": "98ba414efb1c5457141a97890ea53f2f2592b6a81c9e0e52c2f700ae199af269",
       "size": 36397
     },
     {
@@ -627,7 +627,7 @@
         }
       },
       "download_url": "packages/net.subnet-calculator-1.2.6.zip",
-      "sha256": "2d5b383cae788771602ee2ae04cf55b29b9b435f173da33554866a62071a6ba5",
+      "sha256": "f36a1bd808b109fb73a26e743cf66143ab2ca4f447ed7f0e7997b882c8b417a8",
       "size": 7770
     }
   ]

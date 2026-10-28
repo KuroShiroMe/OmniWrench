@@ -30,6 +30,8 @@ from omniwrench.core.vault import Vault
 from omniwrench.sdk import ToolBase
 
 from . import scaling, theme
+from omniwrench.ai import functions as ai_functions
+
 from .ai_panel import AIPanel
 from .ai_settings import ensure_catalog_update
 from .home_page import HomePage
@@ -259,7 +261,8 @@ class MainWindow(QMainWindow):
         tool = self.manager.get(tool_id)
         try:
             instance = self.manager.create_instance(
-                tool_id, notify=self.notify, open_settings=lambda: self.open_tool_settings(tool_id))
+                tool_id, notify=self.notify, open_settings=lambda: self.open_tool_settings(tool_id),
+                ask_assistant=self.ask_assistant, ai_services=self.ai_services)
             return instance, instance.create_widget(None)
         except Exception as exc:  # noqa: BLE001
             log.error("Tool %s konnte nicht gestartet werden:\n%s", tool_id, traceback.format_exc())
@@ -351,6 +354,7 @@ class MainWindow(QMainWindow):
             entry.instance.shutdown()
         except Exception:  # noqa: BLE001
             log.exception("shutdown() von %s fehlgeschlagen", entry.tool_id)
+        ai_functions.unregister_owner(getattr(entry.instance, "context", None))
         tool = self.manager.get(entry.tool_id)
         if tool:
             for cb in entry.listeners:
@@ -744,6 +748,22 @@ class MainWindow(QMainWindow):
         else:
             self.ai_dock.toggleView(False)
         self.ai_button.setChecked(not self.ai_dock.isClosed())
+
+    def ai_services(self):
+        from .ai_services import AIServices
+        return AIServices(self)
+
+    def ask_assistant(self, context: str, title: str = "", tool_id: str = "") -> None:
+        """Kontextmenü „Assistent fragen …“ aus Tools (ToolContext.ask_assistant)."""
+        if not self.ai_panel.store.chat_connections():
+            self.toggle_assistant(True)   # zeigt den Hinweis „Optionen öffnen“
+            return
+        if self.ai_panel._running:
+            self.toggle_assistant(True)
+            QMessageBox.information(self, APP_NAME, tr("ai.ask.busy"))
+            return
+        self.toggle_assistant(True)
+        self.ai_panel.ask_about(context, title, tool_id)
 
     # ======================================================= Einstellungen
     def open_app_settings(self, initial_tab: str = "") -> None:

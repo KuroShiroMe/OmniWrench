@@ -1370,5 +1370,7 @@
   "fav.mode_sso": "Anmeldung: angemeldeter Benutzer",
   "fav.mode_vault": "Anmeldung: gespeicherte Anmeldedaten „{cred}“",
   "fav.mode_manual": "Anmeldung: andere Anmeldedaten ({user})",
-  "fav.cred_missing": "Die gespeicherten Anmeldedaten dieses Favoriten sind nicht mehr vorhanden. Bitte Anmeldedaten auswählen und den Favoriten überschreiben."
+  "fav.cred_missing": "Die gespeicherten Anmeldedaten dieses Favoriten sind nicht mehr vorhanden. Bitte Anmeldedaten auswählen und den Favoriten überschreiben.",
+  "ai.fn.res_add": "Reservierung {ip} für {mac} in Scope {scope} auf {server} anlegen?",
+  "ai.fn.res_remove": "Reservierung {ip} aus Scope {scope} auf {server} entfernen?"
 }

@@ -30,6 +30,8 @@ from omniwrench.ui import theme
 from omniwrench.ui.widgets import make_button
 
 from . import dialogs as dlg
+from . import ui_base
+from .ai import DnsAI
 from . import dnsutil as du
 from . import eventlog
 from . import favorites as fv
@@ -102,6 +104,8 @@ class MsDnsExtended(ToolBase):
         self._shortcut.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self._shortcut.activated.connect(self._close_current)
         self.bridge.scan_progress.connect(self.check_page.scan_progress)
+        self.ai = DnsAI(self)
+        ui_base.set_ask_hook(self.context)
         return self.root
 
     def _card(self) -> tuple[QWidget, QVBoxLayout]:
@@ -211,6 +215,11 @@ class MsDnsExtended(ToolBase):
         {"sso": self.m_sso, "vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
         self.mode_group.idToggled.connect(lambda *_: self._mode_changed())
         grid.addLayout(modes, 2, 1)
+        self.ai_row = fv.AIAccessRow(self.context)
+        if self.ai_row.available:
+            from omniwrench.core.i18n import tr as app_tr
+            grid.addWidget(QLabel(app_tr("ai.tab_access")), 3, 0)
+            grid.addWidget(self.ai_row, 3, 1)
         cl.addLayout(grid)
         self.auto_discover = QCheckBox(tr("login.auto_discover"))
         self.auto_discover.setChecked(bool(self.settings.get("auto_discover", True)))
@@ -249,7 +258,8 @@ class MsDnsExtended(ToolBase):
         elif mode == "vault":
             login["cred"] = fv.cred_key(self.cred_field.selected_item())
         return {"server": self.server.currentText().strip(), "login": login,
-                "options": {"auto_discover": self.auto_discover.isChecked(), "auto_scan": self.auto_scan.isChecked()}}
+                "options": {"auto_discover": self.auto_discover.isChecked(), "auto_scan": self.auto_scan.isChecked()},
+                "ai": self.ai_row.value()}
 
     def fav_apply(self, fav: dict | None) -> None:
         if not fav:
@@ -272,6 +282,7 @@ class MsDnsExtended(ToolBase):
         for key, box in (("auto_discover", self.auto_discover), ("auto_scan", self.auto_scan)):
             if key in opts:
                 box.setChecked(bool(opts[key]))
+        self.ai_row.set_value(fav.get("ai"))
 
     def _build_main(self) -> QWidget:
         tr = self.tr
@@ -543,6 +554,7 @@ class MsDnsExtended(ToolBase):
         now = eventlog.iso_utc(datetime.datetime.now() - datetime.timedelta(minutes=2))
         self._ev_since = {s: now for s in svc.servers}
         self._apply_refresh_timer()
+        self.ai_row.apply()
         if self.auto_scan.isChecked():
             self.start_scan()
 
@@ -619,6 +631,7 @@ class MsDnsExtended(ToolBase):
         for key in list(self.tabs):
             self._close_tab(key)
         yield Job(self.svc.logout, tr("status.logout"))
+        self.ai_row.clear()
         self.scans = {}
         self.dhcp_leases = None
         self.stack.setCurrentIndex(0)
@@ -1140,6 +1153,9 @@ class MsDnsExtended(ToolBase):
 
     def shutdown(self) -> None:
         self._closed = True
+        ai_row = getattr(self, "ai_row", None)
+        if ai_row is not None:
+            ai_row.clear()
         self.refresh_timer.stop()
         self._scan_gen += 1
         self._poll_gen += 1

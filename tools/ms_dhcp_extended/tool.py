@@ -32,6 +32,8 @@ from omniwrench.ui import theme
 from omniwrench.ui.widgets import make_button
 
 from . import checks as ck
+from . import ui_base
+from .ai import DhcpAI
 from . import dialogs as dlg
 from . import eventlog
 from . import favorites as fv
@@ -109,6 +111,8 @@ class MsDhcpExtended(ToolBase):
         self.scanner.scope_done.connect(cp.scope_done)
         self.scanner.finished.connect(self._scan_finished)
         self.scanner.failed.connect(self._scan_failed)
+        self.ai = DhcpAI(self)
+        ui_base.set_ask_hook(self.context)
         return self.root
 
     def _new_backend(self):
@@ -223,6 +227,11 @@ class MsDhcpExtended(ToolBase):
         {"sso": self.m_sso, "vault": self.m_vault, "manual": self.m_manual}.get(mode, self.m_sso).setChecked(True)
         self.mode_group.idToggled.connect(lambda *_: self._mode_changed())
         grid.addLayout(modes, 2, 1, 1, 2)
+        self.ai_row = fv.AIAccessRow(self.context)
+        if self.ai_row.available:
+            from omniwrench.core.i18n import tr as app_tr
+            grid.addWidget(QLabel(app_tr("ai.tab_access")), 3, 0)
+            grid.addWidget(self.ai_row, 3, 1, 1, 2)
         cl.addLayout(grid)
         self.auto_partner = QCheckBox(tr("login.auto_partner"))
         self.auto_partner.setChecked(bool(self.settings.get("auto_partner", True)))
@@ -259,7 +268,8 @@ class MsDhcpExtended(ToolBase):
             login["cred"] = fv.cred_key(self.cred_field.selected_item())
         return {"server": self.server.currentText().strip(), "login": login,
                 "options": {"auto_partner": self.auto_partner.isChecked(), "auto_scan": self.auto_scan.isChecked(),
-                            "family": self.family}}
+                            "family": self.family},
+                "ai": self.ai_row.value()}
 
     def fav_apply(self, fav: dict | None) -> None:
         if not fav:
@@ -282,6 +292,7 @@ class MsDhcpExtended(ToolBase):
         for key, box in (("auto_partner", self.auto_partner), ("auto_scan", self.auto_scan)):
             if key in opts:
                 box.setChecked(bool(opts[key]))
+        self.ai_row.set_value(fav.get("ai"))
         self.user.setEnabled(self.m_manual.isChecked())
         self.password.setEnabled(self.m_manual.isChecked())
 
@@ -578,6 +589,7 @@ class MsDhcpExtended(ToolBase):
         self._ev_seen = set()
         self._poll_error = ""
         self._apply_refresh_timer()
+        self.ai_row.apply()
         fav = self._login_fav
         if fav and (fav.get("options") or {}).get("family") in (4, 6):
             self.set_family(fav["options"]["family"])
@@ -632,6 +644,7 @@ class MsDhcpExtended(ToolBase):
             self.close_tab(w, force=True)
         self.scanner.reset()
         yield Job(self.svc.disconnect, tr("status.disconnecting"))
+        self.ai_row.clear()
         self.defs_page.lock()
         self.srv_opts.current = None
         self.events_page.reset()
@@ -1155,6 +1168,9 @@ class MsDhcpExtended(ToolBase):
         return True
 
     def shutdown(self) -> None:
+        ai_row = getattr(self, "ai_row", None)
+        if ai_row is not None:
+            ai_row.clear()
         scanner = getattr(self, "scanner", None)
         if scanner is not None:
             scanner.reset()

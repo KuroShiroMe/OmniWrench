@@ -146,6 +146,15 @@ def _check_assistant(window, code: str, fake_url: str) -> None:
         errors.append("Chatleiste: Chat wurde nicht gespeichert")
     window.ai_panel.toggle_history()
     pump(0.1)
+    # „Assistent fragen …“ aus einem Tool (Dialog bestätigt)
+    from PySide6.QtWidgets import QDialog
+    from omniwrench.ui import ai_panel
+    ai_panel.AskDialog.exec = lambda self: QDialog.DialogCode.Accepted
+    window.ask_assistant("Zeile: 10.0.0.1", "Smoke-Tool", "smoke.tool")
+    wait_for(lambda: not window.ai_panel._running, 15, "Antwort auf „Assistent fragen …“")
+    msgs = (window.ai_panel.thread or {}).get("messages", [])
+    if len(msgs) < 2 or "10.0.0.1" not in msgs[0].get("content", "") or msgs[-1].get("content") != "Smoke OK":
+        errors.append(f"Assistent fragen: unerwarteter Verlauf {msgs!r}")
     window.ai_panel.new_chat()
     store.remove("smoke")
     window.toggle_assistant(False)

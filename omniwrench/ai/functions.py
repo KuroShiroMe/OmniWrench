@@ -33,6 +33,7 @@ class Function:
     level: int = LEVEL_DESCRIBE
     confirm: bool = False           # Änderung: vor dem Ausführen nachfragen
     summary: Callable[[dict], str] | None = None   # Text für die Bestätigung
+    owner: Any = None               # z. B. ToolContext einer Tab-Instanz (zum Entfernen beim Schließen)
 
     def schema(self) -> dict:
         return {"name": self.name, "description": self.description, "parameters": self.parameters}
@@ -60,6 +61,12 @@ def register(fn: Function) -> None:
 def unregister_source(source: str) -> None:
     with _lock:
         for name in [n for n, f in _registry.items() if f.source == source]:
+            del _registry[name]
+
+
+def unregister_owner(owner: Any) -> None:
+    with _lock:
+        for name in [n for n, f in _registry.items() if f.owner is owner]:
             del _registry[name]
 
 

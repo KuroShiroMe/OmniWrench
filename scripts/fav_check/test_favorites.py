@@ -171,7 +171,8 @@ def test_dhcp(manager):
     tool.auto_partner.setChecked(True)
     tool.fav_bar.overwrite()
     fav = tool.favs.get(fid)
-    check(fav["options"]["auto_partner"] is True and fav["ai"] == {"level": 1} and fav["note"] == "Notiz", "überschreiben")
+    check(fav["options"]["auto_partner"] is True and fav["ai"] == {"level": 1, "pseudo": None} and fav["note"] == "Notiz",
+          "überschreiben (KI-Zugriff aus der Maske)")
     # Anmeldung über Favorit stellt die gespeicherte Ansicht (IPv6) ein
     tool.favs.save({"id": fid, "login": {"mode": "sso"}, "options": {"family": 6, "auto_scan": False}})
     tool.fav_bar.refresh()

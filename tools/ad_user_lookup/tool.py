@@ -95,7 +95,30 @@ class AdUserLookup(ToolBase):
         splitter.setSizes([400, 200])
         lay.addWidget(splitter, 1)
         self._users: list[dict] = []
+        if hasattr(self.context, "add_ask_action"):     # KI-Assistent (ab OmniWrench 0.9.0)
+            self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            self.table.customContextMenuRequested.connect(self._context_menu)
+            from omniwrench.sdk import AI_READ
+            self.context.ai_function(
+                "ad_user_results", "AD user lookup: users found by the last search in the tool (account, name, "
+                "state, last logon, mail, department, groups).", self._ai_results, level=AI_READ)
         return root
+
+    def _selected_users(self) -> list[dict]:
+        rows = sorted({i.data(Qt.ItemDataRole.UserRole) for i in self.table.selectedItems()})
+        return [self._users[r] for r in rows if r is not None and 0 <= r < len(self._users)]
+
+    def _context_menu(self, pos) -> None:
+        from PySide6.QtWidgets import QMenu
+        if not self._selected_users():
+            return
+        menu = QMenu(self.table)
+        self.context.add_ask_action(menu, lambda: json.dumps(self._selected_users(), ensure_ascii=False, indent=1))
+        menu.exec(self.table.viewport().mapToGlobal(pos))
+
+    def _ai_results(self, args, call):
+        return call.in_gui(lambda: {"query": self.query.text().strip(), "total": len(self._users),
+                                    "users": self._users[:200]})
 
     def _toggle_credential(self, on: bool) -> None:
         self.context.settings.set("use_credential", on)
