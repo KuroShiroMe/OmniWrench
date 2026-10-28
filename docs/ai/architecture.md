@@ -297,6 +297,25 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   UpdateFromDS on peers; file zones: ForceRefresh on connected secondaries. `MsDnsExtended.show_error(..., warning)` =
   popup with Detailansicht.
 
+## Server favourites (DHCP 1.6.0, DNS 1.2.0, 2026-10-28)
+- `tools/ms_dhcp_extended/favorites.py` == `tools/ms_dns_extended/favorites.py` (identical copy, no imports between
+  tools; test checks equality). FavoriteStore(settings) on the undeclared tool setting "favorites":
+  {"version":1,"last":id,"items":[{id,name,server,note,login:{mode sso|vault|manual,user,cred:{ref}|{name,username}},
+  options:{tool-specific},ai:{}}]}. save() merges (unknown keys + sections like "ai" survive; "login" is replaced),
+  always deep copies (ToolSettingsStore compares values). section()/set_section() for other features.
+- FavoritesBar (row "Favorit" on the login card): combo + ☆ (save new / overwrite selected) + "Verwalten …"
+  (ManageDialog: edit, up/down, delete). Signal applied(fav) -> tool.fav_apply fills the form; tool.fav_capture
+  reads it. Manual edit of the server -> selection "Kein Favorit". restore() at build selects the last one.
+- Credentials: only cred_key (ref or name+username) -> match_cred finds the item in the CredentialField list and sets
+  cred_field.combo; missing -> login_status hint. Passwords never in favourites.
+- DHCP options: auto_partner, auto_scan, family (applied via set_family after login when the favourite's server equals
+  the typed one, `_login_fav`). DNS options: auto_discover, auto_scan + extra_fields servers (list) and dhcp_server,
+  edited only in the favourite dialog; fav_login_flow connects them (connect_servers_flow, shared with discovery) and
+  sets svc.dhcp_server/user/secret from the login.
+- KI integration (thread "KI-Integration", branch claude/project-thread-ie207t) uses "ai": {"level": null|int,
+  "pseudo": null|bool} (null = inherit) via section()/applied.
+- Test: scripts/fav_check/test_favorites.py (store + both tools offscreen with the screenshot fake backends).
+
 ## Wiki and template (2026-10-22)
 ```
 wiki/                         GitHub-Wiki source (German), *.md + images/; mirrored by .github/workflows/wiki.yml
