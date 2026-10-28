@@ -37,7 +37,12 @@ from .http import AIError, Cancelled
 KINDS = ("image", "music", "video")
 IMAGE_APIS = ("openai_images", "chatgpt_image", "gemini_image", "bfl", "fal", "replicate", "stability_image",
               "ideogram", "minimax_image")
-SUPPORTED = {"image": IMAGE_APIS, "music": (), "video": ()}
+MUSIC_APIS = ("gemini_lyria", "elevenlabs_music", "minimax_music", "stability_audio", "mureka", "fal", "replicate")
+VIDEO_APIS = ("gemini_omni", "xai_video", "minimax_video", "runway", "luma", "seedance", "fal", "replicate")
+SUPPORTED = {"image": IMAGE_APIS, "music": MUSIC_APIS, "video": VIDEO_APIS}
+VIDEO_ASPECTS = ("16:9", "9:16", "1:1")
+RESOLUTIONS = ("720p", "1080p", "480p")
+_RUNWAY_RATIO = {"16:9": "1280:720", "9:16": "720:1280", "1:1": "960:960"}
 ASPECTS = ("1:1", "16:9", "9:16", "4:3", "3:4")
 REFERENCE_APIS = ("openai_images", "chatgpt_image", "gemini_image", "bfl", "fal", "replicate")
 STORE_KIND = {"image": "images", "music": "music", "video": "videos"}
@@ -72,6 +77,10 @@ class Request:
     count: int = 1
     references: list[dict] = field(default_factory=list)   # [{"mime", "data": bytes}]
     negative: str = ""
+    duration: int = 0              # Sekunden (Musik/Video), 0 = Vorgabe des Anbieters
+    lyrics: str = ""               # Musik: eigener Liedtext
+    instrumental: bool = False     # Musik: ohne Gesang
+    resolution: str = ""           # Video: 480p/720p/1080p
 
 
 # ------------------------------------------------------------------ Katalog
@@ -415,7 +424,8 @@ class ImageGen:
 
     # --- Abfragen ------------------------------------------------------------------------------------
     def _poll(self, get: Callable[[], dict], status: Callable[[dict], str], done: tuple, failed: tuple,
-              kind: str = "image") -> dict:
+              kind: str = "") -> dict:
+        kind = kind or getattr(self, "kind", "image")
         start = time.monotonic()
         delay = 1.5
         while True:
@@ -432,6 +442,296 @@ class ImageGen:
                 raise AIError("timeout", "network", code="timeout")
             _wait(self.stop, delay)
             delay = min(delay * 1.5, 8)
+
+
+class MediaGen(ImageGen):
+    """Musik und Video. Methoden _music_<api> bzw. _video_<api> liefern Media-Listen."""
+
+    def generate(self, kind: str, req: Request) -> list[Media]:
+        if kind == "image":
+            return self.run(req)
+        self.kind = kind
+        api = api_for(self.conn, kind)
+        fn = getattr(self, f"_{kind}_{api}", None)
+        if fn is None or api not in SUPPORTED.get(kind, ()):
+            raise AIError(f"no {kind} api for {self.conn.provider}", "request", code="no_media")
+        req.model = req.model or (models(self.conn, kind) or [""])[0]
+        out = fn(req)
+        if not out:
+            raise AIError(f"no {kind} in the answer", "server", code="no_result")
+        for m in out:
+            m.meta.setdefault("model", req.model)
+        return out
+
+    def _music_text(self, req: Request) -> str:
+        text = req.prompt
+        if req.instrumental:
+            text += "\nInstrumental only, no vocals."
+        if req.duration:
+            text += f"\nLength: about {req.duration} seconds."
+        if req.lyrics and not req.instrumental:
+            text += "\n\nLyrics:\n" + req.lyrics
+        return text
+
+    # --- Musik ---------------------------------------------------------------------------------------
+    def _music_gemini_lyria(self, req: Request) -> list[Media]:
+        base = self.conn.url
+        if base.endswith("/openai"):
+            base = base[: -len("/openai")]
+        key = self.store.api_key(self.conn)
+        parts: list[dict] = [{"text": self._music_text(req)}]
+        for r in req.references:
+            parts.append({"inline_data": {"mime_type": r.get("mime", "image/png"), "data": _b64(r)}})
+        url = f"{base}/models/{urllib.parse.quote(req.model, safe='-._')}:generateContent"
+        data = aihttp.json_request("POST", url, {"x-goog-api-key": key}, {"contents": [{"parts": parts}]},
+                                   timeout=600)
+        out, lyrics = [], []
+        for cand in data.get("candidates") or []:
+            for part in (cand.get("content") or {}).get("parts") or []:
+                inline = part.get("inlineData") or part.get("inline_data")
+                if inline and inline.get("data"):
+                    raw = base64.b64decode(inline["data"])
+                    out.append(Media(raw, inline.get("mimeType") or inline.get("mime_type") or _sniff(raw)))
+                elif part.get("text"):
+                    lyrics.append(part["text"])
+        for m in out:
+            if lyrics:
+                m.meta["lyrics"] = "\n".join(lyrics)
+        return out
+
+    def _music_elevenlabs_music(self, req: Request) -> list[Media]:
+        body: dict = {"prompt": req.prompt, "model_id": req.model or "music_v1"}
+        if req.duration:
+            body["music_length_ms"] = max(3000, min(600_000, req.duration * 1000))
+        if req.instrumental:
+            body["force_instrumental"] = True
+        elif req.lyrics:
+            body["prompt"] = self._music_text(Request(req.prompt, lyrics=req.lyrics))
+        h = dict(self.headers(), Accept="audio/mpeg")
+        with aihttp.request("POST", self.url("/music?output_format=mp3_44100_128"), h, body, timeout=600) as resp:
+            data = resp.read()
+        return [Media(data, "audio/mpeg")]
+
+    def _music_minimax_music(self, req: Request) -> list[Media]:
+        body: dict = {"model": req.model, "prompt": req.prompt,
+                      "audio_setting": {"sample_rate": 44100, "bitrate": 256000, "format": "mp3"}}
+        if req.lyrics and not req.instrumental:
+            body["lyrics"] = req.lyrics
+        else:
+            body["is_instrumental"] = True
+        data = aihttp.json_request("POST", self.url("/music_generation"), self.headers(), body, timeout=600)
+        status = data.get("base_resp") or {}
+        if status.get("status_code") not in (None, 0):
+            raise AIError(status.get("status_msg") or "error", "request", code=str(status.get("status_code")))
+        audio = (data.get("data") or {}).get("audio") or ""
+        if audio.startswith("http"):
+            return [_download(audio)]
+        return [Media(bytes.fromhex(audio), "audio/mpeg")] if audio else []
+
+    def _music_stability_audio(self, req: Request) -> list[Media]:
+        fields = {"prompt": self._music_text(Request(req.prompt, instrumental=req.instrumental)),
+                  "duration": req.duration or None, "output_format": "mp3", "model": req.model}
+        body, ctype = _multipart(fields, [])
+        h = dict(self.headers(), Accept="audio/*")
+        with _raw("POST", self.url("/audio/stable-audio-2/text-to-audio"), h, body, ctype, 600) as resp:
+            data = resp.read()
+        return [Media(data, "audio/mpeg")]
+
+    def _music_mureka(self, req: Request) -> list[Media]:
+        kind = "instrumental" if req.instrumental or not req.lyrics else "song"
+        body: dict = {"model": req.model or "auto", "prompt": req.prompt}
+        if kind == "song":
+            body["lyrics"] = req.lyrics
+        job = aihttp.json_request("POST", self.url(f"/{kind}/generate"), self.headers(), body, timeout=60)
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/{kind}/query/{job.get('id', '')}"),
+                                                        self.headers(), timeout=60),
+                            lambda d: str(d.get("status", "")), ("succeeded",),
+                            ("failed", "cancelled", "timeouted"))
+        return [_download(c["url"]) for c in result.get("choices") or [] if c.get("url")]
+
+    def _music_fal(self, req: Request) -> list[Media]:
+        payload: dict = {"prompt": self._music_text(req)}
+        if req.duration:
+            payload["duration"] = req.duration
+            payload["music_length_ms"] = req.duration * 1000
+        if req.lyrics and not req.instrumental:
+            payload["lyrics"] = req.lyrics
+        return self._fal_files(self._fal_queue(req.model, payload), ("audio", "audio_file", "audio_url"))
+
+    def _music_replicate(self, req: Request) -> list[Media]:
+        inp: dict = {"prompt": self._music_text(req)}
+        if req.duration:
+            inp["duration"] = req.duration
+        if req.lyrics and not req.instrumental:
+            inp["lyrics"] = req.lyrics
+        return self._replicate_files(self._replicate_run(req.model, inp))
+
+    # --- Video ---------------------------------------------------------------------------------------
+    def _video_gemini_omni(self, req: Request) -> list[Media]:
+        base = self.conn.url
+        if base.endswith("/openai"):
+            base = base[: -len("/openai")]
+        key = {"x-goog-api-key": self.store.api_key(self.conn)}
+        content: list | str = req.prompt
+        if req.references:
+            content = [{"type": "text", "text": req.prompt}] + [
+                {"type": "image", "mime_type": r.get("mime", "image/png"), "data": _b64(r)} for r in req.references]
+        fmt = {"type": "video", "delivery": "uri", "aspect_ratio": req.aspect if req.aspect in ("16:9", "9:16")
+               else "16:9", "resolution": req.resolution or "720p"}
+        data = aihttp.json_request("POST", base + "/interactions", key,
+                                   {"model": req.model, "input": content, "response_format": fmt}, timeout=900)
+        out = []
+        for item in _find_items(data, "video"):
+            if item.get("data"):
+                out.append(Media(base64.b64decode(item["data"]), item.get("mime_type") or "video/mp4"))
+            elif item.get("uri"):
+                file_id = item["uri"].rstrip("/").rsplit("/", 1)[-1].split(":")[0]
+                self._poll(lambda: aihttp.json_request("GET", f"{base}/files/{file_id}", key, timeout=60),
+                           lambda d: str(d.get("state", "")), ("ACTIVE",), ("FAILED",))
+                out.append(_download(f"{base}/files/{file_id}:download?alt=media", key, timeout=600))
+        return out
+
+    def _video_xai_video(self, req: Request) -> list[Media]:
+        body: dict = {"model": req.model, "prompt": req.prompt, "aspect_ratio": req.aspect}
+        if req.duration:
+            body["duration"] = max(1, min(15, req.duration))
+        if req.resolution:
+            body["resolution"] = req.resolution
+        if req.references:
+            body["image"] = {"url": _data_url(req.references[0])}
+        job = aihttp.json_request("POST", self.url("/videos/generations"), self.headers(), body, timeout=60)
+        rid = job.get("request_id") or job.get("id", "")
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/videos/{rid}"), self.headers(), timeout=60),
+                            lambda d: str(d.get("status", "")), ("done",), ("failed", "expired"))
+        url = (result.get("video") or {}).get("url")
+        return [_download(url, timeout=600)] if url else []
+
+    def _video_minimax_video(self, req: Request) -> list[Media]:
+        body: dict = {"model": req.model, "prompt": req.prompt}
+        if req.duration:
+            body["duration"] = 10 if req.duration > 6 else 6
+        if req.resolution:
+            body["resolution"] = {"480p": "512P", "720p": "768P", "1080p": "1080P"}.get(req.resolution, "768P")
+        if req.references:
+            body["first_frame_image"] = _data_url(req.references[0])
+        job = aihttp.json_request("POST", self.url("/video_generation"), self.headers(), body, timeout=60)
+        status = job.get("base_resp") or {}
+        if status.get("status_code") not in (None, 0):
+            raise AIError(status.get("status_msg") or "error", "request", code=str(status.get("status_code")))
+        tid = job.get("task_id", "")
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/query/video_generation?task_id={tid}"),
+                                                        self.headers(), timeout=60),
+                            lambda d: str(d.get("status", "")), ("Success",), ("Fail", "Failed"))
+        info = aihttp.json_request("GET", self.url(f"/files/retrieve?file_id={result.get('file_id', '')}"),
+                                   self.headers(), timeout=60)
+        url = (info.get("file") or {}).get("download_url")
+        return [_download(url, timeout=600)] if url else []
+
+    def _video_runway(self, req: Request) -> list[Media]:
+        h = dict(self.headers(), **{"X-Runway-Version": "2024-11-06"})
+        body: dict = {"model": req.model, "promptText": req.prompt,
+                      "ratio": _RUNWAY_RATIO.get(req.aspect, "1280:720"), "duration": req.duration or 5}
+        path = "/text_to_video"
+        if req.references:
+            path = "/image_to_video"
+            body["promptImage"] = _data_url(req.references[0])
+        job = aihttp.json_request("POST", self.url(path), h, body, timeout=60)
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/tasks/{job.get('id', '')}"), h, timeout=60),
+                            lambda d: str(d.get("status", "")), ("SUCCEEDED",), ("FAILED", "CANCELLED"))
+        return [_download(u, timeout=600) for u in result.get("output") or [] if isinstance(u, str)]
+
+    def _video_luma(self, req: Request) -> list[Media]:
+        body: dict = {"prompt": req.prompt, "model": req.model, "aspect_ratio": req.aspect}
+        if req.duration:
+            body["duration"] = f"{9 if req.duration > 6 else 5}s"
+        if req.resolution:
+            body["resolution"] = req.resolution
+        if req.references:
+            body["keyframes"] = {"frame0": {"type": "image", "url": _data_url(req.references[0])}}
+        job = aihttp.json_request("POST", self.url("/generations"), self.headers(), body, timeout=60)
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/generations/{job.get('id', '')}"),
+                                                        self.headers(), timeout=60),
+                            lambda d: str(d.get("state", "")), ("completed",), ("failed",))
+        url = (result.get("assets") or {}).get("video")
+        return [_download(url, timeout=600)] if url else []
+
+    def _video_seedance(self, req: Request) -> list[Media]:
+        text = f"{req.prompt} --ratio {req.aspect}"
+        if req.duration:
+            text += f" --duration {req.duration}"
+        if req.resolution:
+            text += f" --resolution {req.resolution}"
+        content: list[dict] = [{"type": "text", "text": text}]
+        for r in req.references[:1]:
+            content.append({"type": "image_url", "image_url": {"url": _data_url(r)}})
+        job = aihttp.json_request("POST", self.url("/contents/generations/tasks"), self.headers(),
+                                  {"model": req.model, "content": content}, timeout=60)
+        result = self._poll(lambda: aihttp.json_request("GET", self.url(f"/contents/generations/tasks/{job.get('id', '')}"),
+                                                        self.headers(), timeout=60),
+                            lambda d: str(d.get("status", "")), ("succeeded",), ("failed", "cancelled"))
+        url = (result.get("content") or {}).get("video_url")
+        return [_download(url, timeout=600)] if url else []
+
+    def _video_fal(self, req: Request) -> list[Media]:
+        payload: dict = {"prompt": req.prompt, "aspect_ratio": req.aspect}
+        if req.duration:
+            payload["duration"] = str(req.duration)
+        if req.resolution:
+            payload["resolution"] = req.resolution
+        if req.negative:
+            payload["negative_prompt"] = req.negative
+        if req.references:
+            payload["image_url"] = _data_url(req.references[0])
+        return self._fal_files(self._fal_queue(req.model, payload), ("video", "video_url"))
+
+    def _video_replicate(self, req: Request) -> list[Media]:
+        inp: dict = {"prompt": req.prompt, "aspect_ratio": req.aspect}
+        if req.duration:
+            inp["duration"] = req.duration
+        if req.resolution:
+            inp["resolution"] = req.resolution
+        if req.references:
+            inp["image"] = _data_url(req.references[0])
+            inp["start_image"] = inp["image"]
+        return self._replicate_files(self._replicate_run(req.model, inp))
+
+    # --- gemeinsame Auswertung -------------------------------------------------------------------------
+    @staticmethod
+    def _fal_files(result: dict, keys: tuple[str, ...]) -> list[Media]:
+        for key in keys:
+            value = result.get(key)
+            if isinstance(value, dict) and value.get("url"):
+                return [_download(value["url"], timeout=600)]
+            if isinstance(value, str) and value.startswith("http"):
+                return [_download(value, timeout=600)]
+            if isinstance(value, list):
+                return [_download(v["url"] if isinstance(v, dict) else v, timeout=600) for v in value if v]
+        return []
+
+    @staticmethod
+    def _replicate_files(result: dict) -> list[Media]:
+        output = result.get("output")
+        urls = output if isinstance(output, list) else [output]
+        return [_download(u, timeout=600) for u in urls if isinstance(u, str) and u.startswith(("http", "data:"))]
+
+
+def _find_items(data, kind: str) -> list[dict]:
+    """Alle Inhalte {"type": kind, ...} in einer verschachtelten Antwort (Interactions-API)."""
+    out: list[dict] = []
+    if isinstance(data, dict):
+        if data.get("type") == kind and (data.get("data") or data.get("uri")):
+            out.append(data)
+        for v in data.values():
+            out += _find_items(v, kind)
+    elif isinstance(data, list):
+        for v in data:
+            out += _find_items(v, kind)
+    return out
+
+
+def generate(store: ConnectionStore, conn: Connection, kind: str, req: Request,
+             stop: threading.Event | None = None, progress: Callable[[str], None] | None = None) -> list[Media]:
+    return MediaGen(store, conn, stop, progress).generate(kind, req)
 
 
 def generate_image(store: ConnectionStore, conn: Connection, req: Request, stop: threading.Event | None = None,

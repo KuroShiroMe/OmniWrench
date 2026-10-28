@@ -26,6 +26,7 @@ from .chats import ChatList
 from .explorer import WorkspacePanel
 from .grouptab import GroupTab
 from .images import ImagesTab
+from .mediatab import MediaTab
 from .viewer import FileViewer
 
 MAX_VIEW = 400_000
@@ -58,6 +59,10 @@ class Clank(ToolBase):
         self.images = ImagesTab(self)
         self.images.to_chat.connect(self.image_to_chat)
         self.modes.addTab(self.images, "🖼 " + tr("mode.images"))
+        self.music = MediaTab(self, "music")
+        self.modes.addTab(self.music, "🎵 " + tr("mode.music"))
+        self.video = MediaTab(self, "video")
+        self.modes.addTab(self.video, "🎬 " + tr("mode.video"))
         self.group = GroupTab(self)
         self.modes.addTab(self.group, "👥 " + tr("mode.group"))
         self.modes.currentChanged.connect(self._mode_changed)
@@ -355,7 +360,7 @@ class Clank(ToolBase):
     def can_close(self) -> bool:
         panel = getattr(self, "panel", None)
         busy = panel is not None and panel._running
-        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "group"))
+        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "music", "video", "group"))
         if busy:
             return QMessageBox.question(self.root, self.tr("tool.name"), self.tr("ui.close_running")) \
                 == QMessageBox.StandardButton.Yes
@@ -365,7 +370,7 @@ class Clank(ToolBase):
         panel = getattr(self, "panel", None)
         if panel is not None and panel._running:
             panel.stop()
-        for name in ("images", "group"):
+        for name in ("images", "music", "video", "group"):
             tab = getattr(self, name, None)
             if tab is not None and tab.running:
                 tab.stop()

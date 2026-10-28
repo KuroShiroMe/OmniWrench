@@ -143,10 +143,9 @@
      ]
     },
     "video": {
-     "api": "gemini_veo",
+     "api": "gemini_omni",
      "models": [
-      "veo-3.1-generate-preview",
-      "veo-3.1-fast-generate-preview"
+      "gemini-omni-1.1-flash"
      ]
     }
    }
@@ -191,6 +190,8 @@
     "video": {
      "api": "xai_video",
      "models": [
+      "grok-imagine-video-1.5",
+      "grok-imagine-video-1.5-lite",
       "grok-imagine-video"
      ]
     }
@@ -1604,9 +1605,9 @@
     "video": {
      "api": "runway",
      "models": [
-      "gen4_turbo",
       "gen4.5",
-      "veo3.1"
+      "veo3.1",
+      "gen4_turbo"
      ]
     }
    }

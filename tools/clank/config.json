@@ -7,10 +7,22 @@
       "default": "auto",
       "group": "Commands",
       "options": [
-        {"value": "auto", "label": "Automatic (PowerShell on Windows, bash on Linux)"},
-        {"value": "powershell", "label": "PowerShell"},
-        {"value": "cmd", "label": "Command prompt (cmd)"},
-        {"value": "bash", "label": "bash"}
+        {
+          "value": "auto",
+          "label": "Automatic (PowerShell on Windows, bash on Linux)"
+        },
+        {
+          "value": "powershell",
+          "label": "PowerShell"
+        },
+        {
+          "value": "cmd",
+          "label": "Command prompt (cmd)"
+        },
+        {
+          "value": "bash",
+          "label": "bash"
+        }
       ]
     },
     {
@@ -29,6 +41,14 @@
       "default": "",
       "group": "Repositories",
       "description": "Empty = OmniWrench-Repos in the user folder."
+    },
+    {
+      "key": "ffmpeg_path",
+      "type": "string",
+      "label": "ffmpeg program",
+      "default": "",
+      "group": "Media",
+      "description": "Empty = automatic (downloaded copy or ffmpeg on the PATH). Needed for the music and video tabs."
     }
   ]
 }

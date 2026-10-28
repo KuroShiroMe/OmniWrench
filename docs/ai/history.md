@@ -532,3 +532,7 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   and "Gruppenchat" (2-6 assistants, modes, brakes, interjections, summary, saved encrypted). Provider check: Gemini
   image models now gemini-nano-banana-2.1 (GA 2026-10-06, replaces deprecated gemini-3.1-flash-image), OpenAI
   gpt-image-1-mini/1.5/chatgpt-image-latest shut down 2026-12-01 (not in catalog). Test test_media_group.py (68).
+- 2026-10-28: Etappe 6: Clank tabs "Musik" and "Video" (7 music + 8 video API kinds, playback, ffmpeg edits: trim,
+  MP3, GIF, add music, mute, still; ffmpeg download for Windows, greyed tabs without ffmpeg). Provider check: Veo 3.1
+  preview shut down 2026-10-22 -> Gemini Omni Flash (gemini-omni-1.1-flash, Interactions API); xAI grok-imagine-video
+  1.5 + 1.5-lite; Lyria 3.5 GA. Test test_music_video.py (71 checks).

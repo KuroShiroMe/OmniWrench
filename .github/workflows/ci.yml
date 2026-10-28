@@ -83,3 +83,7 @@ jobs:
         run: python scripts/ai_check/test_studio.py
       - name: Clank Bilder und Gruppenchat mit Fake-Anbietern
         run: python scripts/ai_check/test_media_group.py
+      - name: Clank Musik und Video mit Fake-Anbietern und ffmpeg
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          python scripts/ai_check/test_music_video.py

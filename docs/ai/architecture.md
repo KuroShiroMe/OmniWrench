@@ -434,3 +434,21 @@ docs/README.md                internal docs index, points to the wiki
   <chats>/groups/<id>/thread (write_doc -> encrypted like chats; list_threads ignores the folder). `grouptab.py`
   GroupTab (collapsible Section widgets, participants table, transcript QTextBrowser with colored names,
   pseudonymization per tool setting via Pseudonymizer(thread.state.pseudo)). Test scripts/ai_check/test_media_group.py.
+- Etappe 6 (music + video): media.MediaGen(ImageGen).generate(kind, req) dispatches `_music_<api>` /
+  `_video_<api>`; Request has duration/lyrics/instrumental/resolution. Music: gemini_lyria (generateContent, text
+  parts = lyrics), elevenlabs_music (/music -> mp3 bytes, xi-api-key), minimax_music (hex audio), stability_audio
+  (multipart, Accept audio/*), mureka (song|instrumental generate + query, choices[].url), fal, replicate. Video:
+  gemini_omni (POST /v1beta/interactions, response_format video delivery uri, poll /files/<id> ACTIVE, download
+  :download?alt=media), xai_video (/videos/generations + /videos/<request_id>, status done, video.url), minimax_video
+  (task -> query -> files/retrieve download_url, resolution 512P/768P/1080P), runway (X-Runway-Version 2024-11-06,
+  text_to_video|image_to_video, /tasks/<id> SUCCEEDED output[]), luma (/generations state completed assets.video),
+  seedance (BytePlus /contents/generations/tasks, params as "--ratio" in text), fal, replicate. Kling (JWT) and
+  ComfyUI not supported (not offered). Catalog: Gemini video = gemini_omni / gemini-omni-1.1-flash (Veo 3.1 preview
+  shut down 2026-10-22), xAI video models 1.5/1.5-lite.
+  Clank `ffmpeg.py`: find() = setting ffmpeg_path > <data_dir>/ffmpeg/ > PATH; download_windows() from BtbN
+  FFmpeg-Builds latest win64 gpl zip (only bin/ffmpeg.exe + ffprobe.exe); poster/trim/to_gif/to_mp3/mux/mute/
+  duration. `mediatab.py` MediaTab(kind music|video): pages FFmpegPage (greyed hint, download on Windows after
+  confirm, Linux package command, pick file, recheck) / NoBotPage / main (form, file list with video posters
+  <file>.poster.png, QMediaPlayer + QVideoWidget, fallback open externally), edits saved as new files with JSON
+  {edit, source}; GIF and stills go to images. WAV music is also converted to MP3. Test test_music_video.py (CI
+  installs ffmpeg).
