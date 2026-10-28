@@ -536,3 +536,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   MP3, GIF, add music, mute, still; ffmpeg download for Windows, greyed tabs without ffmpeg). Provider check: Veo 3.1
   preview shut down 2026-10-22 -> Gemini Omni Flash (gemini-omni-1.1-flash, Interactions API); xAI grok-imagine-video
   1.5 + 1.5-lite; Lyria 3.5 GA. Test test_music_video.py (71 checks).
+- 2026-10-28: Etappe 7a: Clank templates (8 built-in, own with {{placeholders}}), tab "Dokumente" (write/revise with
+  AI, export HTML/PDF/ODT, new storage type documents), screenshot (region/full screen to chat), tab "Planung"
+  (scheduled prompts while Clank is open). Test test_extras.py (40 checks).

@@ -646,5 +646,6 @@
   "ai.fav.pseudo_on": "Pseudonymization on",
   "ai.fav.pseudo_off": "Pseudonymization off",
   "ai.fav.hint": "What assistants may see of this server while you are logged in. Saved with the favourite. Exceptions per assistant from the tool settings still apply.",
-  "ai.panel.confirm_explanation": "Explanation of the assistant:"
+  "ai.panel.confirm_explanation": "Explanation of the assistant:",
+  "ai.store.type_documents": "Documents"
 }

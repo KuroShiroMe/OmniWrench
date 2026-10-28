@@ -39,11 +39,11 @@ DATA_KEY = "app:ai:data_key"
 MAGIC = b"OWAI1"
 
 MODES = ("documents", "central", "per_type")
-TYPES = ("chats", "projects", "images", "music", "videos", "transcripts")
+TYPES = ("chats", "projects", "documents", "images", "music", "videos", "transcripts")
 ENCRYPTABLE = ("chats", "projects", "transcripts")
-FORMATS = {"chats": "JSON + Markdown", "projects": "JSON + Markdown", "images": "PNG/WebP + JSON",
+FORMATS = {"chats": "JSON + Markdown", "projects": "JSON + Markdown", "documents": "Markdown, HTML, PDF, ODT", "images": "PNG/WebP + JSON",
            "music": "MP3/WAV + JSON", "videos": "MP4 + JSON", "transcripts": "JSON + Markdown"}
-SUBDIRS = {"chats": "Chats", "projects": "Projects", "images": "Images", "music": "Music",
+SUBDIRS = {"chats": "Chats", "projects": "Projects", "documents": "Documents", "images": "Images", "music": "Music",
            "videos": "Videos", "transcripts": "Transcripts"}
 INDEX_DIR = LOCAL_DIR / "ai-index"
 
@@ -56,7 +56,7 @@ _FOLDER_IDS = {   # Windows Known Folder IDs
 _XDG = {"documents": "XDG_DOCUMENTS_DIR", "pictures": "XDG_PICTURES_DIR", "music": "XDG_MUSIC_DIR",
         "videos": "XDG_VIDEOS_DIR"}
 _FALLBACK = {"documents": "Documents", "pictures": "Pictures", "music": "Music", "videos": "Videos"}
-_TYPE_FOLDER = {"chats": "documents", "projects": "documents", "transcripts": "documents",
+_TYPE_FOLDER = {"chats": "documents", "projects": "documents", "transcripts": "documents", "documents": "documents",
                 "images": "pictures", "music": "music", "videos": "videos"}
 
 

@@ -452,3 +452,11 @@ docs/README.md                internal docs index, points to the wiki
   <file>.poster.png, QMediaPlayer + QVideoWidget, fallback open externally), edits saved as new files with JSON
   {edit, source}; GIF and stills go to images. WAV music is also converted to MP3. Test test_music_video.py (CI
   installs ffmpeg).
+  Clank stage 7a: `templates.py` (built-in templates in tool locales tpl.<id>.name/.text, own ones in setting
+  "templates"; {{Placeholder}} asked by FillDialog; sidebar tab "Vorlagen" -> chat input). `documents.py` tab
+  "Dokumente": Markdown files in storage type "documents" (unencrypted, editable), editor + preview, write/revise
+  (selection) via ask_once (pseudonymized, no functions), export HTML/PDF (QPrinter)/ODT. `screenshot.py`: hides the
+  window 350 ms, grab_all over all screens, RegionPicker overlay, PNG + JSON {"screenshot": true} in images, attached
+  to chat (Wayland may deliver blank -> hint). `schedule.py` tab "Planung": jobs (once/daily/weekly/interval) in
+  tool setting "schedules", QTimer 30 s, catch-up of missed runs on open, run via chat.run without confirmation
+  (level-4 changes refused), result saved as thread "⏰ name · date"; only one Clank instance (`_owner`) runs jobs.

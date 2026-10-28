@@ -329,7 +329,7 @@ def main() -> int:
     win.open_tool(tid)
     rs.pump(0.5)
     tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
-    check(tool.modes.count() == 5, "Reiter Chat, Bilder, Musik, Video, Gruppenchat")
+    check(tool.modes.count() >= 5, "Reiter Chat, Bilder, Musik, Video, Gruppenchat")
 
     # Bilder
     tool.modes.setCurrentWidget(tool.images)

@@ -14,7 +14,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QInputDialog, QLabel, QMessageBox, QSplitter, QTabWidget, QVBoxLayout, QWidget,
+    QInputDialog, QLabel, QMenu, QMessageBox, QSplitter, QTabWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
 from omniwrench.sdk import ToolBase, run_async
@@ -25,7 +25,11 @@ from .ai import StudioAI
 from .chats import ChatList
 from .explorer import WorkspacePanel
 from .grouptab import GroupTab
+from .documents import DocumentsTab
 from .images import ImagesTab
+from .schedule import ScheduleTab
+from .screenshot import Screenshot
+from .templates import TemplatesPanel
 from .mediatab import MediaTab
 from .viewer import FileViewer
 
@@ -65,6 +69,17 @@ class Clank(ToolBase):
         self.modes.addTab(self.video, "🎬 " + tr("mode.video"))
         self.group = GroupTab(self)
         self.modes.addTab(self.group, "👥 " + tr("mode.group"))
+        self.docs = DocumentsTab(self)
+        self.modes.addTab(self.docs, "📄 " + tr("mode.docs"))
+        self.plans = ScheduleTab(self)
+        self.modes.addTab(self.plans, "⏰ " + tr("mode.plans"))
+        shot = QToolButton(text="📷 " + tr("shot.button"))
+        shot.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
+        shot_menu = QMenu(shot)
+        shot_menu.addAction(tr("shot.region"), lambda: self.screenshot(True))
+        shot_menu.addAction(tr("shot.full"), lambda: self.screenshot(False))
+        shot.setMenu(shot_menu)
+        self.modes.setCornerWidget(shot, Qt.Corner.TopRightCorner)
         self.modes.currentChanged.connect(self._mode_changed)
 
         self.ai = StudioAI(self)
@@ -79,10 +94,15 @@ class Clank(ToolBase):
         tr = self.tr
         split = QSplitter(Qt.Orientation.Horizontal)
         side = QTabWidget()
+        side.setUsesScrollButtons(False)
+        side.tabBar().setExpanding(True)
+        side.setMinimumWidth(240)
         self.chats = ChatList(tr, self.storage)
         side.addTab(self.chats, tr("side.chats"))
         self.ws_panel = WorkspacePanel(self)
         side.addTab(self.ws_panel, tr("side.workspace"))
+        self.templates = TemplatesPanel(tr, self.context.settings)
+        side.addTab(self.templates, tr("side.templates"))
         self.side = side
         split.addWidget(side)
         self.panel = self.services.chat_widget(system_extra=self._system_extra)
@@ -107,6 +127,7 @@ class Clank(ToolBase):
         c.delete_thread.connect(self.delete_thread)
         c.reveal.connect(self.reveal_chat)
         self.panel.threadSaved.connect(lambda tid, pid: self.chats.mark(tid, pid))
+        self.templates.use.connect(self.use_template)
         w = self.ws_panel
         w.open_file.connect(lambda rel: self.show_file(rel))
         w.changed.connect(self.save_roots)
@@ -122,6 +143,19 @@ class Clank(ToolBase):
         w = self.modes.widget(idx)
         if hasattr(w, "refresh"):
             w.refresh()
+
+    def use_template(self, text: str) -> None:
+        self.modes.setCurrentIndex(0)
+        self.panel.input.setPlainText(text)
+        self.panel.focus_input()
+
+    def screenshot(self, region: bool) -> None:
+        def done(path, error):
+            if error:
+                self.notify(error)
+            elif path is not None:
+                self.image_to_chat(str(path))
+        Screenshot(self.root.window(), self.storage, self.tr).take(region, done)
 
     def image_to_chat(self, path: str) -> None:
         self.panel.add_attachment(Path(path))
@@ -360,7 +394,7 @@ class Clank(ToolBase):
     def can_close(self) -> bool:
         panel = getattr(self, "panel", None)
         busy = panel is not None and panel._running
-        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "music", "video", "group"))
+        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "music", "video", "group", "docs"))
         if busy:
             return QMessageBox.question(self.root, self.tr("tool.name"), self.tr("ui.close_running")) \
                 == QMessageBox.StandardButton.Yes
@@ -374,6 +408,10 @@ class Clank(ToolBase):
             tab = getattr(self, name, None)
             if tab is not None and tab.running:
                 tab.stop()
+        for name in ("docs", "plans"):
+            tab = getattr(self, name, None)
+            if tab is not None:
+                tab.shutdown()
         timer = getattr(self, "_level_timer", None)
         if timer is not None:
             timer.stop()
