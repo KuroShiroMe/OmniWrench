@@ -10,6 +10,11 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
       for remote MCP servers. Dialect locales got only a light word-map colouring for the 273 ai.* keys (native
       check open like the other dialect texts). Non-de/en locales still say "options" in a few ai.* texts where
       de/en now say "Einstellungen"/"settings" (menu name). Template repo (templates/tool-repo): mention AI SDK.
+      Not built from the feasibility doc tables (listed to Stef 2026-10-29, proposed as follow-up PR Clank 1.1/App 0.9.1):
+      cost per answer + monthly limit per connection (A6), "export unencrypted", full-text search over all chats,
+      branch/pin/tag threads, artifact preview (HTML/tables/diagrams), project memory .md, compare two answers,
+      PDF preview + Office as text, image edit local+AI, music fade/normalize + video concat, "An IconForge senden",
+      ComfyUI, group chat € limit/@Name/PASS, Word/Excel export.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
