@@ -63,6 +63,12 @@ class Adapter:
             return f"{system}\n\n{SAFE_RULE}" if system else SAFE_RULE
         return system
 
+    def effort(self, state: dict | None) -> str:
+        """Nachdenk-Aufwand ("low"/"medium") für Anbieter, die ihn verstehen; leer = Vorgabe des Modells."""
+        if not (self.info and self.info.reasoning) or not state or state.get("no_reasoning"):
+            return ""
+        return state.get("reasoning", "")
+
     def url(self, path: str) -> str:
         base = self.conn.url
         if not base:
@@ -120,10 +126,13 @@ class OpenAIChat(Adapter):
             elif role == "assistant":
                 msg: dict = {"role": "assistant", "content": m.get("content") or None}
                 if m.get("tool_calls"):
-                    msg["tool_calls"] = [{"id": c["id"], "type": "function",
-                                          "function": {"name": c["name"],
-                                                       "arguments": json.dumps(c.get("arguments") or {})}}
-                                         for c in m["tool_calls"]]
+                    msg["tool_calls"] = []
+                    for c in m["tool_calls"]:
+                        tc = {"id": c["id"], "type": "function",
+                              "function": {"name": c["name"], "arguments": json.dumps(c.get("arguments") or {})}}
+                        if c.get("extra_content"):     # Gemini: thought_signature muss zurück
+                            tc["extra_content"] = c["extra_content"]
+                        msg["tool_calls"].append(tc)
                 elif msg["content"] is None:
                     msg["content"] = ""
                 out.append(msg)
@@ -137,6 +146,8 @@ class OpenAIChat(Adapter):
                       "stream_options": {"include_usage": True}}
         if tools and self.supports_tools:
             body["tools"] = [{"type": "function", "function": t} for t in tools]
+        if self.effort(state):
+            body["reasoning_effort"] = self.effort(state)
         text, calls, usage = [], {}, {}
         for _event, data in aihttp.sse(self.url("/chat/completions"), self.headers(), body, stop):
             if data == "[DONE]" or not isinstance(data, dict):
@@ -153,15 +164,26 @@ class OpenAIChat(Adapter):
                     text.append(delta["content"])
                     on_event("text", delta["content"])
                 for tc in delta.get("tool_calls") or []:
-                    slot = calls.setdefault(tc.get("index", 0), {"id": "", "name": "", "args": ""})
+                    key = tc.get("index", 0)
+                    slot = calls.get(key)
+                    # Gemini schickt parallele Aufrufe ohne eigenen index, aber mit eigener id
+                    if slot is not None and tc.get("id") and slot["id"] and tc["id"] != slot["id"]:
+                        key = 10_000 + len(calls)
+                        slot = None
+                    if slot is None:
+                        slot = calls[key] = {"id": "", "name": "", "args": "", "extra": None}
                     slot["id"] = tc.get("id") or slot["id"]
+                    if tc.get("extra_content"):
+                        slot["extra"] = tc["extra_content"]
                     fn = tc.get("function") or {}
                     slot["name"] += fn.get("name") or ""
                     slot["args"] += fn.get("arguments") or ""
         tool_calls = []
-        for _, slot in sorted(calls.items()):
+        for slot in calls.values():
             call = {"id": slot["id"] or "call_" + uuid.uuid4().hex[:10], "name": slot["name"],
                     "arguments": _args(slot["args"])}
+            if slot["extra"]:
+                call["extra_content"] = slot["extra"]
             tool_calls.append(call)
             on_event("tool_call", call)
         return {"text": "".join(text), "tool_calls": tool_calls, "usage": usage}
@@ -195,6 +217,8 @@ class OpenAIResponses(Adapter):
     def chat(self, system, messages, tools, on_event, stop, state=None):
         system = self.rules(system)
         body: dict = {"model": self.conn.model, "input": self.convert(messages), "stream": True, "store": False}
+        if self.effort(state):
+            body["reasoning"] = {"effort": self.effort(state)}
         if system:
             body["instructions"] = system
         if tools:

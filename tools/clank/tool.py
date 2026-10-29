@@ -34,6 +34,7 @@ from .transcript import TranscriptTab
 from .voice import VoiceTab
 from .mcptab import MCPTab
 from .mediatab import MediaTab
+from .overview import OverviewTab, apply_defaults
 from .viewer import FileViewer
 
 MAX_VIEW = 400_000
@@ -82,6 +83,8 @@ class Clank(ToolBase):
         self.modes.addTab(self.voice, "🗣 " + tr("mode.voice"))
         self.mcp = MCPTab(self)
         self.modes.addTab(self.mcp, "🔌 " + tr("mode.mcp"))
+        self.overview = OverviewTab(self)
+        self.modes.addTab(self.overview, "🧭 " + tr("mode.overview"))
         shot = QToolButton(text="📷 " + tr("shot.button"))
         shot.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         shot_menu = QMenu(shot)
@@ -97,6 +100,7 @@ class Clank(ToolBase):
         self._level_timer.start(4000)
         last = ctx.settings.get("last_project") or ""
         self.set_project(last if self.storage.load_project(last) else "") if last else self.set_project("")
+        apply_defaults(self)
         return self.root
 
     def _build_chat(self) -> QWidget:
@@ -300,7 +304,8 @@ class Clank(ToolBase):
         self.context.notify(text)
 
     def _system_extra(self) -> str:
-        parts = ["You are running inside the KI-Studio tool (\"Clank\") of OmniWrench."]
+        parts = ["You are running inside the KI-Studio tool (\"Clank\") of OmniWrench, a general AI workplace "
+                 "for any kind of task."]
         if self.roots:
             lines = []
             for r in self.roots:
@@ -312,8 +317,8 @@ class Clank(ToolBase):
                          "studio_write_file with the complete new content; for shell commands use studio_run_command "
                          "with a short explanation. The user confirms both.")
         else:
-            parts.append("The workspace is empty; the user can add folders or repositories on the tab "
-                         f"'{self.tr('side.workspace')}' in KI-Studio.")
+            parts.append("No workspace is shared. Only if the user asks about files: folders or repositories can "
+                         f"be added on the tab '{self.tr('side.workspace')}' in KI-Studio.")
         voice = getattr(self, "voice", None)
         if voice is not None and voice.system_hint():
             parts.append(voice.system_hint())

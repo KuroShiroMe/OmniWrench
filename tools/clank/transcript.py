@@ -26,6 +26,7 @@ from PySide6.QtWidgets import (
 from omniwrench.sdk import run_async
 
 from . import audio
+from . import local_speech as ls
 from . import speakers as spk
 from .documents import ask_once
 from .grouptab import Section
@@ -33,6 +34,71 @@ from .images import NoBotPage
 
 COLORS = ("#8b5cf6", "#22c55e", "#f59e0b", "#06b6d4", "#ef4444", "#ec4899", "#84cc16", "#3b82f6")
 KEEP_AUDIO = 300                    # so viele Abschnitte bleiben für „Stimme als Profil speichern“ im Speicher
+
+
+def local_needs(tr, data_dir, whisper_model: str = "", piper_voice: str = "") -> list[str]:
+    """Was für Whisper lokal / Piper noch fehlt (Pakete, Modell, Stimme) – lesbar für den Hinweis."""
+    need = []
+    if whisper_model:
+        if audio.missing(tuple(ls.WHISPER_PACKAGES)):
+            need.append("faster-whisper")
+        if not ls.whisper_ready(data_dir, whisper_model):
+            need.append(tr("va.need_whisper_model", model=whisper_model,
+                           mb=ls.WHISPER_MODELS.get(whisper_model, ls.WHISPER_MODELS[ls.WHISPER_DEFAULT])[1]))
+    if piper_voice:
+        if audio.missing(tuple(ls.PIPER_PACKAGES)):
+            need.append("piper-tts")
+        if not ls.piper_ready(data_dir, piper_voice):
+            need.append(tr("va.need_piper_voice", voice=piper_voice))
+    return need
+
+
+def setup_local(parent, studio, on_status, on_done, whisper_model: str = "", piper_voice: str = "") -> bool:
+    """Whisper lokal / Piper einrichten (nach Rückfrage): Pakete in den lib-Ordner, Modell bzw. Stimme laden.
+    False = nichts zu tun oder abgelehnt."""
+    tr = studio.tr
+    tool_dir, data_dir = studio.context.tool_dir, studio.context.data_dir
+    need = local_needs(tr, data_dir, whisper_model, piper_voice)
+    if not need or QMessageBox.question(parent, tr("va.local_setup"), tr("va.local_q", what="\n• ".join([""] + need))) \
+            != QMessageBox.StandardButton.Yes:
+        return False
+
+    def work(progress):
+        pkgs = []
+        if whisper_model:
+            pkgs += [pip for mod, pip in ls.WHISPER_PACKAGES.items() if audio.missing((mod,))]
+        if piper_voice:
+            pkgs += [pip for mod, pip in ls.PIPER_PACKAGES.items() if audio.missing((mod,))]
+        if pkgs:
+            progress(tr("deps.installing", packages=", ".join(pkgs)))
+            err = audio.install_packages(tool_dir, pkgs)
+            if err:
+                raise RuntimeError(err)
+        if whisper_model and not ls.whisper_ready(data_dir, whisper_model):
+            progress(tr("va.loading_whisper", model=whisper_model))
+            ls.whisper_prepare(data_dir, whisper_model)
+        if piper_voice and not ls.piper_ready(data_dir, piper_voice):
+            ls.piper_download(data_dir, piper_voice, lambda st: progress(tr("va.downloading", state=st)))
+        return True
+
+    def done(_):
+        on_status(tr("va.setup_done"))
+        on_done(True)
+
+    def failed(text):
+        on_status("⚠ " + text.splitlines()[0])
+        on_done(False)
+    run_async(work, done, failed, on_status)
+    return True
+
+
+class LocalWhisper:
+    """Platzhalter-Verbindung für „Whisper lokal“ (nichts verlässt den Rechner)."""
+
+    def __init__(self, name: str):
+        self.id = ls.WHISPER
+        self.name = name
+        self.info = None
 
 
 class DepsPage(QWidget):
@@ -462,9 +528,6 @@ class TranscriptTab(QWidget):
             self.stack.setCurrentIndex(0)
             return
         conns = [c for c in speech.stt_connections(self.services.connections) if not (c.info and c.info.removed)]
-        if not conns:
-            self.stack.setCurrentIndex(1)
-            return
         self.stack.setCurrentIndex(2)
         if self.recorder is not None:
             return
@@ -473,6 +536,7 @@ class TranscriptTab(QWidget):
         self.conn.clear()
         for c in conns:
             self.conn.addItem(c.name, c.id)
+        self.conn.addItem(self.tr_("va.whisper"), ls.WHISPER)
         self.conn.setCurrentIndex(max(0, self.conn.findData(keep)))
         self.conn.blockSignals(False)
         self._fill_models()
@@ -490,6 +554,12 @@ class TranscriptTab(QWidget):
         from omniwrench.ai import speech
         conn = self.services.connections.get(self.conn.currentData() or "")
         self.model.clear()
+        if self.conn.currentData() == ls.WHISPER:
+            for name, (_repo, mb) in ls.WHISPER_MODELS.items():
+                self.model.addItem(self.tr_(f"va.whisper_{name.replace('-', '_')}", mb=mb), name)
+            idx = self.model.findData(self.settings.get("ts_whisper_model") or ls.WHISPER_DEFAULT)
+            self.model.setCurrentIndex(max(0, idx))
+            return
         if conn is None:
             return
         for m in speech.stt_models(conn):
@@ -528,7 +598,10 @@ class TranscriptTab(QWidget):
         s.set("ts_mic_device", self.mic_dev.currentData() or "")
         s.set("ts_system_device", self.sys_dev.currentData() or "")
         s.set("ts_connection", self.conn.currentData() or "")
-        s.set("ts_model", self.model.currentData() or "")
+        if self.conn.currentData() == ls.WHISPER:
+            s.set("ts_whisper_model", self.model.currentData() or ls.WHISPER_DEFAULT)
+        else:
+            s.set("ts_model", self.model.currentData() or "")
         s.set("ts_languages", self.langs.text().strip())
         s.set("ts_own_name", self.own.text().strip())
         s.set("ts_multi_mic", self.multi_mic.isChecked())
@@ -555,7 +628,18 @@ class TranscriptTab(QWidget):
         tr = self.tr_
         if self.recorder is not None or (self.worker is not None and self.worker.is_alive()):
             return
-        conn = self.services.connections.get(self.conn.currentData() or "")
+        local = self.conn.currentData() == ls.WHISPER
+        if local:
+            model = self.model.currentData() or ls.WHISPER_DEFAULT
+            if local_needs(tr, self.studio.context.data_dir, model):
+                self.start_btn.setEnabled(False)
+                if not setup_local(self, self.studio, self.status.setText,
+                                   lambda ok: self.start_btn.setEnabled(True), whisper_model=model):
+                    self.start_btn.setEnabled(True)
+                return
+            conn = LocalWhisper(tr("va.whisper"))
+        else:
+            conn = self.services.connections.get(self.conn.currentData() or "")
         if conn is None:
             return
         if not (self.use_mic.isChecked() or self.use_sys.isChecked()):
@@ -588,8 +672,8 @@ class TranscriptTab(QWidget):
         self.queue = queue.Queue()
         job = {"store": self.services.connections, "conn": conn, "model": model,
                "languages": self.data["languages"], "profiles": use_profiles,
-               "known": spk.ProfileStore.samples(profiles) if use_profiles and speech.knows_speakers(conn, model)
-               else [], "own": self.own.text().strip() or tr("ts.me"), "multi_mic": self.multi_mic.isChecked()}
+               "known": spk.ProfileStore.samples(profiles) if use_profiles and not local and
+               speech.knows_speakers(conn, model) else [], "data_dir": self.studio.context.data_dir, "own": self.own.text().strip() or tr("ts.me"), "multi_mic": self.multi_mic.isChecked()}
         self.worker = threading.Thread(target=self._work, args=(job,), name="transcribe", daemon=True)
         self.worker.start()
         self.recorder = audio.Recorder(self.make_sources(), lambda kind, s, t: self.queue.put((kind, s, t)),
@@ -659,8 +743,14 @@ class TranscriptTab(QWidget):
             kind, samples, t0 = item
             counter += 1
             try:
-                segs = speech.transcribe(job["store"], job["conn"], speech.wav_bytes(samples), job["model"],
-                                         job["languages"], job["known"], True, self.stop_event)
+                if isinstance(job["conn"], LocalWhisper):
+                    langs = job["languages"]
+                    segs = [speech.Segment(t, a, b) for t, a, b in
+                            ls.whisper_transcribe(job["data_dir"], samples, job["model"], langs[0] if len(langs) == 1
+                                                  else "")]
+                else:
+                    segs = speech.transcribe(job["store"], job["conn"], speech.wav_bytes(samples), job["model"],
+                                             job["languages"], job["known"], True, self.stop_event)
             except Exception as err:  # noqa: BLE001 - weiter aufnehmen, Fehler anzeigen
                 self.bridge.error.emit(error_text(err))
                 continue

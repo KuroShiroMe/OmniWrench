@@ -17,6 +17,7 @@
 - [KI-Datenablage](#ki-datenablage)
 - [Anbieterliste und entfernte Anbieter](#anbieterliste-und-entfernte-anbieter)
 - [Kosten](#kosten)
+- [Fähigkeiten prüfen](#fähigkeiten-prüfen)
 - [Fehlerbehebung](#fehlerbehebung)
 - [Siehe auch](#siehe-auch)
 
@@ -100,7 +101,7 @@ Fenster ausklinken. **Strg+Umschalt+A** blendet sie ein und aus.
 | **🕘** | Chatverlauf: suchen, öffnen, umbenennen, löschen, Ordner öffnen |
 | **⋯** | Projekt bearbeiten, Ordner öffnen, Einstellungen der Assistenten |
 | Projekt | Chats in einem Projekt teilen dessen Anweisungen (siehe [Projekte](#projekte)) |
-| Kurz / Normal / Ausführlich | Detailgrad der Antworten |
+| Kurz / Normal / Ausführlich | Detailgrad der Antworten. Bei Modellen, die vor der Antwort „nachdenken“ (Gemini, GPT, Grok), steuert er auch den Nachdenk-Aufwand: Kurz und Normal antworten schnell, Ausführlich denkt gründlicher nach und braucht länger |
 | 📎 | Datei anhängen: Bilder (für Assistenten mit Bildeingabe) und Textdateien, höchstens 8 MB |
 | Eingabe | **Enter** sendet, **Umschalt+Enter** neue Zeile; während der Antwort wird der Knopf zu **Anhalten** |
 
@@ -203,15 +204,33 @@ Kostenlose Stufen ändern sich häufig, und bei manchen werden Eingaben zum Trai
 außerhalb der EU, Mistral im „Experiment“-Tarif). Für Firmendaten besser ein bezahltes Konto oder ein lokales Modell
 nehmen.
 
+## Fähigkeiten prüfen
+
+Unter *Einstellungen › KI-Assistenten* zeigt **🔍 Fähigkeiten prüfen** für den markierten Assistenten:
+
+- **Was er kann:** Chat, Bilder, Musik, Video, Spracherkennung, Vorlesen – jeweils verfügbar, nicht verfügbar oder
+  unklar, mit den passenden Modellen aus der Modellliste des Kontos und der Voraussetzung (z. B. „API-Konto mit
+  Abrechnung“ für Gemini-Bilder).
+- **Nutzungsvolumen:** Guthaben bei OpenRouter, DeepSeek, Moonshot und SiliconFlow; verbleibende Anfragen und
+  Tokens bei Anbietern, die sie in ihren Antworten mitschicken (z. B. OpenAI, Groq, Anthropic, Mistral). Google,
+  OpenAI und Anthropic zeigen Verbrauch und Restguthaben nur auf ihrer Webseite – der Bericht verlinkt sie.
+
+Ob eine Funktion im Tarif wirklich enthalten ist, zeigt sich manchmal erst beim ersten Versuch. In
+[Clank](Tool-Clank-KI-Studio#ki-übersicht) zeigt der Reiter **KI-Übersicht** dieselben Angaben je Funktion und
+legt dort den Standard-Assistenten fest.
+
 ## Fehlerbehebung
 
 | Problem | Ursache / Lösung |
 |---|---|
+| „Diese Funktion ist in Ihrem Tarif … nicht enthalten“ | Kostenlose Stufe ohne diese Funktion (z. B. Gemini-Bilder). Abrechnung beim Anbieter einrichten oder einen anderen Anbieter wählen |
+| „Das Limit des Anbieters ist gerade erreicht. Bitte in … s erneut versuchen“ | Minutenlimit der kostenlosen Stufe (Gemini: wenige Anfragen pro Minute). Kurz warten; Clanks Gruppenchat wartet von selbst |
+| „Der Anbieter ist gerade überlastet“ | OmniWrench hat schon zweimal neu versucht. Etwas später erneut fragen oder über den Modellknopf ein anderes Modell wählen |
 | „Kein API-Schlüssel hinterlegt“ | Schlüssel unter *Einstellungen › KI-Assistenten › Bearbeiten* eintragen |
 | „Die Anmeldung ist abgelaufen“ | **Neu anmelden** in der Verbindung |
 | „Der Anbieter kennt das gewählte Modell nicht“ (z. B. Gemini: „… is not found for API version …“) | Modell veraltet. Oben im Chat über den Modellknopf ein verfügbares Modell wählen; Vorgaben aus dem Katalog tauscht OmniWrench von selbst aus |
 | ChatGPT: Plan reicht nicht | „Mit ChatGPT anmelden“ braucht Plus oder Pro; sonst API-Schlüssel nutzen |
-| „Anfragelimit erreicht“ / „Guthaben aufgebraucht“ | Beim Anbieter Kontingent prüfen; kurz warten |
+| „Guthaben aufgebraucht“ | Beim Anbieter aufladen; Stand über **Fähigkeiten prüfen** |
 | „Keine Verbindung zum Anbieter“ | Proxy/Firewall prüfen. Lokale Adressen (`localhost`, `127.x`) gehen nie über den Proxy |
 | Anmeldung im Browser bleibt hängen | Browser-Fenster schließen, erneut versuchen; bei Entra ID die Freigabe der App durch die IT prüfen |
 | Assistent nutzt keine Tool-Daten | KI-Zugriff steht auf „Beschreibung“ (Standard) – Stufe im Tool erhöhen, siehe [KI-Zugriff](KI-Zugriff-und-Verfremdung) |

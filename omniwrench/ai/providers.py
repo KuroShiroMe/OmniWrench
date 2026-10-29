@@ -58,9 +58,11 @@ class Provider:
     key_prefix: str = ""
     base_url_editable: bool = False
     list_models: bool = False
+    usage_url: str = ""                             # Webseite mit Verbrauch/Guthaben (wenn die API es nicht meldet)
     models_url: str = ""                            # eigene Adresse der Modellliste (Standard: <base_url>/models)
     requires: dict = field(default_factory=dict)   # Anmeldeart (oder "*") -> Schlüssel ai.req.<…>
     model_tags: dict = field(default_factory=dict)  # Modell -> Merkmale (ai.models.TAGS), sonst aus dem Namen
+    reasoning: bool = False                         # versteht reasoning_effort (Nachdenk-Aufwand je Detailgrad)
     nsfw: bool = False                              # kann Inhalte für Erwachsene erzeugen (je nach Modell)
 
     @classmethod

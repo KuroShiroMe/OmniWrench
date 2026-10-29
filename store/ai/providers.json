@@ -1,6 +1,6 @@
 {
  "format": 1,
- "updated": "2026-10-29T13:00",
+ "updated": "2026-10-29T18:00",
  "categories": [
   "recommended",
   "chat",
@@ -69,7 +69,9 @@
    },
    "requires": {
     "oauth_chatgpt": "chatgpt_plus"
-   }
+   },
+   "reasoning": true,
+   "usage_url": "https://platform.openai.com/usage"
   },
   {
    "id": "anthropic",
@@ -100,7 +102,8 @@
    "docs_url": "https://docs.claude.com",
    "status": "active",
    "recommended": true,
-   "note": "subscription_oauth_forbidden"
+   "note": "subscription_oauth_forbidden",
+   "usage_url": "https://console.anthropic.com/settings/usage"
   },
   {
    "id": "gemini",
@@ -122,7 +125,8 @@
     "image",
     "music",
     "video",
-    "web_search"
+    "web_search",
+    "speech"
    ],
    "models": [
     "gemini-3.8-flash",
@@ -142,25 +146,39 @@
       "gemini-nano-banana-2.1",
       "gemini-3-pro-image",
       "gemini-3.1-flash-image"
-     ]
+     ],
+     "requires": "api_paid"
     },
     "music": {
      "api": "gemini_lyria",
      "models": [
       "lyria-3.5",
       "lyria-3-clip-preview"
-     ]
+     ],
+     "requires": "api_paid"
     },
     "video": {
      "api": "gemini_omni",
      "models": [
       "gemini-omni-1.1-flash"
+     ],
+     "requires": "api_paid"
+    },
+    "speech": {
+     "api": "gemini_audio",
+     "models": [
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.8-flash-tts",
+      "gemini-3.8-flash-lite-tts"
      ]
     }
    },
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "reasoning": true,
+   "usage_url": "https://aistudio.google.com/usage"
   },
   {
    "id": "xai",
@@ -208,7 +226,9 @@
      ]
     }
    },
-   "nsfw": true
+   "nsfw": true,
+   "reasoning": true,
+   "usage_url": "https://console.x.ai"
   },
   {
    "id": "mistral",
@@ -227,7 +247,8 @@
    "capabilities": [
     "chat",
     "tools",
-    "vision"
+    "vision",
+    "speech"
    ],
    "models": [
     "mistral-large-latest",
@@ -241,6 +262,15 @@
    "recommended": true,
    "requires": {
     "*": "api_free_tier"
+   },
+   "usage_url": "https://console.mistral.ai/usage",
+   "media": {
+    "speech": {
+     "api": "openai_audio",
+     "models": [
+      "voxtral-mini-latest"
+     ]
+    }
    }
   },
   {
@@ -290,7 +320,8 @@
    ],
    "key_url": "https://www.perplexity.ai/settings/api",
    "docs_url": "https://docs.perplexity.ai",
-   "status": "active"
+   "status": "active",
+   "usage_url": "https://www.perplexity.ai/account/api/billing"
   },
   {
    "id": "cohere",
@@ -319,7 +350,8 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "usage_url": "https://dashboard.cohere.com/billing"
   },
   {
    "id": "deepseek",
@@ -345,7 +377,8 @@
    "key_url": "https://platform.deepseek.com/api_keys",
    "docs_url": "https://api-docs.deepseek.com",
    "status": "active",
-   "note": "privacy_cn"
+   "note": "privacy_cn",
+   "usage_url": "https://platform.deepseek.com/usage"
   },
   {
    "id": "qwen",
@@ -480,7 +513,8 @@
       "image-01"
      ]
     }
-   }
+   },
+   "usage_url": "https://www.minimax.io/platform/user-center/basic-information"
   },
   {
    "id": "azure_openai",
@@ -521,7 +555,9 @@
       "gpt-image-1"
      ]
     }
-   }
+   },
+   "reasoning": true,
+   "usage_url": "https://portal.azure.com"
   },
   {
    "id": "bedrock",
@@ -801,7 +837,8 @@
    "requires": {
     "*": "api_free_tier"
    },
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://openrouter.ai/activity"
   },
   {
    "id": "together",
@@ -827,7 +864,8 @@
    "key_url": "https://api.together.ai/settings/api-keys",
    "docs_url": "https://docs.together.ai",
    "status": "active",
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://api.together.ai/settings/billing"
   },
   {
    "id": "fireworks",
@@ -851,7 +889,8 @@
    "models": [],
    "key_url": "https://fireworks.ai/account/api-keys",
    "docs_url": "https://docs.fireworks.ai",
-   "status": "active"
+   "status": "active",
+   "usage_url": "https://fireworks.ai/account/usage"
   },
   {
    "id": "deepinfra",
@@ -876,7 +915,8 @@
    "key_url": "https://deepinfra.com/dash/api_keys",
    "docs_url": "https://deepinfra.com/docs",
    "status": "active",
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://deepinfra.com/dash/usage"
   },
   {
    "id": "groq",
@@ -903,6 +943,17 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
+   },
+   "reasoning": true,
+   "usage_url": "https://console.groq.com/settings/usage",
+   "media": {
+    "speech": {
+     "api": "openai_audio",
+     "models": [
+      "whisper-large-v3-turbo",
+      "whisper-large-v3"
+     ]
+    }
    }
   },
   {
@@ -929,7 +980,8 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "usage_url": "https://cloud.cerebras.ai"
   },
   {
    "id": "huggingface",
@@ -956,7 +1008,8 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "usage_url": "https://huggingface.co/settings/billing"
   },
   {
    "id": "vercel",
@@ -1035,7 +1088,8 @@
      ]
     }
    },
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://fal.ai/dashboard/usage-billing"
   },
   {
    "id": "replicate",
@@ -1085,7 +1139,8 @@
      ]
     }
    },
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://replicate.com/account/billing"
   },
   {
    "id": "ollama",
@@ -1376,7 +1431,8 @@
       "flux-kontext-pro"
      ]
     }
-   }
+   },
+   "usage_url": "https://api.bfl.ai"
   },
   {
    "id": "recraft",
@@ -1407,7 +1463,8 @@
       "recraftv3"
      ]
     }
-   }
+   },
+   "usage_url": "https://www.recraft.ai/profile/api"
   },
   {
    "id": "stability",
@@ -1446,7 +1503,8 @@
       "stable-audio-2.5"
      ]
     }
-   }
+   },
+   "usage_url": "https://platform.stability.ai/account/credits"
   },
   {
    "id": "ideogram",
@@ -1478,7 +1536,8 @@
       "V_3_TURBO"
      ]
     }
-   }
+   },
+   "usage_url": "https://ideogram.ai/manage-api"
   },
   {
    "id": "midjourney",
@@ -1561,7 +1620,8 @@
       "eleven_flash_v2_5"
      ]
     }
-   }
+   },
+   "usage_url": "https://elevenlabs.io/app/usage"
   },
   {
    "id": "mureka",
@@ -1661,7 +1721,8 @@
       "gen4_turbo"
      ]
     }
-   }
+   },
+   "usage_url": "https://dev.runwayml.com"
   },
   {
    "id": "luma",
@@ -1693,7 +1754,8 @@
       "ray-flash-2"
      ]
     }
-   }
+   },
+   "usage_url": "https://lumalabs.ai/api/billing"
   },
   {
    "id": "kling",
@@ -1808,7 +1870,8 @@
       "nova-3"
      ]
     }
-   }
+   },
+   "usage_url": "https://console.deepgram.com"
   },
   {
    "id": "assemblyai",
@@ -1840,7 +1903,8 @@
       "universal-2"
      ]
     }
-   }
+   },
+   "usage_url": "https://www.assemblyai.com/app/usage"
   },
   {
    "id": "copilot_consumer",
@@ -1890,7 +1954,9 @@
    "requires": {
     "*": "api_free_tier"
    },
-   "models_url": "https://models.github.ai/catalog/models"
+   "models_url": "https://models.github.ai/catalog/models",
+   "reasoning": true,
+   "usage_url": "https://github.com/settings/billing"
   },
   {
    "id": "cloudflare",
@@ -1918,7 +1984,8 @@
    "requires": {
     "*": "api_free_tier"
    },
-   "base_url_editable": true
+   "base_url_editable": true,
+   "usage_url": "https://dash.cloudflare.com/?to=/:account/ai/workers-ai"
   },
   {
    "id": "nvidia",
@@ -1945,7 +2012,8 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "usage_url": "https://build.nvidia.com"
   },
   {
    "id": "sambanova",
@@ -1971,7 +2039,8 @@
    "status": "active",
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "usage_url": "https://cloud.sambanova.ai"
   },
   {
    "id": "novita",
@@ -1996,7 +2065,8 @@
    "key_url": "https://novita.ai/settings/key-management",
    "docs_url": "https://novita.ai/docs",
    "status": "active",
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://novita.ai/billing"
   },
   {
    "id": "nebius",
@@ -2116,7 +2186,8 @@
    "key_url": "https://venice.ai/settings/api",
    "docs_url": "https://docs.venice.ai",
    "status": "active",
-   "nsfw": true
+   "nsfw": true,
+   "usage_url": "https://venice.ai/settings/api"
   },
   {
    "id": "requesty",

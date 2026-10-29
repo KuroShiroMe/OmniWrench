@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import difflib
 import random
+import re
 import secrets
 import threading
 import time
@@ -212,6 +213,30 @@ def messages_for(thread: dict, me: dict, encode: Callable[[str], str], summary: 
     return out
 
 
+RATE_RETRIES = 3
+RATE_WAIT_MAX = 90.0
+
+
+def rate_wait(err: str) -> tuple[float, int] | None:
+    """Minuten-/Anfragelimit (429) mit Wartezeit? -> (Sekunden, Limit je Minute oder 0); None = echter Fehler.
+    Kein Warten bei aufgebrauchtem Guthaben oder Funktion nicht im Tarif („limit: 0“)."""
+    low = err.lower()
+    if "limit: 0," in low or any(w in low for w in ("credit", "balance")):
+        return None
+    if not any(w in low for w in ("429", "rate limit", "rate-limit", "quota", "too many requests", "per minute",
+                                  "resource_exhausted", "retry in")):
+        return None
+    if "per day" in low or "perday" in low or "daily" in low:
+        return None
+    m = re.search(r"retry in ([\d.]+)\s*s", low) or re.search(r"retry[- ]after[\"': ]+([\d.]+)", low)
+    seconds = float(m.group(1)) + 1 if m else 20.0
+    if seconds > RATE_WAIT_MAX:
+        return None
+    lim = re.search(r"limit: (\d+)", low)
+    per_minute = int(lim.group(1)) if lim and "minute" in low else 0
+    return seconds, per_minute
+
+
 def _similar(a: str, b: str) -> bool:
     """Fast gleicher Beitrag wie der vorige desselben Teilnehmers (kurze Antworten zählen nicht)."""
     return min(len(a), len(b)) >= REPEAT_MIN and difflib.SequenceMatcher(None, a[:4000], b[:4000]).ratio() >= REPEAT_RATIO
@@ -228,6 +253,8 @@ class GroupRun:
         self.opts = options(thread.get("options"))
         self.start = hooks.clock()
         self.spoken = 0
+        self.gap: dict[str, float] = {}           # Verbindung -> Mindestabstand (s), gelernt aus Minutenlimits
+        self.last_call: dict[str, float] = {}
 
     # Bremsen ------------------------------------------------------------------------------------------
     def tokens(self) -> int:
@@ -327,14 +354,7 @@ class GroupRun:
                 cut = True
                 turn_stop.set()
 
-        try:
-            result = self.chat_fn(p, system, msgs, on_text, turn_stop) or {}
-        except Exception:
-            if self.stop.is_set():
-                raise Stopped() from None
-            if not cut:
-                raise
-            result = {"text": "".join(buf)}
+        result = self._call(p, system, msgs, on_text, turn_stop, buf, lambda: cut)
         usage = self.thread.setdefault("usage", {}).setdefault(p["connection"], {"input": 0, "output": 0})
         for k in ("input", "output"):
             usage[k] = usage.get(k, 0) + int((result.get("usage") or {}).get(k, 0) or 0)
@@ -360,6 +380,36 @@ class GroupRun:
             self.spoken += 1
         self.hooks.on_message(msg)
         return msg
+
+
+    def _wait(self, seconds: float) -> None:
+        if seconds > 0 and self.stop.wait(seconds):
+            raise Stopped()
+
+    def _call(self, p, system, msgs, on_text, turn_stop, buf, was_cut) -> dict:
+        """Ein Beitrag. Bei Minutenlimits warten und wiederholen; danach Abstand für diese Verbindung halten."""
+        conn = p.get("connection", "")
+        for attempt in range(RATE_RETRIES + 1):
+            gap = self.gap.get(conn, 0.0)
+            if gap and conn in self.last_call:
+                self._wait(self.last_call[conn] + gap - time.monotonic())
+            self.last_call[conn] = time.monotonic()
+            try:
+                return self.chat_fn(p, system, msgs, on_text, turn_stop) or {}
+            except Exception as err:
+                if self.stop.is_set():
+                    raise Stopped() from None
+                if was_cut():
+                    return {"text": "".join(buf)}
+                hit = None if buf or attempt == RATE_RETRIES else rate_wait(str(err))
+                if hit is None:
+                    raise
+                seconds, per_minute = hit
+                if per_minute:
+                    self.gap[conn] = max(self.gap.get(conn, 0.0), 60.0 / per_minute + 0.5)
+                self._note("wait", who=p.get("name", ""), seconds=int(round(seconds)))
+                self._wait(seconds)
+        return {}
 
 
 class _Brake(Exception):

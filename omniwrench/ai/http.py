@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -62,6 +63,24 @@ def _error_from_http(err: urllib.error.HTTPError) -> AIError:
     return AIError(message or f"HTTP {status}", kind, status, code)
 
 
+# Zuletzt gemeldete Limits je Host (aus Antwort-Headern wie x-ratelimit-remaining-requests), für "Fähigkeiten prüfen"
+LIMITS: dict[str, dict] = {}
+_LIMIT_PREFIXES = ("x-ratelimit-", "anthropic-ratelimit-", "ratelimit-", "x-ratelimit")
+
+
+def _remember_limits(url: str, headers) -> None:
+    try:
+        found = {k.lower(): v for k, v in headers.items() if k.lower().startswith(_LIMIT_PREFIXES)}
+    except Exception:  # noqa: BLE001 - nur Zusatzinfo
+        return
+    if found:
+        LIMITS[(urllib.parse.urlparse(url).hostname or "").lower()] = {"ts": time.time(), **found}
+
+
+def limits_for(url: str) -> dict:
+    return dict(LIMITS.get((urllib.parse.urlparse(url).hostname or "").lower(), {}))
+
+
 def request(method: str, url: str, headers: dict | None = None, body: Any = None,
             form: dict | None = None, timeout: float = 60) -> urllib.request.addinfourl:
     h = {"User-Agent": USER_AGENT, "Accept": "application/json"}
@@ -77,12 +96,16 @@ def request(method: str, url: str, headers: dict | None = None, body: Any = None
     host = (urllib.parse.urlparse(url).hostname or "").lower()
     try:
         if url.startswith("https:"):
-            return urllib.request.urlopen(req, timeout=timeout, context=_SSL)
-        if host in ("localhost", "::1") or host.startswith("127."):
+            resp = urllib.request.urlopen(req, timeout=timeout, context=_SSL)
+        elif host in ("localhost", "::1") or host.startswith("127."):
             # Lokale Server (Ollama, LM Studio …) nie über einen Proxy ansprechen
-            return _LOCAL_OPENER.open(req, timeout=timeout)
-        return urllib.request.urlopen(req, timeout=timeout)
+            resp = _LOCAL_OPENER.open(req, timeout=timeout)
+        else:
+            resp = urllib.request.urlopen(req, timeout=timeout)
+        _remember_limits(url, resp.headers)
+        return resp
     except urllib.error.HTTPError as err:
+        _remember_limits(url, err.headers or {})
         raise _error_from_http(err) from None
     except (urllib.error.URLError, OSError) as err:
         reason = getattr(err, "reason", err)

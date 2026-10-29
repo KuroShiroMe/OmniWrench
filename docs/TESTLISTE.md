@@ -389,6 +389,27 @@ ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal is
 - [ ] Sprache auf Englisch/Französisch umstellen: Texte vollständig (KI-Texte in allen 23 Sprachen ergänzt,
       Dialekte nur leicht eingefärbt).
 
+### 12e. Gemini-Fixes, Fähigkeiten prüfen, KI-Übersicht, Sprache (Clank 1.0.2)
+- [ ] Gemini-Chat: „Erzähl einen Witz“ – Antwort deutlich schneller als vorher, Witz nicht über IT-Leute.
+- [ ] Gemini-Chat: Frage, die Programmfunktionen braucht (z. B. „Welche Tools sind installiert?“) – kein Fehler
+      „thought_signature“ mehr, mehrere Funktionen gleichzeitig klappen.
+- [ ] Bei „high demand“ (503): OmniWrench versucht still neu; erst nach 3 Versuchen „Der Anbieter ist gerade überlastet“.
+- [ ] Bilder mit Gemini ohne Abrechnung: eine kurze Meldung „nicht in Ihrem Tarif“ statt Rohtext-Wand.
+- [ ] Einstellungen › KI-Assistenten › Gemini markieren › **🔍 Fähigkeiten prüfen**: Funktionen mit Status und Modellen,
+      Bilder mit Voraussetzung „Abrechnung“, Link zur Verbrauchsseite. Bei OpenRouter/DeepSeek: Guthaben sichtbar.
+- [ ] Gruppenchat mit 3× Gemini (kostenlos): bei Minutenlimit erscheint „Minutenlimit … geht in N s weiter“, danach
+      läuft er weiter und braucht keine zweite Wartepause.
+- [ ] Clank › **🧭 KI-Übersicht**: je Funktion Standard wählen (z. B. Vorlesen = Gemini) -> Reiter Sprachassistent
+      zeigt die Auswahl; **Alle prüfen** füllt Erlaubt?/Volumen; **Details …** öffnet den Bericht. Neustart: Chat startet
+      mit dem gewählten Standard.
+- [ ] Sprachassistent › Sprache auf Französisch: Piper-/Systemstimmen nur französisch; zurück auf Programmsprache.
+- [ ] Spracherkennung **Whisper lokal**: „Offline-Sprache einrichten“ (Rückfrage, Download faster-whisper + Modell small),
+      dann Frage sprechen -> deutlich genauer als Vosk. Auch in der Mitschrift wählbar.
+- [ ] Vorlesen mit **Piper**: Stimme (z. B. de_DE-thorsten-medium) wählen, einrichten, **Probehören**.
+- [ ] Vorlesen mit **Systemstimme**: Liste zeigt die installierten Windows-Stimmen (OneCore und SAPI); andere Stimme hörbar.
+      Bitte notieren, ob natürliche Windows-Stimmen in der Liste auftauchen.
+- [ ] Vorlesen und Erkennung mit **Gemini** (Stimme z. B. Puck) und Erkennung mit **Groq** (Whisper), falls verbunden.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).

@@ -335,3 +335,9 @@
   scripts/ai_wiki/descriptions.py, then run build_ai_wiki.py (aborts if a description is missing).
 - Catalog coverage (Stef 2026-10-29): cover as many providers as possible; ones without API or adapter stay listed
   as "unavailable" with a note (via fal/Replicate, not integrated yet, no public API).
+- Answers neutral (Stef 2026-10-29): system prompt must not assume IT users; tool functions only when the question is about the program.
+- Clank defaults per function (Stef 2026-10-29): tab KI-Übersicht sets the default assistant per function and shows
+  capability + volume from the last scan; offline options (Whisper local, Vosk, system voice, Piper) count as free.
+- Voices (Stef 2026-10-29): voice list follows the selected voice-assistant language (default = program language),
+  other languages selectable. Free offline speech: faster-whisper (STT) + Piper (TTS), installed only on request.
+- Group chat must not abort on per-minute limits: wait (≤90 s), retry (3x), then keep a per-connection gap.

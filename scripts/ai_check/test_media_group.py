@@ -265,6 +265,42 @@ def test_group_engine(group) -> None:
     check(r == "time_limit", f"Zeitlimit ({r})")
     o = group.options({"rounds": 999, "mode": "nonsense", "pause_each_round": 1})
     check(o["rounds"] == 30 and o["mode"] == "discussion" and o["pause_each_round"] is True, "Optionen begrenzt")
+    # Minutenlimit: warten, wiederholen, danach Abstand halten (Gemini-Free-Tier-Meldung)
+    gem = ("You exceeded your current quota, please check your plan and billing details. * Quota exceeded for "
+           "metric: generativelanguage.googleapis.com/generate_content_free_tier_requests, limit: 5, model: x, "
+           "description: Generate content requests per minute limit exceeded on Free Tier. Please retry in 32.9s.")
+    check(group.rate_wait(gem) == (33.9, 5), f"Minutenlimit erkannt {group.rate_wait(gem)}")
+    check(group.rate_wait("limit: 0, model: gemini-3-pro-image") is None, "nicht im Tarif: kein Warten")
+    check(group.rate_wait("Insufficient credit balance") is None, "Guthaben leer: kein Warten")
+    check(group.rate_wait("Quota exceeded: requests per day. Please retry in 30000s") is None, "Tageslimit: kein Warten")
+
+    class FakeStop(threading.Event):
+        waits: list[float] = []
+
+        def wait(self, timeout=None):
+            self.waits.append(round(timeout or 0, 1))
+            return False
+    fails = {"n": 1}
+
+    def limited(p, s, m, o, st):
+        if fails["n"]:
+            fails["n"] -= 1
+            raise RuntimeError(gem)
+        return {"text": "ok " + p["id"]}
+    stop = FakeStop()
+    thread = group.new_thread("Limit", parts, {"rounds": 1, "summary": False})
+    r = group.GroupRun(thread, limited, group.GroupHooks(), stop).run()
+    notes = [m for m in thread["messages"] if m.get("content") == "wait"]
+    check(r == "rounds" and len(notes) == 1 and notes[0]["seconds"] == 34, f"gewartet und weiter ({r}, {notes})")
+    check(stop.waits and stop.waits[0] == 33.9, f"Wartezeit {stop.waits}")
+    check(len([m for m in thread["messages"] if m["role"] == "assistant"]) == len(parts), "alle Beiträge nach Wartezeit")
+    always = group.GroupRun(group.new_thread("x", parts, {"rounds": 1, "summary": False}),
+                            lambda *a: (_ for _ in ()).throw(RuntimeError(gem)), group.GroupHooks(), FakeStop())
+    try:
+        always.run()
+        check(False, "dauerhaftes Limit bricht ab")
+    except RuntimeError:
+        check(True, "dauerhaftes Limit bricht nach Wiederholungen ab")
 
 
 def wait(cond, seconds=20.0):

@@ -6,6 +6,7 @@ Profilen und Zusammenfassung, Sprachassistent (Knopf „Sprechen“, Weckwort-Ab
 
 from __future__ import annotations
 
+import base64
 import http.server
 import json
 import shutil
@@ -129,6 +130,14 @@ def fake_server() -> str:
                 self._json({"results": {"utterances": [
                     {"speaker": 0, "start": 0.0, "end": 2.9, "transcript": "Teil eins."},
                     {"speaker": 1, "start": 3.0, "end": 6.0, "transcript": "Teil zwei."}]}})
+            elif p.startswith("/gem/v1beta/models/") and p.endswith(":generateContent"):
+                if "-tts" in p:
+                    pcm = base64.b64encode(b"\x00\x01" * 2400).decode()
+                    self._json({"candidates": [{"content": {"parts": [{"inlineData": {
+                        "mimeType": "audio/L16;codec=pcm;rate=24000", "data": pcm}}]}}]})
+                else:
+                    self._json({"candidates": [{"content": {"parts": [
+                        {"text": "Speaker 1: Hallo zusammen.\nSpeaker 2: Guten Tag.\nwie geht es?"}]}}]})
             elif p == "/aai/v2/upload":
                 self._json({"upload_url": "https://cdn.example/x"})
             elif p == "/aai/v2/transcript":
@@ -245,6 +254,41 @@ def test_core(store, base, sp, au, storage) -> None:
     check(long and long[0] <= au.MAX_CHUNK + 0.1, "lange Rede geteilt")
 
 
+def test_more_speech(store, base) -> None:
+    """Gemini (Erkennung + Vorlesen), Groq Whisper, Mistral Voxtral, Piper-Adressen."""
+    from omniwrench.ai import speech
+    from omniwrench.ai.connections import Connection
+    for cid, provider, url in (("gem", "gemini", "/gem/v1beta/openai"), ("gq", "groq", "/oa/v1"),
+                               ("mi", "mistral", "/oa/v1")):
+        store.save(Connection(id=cid, name=provider, provider=provider, base_url=base + url, auth="api_key"))
+        store.set_secrets(cid, {"api_key": "k"})
+    gem, gq, mi = store.get("gem"), store.get("gq"), store.get("mi")
+    stt = {c.id for c in speech.stt_connections(store)}
+    tts = {c.id for c in speech.tts_connections(store)}
+    check({"gem", "gq", "mi"} <= stt and "gem" in tts and not {"gq", "mi"} & tts, f"Gemini/Groq/Mistral STT, TTS {tts}")
+    check(speech.stt_models(gq)[0] == "whisper-large-v3-turbo" and speech.stt_models(mi) == ["voxtral-mini-latest"],
+          "Groq Whisper, Mistral Voxtral")
+    check(all("tts" not in m for m in speech.stt_models(gem)) and all("tts" in m for m in speech.tts_models(gem)),
+          "Gemini Modelle getrennt")
+    check(len(speech.voices(gem)) == 30 and "Kore" in speech.voices(gem), "30 Gemini-Stimmen")
+    wav = speech.wav_bytes(voice(*ALICE, secs=0.5))
+    segs = speech.transcribe(store, gem, wav, "", ["de"])
+    check([(s.speaker, s.text) for s in segs] == [("1", "Hallo zusammen."), ("2", "Guten Tag. wie geht es?")],
+          f"Gemini Erkennung mit Sprechern {[(s.speaker, s.text) for s in segs]}")
+    path, raw, headers = POSTS[-1]
+    check(path.startswith("/gem/v1beta/models/gemini-3.8-flash:") and b"audio/wav" in raw and
+          {k.lower(): v for k, v in headers.items()}.get("x-goog-api-key") == "k", "Gemini: Audio + Schlüssel nativ")
+    data, mime = speech.synthesize(store, gem, "Hallo", "", "Puck")
+    check(mime == "audio/wav" and data[:4] == b"RIFF" and b"Puck" in POSTS[-1][1], "Gemini Vorlesen als WAV")
+    speech.transcribe(store, mi, wav, "voxtral-mini-latest", ["de"])
+    check(b"response_format" not in POSTS[-1][1] and b"voxtral" in POSTS[-1][1], "Voxtral ohne response_format")
+    from tools.clank import local_speech as ls
+    check(ls.piper_url("de_DE-thorsten-medium", ".onnx").endswith(
+        "/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx"), "Piper-Adresse")
+    check(ls.piper_url("de_DE-eva_k-x_low", ".onnx.json").endswith("/de/de_DE/eva_k/x_low/de_DE-eva_k-x_low.onnx.json"),
+          "Piper-Adresse mit x_low")
+
+
 def main() -> int:
     shots = None
     if "--shots" in sys.argv:
@@ -292,6 +336,7 @@ def main() -> int:
     real_missing = au.missing
     au.missing = lambda packages=au.PACKAGES: [p for p in real_missing(packages) if p != "soundcard"]
     test_core(store, base, sp, au, Storage(settings, vault))
+    test_more_speech(store, base)
 
     # --- Reiter Mitschrift --------------------------------------------------------------------------
     tab = tool.transcript
@@ -457,7 +502,55 @@ def main() -> int:
     check(wait(lambda: "Offline beantwortet" in v.log.toPlainText()), "Antwort")
     check(wait(lambda: any(p == "/oa/v1/audio/speech" for p, b, h in POSTS)), "Vorlesen über Anbieter")
     check(wait(lambda: v.state == "wake", 20), "danach wieder Weckwort")
+    v.off()
+    rs.pump(0.3)
+    # Sprache frei wählbar, Offline-Optionen, Stimmen je Anbieter
+    v.refresh()
+    check(v.stt.findData(va.WHISPER) >= 0 and v.tts.findData(va.PIPER) >= 0, "Whisper lokal und Piper wählbar")
+    v.stt.setCurrentIndex(v.stt.findData(va.WHISPER))
+    check(v.stt_model.count() == 4 and v.stt_model.currentData() == "small", "Whisper-Größen, small vorgewählt")
+    check(not v.local_btn.isHidden() and "faster-whisper" in v.local_info.text(), "Einrichten-Hinweis für Whisper")
+    v.tts.setCurrentIndex(v.tts.findData("gem"))
+    check(v.voice.count() == 30 and v.voice.isEditable(), "Gemini-Stimmen in der Auswahl")
+    v.voice.setCurrentIndex(v.voice.findData("Puck"))
+    v.lang_box.setCurrentIndex(v.lang_box.findData("fr"))
+    check(v._lang() == "fr", "andere Sprache als Programmsprache")
+    v.tts.setCurrentIndex(v.tts.findData(va.PIPER))
+    names = [v.voice.itemData(i) for i in range(v.voice.count())]
+    check(names and all(n.startswith("fr_") for n in names), f"Piper-Stimmen der gewählten Sprache {names[:3]}")
+    v.lang_box.setCurrentIndex(0)
+    v._save_settings()
+    check((tool.context.settings.get("va_voices") or {}).get(va.PIPER, "").startswith(tool.context.settings.get(
+        "va_lang") or "de"), "Stimme je Ausgabe gemerkt")
+    v.tts.setCurrentIndex(v.tts.findData("gem"))
+    check(v.voice.currentData() == "Puck", "Gemini-Stimme wiederhergestellt")
+
+    # KI-Übersicht: Standard je Funktion
+    ov = tool.overview
+    tool.modes.setCurrentWidget(ov)
+    rs.pump(0.3)
+    labels = [ov.table.item(i, 0).text() for i in range(ov.table.rowCount())]
+    check(len(labels) == 9 and "Chat" in labels[0], f"Übersicht: 9 Funktionen {labels[:2]}")
+    row = next(i for i, r in enumerate(ov.rows) if r.key == "va_tts")
+    box = ov.combos[row]
+    box.setCurrentIndex(box.findData("oa"))
+    ov._chosen(row)
+    check(tool.context.settings.get("va_tts") == "oa" and v.tts.currentData() == "oa", "Übersicht stellt Reiter um")
+    row = next(i for i, r in enumerate(ov.rows) if r.key == "ts_connection")
+    check(ov.combos[row].findData(va.WHISPER) >= 0, "Mitschrift: Whisper lokal in der Übersicht")
+    from omniwrench.ai import scan
+    store.settings.set(scan.SETTINGS_KEY, {"oa": {"ts": 1, "kinds": {"tts": {"status": "ok"}},
+                                                  "account": {"balance": 4.5, "currency": "USD"}, "limits": {}}})
+    ov.refresh()
+    row = next(i for i, r in enumerate(ov.rows) if r.key == "va_tts")
+    check("4.5" in ov.table.item(row, 3).text() and "✔" in ov.table.item(row, 2).text(),
+          f"Prüfergebnis und Guthaben angezeigt ({ov.table.item(row, 3).text()})")
     if shots:
+        rs.pump(0.3)
+        win.grab().save(str(shots / "clank_overview.png"))
+        tool.modes.setCurrentWidget(v)
+        v.setup.head.setChecked(True)
+        v.stt.setCurrentIndex(v.stt.findData(va.WHISPER))
         rs.pump(0.3)
         win.grab().save(str(shots / "clank_voice.png"))
     win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))

@@ -587,3 +587,12 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   SiliconFlow, Doubao, ERNIE, Hunyuan, StepFun, Databricks, Snowflake, LiteLLM, Foundry Local, Docker Model Runner,
   oobabooga, llamafile, AnythingLLM, Open WebUI, Lemonade, Xinference, SGLang, TabbyAPI, Msty + info-only media/speech.
   Wiki page KI-Anbieter (generated: scripts/ai_wiki/build_ai_wiki.py + descriptions.py). Region filter "EU" fixed.
+- 2026-10-29 (KI round 3, after Stef's Gemini tests): neutral system prompt (no IT assumption, also Clank);
+  reasoning effort low for short/normal, medium for detailed (Gemini/OpenAI/xAI/Groq, auto-fallback on 400);
+  Gemini fixes: thought_signature echoed (tool_call.extra_content), parallel tool calls split by id, 503/"high demand"
+  retried 2x (2 s, 6 s) before text arrives; quota errors shortened (not_in_plan / retry_in / no_credit / busy).
+  "Fähigkeiten prüfen" (omniwrench/ai/scan.py + ui/ai_scan.py): functions/models per connection, balance APIs,
+  rate-limit headers, usage_url. Clank 1.0.2: tab KI-Übersicht (overview.py, default assistant per function),
+  group chat waits on per-minute limits and keeps a learned gap per connection (group.rate_wait),
+  speech: gemini_audio (STT + TTS, 30 voices), Groq Whisper, Mistral Voxtral, Whisper local (faster-whisper) and
+  Piper (local_speech.py), voice language selectable (va_lang), voice list per language/provider, test button.

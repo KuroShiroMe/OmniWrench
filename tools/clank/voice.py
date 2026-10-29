@@ -1,9 +1,11 @@
 """Reiter „Sprachassistent“: per Weckwort („Hey Clank“) oder Knopf sprechen, Antwort vorlesen lassen.
 
 Weckwort: offline mit Vosk (kleines Sprachmodell je Sprache, ~40–50 MB, wird auf Wunsch geladen). Erst nach dem
-Weckwort geht Audio an den gewählten Anbieter für Spracherkennung – oder bleibt mit „Offline (Vosk)“ ganz auf dem
-Rechner. Die Frage läuft über den Chat des KI-Studios (gleiche Assistenten, Funktionen und Bestätigungen), die
-Antwort liest die Systemstimme (QTextToSpeech) oder ein Anbieter (omniwrench.ai.speech) vor.
+Weckwort geht Audio an den gewählten Anbieter für Spracherkennung – oder bleibt mit „Whisper lokal“ (faster-whisper)
+bzw. „Offline (Vosk)“ ganz auf dem Rechner. Die Frage läuft über den Chat des KI-Studios (gleiche Assistenten,
+Funktionen und Bestätigungen), die Antwort liest eine Systemstimme (QTextToSpeech, alle Engines), Piper (offline,
+local_speech.py) oder ein Anbieter (omniwrench.ai.speech) vor. Die Sprache (va_lang) ist frei wählbar; danach richten
+sich Weckwort-Modell, Erkennung und Stimmenliste.
 Zustände: off -> wake -> command -> thinking -> speaking -> (followup) -> wake.
 """
 
@@ -29,8 +31,9 @@ from PySide6.QtWidgets import (
 from omniwrench.sdk import run_async
 
 from . import audio
+from . import local_speech as ls
 from .grouptab import Section
-from .transcript import DepsPage
+from .transcript import DepsPage, local_needs, setup_local
 
 VOSK_MODELS = {"de": "vosk-model-small-de-0.15", "en": "vosk-model-small-en-us-0.15",
                "fr": "vosk-model-small-fr-0.22", "es": "vosk-model-small-es-0.42", "it": "vosk-model-small-it-0.22",
@@ -39,6 +42,10 @@ VOSK_MODELS = {"de": "vosk-model-small-de-0.15", "en": "vosk-model-small-en-us-0
 VOSK_URL = "https://alphacephei.com/vosk/models/{name}.zip"
 OFFLINE = "__vosk__"
 SYSTEM_VOICE = "__system__"
+WHISPER = ls.WHISPER
+PIPER = ls.PIPER
+LANGS = ("de", "en", "fr", "es", "it", "nl", "pl", "pt", "ru", "tr", "uk", "cs", "sk", "sv", "da", "no", "fi", "hu",
+         "el", "ro", "ca", "ar", "zh", "ja", "ko", "hi")
 FOLLOWUP_SECONDS = 8.0
 COMMAND_TIMEOUT = 10.0
 
@@ -145,6 +152,33 @@ class WakeDetector:
         rec = self.vosk.KaldiRecognizer(self.model, audio.RATE)
         rec.AcceptWaveform(self.pcm(samples))
         return json.loads(rec.FinalResult()).get("text", "")
+
+
+def system_voices(lang: str) -> list[tuple[str, str, str]]:
+    """Installierte Systemstimmen der Sprache über alle Engines: [(Engine, Name, Gebiet)].
+    Windows: „winrt“ (OneCore, auch neuere natürliche Stimmen, soweit Windows sie freigibt) und „sapi“."""
+    try:
+        from PySide6.QtCore import QLocale
+        from PySide6.QtTextToSpeech import QTextToSpeech
+    except ImportError:
+        return []
+    out, seen = [], set()
+    engines = [e for e in QTextToSpeech.availableEngines() if e != "mock"]
+    for engine in engines or [""]:
+        try:
+            tts = QTextToSpeech(engine) if engine else QTextToSpeech()
+            found = tts.allVoices(None)
+        except Exception:  # noqa: BLE001 - Engine ohne Stimmen / nicht ladbar
+            continue
+        for v in found:
+            loc = v.locale()
+            if loc.name().split("_")[0] != lang or (engine, v.name()) in seen:
+                continue
+            seen.add((engine, v.name()))
+            out.append((engine if len(engines) > 1 else "", v.name(),
+                        QLocale.territoryToString(loc.territory())))
+        tts.deleteLater()
+    return sorted(out, key=lambda x: (x[0] != (engines[0] if engines else ""), x[1]))
 
 
 def speakable(text: str, limit: int, code_hint: str = "(Code)") -> str:
@@ -264,18 +298,52 @@ class VoiceTab(QWidget):
         self.setup_btn.clicked.connect(self.setup_wake)
         eng.addWidget(self.setup_btn)
         form.addRow(tr("va.engine"), eng)
+        self.lang_box = QComboBox()
+        self.lang_box.setToolTip(tr("va.lang_tip"))
+        from PySide6.QtCore import QLocale
+        self.lang_box.addItem(tr("va.lang_app", lang=QLocale(self._app_lang()).nativeLanguageName() or
+                                 self._app_lang()), "")
+        for code in LANGS:
+            name = QLocale(code).nativeLanguageName() or code
+            self.lang_box.addItem(f"{name[:1].upper()}{name[1:]} ({code})", code)
+        self.lang_box.setCurrentIndex(max(0, self.lang_box.findData(self.settings.get("va_lang") or "")))
+        self.lang_box.currentIndexChanged.connect(self._lang_changed)
+        lang_row = QHBoxLayout()
+        lang_row.addWidget(self.lang_box)
+        lang_row.addStretch()
+        form.addRow(tr("va.lang"), lang_row)
+        rec = QHBoxLayout()
         self.stt = QComboBox()
-        form.addRow(tr("va.stt"), self.stt)
+        self.stt.currentIndexChanged.connect(self._fill_stt_models)
+        rec.addWidget(self.stt, 2)
+        self.stt_model = QComboBox()
+        self.stt_model.setToolTip(tr("va.whisper_model_tip"))
+        self.stt_model.currentIndexChanged.connect(lambda *_: self._update_local())
+        rec.addWidget(self.stt_model, 1)
+        form.addRow(tr("va.stt"), rec)
         out = QHBoxLayout()
         self.tts = QComboBox()
         self.tts.currentIndexChanged.connect(self._fill_tts_models)
         out.addWidget(self.tts, 2)
         self.tts_model = QComboBox()
         out.addWidget(self.tts_model, 1)
-        self.voice = QLineEdit(self.settings.get("va_voice") or "")
-        self.voice.setPlaceholderText(tr("va.voice_hint"))
-        out.addWidget(self.voice, 1)
+        self.voice = QComboBox()
+        self.voice.setEditable(True)
+        self.voice.setMinimumContentsLength(14)
+        self.voice.currentIndexChanged.connect(lambda *_: self._update_local())
+        out.addWidget(self.voice, 2)
         form.addRow(tr("va.tts"), out)
+        local = QHBoxLayout()
+        self.local_info = QLabel()
+        self.local_info.setWordWrap(True)
+        local.addWidget(self.local_info, 1)
+        self.local_btn = QPushButton("⬇ " + tr("va.local_setup"))
+        self.local_btn.clicked.connect(self.setup_local)
+        local.addWidget(self.local_btn)
+        self.test_btn = QPushButton("🔊 " + tr("va.test_voice"))
+        self.test_btn.clicked.connect(lambda: self.speak(tr("va.test_text"), test=True))
+        local.addWidget(self.test_btn)
+        form.addRow("", local)
         more = QHBoxLayout()
         self.followup = QCheckBox(tr("va.followup"))
         self.followup.setChecked(self.settings.get("va_followup", True))
@@ -307,9 +375,19 @@ class VoiceTab(QWidget):
     def running(self) -> bool:
         return self.state != "off"
 
-    def _lang(self) -> str:
+    def _app_lang(self) -> str:
         from omniwrench.core.i18n import current_language
         return (current_language() or "en").split("_")[0].split("-")[0]
+
+    def _lang(self) -> str:
+        """Sprache des Assistenten: frei gewählt oder die Programmsprache."""
+        box = getattr(self, "lang_box", None)
+        return (box.currentData() if box is not None else self.settings.get("va_lang")) or self._app_lang()
+
+    def _lang_changed(self, *_):
+        self.settings.set("va_lang", self.lang_box.currentData() or "")
+        self._fill_voices()
+        self._update_engine()
 
     def wake_available(self) -> bool:
         return not audio.missing(("vosk",)) and model_ready(self.studio.context.data_dir, self._lang())
@@ -329,12 +407,17 @@ class VoiceTab(QWidget):
         for c in speech.stt_connections(store):
             if not (c.info and c.info.removed):
                 self.stt.addItem(c.name, c.id)
+        self.stt.addItem(tr("va.whisper"), WHISPER)
         self.stt.addItem(tr("va.offline"), OFFLINE)
+        self.stt.blockSignals(True)
         self.stt.setCurrentIndex(max(0, self.stt.findData(keep)))
+        self.stt.blockSignals(False)
+        self._fill_stt_models()
         keep = self.tts.currentData() or self.settings.get("va_tts") or SYSTEM_VOICE
         self.tts.blockSignals(True)
         self.tts.clear()
         self.tts.addItem(tr("va.system_voice"), SYSTEM_VOICE)
+        self.tts.addItem(tr("va.piper"), PIPER)
         for c in speech.tts_connections(store):
             if not (c.info and c.info.removed):
                 self.tts.addItem(c.name, c.id)
@@ -343,19 +426,116 @@ class VoiceTab(QWidget):
         self._fill_tts_models()
         self._update_engine()
 
+    def _fill_stt_models(self, *_):
+        from omniwrench.ai import speech
+        target = self.stt.currentData() or ""
+        self.stt_model.blockSignals(True)
+        self.stt_model.clear()
+        if target == WHISPER:
+            for name, (_repo, mb) in ls.WHISPER_MODELS.items():
+                self.stt_model.addItem(self.tr_(f"va.whisper_{name.replace('-', '_')}", mb=mb), name)
+            keep = self.settings.get("va_whisper_model") or ls.WHISPER_DEFAULT
+        else:
+            conn = self.services.connections.get(target)
+            for m in speech.stt_models(conn) if conn else []:
+                self.stt_model.addItem(m, m)
+            keep = (self.settings.get("va_stt_models") or {}).get(target, "")
+        self.stt_model.setCurrentIndex(max(0, self.stt_model.findData(keep)))
+        self.stt_model.setVisible(self.stt_model.count() > 1)
+        self.stt_model.blockSignals(False)
+        self._update_local()
+
     def _fill_tts_models(self, *_):
         from omniwrench.ai import speech
         self.tts_model.clear()
         conn = self.services.connections.get(self.tts.currentData() or "")
         self.tts_model.setVisible(conn is not None)
-        self.voice.setVisible(conn is not None)
-        if conn is None:
-            return
-        for m in speech.tts_models(conn):
-            self.tts_model.addItem(m, m)
-        idx = self.tts_model.findData(self.settings.get("va_tts_model") or "")
+        if conn is not None:
+            for m in speech.tts_models(conn):
+                self.tts_model.addItem(m, m)
+            idx = self.tts_model.findData(self.settings.get("va_tts_model") or "")
+            if idx >= 0:
+                self.tts_model.setCurrentIndex(idx)
+        self._fill_voices()
+
+    def _voice_key(self) -> str:
+        return self.tts.currentData() or SYSTEM_VOICE
+
+    def _fill_voices(self) -> None:
+        """Stimmen passend zur gewählten Sprache (Systemstimmen, Piper) bzw. die des Anbieters."""
+        from omniwrench.ai import speech
+        tr = self.tr_
+        target = self._voice_key()
+        lang = self._lang()
+        prev = getattr(self, "_voice_target", None)
+        if prev is not None and (self.voice.count() or self.voice.currentText()):
+            self.settings.set("va_voices", dict(self.settings.get("va_voices") or {}, **{prev: self._voice_value()}))
+        self._voice_target = target
+        saved = (self.settings.get("va_voices") or {}).get(target)
+        if saved is None and target not in (SYSTEM_VOICE, PIPER):
+            saved = self.settings.get("va_voice") or ""          # bis 1.0.1 eine Stimme für alle
+        self.voice.blockSignals(True)
+        self.voice.clear()
+        self.voice.setEditable(target not in (SYSTEM_VOICE, PIPER))
+        if self.voice.isEditable():
+            self.voice.lineEdit().setPlaceholderText(tr("va.voice_hint"))
+        if target == SYSTEM_VOICE:
+            self.voice.addItem(tr("va.voice_default"), "")
+            for engine, name, loc in system_voices(lang):
+                label = f"{name} · {loc}" + (f" ({engine})" if engine else "")
+                self.voice.addItem(label, f"{engine}|{name}")
+        elif target == PIPER:
+            have = set(ls.installed_voices(self.studio.context.data_dir))
+            for name, mb in ls.piper_voices(self.studio.context.data_dir, lang):
+                mark = "✓ " if name in have else "⬇ "
+                self.voice.addItem(mark + name + (f" · {mb} MB" if mb and name not in have else ""), name)
+        else:
+            conn = self.services.connections.get(target)
+            for v in speech.voices(conn) if conn else []:
+                self.voice.addItem(v, v)
+        idx = self.voice.findData(saved) if saved else -1
         if idx >= 0:
-            self.tts_model.setCurrentIndex(idx)
+            self.voice.setCurrentIndex(idx)
+        elif saved and self.voice.isEditable():
+            self.voice.setEditText(saved)
+        elif target == PIPER and self.voice.count():
+            self.voice.setCurrentIndex(0)
+        self.voice.blockSignals(False)
+        self._update_local()
+
+    def _voice_value(self) -> str:
+        if self.voice.isEditable():
+            text = self.voice.currentText().strip()
+            data = self.voice.currentData()
+            return data if data and self.voice.itemText(self.voice.currentIndex()) == text else text
+        return self.voice.currentData() or ""
+
+    def _update_local(self) -> None:
+        """Hinweis und Einrichten-Knopf für Whisper lokal / Piper."""
+        if not hasattr(self, "local_btn"):
+            return
+        need = self._local_needs()
+        tr = self.tr_
+        self.local_btn.setVisible(bool(need))
+        self.local_info.setText(tr("va.local_needs", what=", ".join(need)) if need else "")
+        self.local_info.setVisible(bool(need))
+
+    def _local_needs(self) -> list[str]:
+        whisper = (self.stt_model.currentData() or ls.WHISPER_DEFAULT) if self.stt.currentData() == WHISPER else ""
+        piper = (self.voice.currentData() or "") if self._voice_key() == PIPER else ""
+        return local_needs(self.tr_, self.studio.context.data_dir, whisper, piper)
+
+    def setup_local(self) -> None:
+        """Whisper lokal / Piper einrichten (Rückfrage, Pakete, Modell bzw. Stimme)."""
+        whisper = (self.stt_model.currentData() or ls.WHISPER_DEFAULT) if self.stt.currentData() == WHISPER else ""
+        piper = (self.voice.currentData() or "") if self._voice_key() == PIPER else ""
+
+        def done(_ok):
+            self.local_btn.setEnabled(True)
+            self._fill_voices()
+        self.local_btn.setEnabled(False)
+        if not setup_local(self, self.studio, self.status.setText, done, whisper, piper):
+            self.local_btn.setEnabled(True)
 
     def _update_engine(self) -> None:
         tr = self.tr_
@@ -406,7 +586,13 @@ class VoiceTab(QWidget):
         s.set("va_stt", self.stt.currentData() or "")
         s.set("va_tts", self.tts.currentData() or SYSTEM_VOICE)
         s.set("va_tts_model", self.tts_model.currentData() or "")
-        s.set("va_voice", self.voice.text().strip())
+        s.set("va_lang", self.lang_box.currentData() or "")
+        stt = self.stt.currentData() or ""
+        if stt == WHISPER:
+            s.set("va_whisper_model", self.stt_model.currentData() or ls.WHISPER_DEFAULT)
+        elif self.stt_model.currentData():
+            s.set("va_stt_models", dict(s.get("va_stt_models") or {}, **{stt: self.stt_model.currentData()}))
+        s.set("va_voices", dict(s.get("va_voices") or {}, **{self._voice_key(): self._voice_value()}))
         s.set("va_followup", self.followup.isChecked())
         s.set("va_limit", self.limit.value())
 
@@ -499,6 +685,7 @@ class VoiceTab(QWidget):
             self.on_btn.blockSignals(True)
             self.on_btn.setChecked(False)
             self.on_btn.blockSignals(False)
+            self._show_state()
 
     def talk(self) -> None:
         """Knopf „Sprechen“: ohne Weckwort direkt zuhören (funktioniert auch ohne Vosk)."""
@@ -541,18 +728,25 @@ class VoiceTab(QWidget):
             return
         self._set_state("thinking")
         stt = self.stt.currentData() or OFFLINE
+        model = self.stt_model.currentData() or ""
         store = self.services.connections
         langs = [self._lang()]
         det = self.detector
+        data_dir = self.studio.context.data_dir
+        if stt == WHISPER and self._local_needs():
+            self._error(self.tr_("va.local_missing"))
+            return
 
         def work():
             from omniwrench.ai import speech
+            if stt == WHISPER:
+                return " ".join(t for t, _a, _b in ls.whisper_transcribe(data_dir, samples, model, langs[0])).strip()
             if stt == OFFLINE:
                 if det is None:
                     raise RuntimeError(self.tr_("va.need_wake"))
                 return det.transcribe(samples)
             conn = store.get(stt)
-            segs = speech.transcribe(store, conn, speech.wav_bytes(samples), "", langs, None, False)
+            segs = speech.transcribe(store, conn, speech.wav_bytes(samples), model, langs, None, False)
             return " ".join(s.text for s in segs).strip()
 
         def done(text):
@@ -603,24 +797,37 @@ class VoiceTab(QWidget):
         self.speak(speakable(text, self.limit.value(), self.tr_("va.code")))
 
     # --- Vorlesen -----------------------------------------------------------------------------------
-    def speak(self, text: str) -> None:
+    def speak(self, text: str, test: bool = False) -> None:
+        if test:
+            if self.state != "off":
+                return
+            self._save_settings()
         self._set_state("speaking")
         target = self.tts.currentData() or SYSTEM_VOICE
+        voice = self._voice_value()
         if target == SYSTEM_VOICE:
-            self._speak_system(text)
+            self._speak_system(text, voice)
+            return
+        if target == PIPER and self._local_needs():
+            self.status.setText("⚠ " + self.tr_("va.local_missing"))
+            self._speak_system(text, "")
             return
         store = self.services.connections
-        model, voice = self.tts_model.currentData() or "", self.voice.text().strip()
+        model = self.tts_model.currentData() or ""
+        data_dir = self.studio.context.data_dir
 
         def work():
+            if target == PIPER:
+                return ls.piper_synthesize(data_dir, voice, text), "audio/wav"
             from omniwrench.ai import speech
             return speech.synthesize(store, store.get(target), text, model, voice)
 
         def done(result):
-            data, _mime = result
+            data, mime = result
             if self.state != "speaking":
                 return
-            path = Path(tempfile.gettempdir()) / f"omniwrench_voice_{int(time.time() * 1000)}.mp3"
+            ext = ".wav" if "wav" in (mime or "") else ".mp3"
+            path = Path(tempfile.gettempdir()) / f"omniwrench_voice_{int(time.time() * 1000)}{ext}"
             path.write_bytes(data)
             self._play(path)
 
@@ -629,18 +836,25 @@ class VoiceTab(QWidget):
             self._speak_system(text)
         run_async(work, done, failed)
 
-    def _speak_system(self, text: str) -> None:
+    def _speak_system(self, text: str, voice: str = "") -> None:
         try:
             from PySide6.QtTextToSpeech import QTextToSpeech
         except ImportError:
             self._spoken()
             return
+        engine, _, name = voice.partition("|")
+        if self._tts is not None and engine and self._tts.engine() != engine:
+            self._tts.deleteLater()
+            self._tts = None
         if self._tts is None:
-            self._tts = QTextToSpeech(self)
-            from PySide6.QtCore import QLocale
-            from omniwrench.core.i18n import current_language
-            self._tts.setLocale(QLocale(current_language() or "en"))
+            self._tts = QTextToSpeech(engine, self) if engine else QTextToSpeech(self)
             self._tts.stateChanged.connect(self._tts_state)
+        from PySide6.QtCore import QLocale
+        self._tts.setLocale(QLocale(self._lang()))
+        if name:
+            match = next((v for v in self._tts.allVoices(None) if v.name() == name), None)
+            if match is not None:
+                self._tts.setVoice(match)
         self._tts_started = False
         self._tts.say(text)
         QTimer.singleShot(max(4000, len(text) * 120), self._tts_timeout)

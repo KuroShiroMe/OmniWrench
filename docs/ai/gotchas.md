@@ -222,3 +222,8 @@
   Never rely on catalog "models" alone: chat fetches /models. Gemini OpenAI-compat lists ids as "models/<name>" and
   returns errors as a JSON LIST [{"error": …}] (http._error_from_http handles both).
 - Region filter compared country == "EU" (never true) -> now EU country set or category "eu".
+- Gemini free tier: ~5 requests/min per model; quota error text contains "billing details" even for per-minute limits
+  -> check "retry in Ns" BEFORE credit words (chat.quota_text, group.rate_wait). "limit: 0" = not in plan.
+- Gemini OpenAI-compat tool calls: thought signature in tool_call.extra_content must be sent back; parallel calls share index 0.
+- huggingface.co is blocked in the cloud sandbox: Piper voice list/downloads can't be tested here (fallback list in local_speech).
+- Windows Narrator "natural" voices are mostly not exposed to OneCore/SAPI apps; QTextToSpeech shows only what Windows exposes.

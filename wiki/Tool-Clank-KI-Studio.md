@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `ai.clank` |
-| **Stand der Seite** | Version 1.0.1 |
+| **Stand der Seite** | Version 1.0.2 |
 | **Bereich** | Automatisierung & Entwicklung |
 | **Tags** | KI, Chat, ChatGPT, Claude, Copilot, Ollama, Git, GitHub, GitLab, Azure DevOps, MCP, Bilder, Musik, Video, Transkription, Sprachassistent |
 | **Plattformen** | Windows, Linux |
@@ -34,6 +34,7 @@
   - [Mitschrift](#mitschrift)
   - [Sprachassistent](#sprachassistent)
   - [MCP](#mcp)
+  - [KI-Übersicht](#ki-übersicht)
 - [Einstellungen](#einstellungen)
 - [Sicherheit und Datenschutz](#sicherheit-und-datenschutz)
 - [Grenzen und bekannte Einschränkungen](#grenzen-und-bekannte-einschränkungen)
@@ -157,6 +158,12 @@ mit verschiedenen Rollen).
 | **Ablauf** | Art (Diskussion, Ideensammlung, Debatte, Prüfung), Reihenfolge (fest / zufällig je Runde), Detailgrad, Zusammenfassung am Ende |
 | **Bremsen** | Runden, Beiträge insgesamt, Zeichen je Beitrag, Zeitlimit, Token-Budget, nach jeder Runde anhalten, Ende bei Einigkeit, Ende bei Wiederholung |
 
+**Minutenlimits:** Kostenlose Stufen erlauben oft nur wenige Anfragen pro Minute (Gemini z. B. 5). Meldet ein
+Anbieter, dass das Minutenlimit erreicht ist, wartet der Gruppenchat die genannte Zeit (höchstens 90 Sekunden) und
+macht dann weiter; im Verlauf steht ein Hinweis. Danach hält er für diesen Anbieter automatisch genug Abstand
+zwischen den Anfragen. Tageslimits, leeres Guthaben oder „nicht im Tarif“ beenden den Lauf mit einer Meldung.
+Tipp: Für mehrere Teilnehmer verschiedene Anbieter mischen.
+
 Während des Laufs: **Einwerfen** (kommt vor dem nächsten Beitrag), **Anhalten**, **Weiter**. Im Gruppenchat
 gibt es keine Funktionsaufrufe; die Verfremdung folgt dem KI-Zugriff von Clank. Gruppenchats werden wie Chats
 gespeichert (verschlüsselt, falls eingestellt).
@@ -178,7 +185,9 @@ einer die Zeitpläne aus.
 
 ### Mitschrift
 Schreibt Besprechungen von **Mikrofon** und/oder **Systemton** (Teams, Zoom, Webex …) live mit, erkennt die
-Sprecher und fasst am Ende zusammen. Spracherkennung über OpenAI, ElevenLabs, Deepgram oder AssemblyAI.
+Sprecher und fasst am Ende zusammen. Spracherkennung über OpenAI, Google Gemini, Groq (Whisper), Mistral (Voxtral),
+ElevenLabs, Deepgram, AssemblyAI oder **Whisper lokal** (offline und kostenlos, siehe
+[Sprachassistent](#sprachassistent); ohne Sprecherkennung des Anbieters, die Sprecher trennt dann Clank selbst).
 
 1. Quellen, Spracherkennung, Sprachen (z. B. `de, en`) und den eigenen Namen für das Mikrofon wählen.
 2. **Aufnahme starten** – vor **jeder** Aufnahme fragt Clank die Einwilligung ab (siehe unten). Ein roter
@@ -208,13 +217,30 @@ einstellbar, weitere Schreibweisen möglich), Frage sprechen, die Antwort wird v
 | Einstellung | Bedeutung |
 |---|---|
 | Weckwort | Offline erkannt mit Vosk (kleines Sprachmodell je Sprache, **Weckwort einrichten …**) |
-| Spracherkennung | Anbieter (genauer) oder „Offline (Vosk)“ – dann bleibt alles auf dem Rechner |
-| Antwort vorlesen mit | Systemstimme (offline) oder Stimme eines Anbieters (OpenAI, ElevenLabs) |
+| Sprache | Programmsprache oder eine andere Sprache; danach richten sich Weckwort-Modell, Erkennung und Stimmenliste |
+| Spracherkennung | Anbieter, **Whisper lokal** oder „Offline (Vosk, ungenauer)“ (siehe Tabelle unten) |
+| Antwort vorlesen mit | Systemstimme, **Piper** oder ein Anbieter mit Stimme (OpenAI, Google Gemini, ElevenLabs) |
+| Stimme | Liste passend zur gewählten Sprache (Systemstimmen, Piper) bzw. die Stimmen des Anbieters (Gemini 30, OpenAI 11; ElevenLabs: Stimm-ID eintragen). Die Wahl wird je Ausgabe gemerkt. **Probehören** spielt einen Beispielsatz |
 | Folgefragen ohne Weckwort | 8 Sekunden nach der Antwort wieder zuhören |
 | Vorlesen bis etwa | Längere Antworten werden gekürzt vorgelesen; Code wird nur erwähnt |
 
 Das Weckwort wird **immer offline** erkannt; erst danach geht der gesprochene Satz an die gewählte
 Spracherkennung.
+
+**Welche Erkennung und Stimme passt?**
+
+| Möglichkeit | Kosten | Qualität | Hinweise |
+|---|---|---|---|
+| Whisper lokal (faster-whisper) | kostenlos, offline | sehr gut (Modell *small* empfohlen, *large-v3-turbo* am besten) | Einmalig **Offline-Sprache einrichten**: Paket (~100 MB) und Modell (145 MB bis 1,6 GB) werden geladen. Braucht etwas Rechenzeit |
+| Vosk | kostenlos, offline | einfach | Dasselbe kleine Modell wie das Weckwort |
+| Groq (Whisper) | kostenlose Stufe | sehr gut, sehr schnell | Groq-Assistent verbinden |
+| Google Gemini | kostenlose Stufe mit Minutenlimit | sehr gut, erkennt Sprecher | Erkennung und Vorlesen (30 Stimmen) |
+| Mistral (Voxtral) | günstig | sehr gut | EU-Anbieter |
+| OpenAI, ElevenLabs, Deepgram, AssemblyAI | kostenpflichtig | sehr gut | |
+| Systemstimme | kostenlos, offline | je nach System | Alle installierten Stimmen der Sprache. Unter Windows zusätzliche Stimmen über *Einstellungen › Zeit und Sprache › Sprache* installieren. Die neuen „natürlichen“ Sprachausgabe-Stimmen gibt Windows bisher nur teilweise für andere Programme frei |
+| Piper | kostenlos, offline | natürlich klingend | Stimmen je Sprache (z. B. Thorsten, Kerstin, Eva), je Stimme 20–110 MB, Download auf Wunsch |
+
+Pakete und Modelle landen im Tool-Ordner bzw. im Datenordner von Clank; heruntergeladen wird nur nach Rückfrage.
 
 ### MCP
 ![MCP](images/clank-mcp.png)
@@ -239,6 +265,21 @@ kopieren** liefert die Konfiguration für Claude Desktop & Co. (stdio, startet `
 - Nur auf diesem Rechner erreichbar (`127.0.0.1`, Standard-Port 47821) und nur mit Token.
 - Änderungen werden **immer hier im Programm** bestätigt.
 - **Neues Token erzeugen …** macht bisherige HTTP-Einrichtungen ungültig.
+
+### KI-Übersicht
+Legt fest, welcher Assistent für welche Funktion standardmäßig verwendet wird (Chat, Bilder, Musik, Video,
+Dokumente, Mitschrift, Zusammenfassung, Spracherkennung und Vorlesen des Sprachassistenten). Die Reiter übernehmen
+die Auswahl sofort. Zu jeder Zeile zeigt die Tabelle:
+
+| Spalte | Inhalt |
+|---|---|
+| Erlaubt? | Ergebnis der letzten Prüfung: verfügbar, nicht verfügbar, unklar |
+| Volumen | Guthaben oder verbleibende Anfragen, soweit der Anbieter sie meldet, mit Zeitpunkt der Prüfung |
+| Voraussetzung | z. B. „API-Konto mit Abrechnung“ |
+
+**Ausgewählten prüfen** und **Alle prüfen** fragen die Anbieter neu ab; **Details …** zeigt den ganzen Bericht
+(Modelle je Funktion, Limits, Link zur Verbrauchsseite). Mehr dazu unter
+[KI-Assistenten › Fähigkeiten prüfen](KI-Assistenten#fähigkeiten-prüfen).
 
 ## Einstellungen
 Rechtsklick auf Clank › *Einstellungen*:
@@ -285,6 +326,8 @@ Vorlagen, Zeitpläne) werden in den Reitern selbst gesetzt und gespeichert.
 | Reiter Bilder/Musik/Video ausgegraut | Kein Anbieter mit dieser Fähigkeit verbunden – in *Einstellungen › KI-Assistenten* hinzufügen |
 | Musik/Video: „braucht ffmpeg“ | Unter Windows **ffmpeg herunterladen**, unter Linux per Paketverwaltung installieren, dann **Erneut prüfen** |
 | Mitschrift: Quelle kann nicht aufgenommen werden | Gerät belegt oder fehlt; unter Linux PulseAudio/PipeWire prüfen; unter Windows Mikrofonzugriff in den Datenschutzeinstellungen erlauben |
+| Gruppenchat: „Limit des Anbieters erreicht“ | Kostenlose Stufe mit Minutenlimit – Clank wartet automatisch; bei Tageslimit später weitermachen oder Anbieter mischen |
+| „Offline-Sprache ist noch nicht eingerichtet“ | Im Sprachassistenten **Offline-Sprache einrichten** drücken (lädt faster-whisper bzw. Piper und das Modell) |
 | Weckwort reagiert nicht | Weckwort deutlich sprechen, weitere Schreibweisen eintragen (z. B. „hey klang“) oder **Sprechen** benutzen |
 | MCP-Server „Fehler: Server process ended“ | Befehl/Argumente prüfen (z. B. `npx` installiert?), Server einzeln in der Konsole starten |
 | Externes Programm erreicht den MCP-Server nicht | Server in Clank eingeschaltet? Port frei? Bei HTTP das aktuelle Token verwenden |
@@ -293,6 +336,7 @@ Vorlagen, Zeitpläne) werden in den Reitern selbst gesetzt und gespeichert.
 
 | Version | Änderungen |
 |---|---|
+| 1.0.2 | Reiter **KI-Übersicht** (Standard-Assistent je Funktion, Prüfung, Volumen); Sprachassistent: Sprache frei wählbar, Whisper lokal, Piper, Systemstimmen zur Auswahl, Stimmen von Gemini und OpenAI, Probehören; Spracherkennung auch mit Gemini, Groq Whisper und Mistral Voxtral (auch in der Mitschrift); Gruppenchat wartet bei Minutenlimits und hält Abstand |
 | 1.0.1 | Mitschrift: deutlicher Hinweis (Art. 9 DSGVO) vor dem Verwenden von Sprecherprofilen |
 | 1.0.0 | Erste Version: Chat mit Projekten, Vorlagen und Arbeitsbereich (Ordner, Git, GitHub/GitLab/Azure DevOps), Bilder, Musik, Video, Gruppenchat, Dokumente, Bildschirmfoto, Planung, MCP-Client und -Server, Mitschrift mit Sprechererkennung, Sprachassistent mit Weckwort |
 

@@ -9,6 +9,7 @@ Thread (thread.json):
 from __future__ import annotations
 
 import json
+import re
 import logging
 import platform
 import threading
@@ -24,6 +25,8 @@ from .connections import Connection, ConnectionStore
 from .http import AIError, Cancelled
 
 DETAILS = ("short", "normal", "detailed")
+# Nachdenk-Aufwand je Detailgrad (nur Anbieter mit "reasoning" im Katalog): kurz und normal antworten schnell
+REASONING = {"short": "low", "normal": "low", "detailed": "medium"}
 MAX_ROUNDS = 12
 CONTEXT_CHARS = 200_000
 
@@ -70,14 +73,16 @@ def thread_markdown(thread: dict) -> str:
 def system_prompt(detail: str, project: dict | None = None, extra: str = "") -> str:
     lang = current_language() or "en"
     parts = [
-        f"You are the assistant built into {APP_NAME} {__version__} by {VENDOR}, a modular admin toolbox "
-        f"for Windows clients and Linux. Users are system administrators.",
+        f"You are a general-purpose assistant. You run inside {APP_NAME} {__version__} by {VENDOR}, a modular "
+        f"toolbox for Windows and Linux, but questions can be about any topic. Do not assume the user works "
+        f"in IT and do not steer answers towards IT unless the question is about it.",
         f"Today is {time.strftime('%Y-%m-%d')}. The computer runs {platform.system()} {platform.release()}.",
         f"Reply in the user's language (program language: {lang}). Address the user formally and neutrally.",
         _DETAIL_TEXT.get(detail, _DETAIL_TEXT["normal"]),
-        "Use the provided functions to look up facts about the program, its tools, the documentation "
-        "and the connected systems instead of guessing. If a tool that would help is not installed or "
-        "not connected, say so and explain how to install or connect it.",
+        "Only when a question concerns the program, its tools or the connected systems, use the provided "
+        "functions to look up facts instead of guessing. If a tool that would help is not installed or "
+        "not connected, say so and explain how to install or connect it. For everything else answer directly "
+        "without calling functions.",
         "Values like IP-1, HOST-2 or DOMAIN-1 are placeholders for real data that the program hides "
         "from you; use them as they are, the program translates them back for the user.",
     ]
@@ -149,9 +154,8 @@ def run(store: ConnectionStore, conn: Connection, thread: dict, system: str, hoo
             if m.get("content") and m["role"] != "tool":
                 m["content"] = hooks.encode(m["content"])
             enc.append(m)
-        result = adapter.chat(system, enc, schemas,
-                              lambda kind, data: hooks.on_text(data) if kind == "text" else None,
-                              stop, state)
+        state["reasoning"] = REASONING.get(thread.get("detail", "normal"), "")
+        result = _chat_with_retries(adapter, system, enc, schemas, hooks, stop, state)
         usage = thread.setdefault("usage", {}).setdefault(conn.id, {"input": 0, "output": 0})
         for k in ("input", "output"):
             usage[k] = usage.get(k, 0) + int((result.get("usage") or {}).get(k, 0) or 0)
@@ -176,6 +180,42 @@ def run(store: ConnectionStore, conn: Connection, thread: dict, system: str, hoo
     thread["messages"].append({"role": "error", "content": tr("ai.error.too_many_rounds"), "ts": int(time.time())})
 
 
+RETRY_WAITS = (2, 6)     # Sekunden bis zum 2. und 3. Versuch, wenn der Anbieter überlastet ist
+
+
+def _overloaded(err: AIError) -> bool:
+    text = str(err).lower()
+    return err.status in (500, 502, 503, 504, 529) or any(
+        w in text for w in ("overloaded", "high demand", "unavailable", "try again later"))
+
+
+def _chat_with_retries(adapter, system, enc, schemas, hooks: RunHooks, stop: threading.Event, state: dict) -> dict:
+    """Eine Runde an den Anbieter: ohne Nachdenk-Parameter wiederholen, falls unbekannt; bei Überlastung
+    kurz warten und erneut versuchen, solange noch kein Text angekommen ist."""
+    attempt = 0
+    while True:
+        got = []
+
+        def on_event(kind, data):
+            if kind == "text":
+                got.append(data)
+                hooks.on_text(data)
+        try:
+            return adapter.chat(system, enc, schemas, on_event, stop, state)
+        except AIError as err:
+            if state.get("reasoning") and not state.get("no_reasoning") and err.status == 400 \
+                    and "reason" in str(err).lower():
+                state["no_reasoning"] = True          # Modell kennt den Nachdenk-Aufwand nicht
+                continue
+            if got or attempt >= len(RETRY_WAITS) or not _overloaded(err) or stop.is_set():
+                raise
+            logging.getLogger(__name__).info("Anbieter überlastet (%s), neuer Versuch in %s s", err,
+                                             RETRY_WAITS[attempt])
+            if stop.wait(RETRY_WAITS[attempt]):
+                raise Cancelled() from None
+            attempt += 1
+
+
 def _execute(call: dict, allowed: set[str], hooks: RunHooks) -> tuple[str, bool]:
     fn = functions.get(call["name"])
     if fn is None or fn.name not in allowed:
@@ -195,6 +235,25 @@ def _execute(call: dict, allowed: set[str], hooks: RunHooks) -> tuple[str, bool]
     return hooks.encode_result(fn.source, value), True
 
 
+_RETRY = re.compile(r"(?:retry in|retryDelay\W+|try again in)\s*([\d.]+)\s*(ms|s)?", re.IGNORECASE)
+
+
+def quota_text(err: Exception) -> str:
+    """Kontingent- und Limitfehler kurz: nicht im Tarif / später erneut / Guthaben, ohne Rohtext-Wand."""
+    text = str(err)
+    low = text.lower()
+    if re.search(r"limit:\s*0\b", low) or "free_tier" in low and "limit: 0" in low:
+        return tr("ai.error.not_in_plan")
+    m = _RETRY.search(text)
+    if m:                       # Minutenlimit („… please check your plan and billing details … retry in 33s“)
+        secs = float(m.group(1)) / (1000 if (m.group(2) or "").lower() == "ms" else 1)
+        return tr("ai.error.retry_in", seconds=max(1, round(secs)))
+    if any(w in low for w in ("insufficient_quota", "credit", "balance", "payment required")):
+        return tr("ai.error.no_credit")
+    first = re.split(r"(?<=[.!?])\s", text.strip(), maxsplit=1)[0][:240]
+    return tr("ai.error.quota" if getattr(err, "kind", "") == "quota" else "ai.error.limit", detail=first)
+
+
 def error_text(err: Exception) -> str:
     """Verständliche Meldung für die Oberfläche."""
     if isinstance(err, AIError):
@@ -209,6 +268,10 @@ def error_text(err: Exception) -> str:
         from . import models
         if models.is_model_error(err):
             return tr("ai.error.model_missing", detail=str(err))
+        if err.kind in ("limit", "quota") or err.status == 429:
+            return quota_text(err)
+        if _overloaded(err):
+            return tr("ai.error.busy")
         key = {"auth": "ai.error.auth", "limit": "ai.error.limit", "quota": "ai.error.quota",
                "network": "ai.error.network", "server": "ai.error.server"}.get(err.kind, "ai.error.request")
         return tr(key, detail=str(err))

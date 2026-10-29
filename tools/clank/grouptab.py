@@ -601,6 +601,8 @@ class GroupTab(QWidget):
             elif role == "brake":
                 if m.get("content") == "pause":
                     text = self.tr_("grp.paused", n=m.get("round", ""))
+                elif m.get("content") == "wait":
+                    text = self.tr_("grp.wait", who=m.get("who", ""), seconds=m.get("seconds", ""))
                 else:
                     text = self.tr_("grp.end." + m.get("content", ""), who=m.get("who", ""))
                 parts.append(f"<p style='color:gray'><i>⏸ {html.escape(text)}</i></p>")

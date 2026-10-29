@@ -90,6 +90,7 @@ class AIConnectionsPage(QWidget):
         row.addWidget(make_button("＋ " + tr("ai.conn.add"), primary=True, on_click=self.add))
         row.addWidget(make_button(tr("ai.conn.edit"), on_click=self.edit))
         row.addWidget(make_button("★ " + tr("ai.conn.make_primary"), on_click=self.make_primary))
+        row.addWidget(make_button("🔍 " + tr("ai.scan.button"), on_click=self.check))
         up = make_button("▲", on_click=lambda: self._move(-1))
         down = make_button("▼", on_click=lambda: self._move(1))
         for b in (up, down):
@@ -158,6 +159,12 @@ class AIConnectionsPage(QWidget):
             dlg = ConnectionDialog(self.store, conn, self)
             if dlg.exec():
                 self.refresh(conn.id)
+
+    def check(self) -> None:
+        conn = self._current()
+        if conn:
+            from .ai_scan import ScanDialog
+            ScanDialog(self.store, conn, self).exec()
 
     def make_primary(self) -> None:
         conn = self._current()

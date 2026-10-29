@@ -6,6 +6,9 @@ Katalog: media.speech.api (providers.json). Unterstützt:
     elevenlabs_speech  /speech-to-text (scribe_v2, diarize), /text-to-speech/<stimme>
     deepgram           /listen (nova-3, diarize, utterances)
     assemblyai         /upload + /transcript (universal-3-pro, speaker_labels), Abfragen bis fertig
+    gemini_audio       generateContent: Audio rein + Anweisung (Erkennung, Sprecher als „Speaker N:“),
+                       *-tts-Modelle mit responseModalities AUDIO und einer der 30 Stimmen (PCM 24 kHz -> WAV)
+openai_audio passt auch für Groq (whisper-large-v3-turbo) und Mistral (voxtral-mini-latest).
 Vorlesen ohne Anbieter erledigt die Systemstimme (QTextToSpeech) in der Oberfläche.
 Qt-frei; Audio immer als WAV-Bytes.
 """
@@ -15,6 +18,7 @@ from __future__ import annotations
 import base64
 import io
 import json
+import re
 import secrets
 import threading
 import time
@@ -29,11 +33,15 @@ from .connections import Connection, ConnectionStore
 from .http import AIError
 from .media import ImageGen, _check, _raw, _raw_json, _wait, api_for
 
-STT_APIS = ("openai_audio", "elevenlabs_speech", "deepgram", "assemblyai")
-TTS_APIS = ("openai_audio", "elevenlabs_speech")
+STT_APIS = ("openai_audio", "elevenlabs_speech", "deepgram", "assemblyai", "gemini_audio")
+TTS_APIS = ("openai_audio", "elevenlabs_speech", "gemini_audio")
 KNOWN_MAX = 4                        # OpenAI: höchstens 4 bekannte Sprecher je Anfrage
 ELEVEN_VOICE = "JBFqnCBsd6RMkjVDRZzb"
 OPENAI_VOICES = ("alloy", "ash", "ballad", "coral", "echo", "fable", "nova", "onyx", "sage", "shimmer", "verse")
+GEMINI_VOICES = ("Kore", "Puck", "Charon", "Zephyr", "Fenrir", "Leda", "Orus", "Aoede", "Callirrhoe", "Autonoe",
+                 "Enceladus", "Iapetus", "Umbriel", "Algieba", "Despina", "Erinome", "Algenib", "Rasalgethi",
+                 "Laomedeia", "Achernar", "Alnilam", "Schedar", "Gacrux", "Pulcherrima", "Achird",
+                 "Zubenelgenubi", "Vindemiatrix", "Sadachbia", "Sadaltager", "Sulafat")
 
 
 @dataclass
@@ -63,7 +71,7 @@ def stt_connections(store: ConnectionStore) -> list[Connection]:
 
 
 def tts_connections(store: ConnectionStore) -> list[Connection]:
-    return [c for c in store.list() if api_for(c, "speech") in TTS_APIS]
+    return [c for c in store.list() if api_for(c, "speech") in TTS_APIS and tts_models(c)]
 
 
 def _models(conn: Connection) -> list[str]:
@@ -74,8 +82,8 @@ def _models(conn: Connection) -> list[str]:
 def stt_models(conn: Connection) -> list[str]:
     api = api_for(conn, "speech")
     ms = _models(conn)
-    if api == "openai_audio":
-        return [m for m in ms if "transcribe" in m]
+    if api in ("openai_audio", "gemini_audio"):
+        return [m for m in ms if "tts" not in m]
     if api == "elevenlabs_speech":
         return [m for m in ms if m.startswith("scribe")]
     return ms
@@ -84,12 +92,48 @@ def stt_models(conn: Connection) -> list[str]:
 def tts_models(conn: Connection) -> list[str]:
     api = api_for(conn, "speech")
     ms = _models(conn)
-    if api == "openai_audio":
+    if api in ("openai_audio", "gemini_audio"):
         return [m for m in ms if "tts" in m]
     if api == "elevenlabs_speech":
         return [m for m in ms if m.startswith("eleven_")]
     return []
 
+
+def voices(conn: Connection) -> list[str]:
+    """Stimmen zum Auswählen (ElevenLabs: Stimm-ID eintragen, daher leer)."""
+    api = api_for(conn, "speech")
+    if api == "gemini_audio":
+        return list(GEMINI_VOICES)
+    if api == "openai_audio" and tts_models(conn):
+        return list(OPENAI_VOICES)
+    return []
+
+
+def pcm_to_wav(pcm: bytes, rate: int = 24000) -> bytes:
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(pcm)
+    return buf.getvalue()
+
+
+def parse_speakers(text: str) -> list[Segment]:
+    """„Speaker 1: …“-Zeilen (Gemini-Erkennung) in Abschnitte je Sprecher."""
+    out: list[Segment] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        m = re.match(r"^\**\s*(?:speaker|sprecher)\s*(\w+)\s*\**\s*:\s*(.*)$", line, re.I)
+        if m:
+            out.append(Segment(m.group(2).strip(), speaker=m.group(1)))
+        elif out:
+            out[-1].text = (out[-1].text + " " + line).strip()
+        else:
+            out.append(Segment(line))
+    return [seg for seg in out if seg.text]
 
 def knows_speakers(conn: Connection, model: str) -> bool:
     """Kann der Anbieter Sprecher anhand von Stimmproben benennen?"""
@@ -157,8 +201,7 @@ class Speech(ImageGen):
                 pairs.append(("language", languages[0]))
         elif model == "gpt-transcribe":
             pairs += [("languages[]", lang) for lang in languages]
-        else:
-            pairs.append(("response_format", "json"))
+        else:                                    # whisper (Groq), voxtral (Mistral): Standard-JSON
             if languages:
                 pairs.append(("language", languages[0]))
         body, ctype = _multipart(pairs, [("file", "audio.wav", "audio/wav", wav)])
@@ -233,6 +276,31 @@ class Speech(ImageGen):
         text = (data.get("text") or "").strip()
         return [Segment(text)] if text else []
 
+    def _gemini(self) -> tuple[str, dict]:
+        base = self.conn.url
+        if base.endswith("/openai"):
+            base = base[: -len("/openai")]
+        return base, {"x-goog-api-key": self.store.api_key(self.conn)}
+
+    def _stt_gemini_audio(self, wav, model, languages, known, diarize) -> list[Segment]:
+        base, headers = self._gemini()
+        prompt = ("Transcribe this audio verbatim in the language that is spoken. Output only the transcript, "
+                  "no comments, no timestamps.")
+        if languages:
+            prompt += f" Expected language: {', '.join(languages)}."
+        if diarize:
+            prompt += (" If more than one person speaks, start a new line at each change of speaker with "
+                       "'Speaker 1:', 'Speaker 2:' and so on.")
+        body = {"contents": [{"role": "user", "parts": [
+                    {"text": prompt}, {"inline_data": {"mime_type": "audio/wav",
+                                                       "data": base64.b64encode(wav).decode("ascii")}}]}],
+                "generationConfig": {"temperature": 0}}
+        url = f"{base}/models/{urllib.parse.quote(model or 'gemini-3.8-flash', safe='-._')}:generateContent"
+        data = aihttp.json_request("POST", url, headers, body, timeout=300)
+        text = "".join(part.get("text", "") for cand in data.get("candidates") or []
+                       for part in (cand.get("content") or {}).get("parts") or [] if not part.get("thought"))
+        return parse_speakers(text) if diarize else ([Segment(text.strip())] if text.strip() else [])
+
     # --------------------------------------------------------------------------- Text -> Sprache
     def synthesize(self, text: str, model: str = "", voice: str = "") -> tuple[bytes, str]:
         api = api_for(self.conn, "speech")
@@ -249,6 +317,24 @@ class Speech(ImageGen):
             with aihttp.request("POST", self.url(path), dict(self.headers(), Accept="audio/mpeg"), body,
                                 timeout=120) as r:
                 return r.read(), "audio/mpeg"
+        if api == "gemini_audio":
+            base, headers = self._gemini()
+            body = {"contents": [{"parts": [{"text": text[:4000]}]}],
+                    "generationConfig": {"responseModalities": ["AUDIO"], "speechConfig": {"voiceConfig": {
+                        "prebuiltVoiceConfig": {"voiceName": voice if voice in GEMINI_VOICES else "Kore"}}}}}
+            url = f"{base}/models/{urllib.parse.quote(model or 'gemini-3.8-flash-tts', safe='-._')}:generateContent"
+            data = aihttp.json_request("POST", url, headers, body, timeout=180)
+            for cand in data.get("candidates") or []:
+                for part in (cand.get("content") or {}).get("parts") or []:
+                    inline = part.get("inlineData") or part.get("inline_data")
+                    if inline and inline.get("data"):
+                        raw = base64.b64decode(inline["data"])
+                        if raw[:4] == b"RIFF":
+                            return raw, "audio/wav"
+                        mime = inline.get("mimeType") or inline.get("mime_type") or ""
+                        rate = re.search(r"rate=(\d+)", mime)
+                        return pcm_to_wav(raw, int(rate.group(1)) if rate else 24000), "audio/wav"
+            raise AIError("Gemini: no audio in the answer", "server")
         raise AIError(f"Speech output is not supported by {self.conn.name}", "request")
 
 

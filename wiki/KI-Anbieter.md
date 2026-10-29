@@ -140,7 +140,7 @@ Googles Gemini-Modelle über Google AI Studio.
 
 - **Hersteller:** Google (USA)
 - **Anmeldung:** API-Schlüssel
-- **Kann:** Chat, Funktionen, Bildeingabe, Bild, Musik, Video, Websuche
+- **Kann:** Chat, Funktionen, Bildeingabe, Bild, Musik, Video, Websuche, Sprache
 - **Voraussetzung:** API-Konto beim Anbieter. Es gibt eine kostenlose Stufe mit Begrenzungen, darüber wird nach Verbrauch abgerechnet.
 - **Empfohlene Modelle:** `gemini-3.8-flash`, `gemini-4-argon`, `gemini-3.1-pro-preview`, `gemini-3.6-flash`
 - [Schlüssel/Konto](https://aistudio.google.com/apikey) · [Dokumentation](https://ai.google.dev/gemini-api/docs)
@@ -261,7 +261,7 @@ Französischer Anbieter mit eigenen offenen und kommerziellen Modellen.
 
 - **Hersteller:** Mistral AI (Frankreich)
 - **Anmeldung:** API-Schlüssel
-- **Kann:** Chat, Funktionen, Bildeingabe
+- **Kann:** Chat, Funktionen, Bildeingabe, Sprache
 - **Voraussetzung:** API-Konto beim Anbieter. Es gibt eine kostenlose Stufe mit Begrenzungen, darüber wird nach Verbrauch abgerechnet.
 - **Empfohlene Modelle:** `mistral-large-latest`, `mistral-medium-latest`, `mistral-small-latest`, `codestral-latest`
 - [Schlüssel/Konto](https://console.mistral.ai/api-keys) · [Dokumentation](https://docs.mistral.ai)
