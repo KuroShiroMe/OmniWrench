@@ -24,6 +24,10 @@ from .http import AIError
 
 EventFn = Callable[[str, Any], None]
 
+# Anbieter, die Inhalte für Erwachsene erzeugen können, bekommen diese Regel, solange der Schalter aus ist
+SAFE_RULE = ("Keep all content suitable for a workplace: no sexual, pornographic or otherwise explicit "
+             "content, even if asked.")
+
 
 def _args(text: str) -> dict:
     try:
@@ -53,6 +57,12 @@ class Adapter:
         prefix = (self.info.key_prefix if self.info else "") or ("Bearer " if header == "Authorization" else "")
         return {header: prefix + key}
 
+    def rules(self, system: str) -> str:
+        """Systemanweisung plus Inhaltsregel (NSFW-Schalter der Verbindung)."""
+        if self.conn.nsfw_capable and not self.conn.nsfw:
+            return f"{system}\n\n{SAFE_RULE}" if system else SAFE_RULE
+        return system
+
     def url(self, path: str) -> str:
         base = self.conn.url
         if not base:
@@ -60,14 +70,17 @@ class Adapter:
         return base + path
 
     # -------------------------------------------------------------- Abläufe
-    def list_models(self) -> list[str]:
-        data = aihttp.json_request("GET", self.url("/models"), self.headers(), timeout=20)
+    def list_models(self, interactive: bool = True) -> list[str]:
+        url = (self.info.models_url if self.info else "") or self.url("/models")
+        data = aihttp.json_request("GET", url, self.headers(interactive), timeout=20)
         items = data.get("data", data.get("models", [])) if isinstance(data, dict) else data
         out = []
         for item in items or []:
             mid = item.get("id") or item.get("name") if isinstance(item, dict) else item
             if mid:
-                out.append(str(mid))
+                mid = str(mid)
+                # Gemini meldet "models/<name>", erwartet beim Chat aber nur den Namen
+                out.append(mid[len("models/"):] if mid.startswith("models/") else mid)
         return sorted(set(out))
 
     def test(self) -> str:
@@ -119,6 +132,7 @@ class OpenAIChat(Adapter):
         return out
 
     def chat(self, system, messages, tools, on_event, stop, state=None):
+        system = self.rules(system)
         body: dict = {"model": self.conn.model, "messages": self.convert(system, messages), "stream": True,
                       "stream_options": {"include_usage": True}}
         if tools and self.supports_tools:
@@ -179,6 +193,7 @@ class OpenAIResponses(Adapter):
         return items
 
     def chat(self, system, messages, tools, on_event, stop, state=None):
+        system = self.rules(system)
         body: dict = {"model": self.conn.model, "input": self.convert(messages), "stream": True, "store": False}
         if system:
             body["instructions"] = system
@@ -257,6 +272,7 @@ class Anthropic(Adapter):
         return out
 
     def chat(self, system, messages, tools, on_event, stop, state=None):
+        system = self.rules(system)
         body: dict = {"model": self.conn.model, "max_tokens": 8192, "messages": self.convert(messages),
                       "stream": True}
         if system:
@@ -305,7 +321,7 @@ class GraphCopilot(Adapter):
 
     supports_tools = False
 
-    def list_models(self) -> list[str]:
+    def list_models(self, interactive: bool = True) -> list[str]:
         return []
 
     def test(self) -> str:
@@ -313,6 +329,7 @@ class GraphCopilot(Adapter):
         return ""
 
     def chat(self, system, messages, tools, on_event, stop, state=None):
+        system = self.rules(system)
         state = state if state is not None else {}
         headers = self.headers()
         conv = state.get("copilot_conversation")

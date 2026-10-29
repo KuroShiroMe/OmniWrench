@@ -325,3 +325,13 @@
 - Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.
 - Requirements (Stef 2026-10-29): every provider/auth shows what is needed (plan, API credit, free tier, licence,
   local). Keep `requires` in providers.json current during the provider check of every build.
+- Models (Stef 2026-10-29): model choice lives in the chat (button next to the assistent), plug and play: list comes
+  from the provider, short explanation per model, availability shown. Catalog defaults that disappear are replaced
+  automatically; user-typed names are never changed.
+- NSFW (Stef 2026-10-29): providers that can produce adult content are marked (catalog "nsfw") and get a per-assistant
+  switch "NSFW-Inhalte erlauben (ab 18)", default off, confirm dialog (age + organisation, user responsibility).
+  Off = OmniWrench asks the model to stay work-safe; on = no extra rule. Provider rules always apply.
+- Wiki KI-Anbieter describes EVERY catalog provider (Stef 2026-10-29): new provider -> entry in
+  scripts/ai_wiki/descriptions.py, then run build_ai_wiki.py (aborts if a description is missing).
+- Catalog coverage (Stef 2026-10-29): cover as many providers as possible; ones without API or adapter stay listed
+  as "unavailable" with a note (via fal/Replicate, not integrated yet, no public API).

@@ -5,6 +5,7 @@ Einstellungen ("ai_connections", ohne Geheimnisse):
      "key_ref": "<anbieter>:<id>"         API-Schlüssel aus dem Passwortmanager (Passwortfeld)
      "oauth": {"client_id", "auth_url", "token_url", "scopes"}   eigenes OAuth
      "entra": {"tenant", "client_id"}                            Microsoft Entra ID
+     "nsfw": false                       Inhalte für Erwachsene erlaubt (Opt-in, nur Anbieter mit nsfw)
      "created"}
 
 Geheimnisse im Tresor unter "app:ai:<id>":
@@ -42,6 +43,7 @@ class Connection:
     key_ref: str = ""
     oauth: dict = field(default_factory=dict)
     entra: dict = field(default_factory=dict)
+    nsfw: bool = False      # Inhalte für Erwachsene erlaubt (nur bei Anbietern mit nsfw, Opt-in)
     created: int = field(default_factory=lambda: int(time.time()))
 
     @classmethod
@@ -69,6 +71,15 @@ class Connection:
     def has(self, capability: str) -> bool:
         info = self.info
         return bool(info and info.has(capability))
+
+    @property
+    def nsfw_capable(self) -> bool:
+        info = self.info
+        return bool(info and info.nsfw)
+
+    @property
+    def nsfw_allowed(self) -> bool:
+        return self.nsfw_capable and self.nsfw
 
 
 class ConnectionStore:
@@ -109,6 +120,8 @@ class ConnectionStore:
         items = [c.to_dict() for c in self.list() if c.id != conn_id]
         self.settings.set(SETTINGS_KEY, items)
         self.vault.delete(SECRET_PREFIX + conn_id)
+        from . import models
+        models.forget(self.settings, conn_id)
         if self.settings.get(PRIMARY_KEY) == conn_id:
             self.settings.set(PRIMARY_KEY, items[0]["id"] if items else "")
 

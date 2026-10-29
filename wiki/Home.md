@@ -38,6 +38,7 @@ OmniWrench läuft unter **Windows 10/11** und **Linux** und spricht 23 Sprachen 
 | [Tresor und Anmeldung](Tresor-und-Anmeldung) | Masterpasswort, Zertifikat/Smartcard, automatisches Sperren, Passwort vergessen |
 | [Passwortmanager](Passwortmanager) | Eingebauter Passwortmanager, Zugangsdaten in Tools, externe Manager |
 | [KI-Assistenten](KI-Assistenten) | Assistenten verbinden, Chatleiste, Projekte, „Assistent fragen …“, KI-Datenablage |
+| [KI-Anbieter](KI-Anbieter) | Alle unterstützten KI-Anbieter mit Stärken, Kosten, Modellen, kostenlos testen, NSFW |
 | [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung) | Was Assistenten sehen und ändern dürfen, Verfremdung von Adressen und Namen |
 | [Sprachen](Sprachen) | Programmsprache, Dialekte, Sprache je Tool |
 | [Datenablage und Datenschutz](Datenablage-und-Datenschutz) | Wo welche Daten liegen, portable Daten, Netzwerkzugriffe |

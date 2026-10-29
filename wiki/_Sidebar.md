@@ -9,6 +9,7 @@
 - [Tresor und Anmeldung](Tresor-und-Anmeldung)
 - [Passwortmanager](Passwortmanager)
 - [KI-Assistenten](KI-Assistenten)
+- [KI-Anbieter](KI-Anbieter)
 - [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)
 - [Sprachen](Sprachen)
 - [Datenablage und Datenschutz](Datenablage-und-Datenschutz)

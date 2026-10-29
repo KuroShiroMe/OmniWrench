@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
     QStackedWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
-from omniwrench.ai import access, chat, functions
+from omniwrench.ai import access, chat, functions, models
 from omniwrench.ai.app_functions import register_app_functions
 from omniwrench.ai.pseudo import Pseudonymizer
 from omniwrench.ai.connections import Connection, ConnectionStore
@@ -372,6 +372,12 @@ class AIPanel(QWidget):
         self.bot.setToolTip(tr("ai.panel.bot_tip"))
         self.bot.activated.connect(self._bot_changed)
         top.addWidget(self.bot, 1)
+        self.model_btn = QToolButton()
+        self.model_btn.setObjectName("AIModel")
+        self.model_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
+        self.model_btn.clicked.connect(self.choose_model)
+        top.addWidget(self.model_btn)
+        self._fetching: set[str] = set()
         self.new_btn = self._tool_button("＋", tr("ai.panel.new_chat"), self.new_chat)
         self.hist_btn = self._tool_button("🕘", tr("ai.panel.history"), self.toggle_history)
         self.hist_btn.setCheckable(True)
@@ -535,7 +541,8 @@ class AIPanel(QWidget):
         self.bot.setCurrentIndex(idx if idx >= 0 else 0)
         self._fill_projects()
         has = bool(conns)
-        for w in (self.bot, self.new_btn, self.hist_btn, self.more_btn, self.project_combo, self.detail_bar):
+        for w in (self.bot, self.model_btn, self.new_btn, self.hist_btn, self.more_btn, self.project_combo,
+                  self.detail_bar):
             w.setVisible(has)
         if self.embedded:
             self.hist_btn.setVisible(False)
@@ -546,6 +553,7 @@ class AIPanel(QWidget):
             self.stack.setCurrentIndex(self.PAGE_CHAT)
         self._update_welcome()
         self._update_attach()
+        self._update_model()
 
     def _fill_projects(self) -> None:
         self.project_combo.clear()
@@ -766,6 +774,79 @@ class AIPanel(QWidget):
             self.thread["connection_name"] = conn.name
         self._update_welcome()
         self._update_attach()
+        self._update_model()
+
+    # ------------------------------------------------------------- Modell
+    def _update_model(self, fetch: bool = True) -> None:
+        """Modellknopf beschriften; veraltete Modellliste im Hintergrund neu abfragen."""
+        conn = self.connection()
+        if conn is None:
+            return
+        no_models = conn.api == "graph_copilot"
+        self.model_btn.setVisible(not no_models)
+        if no_models:
+            return
+        available = models.cached_models(self.settings, conn.id)
+        missing = available is not None and conn.model not in available
+        text = conn.model or tr("ai.model.none")
+        short = text if len(text) <= 22 else text[:21] + "…"
+        self.model_btn.setText(("🔞 " if conn.nsfw_allowed else "") + ("⚠ " if missing else "") + short + " ▾")
+        choice = next((c for c in models.choices(conn, available) if c.id == conn.model), None)
+        tip = [tr("ai.model.button_tip")]
+        if choice:
+            from .ai_models import tooltip
+            tip.append(tooltip(choice))
+        if conn.nsfw_allowed:
+            tip.append("🔞 " + tr("ai.nsfw.active"))
+        self.model_btn.setToolTip("\n\n".join(tip))
+        self.model_btn.setStyleSheet(f"color: {theme.current['danger']};" if missing else "")
+        if fetch and conn.id not in self._fetching and models.is_stale(self.settings, conn.id):
+            self._fetch_models(conn)
+
+    def _fetch_models(self, conn: Connection) -> None:
+        from .ai_models import fetch
+        self._fetching.add(conn.id)
+
+        def done(found):
+            self._fetching.discard(conn.id)
+            current = self.store.get(conn.id)
+            if current is None:
+                return
+            best = models.best(current, found or None)
+            ours = not current.model or current.model in (current.info.models if current.info else [])
+            if best and best != current.model and ours:
+                # Vorgabe aus dem Katalog gibt es nicht (mehr): bestes verfügbares nehmen und Bescheid sagen.
+                # Selbst eingetragene Namen (z. B. Azure-Bereitstellungen) bleiben, der Knopf zeigt nur ⚠.
+                old = current.model
+                current.model = best
+                self.store.save(current)
+                if self.connection() and self.connection().id == current.id:
+                    self.status.setText(tr("ai.model.switched", old=old or "–", new=best))
+            if self.connection() and self.connection().id == conn.id:
+                self._update_model(fetch=False)
+
+        def failed(_err):
+            self._fetching.discard(conn.id)
+            if self.connection() and self.connection().id == conn.id:
+                self._update_model(fetch=False)
+
+        run_async(lambda: fetch(self.store, conn), done, failed)
+
+    def choose_model(self) -> None:
+        conn = self.connection()
+        if conn is None:
+            return
+        from .ai_models import ModelPicker
+        dlg = ModelPicker(self.store, conn, conn.model, self)
+        if dlg.exec() != QDialog.DialogCode.Accepted or not dlg.selected:
+            self._update_model(fetch=False)
+            return
+        current = self.store.get(conn.id) or conn
+        if dlg.selected != current.model:
+            current.model = dlg.selected
+            self.store.save(current)
+            self.status.setText(tr("ai.model.changed", model=dlg.selected))
+        self._update_model(fetch=False)
 
     # ------------------------------------------------------------ Anhänge
     def attach(self) -> None:
@@ -1051,6 +1132,10 @@ class AIPanel(QWidget):
         msg = {"role": "error", "content": chat.error_text(err), "ts": int(time.time())}
         if isinstance(err, AIError) and err.kind in ("auth", "removed"):
             msg["options_link"] = True
+        conn = self.connection()
+        if conn is not None and models.is_model_error(err):
+            models.forget(self.settings, conn.id)      # Liste neu abfragen, Knopf zeigt dann ⚠
+            self._update_model()
         if self.thread is not None:
             self.thread["messages"].append(msg)
         self._add_message_widget(msg)

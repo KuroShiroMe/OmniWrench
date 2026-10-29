@@ -218,3 +218,7 @@
 - Sign in with ChatGPT: `ext_agent_host_id` must look like `urn:uuid:<uuid>` (bare UUID -> invalid_authorize_request,
   param ext_agent_host_id). First registration must return an issued `client_id` (oaiapp_...), else incomplete.
   Callback only on 127.0.0.1 with path /auth/callback (port may vary). Docs: developers.openai.com/siwc/token-sharing-open-source/sign-in
+- Provider model ids go stale fast (Gemini 3.1 Pro -> gemini-3.1-pro-preview, 4-argon, 3.8-flash within weeks).
+  Never rely on catalog "models" alone: chat fetches /models. Gemini OpenAI-compat lists ids as "models/<name>" and
+  returns errors as a JSON LIST [{"error": …}] (http._error_from_http handles both).
+- Region filter compared country == "EU" (never true) -> now EU country set or category "eu".

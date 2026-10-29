@@ -52,7 +52,10 @@ class Fake(http.server.BaseHTTPRequestHandler):
         self.close_connection = True
 
     def do_GET(self):  # noqa: N802
-        body = json.dumps({"data": [{"id": "m1"}, {"id": "m2"}]}).encode()
+        if "/gem/" in self.path:     # Gemini meldet "models/<name>"
+            body = json.dumps({"data": [{"id": "models/gemini-9-flash"}, {"id": "models/text-embedding-9"}]}).encode()
+        else:
+            body = json.dumps({"data": [{"id": "m1"}, {"id": "m2"}]}).encode()
         self.send_response(200)
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
@@ -113,6 +116,13 @@ class Fake(http.server.BaseHTTPRequestHandler):
                                 "delta": {"type": "text_delta", "text": "Antwort Claude"}}))
             ev.append(("", {"type": "message_stop"}))
         self._sse(ev)
+
+
+def http_error_from(status: int, body: bytes):
+    import io
+    import urllib.error
+    from omniwrench.ai import http as aihttp
+    return aihttp._error_from_http(urllib.error.HTTPError("http://x", status, "err", {}, io.BytesIO(body)))
 
 
 def main() -> int:
@@ -280,6 +290,53 @@ def main() -> int:
     except Exception as e:  # noqa: BLE001
         check(getattr(e, "code", "") == "invalid_grant" and "code already used" in str(e),
               "zweites invalid_grant gemeldet (mit Beschreibung)")
+
+    print("Modelle")
+    from omniwrench.ai import models
+    from omniwrench.ai.http import AIError
+    gem = Connection(id="gem", name="Gemini", provider="gemini", base_url=url.replace("/v1", "/gem/v1"),
+                     model="gemini-3.1-pro")
+    store.save(gem)
+    store.update_secrets("gem", api_key="sk-test")
+    found = adapters.for_connection(store, gem).list_models()
+    check(found == ["gemini-9-flash", "text-embedding-9"], f"Präfix models/ entfernt {found}")
+    models.store(settings, "gem", found)
+    check(not models.is_stale(settings, "gem") and models.cached_models(settings, "gem") == found, "Liste gemerkt")
+    ch = {c.id: c for c in models.choices(gem, found)}
+    check(ch["gemini-9-flash"].status == "ok" and not ch["gemini-9-flash"].other, "verfügbares Chatmodell")
+    check(ch["text-embedding-9"].other, "Einbettung unter weitere Modelle")
+    check(ch["gemini-3.1-pro"].status == "missing", "veraltetes Modell als fehlend markiert")
+    check(models.best(gem, found) == "gemini-9-flash", "bestes verfügbares Modell als Ersatz")
+    check(all(c.status == "unknown" for c in models.choices(gem, None)), "ohne Liste: Verfügbarkeit unbekannt")
+    check(next(c for c in models.choices(gem, None) if c.id == "gemini-3.8-flash").recommended, "Empfehlung aus Katalog")
+    tags = {m: models.tags(m) for m in ("gemini-3.1-pro-preview", "gemini-3.5-flash-lite", "claude-haiku-5-5",
+                                         "claude-sonnet-5-5", "deepseek-reasoner", "codestral-latest",
+                                         "meta-llama/llama-4:free", "gpt-5.5")}
+    check(tags == {"gemini-3.1-pro-preview": ["top", "preview"], "gemini-3.5-flash-lite": ["fast", "light"],
+                   "claude-haiku-5-5": ["light"], "claude-sonnet-5-5": ["balanced"],
+                   "deepseek-reasoner": ["reasoning"], "codestral-latest": ["code"],
+                   "meta-llama/llama-4:free": ["free"], "gpt-5.5": []}, f"Merkmale aus dem Namen {tags}")
+    err = http_error_from(404, b'[{"error": {"code": 404, "message": "models/gemini-3.1-pro is not found for API '
+                               b'version v1main, or is not supported for generateContent.", "status": "NOT_FOUND"}}]')
+    check(str(err).startswith("models/gemini-3.1-pro is not found"), "Gemini-Fehlerliste gelesen")
+    from omniwrench.core.i18n import tr
+    check(models.is_model_error(err) and chat.error_text(err) == tr("ai.error.model_missing", detail=str(err)),
+          "Modellfehler erkannt")
+    check(not models.is_model_error(AIError("bad key", "auth", 401)), "anderer Fehler kein Modellfehler")
+    models.forget(settings, "gem")
+    check(models.is_stale(settings, "gem"), "Liste vergessen")
+    gh = Connection(id="gh", name="gh", provider="github_models")
+    check(adapters.for_connection(store, gh).info.models_url.endswith("/catalog/models"), "eigene Modellliste-Adresse")
+
+    print("NSFW")
+    grok = Connection(id="grok", name="Grok", provider="xai", model="grok-4.7")
+    a = adapters.for_connection(store, grok)
+    check(grok.nsfw_capable and adapters.SAFE_RULE in a.rules("sys"), "Grok ohne Schalter: arbeitstauglich")
+    grok.nsfw = True
+    check(grok.nsfw_allowed and adapters.for_connection(store, grok).rules("sys") == "sys", "Schalter an: keine Regel")
+    claude = Connection(id="cl", name="Claude", provider="anthropic", nsfw=True)
+    check(not claude.nsfw_capable and adapters.for_connection(store, claude).rules("sys") == "sys"
+          and not claude.nsfw_allowed, "Anbieter ohne NSFW: Schalter wirkungslos")
 
     server.shutdown()
     if failures:

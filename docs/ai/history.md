@@ -577,3 +577,13 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-29: "Voraussetzung" row in the add-assistant dialog (Provider.requirement(auth), catalog field "requires",
   defaults by auth/category; ai.req.* in 23 locales). Sign in with ChatGPT needs Plus/Pro (OpenAI SIWC quickstart;
   Go not listed). Wiki KI-Assistenten: requirement table + free tiers note.
+- 2026-10-29: Gemini 404 "models/gemini-3.1-pro is not found" (catalog model ids stale). Built model choice in the
+  chat: ai/models.py (GET /models per connection, cached 12 h in settings "ai_model_cache", status ok/missing/unknown,
+  tags from model name or catalog "model_tags"), ui/ai_models.py ModelPicker, model button in AIPanel (also Clank);
+  catalog defaults that vanished are swapped for the best available model automatically. Model errors -> clear message.
+  NSFW: provider flag "nsfw", Connection.nsfw opt-in with confirm; off = SAFE_RULE appended to system prompt (adapters).
+  Catalog: Gemini/OpenAI/Grok/Claude models updated, +49 providers (112): GitHub Models, Cloudflare, NVIDIA NIM,
+  SambaNova, Novita, Nebius, Venice, Featherless, Chutes, Requesty, AI21, Reka, Upstage, Inception, Nscale, Regolo,
+  SiliconFlow, Doubao, ERNIE, Hunyuan, StepFun, Databricks, Snowflake, LiteLLM, Foundry Local, Docker Model Runner,
+  oobabooga, llamafile, AnythingLLM, Open WebUI, Lemonade, Xinference, SGLang, TabbyAPI, Msty + info-only media/speech.
+  Wiki page KI-Anbieter (generated: scripts/ai_wiki/build_ai_wiki.py + descriptions.py). Region filter "EU" fixed.

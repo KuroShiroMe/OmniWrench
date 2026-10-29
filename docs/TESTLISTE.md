@@ -334,6 +334,16 @@ ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal is
 - [ ] Voraussetzung im Dialog „Assistent hinzufügen“: ChatGPT mit „Mit ChatGPT anmelden“ zeigt „Plus oder Pro“,
       mit API-Schlüssel „API-Konto mit Guthaben“; Gemini „kostenlose Stufe“; Ollama „kostenlos, läuft lokal“.
 - [ ] Mit ChatGPT anmelden (Plus): Anmeldung, Verbindung testen, Frage in der Chatleiste.
+- [ ] Modellwahl Gemini: bestehende Verbindung mit `gemini-3.1-pro` öffnen. Chatleiste fragt die Modelle ab und
+      meldet „Modell gemini-3.1-pro gibt es nicht mehr, jetzt wird … verwendet“; Frage funktioniert.
+- [ ] Modellknopf in der Chatleiste (und in Clank): Liste mit ★, Kurzbeschreibung, Suche; Zeigen auf ein Modell
+      zeigt die Erklärung; „Auch andere Modelle zeigen“; eigenen Namen eintippen und übernehmen; „Was bedeuten die
+      Modelle?“ öffnet die Wiki-Seite KI-Anbieter. Modell wechseln mitten im Chat, nächste Antwort nennt das neue Modell.
+- [ ] Nicht vorhandenes Modell eintragen: Fehlermeldung „Der Anbieter kennt das gewählte Modell nicht …“, Knopf rot mit ⚠.
+- [ ] NSFW: Grok (oder Venice/Ollama) zeigt den Hinweis und den Schalter „NSFW-Inhalte erlauben (ab 18)“, Claude nicht.
+      Einschalten fragt nach (Nein = bleibt aus). Eingeschaltet: 🔞 vor dem Modell in der Chatleiste.
+- [ ] Neue Anbieter: GitHub Models mit GitHub-Token (models:read) verbinden, Modelle abfragen, Frage stellen.
+      Cloudflare: Speichern mit `<ACCOUNT_ID>` in der Adresse wird abgelehnt. Filter Region „EU“ zeigt Mistral, IONOS, STACKIT usw.
 
 ### 12c. KI-Zugriff und Verfremdung
 - [ ] Einstellungen › KI-Zugriff: Stufen, Verfremdung, Vorschau. Tool-Einstellungen: Reiter „KI-Zugriff“ mit

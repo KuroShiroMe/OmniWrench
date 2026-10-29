@@ -15,6 +15,10 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
       branch/pin/tag threads, artifact preview (HTML/tables/diagrams), project memory .md, compare two answers,
       PDF preview + Office as text, image edit local+AI, music fade/normalize + video concat, "An IconForge senden",
       ComfyUI, group chat € limit/@Name/PASS, Word/Excel export.
+      Models/NSFW/catalog (2026-10-29): media/speech providers listed as info only (Leonardo, Krea, Pika, PixVerse,
+      Vidu, Freepik, Speechmatics, Cartesia, Azure Speech) -> direct adapters later if Stef wants. Clank image/music/video
+      model boxes still use catalog lists (no live query yet). NSFW switch affects chat only, not image prompts.
+      ChatGPT sign-in: model list via /models may fail -> picker shows "unknown"; catalog list used.
       Stef 2026-10-29 (after merge, she says when): (1) speaker profiles: keep opt-in, but saving profiles
       permanently gets its own prominent warning (bold, DSGVO Art. 9 biometric data, responsibility lies with the
       user, explicit "Ich habe verstanden" confirmation) instead of only a checkbox in the consent dialog.

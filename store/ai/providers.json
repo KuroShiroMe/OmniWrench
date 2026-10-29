@@ -1,6 +1,6 @@
 {
  "format": 1,
- "updated": "2026-10-29",
+ "updated": "2026-10-29T13:00",
  "categories": [
   "recommended",
   "chat",
@@ -39,9 +39,12 @@
     "speech"
    ],
    "models": [
+    "gpt-6.1-sol",
+    "gpt-6-astra",
+    "gpt-6.1-terra",
+    "gpt-6-luna",
     "gpt-5.5",
-    "gpt-5.5-mini",
-    "gpt-5.5-nano"
+    "gpt-5.5-mini"
    ],
    "key_url": "https://platform.openai.com/api-keys",
    "docs_url": "https://platform.openai.com/docs",
@@ -88,8 +91,9 @@
     "web_search"
    ],
    "models": [
-    "claude-opus-5-5",
     "claude-sonnet-5-5",
+    "claude-opus-5-5",
+    "claude-fable-5-1",
     "claude-haiku-5-5"
    ],
    "key_url": "https://console.anthropic.com/settings/keys",
@@ -121,9 +125,11 @@
     "web_search"
    ],
    "models": [
-    "gemini-3.1-pro",
-    "gemini-3.1-flash",
-    "gemini-3.1-flash-lite"
+    "gemini-3.8-flash",
+    "gemini-4-argon",
+    "gemini-3.1-pro-preview",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash-lite"
    ],
    "key_url": "https://aistudio.google.com/apikey",
    "docs_url": "https://ai.google.dev/gemini-api/docs",
@@ -177,7 +183,7 @@
     "video"
    ],
    "models": [
-    "grok-4.3",
+    "grok-4.7",
     "grok-4.20",
     "grok-code-fast"
    ],
@@ -201,7 +207,8 @@
       "grok-imagine-video"
      ]
     }
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "mistral",
@@ -497,6 +504,8 @@
     "image"
    ],
    "models": [
+    "gpt-6.1-sol",
+    "gpt-6-astra",
     "gpt-5.5",
     "gpt-5.5-mini"
    ],
@@ -560,7 +569,8 @@
     "vision"
    ],
    "models": [
-    "google/gemini-3.1-pro"
+    "google/gemini-3.8-flash",
+    "google/gemini-3.1-pro-preview"
    ],
    "key_url": "https://console.cloud.google.com/vertex-ai",
    "docs_url": "https://cloud.google.com/vertex-ai/docs",
@@ -781,8 +791,8 @@
    "models": [
     "anthropic/claude-sonnet-5.5",
     "openai/gpt-5.5",
-    "google/gemini-3.1-pro",
-    "x-ai/grok-4.3"
+    "google/gemini-3.8-flash",
+    "x-ai/grok-4.7"
    ],
    "key_url": "https://openrouter.ai/settings/keys",
    "docs_url": "https://openrouter.ai/docs",
@@ -790,7 +800,8 @@
    "recommended": true,
    "requires": {
     "*": "api_free_tier"
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "together",
@@ -815,7 +826,8 @@
    "models": [],
    "key_url": "https://api.together.ai/settings/api-keys",
    "docs_url": "https://docs.together.ai",
-   "status": "active"
+   "status": "active",
+   "nsfw": true
   },
   {
    "id": "fireworks",
@@ -863,7 +875,8 @@
    "models": [],
    "key_url": "https://deepinfra.com/dash/api_keys",
    "docs_url": "https://deepinfra.com/docs",
-   "status": "active"
+   "status": "active",
+   "nsfw": true
   },
   {
    "id": "groq",
@@ -1021,7 +1034,8 @@
       "fal-ai/luma-dream-machine/ray-2"
      ]
     }
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "replicate",
@@ -1070,7 +1084,8 @@
       "wan-video/wan-2.5-t2v"
      ]
     }
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "ollama",
@@ -1096,7 +1111,8 @@
    "docs_url": "https://ollama.com",
    "status": "active",
    "recommended": true,
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "lmstudio",
@@ -1121,7 +1137,8 @@
    "key_url": "",
    "docs_url": "https://lmstudio.ai/docs",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "llamacpp",
@@ -1146,7 +1163,8 @@
    "key_url": "",
    "docs_url": "https://github.com/ggml-org/llama.cpp",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "vllm",
@@ -1172,7 +1190,8 @@
    "key_url": "",
    "docs_url": "https://docs.vllm.ai",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "localai",
@@ -1208,7 +1227,8 @@
       "stablediffusion"
      ]
     }
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "jan",
@@ -1233,7 +1253,8 @@
    "key_url": "",
    "docs_url": "https://jan.ai/docs",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "gpt4all",
@@ -1256,7 +1277,8 @@
    "key_url": "",
    "docs_url": "https://docs.gpt4all.io",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "koboldcpp",
@@ -1279,7 +1301,8 @@
    "key_url": "",
    "docs_url": "https://github.com/LostRuins/koboldcpp",
    "status": "active",
-   "list_models": true
+   "list_models": true,
+   "nsfw": true
   },
   {
    "id": "comfyui",
@@ -1317,7 +1340,8 @@
       "workflow"
      ]
     }
-   }
+   },
+   "nsfw": true
   },
   {
    "id": "bfl",
@@ -1837,6 +1861,1151 @@
    "status_note": "no_public_api"
   },
   {
+   "id": "github_models",
+   "name": "GitHub Models",
+   "vendor": "GitHub (Microsoft)",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://models.github.ai/inference",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [
+    "openai/gpt-5.5-mini",
+    "openai/gpt-5.5",
+    "meta/llama-4-maverick-17b-128e-instruct-fp8"
+   ],
+   "key_url": "https://github.com/settings/personal-access-tokens",
+   "docs_url": "https://docs.github.com/en/github-models",
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   },
+   "models_url": "https://models.github.ai/catalog/models"
+  },
+  {
+   "id": "cloudflare",
+   "name": "Cloudflare Workers AI",
+   "vendor": "Cloudflare",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat",
+    "image"
+   ],
+   "api": "openai",
+   "base_url": "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://dash.cloudflare.com/profile/api-tokens",
+   "docs_url": "https://developers.cloudflare.com/workers-ai/",
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   },
+   "base_url_editable": true
+  },
+  {
+   "id": "nvidia",
+   "name": "NVIDIA NIM (build.nvidia.com)",
+   "vendor": "NVIDIA",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://integrate.api.nvidia.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://build.nvidia.com",
+   "docs_url": "https://docs.api.nvidia.com",
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
+  },
+  {
+   "id": "sambanova",
+   "name": "SambaNova Cloud",
+   "vendor": "SambaNova",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.sambanova.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://cloud.sambanova.ai/apis",
+   "docs_url": "https://docs.sambanova.ai",
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
+  },
+  {
+   "id": "novita",
+   "name": "Novita AI",
+   "vendor": "Novita AI",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.novita.ai/v3/openai",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://novita.ai/settings/key-management",
+   "docs_url": "https://novita.ai/docs",
+   "status": "active",
+   "nsfw": true
+  },
+  {
+   "id": "nebius",
+   "name": "Nebius Token Factory",
+   "vendor": "Nebius",
+   "country": "NL",
+   "categories": [
+    "router",
+    "chat",
+    "eu"
+   ],
+   "api": "openai",
+   "base_url": "https://api.tokenfactory.nebius.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://tokenfactory.nebius.com",
+   "docs_url": "https://docs.tokenfactory.nebius.com",
+   "status": "active"
+  },
+  {
+   "id": "hyperbolic",
+   "name": "Hyperbolic",
+   "vendor": "Hyperbolic",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.hyperbolic.xyz/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://app.hyperbolic.xyz/settings",
+   "docs_url": "https://docs.hyperbolic.xyz",
+   "status": "active",
+   "nsfw": true
+  },
+  {
+   "id": "featherless",
+   "name": "Featherless AI",
+   "vendor": "Featherless",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.featherless.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "https://featherless.ai/account/api-keys",
+   "docs_url": "https://featherless.ai/docs",
+   "status": "active",
+   "nsfw": true
+  },
+  {
+   "id": "chutes",
+   "name": "Chutes",
+   "vendor": "Chutes",
+   "country": "US",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://llm.chutes.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://chutes.ai/app/api",
+   "docs_url": "https://chutes.ai/docs",
+   "status": "active",
+   "nsfw": true
+  },
+  {
+   "id": "venice",
+   "name": "Venice AI",
+   "vendor": "Venice",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.venice.ai/api/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://venice.ai/settings/api",
+   "docs_url": "https://docs.venice.ai",
+   "status": "active",
+   "nsfw": true
+  },
+  {
+   "id": "requesty",
+   "name": "Requesty",
+   "vendor": "Requesty",
+   "country": "GB",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://router.requesty.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://app.requesty.ai/api-keys",
+   "docs_url": "https://docs.requesty.ai",
+   "status": "active"
+  },
+  {
+   "id": "ai21",
+   "name": "AI21 (Jamba)",
+   "vendor": "AI21 Labs",
+   "country": "IL",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.ai21.com/studio/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [
+    "jamba-large",
+    "jamba-mini"
+   ],
+   "key_url": "https://studio.ai21.com/account/api-key",
+   "docs_url": "https://docs.ai21.com",
+   "status": "active"
+  },
+  {
+   "id": "reka",
+   "name": "Reka",
+   "vendor": "Reka AI",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.reka.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://platform.reka.ai/apikeys",
+   "docs_url": "https://docs.reka.ai",
+   "status": "active"
+  },
+  {
+   "id": "upstage",
+   "name": "Upstage Solar",
+   "vendor": "Upstage",
+   "country": "KR",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.upstage.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [
+    "solar-pro2",
+    "solar-mini"
+   ],
+   "key_url": "https://console.upstage.ai/api-keys",
+   "docs_url": "https://console.upstage.ai/docs",
+   "status": "active"
+  },
+  {
+   "id": "inception",
+   "name": "Inception (Mercury)",
+   "vendor": "Inception Labs",
+   "country": "US",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.inceptionlabs.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [
+    "mercury",
+    "mercury-coder"
+   ],
+   "key_url": "https://platform.inceptionlabs.ai",
+   "docs_url": "https://docs.inceptionlabs.ai",
+   "status": "active"
+  },
+  {
+   "id": "nscale",
+   "name": "Nscale",
+   "vendor": "Nscale",
+   "country": "GB",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://inference.api.nscale.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://console.nscale.com",
+   "docs_url": "https://docs.nscale.com",
+   "status": "active"
+  },
+  {
+   "id": "regolo",
+   "name": "Regolo.ai",
+   "vendor": "Seeweb",
+   "country": "IT",
+   "categories": [
+    "eu",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.regolo.ai/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://dashboard.regolo.ai",
+   "docs_url": "https://docs.regolo.ai",
+   "status": "active"
+  },
+  {
+   "id": "siliconflow",
+   "name": "SiliconFlow",
+   "vendor": "SiliconFlow",
+   "country": "CN",
+   "categories": [
+    "router",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.siliconflow.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://cloud.siliconflow.com/account/ak",
+   "docs_url": "https://docs.siliconflow.com",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "doubao",
+   "name": "Doubao (BytePlus ModelArk)",
+   "vendor": "ByteDance",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://ark.ap-southeast.bytepluses.com/api/v3",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://console.byteplus.com/ark",
+   "docs_url": "https://docs.byteplus.com/en/docs/ModelArk",
+   "status": "active",
+   "base_url_editable": true,
+   "note": "privacy_cn"
+  },
+  {
+   "id": "ernie",
+   "name": "ERNIE (Baidu Qianfan)",
+   "vendor": "Baidu",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://qianfan.baidubce.com/v2",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://console.bce.baidu.com/qianfan",
+   "docs_url": "https://cloud.baidu.com/doc/qianfan",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "hunyuan",
+   "name": "Hunyuan (Tencent)",
+   "vendor": "Tencent",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.hunyuan.cloud.tencent.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://console.cloud.tencent.com/hunyuan",
+   "docs_url": "https://cloud.tencent.com/document/product/1729",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "stepfun",
+   "name": "StepFun",
+   "vendor": "StepFun",
+   "country": "CN",
+   "categories": [
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://api.stepfun.com/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "https://platform.stepfun.com",
+   "docs_url": "https://platform.stepfun.com/docs",
+   "status": "active",
+   "note": "privacy_cn"
+  },
+  {
+   "id": "databricks",
+   "name": "Databricks Model Serving",
+   "vendor": "Databricks",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<WORKSPACE>.cloud.databricks.com/serving-endpoints",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://docs.databricks.com/en/dev-tools/auth/pat.html",
+   "docs_url": "https://docs.databricks.com/en/machine-learning/model-serving/",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "snowflake",
+   "name": "Snowflake Cortex",
+   "vendor": "Snowflake",
+   "country": "US",
+   "categories": [
+    "enterprise",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "https://<ACCOUNT>.snowflakecomputing.com/api/v2/cortex/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "https://docs.snowflake.com/en/user-guide/programmatic-access-tokens",
+   "docs_url": "https://docs.snowflake.com/en/user-guide/snowflake-cortex/open_ai_sdk",
+   "status": "active",
+   "base_url_editable": true
+  },
+  {
+   "id": "litellm",
+   "name": "LiteLLM Proxy (eigenes Gateway)",
+   "vendor": "BerriAI",
+   "country": "LOCAL",
+   "categories": [
+    "router",
+    "custom",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:4000/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools",
+    "vision"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.litellm.ai/docs/simple_proxy",
+   "status": "active",
+   "base_url_editable": true,
+   "list_models": true
+  },
+  {
+   "id": "foundry_local",
+   "name": "Foundry Local",
+   "vendor": "Microsoft",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:5273/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://learn.microsoft.com/azure/ai-foundry/foundry-local/",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true,
+   "base_url_editable": true
+  },
+  {
+   "id": "docker_model_runner",
+   "name": "Docker Model Runner",
+   "vendor": "Docker",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:12434/engines/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.docker.com/ai/model-runner/",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "textgen_webui",
+   "name": "Text Generation WebUI (oobabooga)",
+   "vendor": "oobabooga",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://127.0.0.1:5000/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://github.com/oobabooga/text-generation-webui",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "llamafile",
+   "name": "llamafile",
+   "vendor": "Mozilla",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:8080/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://github.com/Mozilla-Ocho/llamafile",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "anythingllm",
+   "name": "AnythingLLM",
+   "vendor": "Mintplex Labs",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:3001/api/v1/openai",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.anythingllm.com",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "openwebui",
+   "name": "Open WebUI",
+   "vendor": "Open WebUI",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:3000/api",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.openwebui.com",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "lemonade",
+   "name": "Lemonade Server (AMD)",
+   "vendor": "AMD",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:8000/api/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://lemonade-server.ai",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "xinference",
+   "name": "Xinference",
+   "vendor": "Xorbits",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:9997/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://inference.readthedocs.io",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "sglang",
+   "name": "SGLang",
+   "vendor": "LMSYS",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:30000/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.sglang.ai",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "tabbyapi",
+   "name": "TabbyAPI (ExLlama)",
+   "vendor": "theroyallab",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:5000/v1",
+   "auth": [
+    "api_key"
+   ],
+   "capabilities": [
+    "chat",
+    "tools"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://github.com/theroyallab/tabbyAPI",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "msty",
+   "name": "Msty",
+   "vendor": "Msty",
+   "country": "LOCAL",
+   "categories": [
+    "local",
+    "chat"
+   ],
+   "api": "openai",
+   "base_url": "http://localhost:10000/v1",
+   "auth": [
+    "none"
+   ],
+   "capabilities": [
+    "chat"
+   ],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.msty.app",
+   "status": "active",
+   "list_models": true,
+   "nsfw": true
+  },
+  {
+   "id": "leonardo",
+   "name": "Leonardo.Ai",
+   "vendor": "Canva",
+   "country": "AU",
+   "categories": [
+    "image",
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.leonardo.ai",
+   "status": "unavailable",
+   "status_note": "not_integrated"
+  },
+  {
+   "id": "krea",
+   "name": "Krea",
+   "vendor": "Krea",
+   "country": "US",
+   "categories": [
+    "image",
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.krea.ai",
+   "status": "unavailable",
+   "status_note": "via_router"
+  },
+  {
+   "id": "pika",
+   "name": "Pika",
+   "vendor": "Pika Labs",
+   "country": "US",
+   "categories": [
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://pika.art",
+   "status": "unavailable",
+   "status_note": "via_router"
+  },
+  {
+   "id": "pixverse",
+   "name": "PixVerse",
+   "vendor": "PixVerse",
+   "country": "SG",
+   "categories": [
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.platform.pixverse.ai",
+   "status": "unavailable",
+   "status_note": "via_router"
+  },
+  {
+   "id": "vidu",
+   "name": "Vidu",
+   "vendor": "ShengShu",
+   "country": "CN",
+   "categories": [
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://platform.vidu.com",
+   "status": "unavailable",
+   "status_note": "via_router"
+  },
+  {
+   "id": "hailuo",
+   "name": "Hailuo (MiniMax Video)",
+   "vendor": "MiniMax",
+   "country": "CN",
+   "categories": [
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://www.minimax.io",
+   "status": "unavailable",
+   "status_note": "use_minimax"
+  },
+  {
+   "id": "freepik",
+   "name": "Freepik AI",
+   "vendor": "Freepik",
+   "country": "ES",
+   "categories": [
+    "image",
+    "video",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.freepik.com",
+   "status": "unavailable",
+   "status_note": "not_integrated"
+  },
+  {
+   "id": "speechmatics",
+   "name": "Speechmatics",
+   "vendor": "Speechmatics",
+   "country": "GB",
+   "categories": [
+    "speech",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.speechmatics.com",
+   "status": "unavailable",
+   "status_note": "not_integrated"
+  },
+  {
+   "id": "cartesia",
+   "name": "Cartesia",
+   "vendor": "Cartesia",
+   "country": "US",
+   "categories": [
+    "speech",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://docs.cartesia.ai",
+   "status": "unavailable",
+   "status_note": "not_integrated"
+  },
+  {
+   "id": "azure_speech",
+   "name": "Azure AI Speech",
+   "vendor": "Microsoft",
+   "country": "US",
+   "categories": [
+    "speech",
+    "enterprise",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://learn.microsoft.com/azure/ai-services/speech-service/",
+   "status": "unavailable",
+   "status_note": "not_integrated"
+  },
+  {
+   "id": "pi",
+   "name": "Pi (Inflection)",
+   "vendor": "Inflection AI",
+   "country": "US",
+   "categories": [
+    "chat",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://inflection.ai",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "meta_ai",
+   "name": "Meta AI",
+   "vendor": "Meta",
+   "country": "US",
+   "categories": [
+    "chat",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://www.meta.ai",
+   "status": "unavailable",
+   "status_note": "no_public_api"
+  },
+  {
+   "id": "le_chat_pro",
+   "name": "Le Chat Pro (Mistral-Abo)",
+   "vendor": "Mistral AI",
+   "country": "FR",
+   "categories": [
+    "chat",
+    "unavailable"
+   ],
+   "api": "none",
+   "base_url": "",
+   "auth": [],
+   "capabilities": [],
+   "models": [],
+   "key_url": "",
+   "docs_url": "https://mistral.ai",
+   "status": "unavailable",
+   "status_note": "use_api"
+  },
+  {
    "id": "custom",
    "name": "Benutzerdefiniert (OpenAI-kompatibel)",
    "vendor": "",
@@ -1861,7 +3030,8 @@
    "docs_url": "",
    "status": "active",
    "recommended": true,
-   "base_url_editable": true
+   "base_url_editable": true,
+   "nsfw": true
   },
   {
    "id": "custom_anthropic",
@@ -1886,7 +3056,8 @@
    "key_url": "",
    "docs_url": "",
    "status": "active",
-   "base_url_editable": true
+   "base_url_editable": true,
+   "nsfw": true
   }
  ]
 }

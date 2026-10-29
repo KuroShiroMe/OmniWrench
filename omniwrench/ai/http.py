@@ -37,6 +37,8 @@ def _error_from_http(err: urllib.error.HTTPError) -> AIError:
     message, code = body[:500], ""
     try:
         data = json.loads(body)
+        if isinstance(data, list) and data and isinstance(data[0], dict):   # Gemini: [{"error": …}]
+            data = data[0]
         e = data.get("error", data) if isinstance(data, dict) else {}
         if isinstance(e, dict):
             message = e.get("message") or message

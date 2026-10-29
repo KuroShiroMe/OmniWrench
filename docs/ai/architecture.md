@@ -351,9 +351,13 @@ docs/README.md                internal docs index, points to the wiki
   screenshots the same way; example tool ships screenshots/render.py + main.png.
 
 ## AI assistants (omniwrench/ai/, since 0.9.0)
-- `providers.py` catalog from resources/ai/providers.json (63 providers, categories, auth kinds, capabilities, media
+- `providers.py` catalog from resources/ai/providers.json (112 providers, categories, auth kinds, capabilities, media
   APIs). Newer copy from `<repo>/ai/providers.json` (store) cached in CACHE_DIR/ai, newest "updated" wins, entries
   of the bundled file missing in the newer one are kept. build_store copies it to store/ai/, check_store verifies.
+- `models.py` model list per connection (Adapter.list_models, optional catalog `models_url`, strips Gemini
+  "models/"), cache settings "ai_model_cache" {conn: {ts, models, error}}, choices()/best()/tags()/is_model_error().
+  UI: ui/ai_models.py ModelPicker; AIPanel model button (_update_model, _fetch_models auto-swap of catalog defaults).
+- NSFW: Provider.nsfw + Connection.nsfw; Adapter.rules(system) appends SAFE_RULE unless allowed (all 4 adapters).
 - `connections.py` settings "ai_connections" (no secrets) + vault "app:ai:conn:<id>" ({api_key} or OAuth tokens,
   ChatGPT issued client_id, account). key_ref = password manager reference. "ai_primary" = primary id.
 - `oauth.py` loopback http.server on 127.0.0.1 + PKCE: ChatGPT (dynamic client, ext_agent_host_id = settings

@@ -45,6 +45,14 @@ andere im Programm funktioniert unverändert – die KI-Funktionen sind ein Ange
 3. **Weiter**: Name vergeben, anmelden (siehe [Anmeldearten](#anmeldearten)), Modell wählen (**Modelle laden**
    fragt die Liste beim Anbieter ab) und **Verbindung testen**.
 
+Welcher Anbieter wofür taugt, was er kostet und welche Modelle es gibt, steht auf der Seite
+[KI-Anbieter](KI-Anbieter). Bei Anbietern mit Platzhalter in der Adresse (z. B. `<ACCOUNT_ID>` bei Cloudflare)
+muss dieser vor dem Speichern ersetzt werden.
+
+Bei Anbietern, die Inhalte für Erwachsene erzeugen können (z. B. Grok, Venice, lokale Modelle), gibt es in der
+Verbindung den Schalter **NSFW-Inhalte erlauben (ab 18)**; standardmäßig aus. Details:
+[Inhalte für Erwachsene](KI-Anbieter#inhalte-für-erwachsene-nsfw).
+
 ![Anbieter auswählen](images/ki-assistent-hinzufuegen.png)
 
 | Spalte | Bedeutung |
@@ -87,6 +95,7 @@ Fenster ausklinken. **Strg+Umschalt+A** blendet sie ein und aus.
 | Element | Funktion |
 |---|---|
 | Auswahl oben | Assistent für die nächste Nachricht. Lässt sich jederzeit wechseln, auch mitten im Chat |
+| Modell (Knopf daneben) | Modell des Assistenten wählen: Liste direkt vom Anbieter, ★ empfohlen, Kurzbeschreibung je Modell. ⚠ in Rot: Modell gibt es beim Anbieter nicht (mehr). 🔞: NSFW erlaubt. Siehe [Modelle auswählen](KI-Anbieter#modelle-auswählen) |
 | **＋** | Neuer Chat |
 | **🕘** | Chatverlauf: suchen, öffnen, umbenennen, löschen, Ordner öffnen |
 | **⋯** | Projekt bearbeiten, Ordner öffnen, Einstellungen der Assistenten |
@@ -165,7 +174,7 @@ verschieben.
 
 ## Anbieterliste und entfernte Anbieter
 
-Die Liste der Anbieter (derzeit 63) wird mit dem Programm ausgeliefert und über den Store aktualisiert – neue
+Die Liste der Anbieter (derzeit 112, beschrieben auf [KI-Anbieter](KI-Anbieter)) wird mit dem Programm ausgeliefert und über den Store aktualisiert – neue
 Modelle und Anbieter kommen so ohne Programm-Update. Anbieter, die einen Dienst einstellen, werden **nicht
 gelöscht**: Sie bleiben sichtbar und sind **rot** markiert („Nicht mehr angeboten“), mit dem Datum der
 Einstellung. Bestehende Verbindungen zu ihnen bleiben bestehen, damit Chats lesbar bleiben.
@@ -200,6 +209,7 @@ nehmen.
 |---|---|
 | „Kein API-Schlüssel hinterlegt“ | Schlüssel unter *Einstellungen › KI-Assistenten › Bearbeiten* eintragen |
 | „Die Anmeldung ist abgelaufen“ | **Neu anmelden** in der Verbindung |
+| „Der Anbieter kennt das gewählte Modell nicht“ (z. B. Gemini: „… is not found for API version …“) | Modell veraltet. Oben im Chat über den Modellknopf ein verfügbares Modell wählen; Vorgaben aus dem Katalog tauscht OmniWrench von selbst aus |
 | ChatGPT: Plan reicht nicht | „Mit ChatGPT anmelden“ braucht Plus oder Pro; sonst API-Schlüssel nutzen |
 | „Anfragelimit erreicht“ / „Guthaben aufgebraucht“ | Beim Anbieter Kontingent prüfen; kurz warten |
 | „Keine Verbindung zum Anbieter“ | Proxy/Firewall prüfen. Lokale Adressen (`localhost`, `127.x`) gehen nie über den Proxy |
@@ -208,6 +218,7 @@ nehmen.
 | „Diese Daten lassen sich nicht öffnen“ | Mit einem anderen Tresor verschlüsselt oder beschädigt |
 
 ## Siehe auch
+- [KI-Anbieter](KI-Anbieter) – alle Anbieter, Modelle, kostenlos testen, NSFW
 - [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)
 - [Clank – KI-Studio](Tool-Clank-KI-Studio)
 - [Datenablage und Datenschutz](Datenablage-und-Datenschutz)

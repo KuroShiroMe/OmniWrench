@@ -58,7 +58,10 @@ class Provider:
     key_prefix: str = ""
     base_url_editable: bool = False
     list_models: bool = False
+    models_url: str = ""                            # eigene Adresse der Modellliste (Standard: <base_url>/models)
     requires: dict = field(default_factory=dict)   # Anmeldeart (oder "*") -> Schlüssel ai.req.<…>
+    model_tags: dict = field(default_factory=dict)  # Modell -> Merkmale (ai.models.TAGS), sonst aus dem Namen
+    nsfw: bool = False                              # kann Inhalte für Erwachsene erzeugen (je nach Modell)
 
     @classmethod
     def from_dict(cls, data: dict) -> "Provider":

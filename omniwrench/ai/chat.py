@@ -206,6 +206,9 @@ def error_text(err: Exception) -> str:
             return tr("ai.error.signed_out")
         if err.code.startswith("subscription_sharing_usage"):
             return tr("ai.error.chatgpt_limit")
+        from . import models
+        if models.is_model_error(err):
+            return tr("ai.error.model_missing", detail=str(err))
         key = {"auth": "ai.error.auth", "limit": "ai.error.limit", "quota": "ai.error.quota",
                "network": "ai.error.network", "server": "ai.error.server"}.get(err.kind, "ai.error.request")
         return tr(key, detail=str(err))

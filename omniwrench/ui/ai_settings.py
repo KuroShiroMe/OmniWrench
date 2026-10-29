@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 
 from omniwrench.ai import adapters, oauth, providers, storage
+from omniwrench.ai import models as ai_models_mod
 from omniwrench.ai.chat import error_text
 from omniwrench.ai.connections import Connection, ConnectionStore
 from omniwrench.core import credentials
@@ -27,6 +28,8 @@ from .workers import run_async
 
 CAPS = ("chat", "tools", "vision", "image", "music", "video", "speech", "web_search")
 REGIONS = ("EU", "LOCAL")
+EU_COUNTRIES = {"AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT",
+                "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK"}
 
 
 def provider_name(p: providers.Provider | None, fallback: str = "") -> str:
@@ -137,7 +140,7 @@ class AIConnectionsPage(QWidget):
             if c.id == select:
                 self.table.selectRow(r)
         self.catalog_info.setText(tr("ai.conn.catalog_info", count=len(providers.all_providers()),
-                                     date=providers.updated()))
+                                     date=providers.updated().replace("T", " ")))
 
     def _current(self) -> Connection | None:
         r = self.table.currentRow()
@@ -251,7 +254,9 @@ class ProviderPicker(QWidget):
         if auth in (providers.AUTH_API_KEY, providers.AUTH_NONE) and auth not in p.auth:
             return False
         region = self.region.currentData()
-        if region and p.country != region:
+        if region == "EU" and p.country not in EU_COUNTRIES and "eu" not in p.categories:
+            return False
+        if region and region != "EU" and p.country != region:
             return False
         return True
 
@@ -266,6 +271,8 @@ class ProviderPicker(QWidget):
             if p.vendor and p.vendor not in text:
                 text += f"  ·  {p.vendor}"
             sub = caps_text(p)
+            if p.nsfw:
+                sub += "  ·  🔞 NSFW"
             if p.removed:
                 sub = tr("ai.status.removed")
             elif not p.available:
@@ -289,6 +296,8 @@ class ProviderPicker(QWidget):
         lines = [f"<b>{provider_name(p)}</b> · {', '.join(auth_text(a) for a in p.auth) or '–'}"]
         if p.models:
             lines.append(tr("ai.add.models", models=", ".join(p.models[:6])))
+        if p.nsfw:
+            lines.append(f"<span style='color:{theme.current['warning']}'>🔞 {tr('ai.nsfw.info')}</span>")
         note = note_text(p)
         if note:
             color = theme.current["danger"] if p.removed else theme.current["warning"]
@@ -478,6 +487,21 @@ class ConnectionDialog(QDialog):
         self.model_label = tr("ai.edit.model")
         form.addRow(self.model_label, mrow)
 
+        # Inhalte für Erwachsene: nur bei Anbietern, die das können; Opt-in mit Rückfrage
+        self.nsfw = QCheckBox(tr("ai.nsfw.allow"))
+        self.nsfw.setChecked(bool(self.conn.nsfw))
+        self.nsfw.clicked.connect(self._nsfw_clicked)
+        self.nsfw_info = label(f"<span style='color:{theme.current['warning']}'>🔞 {tr('ai.nsfw.info')}</span>",
+                               wrap=True)
+        nsfw_box = QWidget()
+        nl = QVBoxLayout(nsfw_box)
+        nl.setContentsMargins(0, 0, 0, 0)
+        nl.addWidget(self.nsfw_info)
+        nl.addWidget(self.nsfw)
+        form.addRow(tr("ai.nsfw.label"), nsfw_box)
+        nsfw_box.setVisible(bool(p and p.nsfw))
+        form.labelForField(nsfw_box).setVisible(bool(p and p.nsfw))
+
         trow = QHBoxLayout()
         trow.addWidget(make_button(tr("ai.edit.test"), on_click=self._test))
         self.test_status = label("", "Muted", wrap=True)
@@ -512,6 +536,15 @@ class ConnectionDialog(QDialog):
         self.form.labelForField(self.plan_info).setVisible(bool(req))
         if browser:
             self._update_login_status()
+
+    def _nsfw_clicked(self, on: bool) -> None:
+        if not on:
+            return
+        answer = QMessageBox.question(self, tr("ai.nsfw.label"), tr("ai.nsfw.confirm"),
+                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                                      QMessageBox.StandardButton.No)
+        if answer != QMessageBox.StandardButton.Yes:
+            self.nsfw.setChecked(False)
 
     def _ref_name(self) -> str:
         provider_id, _, cred_id = self.key_ref.partition(":")
@@ -559,6 +592,7 @@ class ConnectionDialog(QDialog):
         c.models = [self.model.itemText(i) for i in range(self.model.count())
                     if not self.p or self.model.itemText(i) not in self.p.models][:200]
         c.key_ref = self.key_ref if c.auth == providers.AUTH_API_KEY else ""
+        c.nsfw = bool(self.p and self.p.nsfw and self.nsfw.isChecked())
         if c.auth == providers.AUTH_CUSTOM:
             c.oauth = {"client_id": self.o_client.text().strip(), "auth_url": self.o_auth.text().strip(),
                        "token_url": self.o_token.text().strip(), "scopes": self.o_scopes.text().strip()}
@@ -620,14 +654,27 @@ class ConnectionDialog(QDialog):
     def _load_models(self) -> None:
         self.test_status.setText(tr("ai.edit.loading_models"))
 
-        def done(models):
-            current = self.model.currentText()
+        def done(found):
+            c = self._collect()
+            current = c.model
+            listed = [m.id for m in ai_models_mod.choices(c, found or None) if not m.other]
             self.model.clear()
-            self.model.addItems(models or (self.p.models if self.p else []))
-            self.model.setCurrentText(current or (models[0] if models else ""))
-            self.test_status.setText(tr("ai.edit.models_loaded", count=len(models)))
+            self.model.addItems(listed or (self.p.models if self.p else []))
+            best = ai_models_mod.best(c, found or None)
+            ours = not current or (self.p is not None and current in self.p.models)
+            self.model.setCurrentText(best if ours else current)
+            text = tr("ai.edit.models_loaded", count=len(found))
+            if found and current and current not in found:
+                text += " · ⚠ " + (tr("ai.model.switched", old=current, new=best) if ours and best != current
+                                   else tr("ai.model.missing_named", model=current))
+            self.test_status.setText(text)
 
-        run_async(self._adapter_task(lambda a: a.list_models()), done, self._show_error)
+        def task(a):
+            found = a.list_models()
+            ai_models_mod.store(self.store.settings, self.conn.id, found)
+            return found
+
+        run_async(self._adapter_task(task), done, self._show_error)
 
     def _test(self) -> None:
         self.test_status.setText(tr("ai.edit.testing"))
@@ -643,6 +690,9 @@ class ConnectionDialog(QDialog):
 
     def _save(self) -> None:
         c = self._collect()
+        if "<" in c.url:   # Platzhalter wie <ACCOUNT_ID> in der Adresse
+            QMessageBox.information(self, self.windowTitle(), tr("ai.edit.fill_url"))
+            return
         if not c.model and self.p and self.p.api not in ("graph_copilot",):
             QMessageBox.information(self, self.windowTitle(), tr("ai.edit.need_model"))
             return
