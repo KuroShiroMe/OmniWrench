@@ -378,8 +378,7 @@ class FavoriteDialog(QDialog):
         self.modes = QButtonGroup(self)
         self.m = {}
         for i, key in enumerate(MODES):
-            rb = QRadioButton(tr({"sso": "fav.login_sso", "vault": "fav.login_vault", "stored": "fav.login_stored",
-                                  "manual": "fav.login_manual"}[key]))
+            rb = QRadioButton(tr(f"fav.login_{key}"))
             self.modes.addButton(rb, i)
             self.m[key] = rb
             box.addWidget(rb)

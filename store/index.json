@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T08:12:10+00:00",
+  "generated": "2026-10-29T08:14:02+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -244,8 +244,8 @@
         }
       },
       "download_url": "packages/net.ms-dhcp-extended-1.6.0.zip",
-      "sha256": "689c7d05fb9ef814b354919ee7fce39ad25ebd08502dd177903f5bf55d954040",
-      "size": 242559
+      "sha256": "ac13823178cd18bd2c69e625b1a7166956447591ffb3beb6a2c296c7353d9570",
+      "size": 242530
     },
     {
       "id": "net.ms-dns-extended",
@@ -334,8 +334,8 @@
         }
       },
       "download_url": "packages/net.ms-dns-extended-1.2.0.zip",
-      "sha256": "91c8f169e99658c2df33512590116c690d7d5b52affeb4bdba89493369a59935",
-      "size": 141937
+      "sha256": "fd403dca83bfc50cb18a8d9ce2b4b111736a03a1218c44e485236d63f7742c55",
+      "size": 141908
     },
     {
       "id": "net.netprobe",
