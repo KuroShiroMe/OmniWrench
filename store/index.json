@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T14:57:08+00:00",
+  "generated": "2026-10-29T14:59:58+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -429,8 +429,8 @@
         }
       },
       "download_url": "packages/ai.mr-zurkon-1.0.0.zip",
-      "sha256": "34f548c4b12a2e64abd5f90380a2a61bfe9bf361bdcd4439002a03d263c674b2",
-      "size": 17086
+      "sha256": "8db97157a8658afb1fe99a5134e77eb6ad96885f5580c5c18f6d4a7099ced91d",
+      "size": 17294
     },
     {
       "id": "net.ms-dhcp-extended",

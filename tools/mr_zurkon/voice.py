@@ -129,6 +129,17 @@ class WakeDetector:
 
 
 _VOICE_CACHE: dict[str, list[tuple[str, str, str]]] = {}
+_ENGINES: dict[str, object] = {}        # Abfrage-Instanzen bleiben bestehen (s. shared_tts)
+
+
+def shared_tts(engine: str = ""):
+    """Eine dauerhafte QTextToSpeech-Instanz je Engine zum Abfragen von Sprachen und Stimmen (oder None).
+
+    Nicht gleich wieder löschen: Engines wie winrt initialisieren im Hintergrund weiter; eine kurz nach dem Anlegen
+    gelöschte Instanz führt unter Windows (z. B. ohne Audiogerät) zur Zugriffsverletzung."""
+    if engine not in _ENGINES:
+        _ENGINES[engine] = ready_tts(engine)
+    return _ENGINES[engine]
 
 
 def ready_tts(engine: str = "", parent=None):
@@ -158,7 +169,7 @@ def system_voices(lang: str) -> list[tuple[str, str, str]]:
     engines = [e for e in QTextToSpeech.availableEngines() if e != "mock"]
     for engine in engines or [""]:
         try:
-            tts = ready_tts(engine)
+            tts = shared_tts(engine)
             if tts is None:
                 continue
             found = []
@@ -175,7 +186,6 @@ def system_voices(lang: str) -> list[tuple[str, str, str]]:
             seen.add((engine, v.name()))
             out.append((engine if len(engines) > 1 else "", v.name(),
                         QLocale.territoryToString(loc.territory())))
-        tts.deleteLater()
     out.sort(key=lambda x: (x[0] != (engines[0] if engines else ""), x[1]))
     _VOICE_CACHE[lang] = out
     return list(out)
