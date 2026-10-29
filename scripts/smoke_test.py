@@ -13,6 +13,7 @@ werden nur geprüft, nicht installiert, damit keine System-Änderungen passieren
 
 from __future__ import annotations
 
+import faulthandler
 import json
 import logging
 import os
@@ -165,6 +166,7 @@ def step(text: str) -> None:
 
 
 def main() -> int:
+    faulthandler.enable(all_threads=True)  # Absturz in nativem Code (Qt, COM, Audio) mit Python-Stack melden
     paths.ensure_dirs()
     logging.basicConfig(level=logging.INFO, format="%(levelname)-7s %(name)s: %(message)s")
     collector = _ErrorCollector(logging.ERROR)
@@ -236,6 +238,8 @@ def main() -> int:
         window.show_store()
         wait_for(lambda: window.catalog is not None, 30, f"Store-Katalog ({code})")
         for tool_id in sorted(manager.tools):
+            if code == languages[0]:
+                step(f"  öffne {tool_id}")
             before = len(window.open_tools)
             window.open_tool(tool_id)
             pump(0.2)
