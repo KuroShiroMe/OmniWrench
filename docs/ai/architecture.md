@@ -297,24 +297,31 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   UpdateFromDS on peers; file zones: ForceRefresh on connected secondaries. `MsDnsExtended.show_error(..., warning)` =
   popup with Detailansicht.
 
-## Server favourites (DHCP 1.6.0, DNS 1.2.0, 2026-10-28)
+## Server favourites (DHCP 1.6.0, DNS 1.2.0, 2026-10-28/29)
 - `tools/ms_dhcp_extended/favorites.py` == `tools/ms_dns_extended/favorites.py` (identical copy, no imports between
-  tools; test checks equality). FavoriteStore(settings) on the undeclared tool setting "favorites":
-  {"version":1,"last":id,"items":[{id,name,server,note,login:{mode sso|vault|manual,user,cred:{ref}|{name,username}},
-  options:{tool-specific},ai:{}}]}. save() merges (unknown keys + sections like "ai" survive; "login" is replaced),
-  always deep copies (ToolSettingsStore compares values). section()/set_section() for other features.
-- FavoritesBar (row "Favorit" on the login card): combo + ☆ (save new / overwrite selected) + "Verwalten …"
-  (ManageDialog: edit, up/down, delete). Signal applied(fav) -> tool.fav_apply fills the form; tool.fav_capture
-  reads it. Manual edit of the server -> selection "Kein Favorit". restore() at build selects the last one.
-- Credentials: only cred_key (ref or name+username) -> match_cred finds the item in the CredentialField list and sets
-  cred_field.combo; missing -> login_status hint. Passwords never in favourites.
-- DHCP options: auto_partner, auto_scan, family (applied via set_family after login when the favourite's server equals
-  the typed one, `_login_fav`). DNS options: auto_discover, auto_scan + extra_fields servers (list) and dhcp_server,
-  edited only in the favourite dialog; fav_login_flow connects them (connect_servers_flow, shared with discovery) and
-  sets svc.dhcp_server/user/secret from the login.
+  tools; test checks equality). FavoriteStore(settings, context.secrets) on the undeclared tool setting "favorites"
+  v2: {"version":2,"last":id,"panel":{open,collapsed[]},"folders":[{id,name,parent}],"items":[{id,name,folder,server,
+  note,login:{mode sso|vault|stored|manual,user,cred:{ref,name,username}},options:{tool-specific},ai:{}}]}.
+  v1 (no folders) loads as-is. save() merges (unknown keys + "ai" survive; "login" replaced), always deep copies.
+  Key "password" in save(): mode "stored" -> context.secrets["fav:<id>"] = {"password"} (None = unchanged), other
+  modes delete it; remove() deletes it, duplicate() copies it. Folders: add/rename/remove (content moves up),
+  set_structure() after drag&drop, cycles are cut on load.
+- FavoritesPanel = collapsible left side panel next to the login card (outer HBox in _build_login): header (+ new
+  favourite, new folder, collapse), search, QTreeWidget (InternalMove DnD -> _dropped -> set_structure), context menu
+  (connect, edit, duplicate, move to, delete; folder: new here, subfolder, rename, delete), Del/F2. Signals
+  applied(fav) (click -> tool.fav_apply fills the form; "stored" puts user + password into "Andere Anmeldedaten",
+  vault ref missing in the CredentialField list is appended) and activated(fav) (double click -> _login_clicked).
+  star_button() next to the server field: new from form (capture incl. typed password -> mode "stored") or menu
+  overwrite/new/edit. FavoriteDialog: name, folder, server, 4 login modes (🔑 pick_credential), note, option_fields
+  (check/choice/text/list). QMenu.addAction(icon, …) avoided (_act helper, gotcha).
+- DHCP options: auto_partner, auto_scan, family (set_family after login when the favourite's server equals the typed
+  one, `_login_fav`). DNS options: auto_discover, auto_scan, servers (list), dhcp_server; fav_login_flow connects them
+  (connect_servers_flow, shared with discovery) and sets svc.dhcp_server/user/secret from the login.
 - KI integration (thread "KI-Integration", branch claude/project-thread-ie207t) uses "ai": {"level": null|int,
   "pseudo": null|bool} (null = inherit) via section()/applied.
-- Test: scripts/fav_check/test_favorites.py (store + both tools offscreen with the screenshot fake backends).
+- Test: scripts/fav_check/test_favorites.py (store + both tools offscreen with the screenshot fake backends, CI).
+  Rendering QMenu offscreen: patch the module's QMenu with a subclass whose exec() returns (class patch on QMenu.exec
+  does not take effect).
 
 ## Wiki and template (2026-10-22)
 ```

@@ -286,20 +286,25 @@ Neu, nur unter Linux (offscreen) geprüft.
 ## 11. Server-Favoriten (DHCP 1.6.0, DNS 1.2.0)
 
 Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorites.py). In beiden Tools gleich testen.
-- [ ] Anmeldeseite: Zeile „Favorit“ oben. Maske ausfüllen (Server, Gespeicherte Anmeldedaten), ☆ › Name vergeben:
-      Favorit erscheint in der Liste und ist ausgewählt.
-- [ ] Zweiter Favorit mit „Andere Anmeldedaten“: Benutzer gespeichert, Kennwort NICHT (Feld beim Wählen leer).
-      In `tool_settings\net.ms-dhcp-extended.json` bzw. `net.ms-dns-extended.json` unter "favorites" kein Kennwort.
-- [ ] Favorit wählen: Server, Anmeldeart, Zugang und Häkchen werden gesetzt; Tool schließen und neu öffnen:
-      zuletzt gewählter Favorit ist wieder da.
-- [ ] Server von Hand ändern: Auswahl springt auf „Kein Favorit“.
-- [ ] ☆ › „überschreiben“ übernimmt geänderte Häkchen/Anmeldeart; „Verwalten …“: bearbeiten, Reihenfolge, löschen.
-- [ ] Gespeicherten Zugang in den Einstellungen löschen, dann Favorit wählen: Hinweis „nicht mehr vorhanden“.
-- [ ] DHCP: Favorit mit Ansicht IPv6 speichern (vorher nach der Anmeldung auf IPv6 umschalten, abmelden, überschreiben),
-      erneut anmelden: Ansicht steht auf IPv6.
-- [ ] DNS: Favorit › Verwalten › Bearbeiten: „Weitere Server“ (z. B. Server außerhalb der Domäne) und
-      „DHCP-Server für den Abgleich“ eintragen. Anmelden: weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“
-      nennt den DHCP-Server. Nicht erreichbarer weiterer Server: nur Protokolleintrag, Anmeldung läuft durch.
+- [ ] Anmeldeseite: links die Liste „Favoriten“, ☆ rechts neben dem Serverfeld. Ordner anlegen (Ordner-Knopf),
+      Unterordner per Rechtsklick, umbenennen, löschen (Inhalt wandert eine Ebene hoch).
+- [ ] Maske ausfüllen mit „Andere Anmeldedaten“ + Kennwort, ☆: Dialog hat „Benutzer und Kennwort im Favoriten
+      speichern“ vorausgewählt, Ordner wählen, OK. In `tool_settings\net.ms-dhcp-extended.json` bzw.
+      `net.ms-dns-extended.json` steht unter "favorites" KEIN Kennwort.
+- [ ] Zwei Favoriten verschiedener Kunden mit verschiedenen Konten/Kennwörtern: Klick füllt Benutzer + Kennwort,
+      Doppelklick meldet direkt an (ohne weitere Auswahl).
+- [ ] + in der Liste: Favorit von Hand anlegen, auch mit „Anmeldedaten aus dem Passwortmanager“ (🔑 wählt einen
+      Eintrag, z. B. aus OmniVault/KeePass); beim Wählen steht der Eintrag unter „Gespeicherte Anmeldedaten“.
+- [ ] „Nur Benutzer speichern“: beim Wählen ist das Kennwortfeld leer und hat den Fokus.
+- [ ] Ziehen und Ablegen von Favoriten und Ordnern; Suche; Liste einklappen/aufklappen; Tool schließen und neu
+      öffnen: Zustand, zugeklappte Ordner und zuletzt gewählter Favorit sind wieder da.
+- [ ] ☆ bei gewähltem Favorit: überschreiben / als neuen speichern / bearbeiten. Server von Hand ändern: Stern grau.
+- [ ] Favorit löschen: Kennwort ist aus dem Tresor weg (Duplizieren übernimmt es).
+- [ ] Masterpasswort zurücksetzen (Testtresor!): Favorit mit Kennwort zeigt Hinweis, Kennwort neu eingeben.
+- [ ] DHCP: Favorit mit Ansicht IPv6 → nach der Anmeldung steht die Ansicht auf IPv6.
+- [ ] DNS: Favorit mit „Weitere Server“ (z. B. Server außerhalb der Domäne) und „DHCP-Server für den Abgleich“:
+      weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“ nennt den DHCP-Server. Nicht erreichbarer weiterer
+      Server: nur Protokolleintrag, Anmeldung läuft durch.
 
 ## 12. KI-Assistenten und Clank – KI-Studio (0.9.0)
 

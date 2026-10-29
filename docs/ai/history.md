@@ -559,3 +559,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   + version rows in DHCP 1.7.0/DNS 1.3.0/NetProbe 1.3.0/IconForge 1.2.0/AD 1.4.0 pages, Einstellungen (3 AI tabs),
   Datenablage, SDK page (ai_function & co.), Home/Sidebar/Tools. Landing page: 3 AI feature cards + Clank image.
   TESTLISTE section 12. Provider check: no new changes since Etappe 7c (same day).
+- 2026-10-29: Stef not happy with the dropdown: wants a collapsible list left of the login with folders, favourite
+  button at the address field, manual creation, and a password per favourite (several customers, different
+  passwords, no separate selection). Rebuilt: FavoritesPanel (folders, search, DnD, context menu, collapse), star at
+  the server field, FavoriteDialog with login mode "stored" (password encrypted in the vault via context.secrets).
+  Also fixed: DHCP _mode_changed had lost user/password enabling in the first favourites commit. Tests 59 checks.

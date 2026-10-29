@@ -85,11 +85,11 @@ Nur unter Windows verfügbar.
 
 ### Anmeldung
 
-![Anmeldung](images/ms-dhcp-anmeldung.png)
+![Anmeldung mit Favoritenliste](images/ms-dhcp-anmeldung.png)
 
 | Feld | Bedeutung |
 |---|---|
-| Favorit | gespeicherter Server mit Anmeldeart und Verbindungseinstellungen, siehe [Favoriten](#favoriten) |
+| **Favoriten** (Liste links) und ☆ am Serverfeld | gespeicherte Server mit Anmeldung, siehe [Favoriten](#favoriten) |
 | Server | Name oder IP-Adresse; zuletzt verwendete Server zur Auswahl |
 | Aus AD laden | listet die im Active Directory autorisierten DHCP-Server |
 | Anmeldung | **Angemeldeter Benutzer**, **Gespeicherte Anmeldedaten** (aus den Einstellungen bzw. dem Passwortmanager) oder **Andere Anmeldedaten** (Benutzer `DOMÄNE\Benutzer` + Passwort, nur für diese Sitzung) |
@@ -103,23 +103,34 @@ Ist ein **Failover-Partner** mit den Anmeldedaten nicht erreichbar, fragt das To
 **Wiederholen**, **Andere Anmeldedaten …**, **Nur Primärserver** oder **Später**.
 
 ### Favoriten
-Server, die regelmäßig verwaltet werden, lassen sich als **Favorit** speichern (Zeile „Favorit“ oben auf der Anmeldeseite). Ein Favorit merkt sich zusätzlich die Ansicht **IPv4/IPv6**, die nach der Anmeldung eingestellt wird.
-Eine Auswahl füllt Server, Anmeldeart, Benutzer bzw. gespeicherte Anmeldedaten und die Verbindungseinstellungen
-aus. Der zuletzt gewählte Favorit ist beim nächsten Öffnen wieder eingestellt. Wird der Server von Hand geändert,
-springt die Auswahl auf „Kein Favorit“.
+Links neben der Anmeldung steht die **Favoritenliste**: Server, die regelmäßig verwaltet werden, mit Anmeldung und
+Verbindungseinstellungen, geordnet in **Ordnern** (z. B. ein Ordner je Kunde, beliebig verschachtelt).
 
-| Aktion | So geht es |
+- **Klick** auf einen Favoriten füllt die Anmeldemaske aus, **Doppelklick** meldet direkt an.
+- Der **Stern** neben dem Serverfeld speichert die aktuelle Anmeldemaske als neuen Favoriten. Ist ein Favorit
+  gewählt (Stern farbig), bietet er **überschreiben**, **als neuen Favoriten speichern** und **bearbeiten** an.
+- **+** in der Kopfzeile legt einen Favoriten von Hand an, der Ordner-Knopf einen Ordner. Rechtsklick bietet
+  Verbinden, Bearbeiten, Duplizieren, Verschieben nach, Löschen bzw. für Ordner neuer Favorit/Unterordner,
+  Umbenennen, Löschen (Inhalt wandert eine Ebene nach oben). Favoriten und Ordner lassen sich mit der Maus
+  verschieben, `Entf` löscht, `F2` bearbeitet.
+- Das Suchfeld filtert nach Name, Server und Notiz. Der Knopf rechts oben klappt die Liste ein (schmale Leiste
+  „Favoriten“ zum Aufklappen); auf- und zugeklappte Ordner und der zuletzt gewählte Favorit bleiben gespeichert.
+  Wird der Server von Hand geändert, ist kein Favorit mehr ausgewählt.
+
+![Favorit bearbeiten](images/ms-dhcp-favoriten.png)
+
+| Anmeldung im Favoriten | Bedeutung |
 |---|---|
-| Favorit anlegen | Anmeldemaske ausfüllen, ☆ (Als Favorit speichern) › Name und Notiz vergeben |
-| Favorit ändern | Favorit wählen, Anmeldemaske anpassen, ☆ › **Favorit „…“ mit den aktuellen Einstellungen überschreiben** |
-| Name, Server, Notiz | **Verwalten …** › **Bearbeiten …** (oder Doppelklick) |
-| Reihenfolge, löschen | **Verwalten …** › **Nach oben**, **Nach unten**, **Löschen** |
+| Angemeldeter Benutzer | Windows-Anmeldung des Arbeitsplatzes |
+| Anmeldedaten aus dem Passwortmanager | Verweis auf einen Eintrag (🔑 wählt aus allen verbundenen Passwortmanagern); das Kennwort bleibt dort |
+| Benutzer und Kennwort im Favoriten speichern | eigenes Kennwort je Favorit, **verschlüsselt im Tresor** von OmniWrench – ideal für mehrere Kunden mit eigenen Konten |
+| Nur Benutzer speichern | Kennwort wird bei jeder Anmeldung eingegeben |
 
-![Favoriten verwalten](images/ms-dhcp-favoriten.png)
-
-Kennwörter werden **nie** im Favoriten gespeichert: Bei „Andere Anmeldedaten“ nur der Benutzer, bei „Gespeicherte
-Anmeldedaten“ nur der Verweis auf den Eintrag (das Kennwort bleibt im Tresor bzw. Passwortmanager). Fehlt der
-Eintrag später, weist die Anmeldeseite darauf hin. Favoriten speichern außerdem den [KI-Zugriff je Server](#ki-assistenten).
+Dazu kommen Notiz und die Verbindungseinstellungen (Failover-Partner verbinden, Prüfung nach der Anmeldung, Ansicht IPv4/IPv6 nach der Anmeldung). Wird ein Favorit mit
+eigenem Kennwort gewählt, stehen Benutzer und Kennwort direkt in „Andere Anmeldedaten“. Ein in der Maske
+eingegebenes Kennwort wird beim Speichern über den Stern mit übernommen. Geht ein Kennwort beim Zurücksetzen des
+Masterpassworts verloren, weisen Anmeldeseite und Dialog darauf hin. Kennwörter stehen nie in den Einstellungen.
+Favoriten speichern außerdem den [KI-Zugriff je Server](#ki-assistenten).
 
 ### Aufbau des Hauptfensters
 Das Hauptfenster hat ein eigenes Dock-System: feste Seiten **Übersicht**, **Server-Optionen**, **Failover**,
@@ -470,7 +481,7 @@ angemeldet sein; Daten kommen aus dem Zwischenspeicher oder werden wie in der Ob
   „↶“ bzw. „✗“ aufgeführt.
 - Abweichende Anmeldedaten gelten nur für die Sitzung und nur für die Serververbindungen; Passwörter werden nicht
   auf der Kommandozeile übergeben.
-- Gespeichert werden nur die Einstellungen, die Favoriten (ohne Kennwörter), die Spaltenanordnung und, falls gewünscht,
+- Gespeichert werden nur die Einstellungen, die Favoriten (Kennwörter von Favoriten nur verschlüsselt im Tresor), die Spaltenanordnung und, falls gewünscht,
   die Zugangsdaten im Tresor.
 
 ## Grenzen und bekannte Einschränkungen
@@ -508,7 +519,7 @@ angemeldet sein; Daten kommen aus dem Zwischenspeicher oder werden wie in der Ob
 | Version | Änderungen |
 |---|---|
 | 1.7.0 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Scopes, Clients, Failover, Reservierungen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
-| 1.6.0 | **Favoriten**: Server mit Anmeldeart, Verbindungseinstellungen und Ansicht IPv4/IPv6 speichern, auf der Anmeldeseite auswählen und verwalten (ohne Kennwörter) |
+| 1.6.0 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen und Ansicht IPv4/IPv6 |
 | 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |
