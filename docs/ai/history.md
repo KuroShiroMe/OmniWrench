@@ -511,3 +511,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   IPv4/IPv6 view, DNS further servers + DHCP server for the comparison. "ai" section agreed with the KI thread.
   Tests: scripts/fav_check (39 checks), dns_check/test_logic, smoke_test, check_locales, check_store. Wiki sections
   "Favoriten" + new login images, TESTLISTE 11. Landing page checked: tool list is generated, nothing else to add.
+- 2026-10-29: Stef not happy with the dropdown: wants a collapsible list left of the login with folders, favourite
+  button at the address field, manual creation, and a password per favourite (several customers, different
+  passwords, no separate selection). Rebuilt: FavoritesPanel (folders, search, DnD, context menu, collapse), star at
+  the server field, FavoriteDialog with login mode "stored" (password encrypted in the vault via context.secrets).
+  Also fixed: DHCP _mode_changed had lost user/password enabling in the first favourites commit. Tests 59 checks.

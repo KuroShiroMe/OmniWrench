@@ -269,11 +269,15 @@
   right must be handled with a clear message (who lacks which right on which partition), remaining steps still run.
   Standalone DNS (no AD) is covered via zone transfer status/trigger.
 
-## Server favourites (2026-10-28)
+## Server favourites (2026-10-28, reworked 2026-10-29)
 - Stef (KI feasibility doc, A3): DHCP and DNS tool get a favourites list storing servers + connection settings;
   AI settings per server will live there too (section "ai", KI thread). Every tool gets an AI setting inherited from
   the main program, login tools get a dropdown at login (KI thread's job).
-- My choices: favourites never store passwords (manual login = user only, stored credentials = reference to the
-  CredentialField entry); saved in plain tool settings (no secrets); one identical favorites.py per tool (tools stay
-  independent); DHCP favourite also restores the IPv4/IPv6 view, DNS favourite can add further servers and the DHCP
-  server for the comparison; manual server edit deselects the favourite; last favourite preselected on open.
+- Stef 2026-10-29: no dropdown; collapsible list LEFT of the login window with folders, manual creation in the list,
+  favourite (star) button at the address field; a password can be linked per favourite (customers with different
+  passwords, no separate favourite + password selection).
+- My choices: favourite password lives encrypted in the vault (context.secrets "fav:<id>"), never in settings; other
+  login modes: current user, password-manager reference, user only. Click fills the form, double click logs in.
+  One identical favorites.py per tool (tools stay independent); DHCP favourite restores the IPv4/IPv6 view, DNS
+  favourite can add further servers and the DHCP server for the comparison; manual server edit deselects; last
+  favourite, panel state and collapsed folders are remembered; deleting a folder moves its content up.
