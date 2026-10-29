@@ -448,5 +448,6 @@
   "fx.link_ok.title": "Link healthy",
   "fx.link_ok.detail": "The counterpart responds without loss at {avg} ms average latency.",
   "fx.link_path_blocked.title": "Ports blocked on the path",
-  "fx.link_path_blocked.detail": "{blocked} of {total} tested ports do not get through the infrastructure between the two hosts."
+  "fx.link_path_blocked.detail": "{blocked} of {total} tested ports do not get through the infrastructure between the two hosts.",
+  "ai.fn.start": "Start a NetProbe test for {targets} with profile \"{profile}\"?"
 }

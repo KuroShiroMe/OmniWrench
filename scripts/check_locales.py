@@ -27,6 +27,8 @@ def load(path: Path) -> dict:
 
 
 def placeholders(text: str) -> set[str]:
+    # {{Vorlagen-Platzhalter}} sind übersetzter Text, keine Format-Platzhalter
+    text = re.sub(r"\{\{[^{}]*\}\}", "", text)
     return set(re.findall(r"\{(\w+)\}", text))
 
 

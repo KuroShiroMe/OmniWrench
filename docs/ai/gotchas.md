@@ -210,3 +210,4 @@
   (not "Optionen") - UI texts and wiki must say "Einstellungen".
 - Clank screenshots need the main window (ai_services): screenshots/render.py builds a MainWindow itself and must set
   ai_storage_mode central with a root inside the temp home, otherwise it reads/writes the real Documents folder.
+- check_locales: `{{Vorlagen-Platzhalter}}` (Clank-Vorlagen) werden seit 0.9.0 ignoriert, nur `{name}` zählt als Format-Platzhalter. Neue `tr("key")` in Tool-Code immer auch in de+en ergänzen – CI findet fehlende Schlüssel.

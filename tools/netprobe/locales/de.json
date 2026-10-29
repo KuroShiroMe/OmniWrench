@@ -448,5 +448,6 @@
   "fx.link_ok.title": "Leitung in Ordnung",
   "fx.link_ok.detail": "Die Gegenstelle antwortet verlustfrei bei {avg} ms mittlerer Latenz.",
   "fx.link_path_blocked.title": "Ports auf der Strecke blockiert",
-  "fx.link_path_blocked.detail": "{blocked} von {total} getesteten Ports kommen nicht durch die Infrastruktur zwischen beiden Rechnern."
+  "fx.link_path_blocked.detail": "{blocked} von {total} getesteten Ports kommen nicht durch die Infrastruktur zwischen beiden Rechnern.",
+  "ai.fn.start": "NetProbe-Test für {targets} mit Profil „{profile}“ starten?"
 }
