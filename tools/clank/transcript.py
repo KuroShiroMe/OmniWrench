@@ -87,12 +87,51 @@ class DepsPage(QWidget):
         run_async(lambda: audio.install_packages(tool_dir, need), done, failed)
 
 
-class ConsentDialog(QDialog):
-    """Pflichthinweis vor jeder Aufnahme."""
+class ProfileNotice(QDialog):
+    """Deutlicher Hinweis, bevor Sprecherprofile (biometrische Daten) dauerhaft gespeichert werden."""
 
-    def __init__(self, tr, provider: str, profiles_possible: bool, parent=None):
+    def __init__(self, tr, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle(tr("ts.pnotice.title"))
+        self.setMinimumWidth(600)
+        lay = QVBoxLayout(self)
+        head = QLabel("⚠ " + tr("ts.pnotice.head"))
+        head.setStyleSheet("font-size: 18px; font-weight: 800; color: #ef4444;")
+        head.setWordWrap(True)
+        lay.addWidget(head)
+        body = QLabel(tr("ts.pnotice.body"))
+        body.setWordWrap(True)
+        body.setStyleSheet("font-weight: 600;")
+        body.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
+        lay.addWidget(body)
+        self.ok_box = QCheckBox(tr("ts.pnotice.accept"))
+        lay.addWidget(self.ok_box)
+        box = QDialogButtonBox()
+        self.ok = box.addButton(tr("ts.pnotice.ok"), QDialogButtonBox.ButtonRole.AcceptRole)
+        box.addButton(QDialogButtonBox.StandardButton.Cancel)
+        box.accepted.connect(self.accept)
+        box.rejected.connect(self.reject)
+        lay.addWidget(box)
+        self.ok.setEnabled(False)
+        self.ok_box.toggled.connect(self.ok.setEnabled)
+
+
+class ConsentDialog(QDialog):
+    """Pflichthinweis vor jeder Aufnahme.
+
+    Sprecherprofile: Beim Start mit angehaktem Opt-in erscheint zusätzlich ProfileNotice. Wer das Opt-in
+    zehnmal kurz hintereinander umschaltet, bekommt den Haken „immer aktiv“ (Einstellung ts_profiles_always):
+    dann ist das Opt-in vorbelegt und ProfileNotice entfällt. Die Einwilligung zur Aufnahme selbst bleibt.
+    """
+
+    TOGGLES = 10          # so oft umschalten …
+    WINDOW = 6.0          # … innerhalb dieser Sekunden
+
+    def __init__(self, tr, provider: str, profiles_possible: bool, settings=None, parent=None):
         super().__init__(parent)
         self.tr_ = tr
+        self.settings = settings
+        self._clicks: list[float] = []
         self.setWindowTitle(tr("ts.consent.title"))
         self.setMinimumWidth(620)
         lay = QVBoxLayout(self)
@@ -109,7 +148,15 @@ class ConsentDialog(QDialog):
         lay.addWidget(self.agree)
         self.profiles = QCheckBox(tr("ts.consent.profiles"))
         self.profiles.setEnabled(profiles_possible)
+        self.profiles.clicked.connect(self._profiles_clicked)
         lay.addWidget(self.profiles)
+        always = bool(settings and settings.get("ts_profiles_always")) and profiles_possible
+        self.always = QCheckBox(tr("ts.consent.profiles_always"))
+        self.always.setChecked(always)
+        self.always.setVisible(always)
+        self.always.toggled.connect(self._always_toggled)
+        lay.addWidget(self.always)
+        self.profiles.setChecked(always)
         row = QHBoxLayout()
         copy = QPushButton(tr("ts.consent.copy"))
         copy.clicked.connect(lambda: QGuiApplication.clipboard().setText(tr("ts.consent.notice")))
@@ -124,6 +171,25 @@ class ConsentDialog(QDialog):
         lay.addWidget(box)
         self.start.setEnabled(False)
         self.agree.toggled.connect(self.start.setEnabled)
+
+    def _profiles_clicked(self, _checked: bool) -> None:
+        now = time.monotonic()
+        self._clicks = [t for t in self._clicks if now - t <= self.WINDOW] + [now]
+        if len(self._clicks) >= self.TOGGLES and self.settings is not None:
+            self.always.setVisible(True)
+
+    def _always_toggled(self, on: bool) -> None:
+        if self.settings is not None:
+            self.settings.set("ts_profiles_always", on)
+        if on:
+            self.profiles.setChecked(True)
+
+    def accept(self) -> None:
+        if self.profiles.isChecked() and not self.always.isChecked():
+            if ProfileNotice(self.tr_, self).exec() != QDialog.DialogCode.Accepted:
+                self.profiles.setChecked(False)
+                return
+        super().accept()
 
 
 class ProfilesDialog(QDialog):
@@ -495,7 +561,7 @@ class TranscriptTab(QWidget):
         if not (self.use_mic.isChecked() or self.use_sys.isChecked()):
             self.status.setText("⚠ " + tr("ts.no_source"))
             return
-        dlg = ConsentDialog(tr, conn.name, True, self)
+        dlg = ConsentDialog(tr, conn.name, True, self.settings, self)
         if dlg.exec() != QDialog.DialogCode.Accepted or not dlg.agree.isChecked():
             return
         self._save_settings()

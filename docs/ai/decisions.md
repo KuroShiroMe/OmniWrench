@@ -317,4 +317,9 @@
   recording start + red banner. Wake word only offline (Vosk) - never stream all mic audio to a cloud provider;
   without Vosk only push-to-talk. Default voice = system voice (free, offline). numpy/soundcard/vosk installed on
   demand into the tool's _lib, not at tool install.
+- Speaker profiles (Stef 2026-10-29): opt-in stays; starting with profiles shows ProfileNotice (bold, Art. 9 DSGVO,
+  user is responsible, confirm checkbox). Hidden by Stef's wish: toggling the opt-in 10x within 6 s reveals "always use
+  profiles without notice" (setting ts_profiles_always) - not in wiki/UI help. Recording consent dialog always stays.
+  Stef asked to make it "less obvious in the code"; I kept it plain + commented (public repo, privacy-relevant code
+  should stay reviewable).
 - Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.

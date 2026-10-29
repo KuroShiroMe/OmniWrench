@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `ai.clank` |
-| **Stand der Seite** | Version 1.0.0 |
+| **Stand der Seite** | Version 1.0.1 |
 | **Bereich** | Automatisierung & Entwicklung |
 | **Tags** | KI, Chat, ChatGPT, Claude, Copilot, Ollama, Git, GitHub, GitLab, Azure DevOps, MCP, Bilder, Musik, Video, Transkription, Sprachassistent |
 | **Plattformen** | Windows, Linux |
@@ -195,7 +195,8 @@ vermerkt.
 
 **Was gespeichert wird:** nur der Text (verschlüsselt, falls eingestellt). Audio und Stimmmerkmale bleiben im
 Arbeitsspeicher. **Sprecherprofile** (Stimmmerkmale mit Namen, damit bekannte Stimmen automatisch benannt werden)
-sind biometrische Daten: nur nach Erlaubnis im Einwilligungsdialog und Zustimmung der Person, **immer
+sind biometrische Daten (Art. 9 DSGVO): nur nach Erlaubnis im Einwilligungsdialog und Zustimmung der Person. Beim
+Start mit Profilen erscheint ein eigener, deutlicher Hinweis; die Verantwortung liegt beim Anwender. Profile sind **immer
 verschlüsselt**, verwaltbar und löschbar über **Sprecherprofile**. Die **Stimmen-Ähnlichkeit** legt fest, wie
 streng Stimmen zugeordnet werden.
 
@@ -292,6 +293,7 @@ Vorlagen, Zeitpläne) werden in den Reitern selbst gesetzt und gespeichert.
 
 | Version | Änderungen |
 |---|---|
+| 1.0.1 | Mitschrift: deutlicher Hinweis (Art. 9 DSGVO) vor dem Verwenden von Sprecherprofilen |
 | 1.0.0 | Erste Version: Chat mit Projekten, Vorlagen und Arbeitsbereich (Ordner, Git, GitHub/GitLab/Azure DevOps), Bilder, Musik, Video, Gruppenchat, Dokumente, Bildschirmfoto, Planung, MCP-Client und -Server, Mitschrift mit Sprechererkennung, Sprachassistent mit Weckwort |
 
 ## Siehe auch

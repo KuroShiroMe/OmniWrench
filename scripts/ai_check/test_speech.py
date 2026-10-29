@@ -298,6 +298,40 @@ def main() -> int:
     tool.modes.setCurrentWidget(tab)
     rs.pump(0.3)
     check(tab.stack.currentIndex() == 2, "Mitschrift bereit (Anbieter vorhanden)")
+    # Sprecherprofile: Hinweis beim Start, verstecktes „immer aktiv“ nach 10x Umschalten
+    notice = {"result": QDialog.DialogCode.Rejected, "shown": 0}
+
+    def notice_exec(_dlg):
+        notice["shown"] += 1
+        return notice["result"]
+    ts.ProfileNotice.exec = notice_exec
+    tab.settings.set("ts_profiles_always", False)
+    dlg = ts.ConsentDialog(tab.tr_, "OA", True, tab.settings, tab)
+    check(not dlg.profiles.isChecked() and not dlg.always.isVisibleTo(dlg), "Profile aus, Zusatzhaken versteckt")
+    dlg.agree.setChecked(True)
+    dlg.profiles.click()
+    dlg.accept()
+    check(notice["shown"] == 1 and not dlg.profiles.isChecked() and dlg.result() != QDialog.DialogCode.Accepted,
+          "Profilhinweis abgelehnt -> kein Start, Haken weg")
+    notice["result"] = QDialog.DialogCode.Accepted
+    dlg.profiles.click()
+    dlg.accept()
+    check(notice["shown"] == 2 and dlg.result() == QDialog.DialogCode.Accepted, "Profilhinweis bestätigt -> Start")
+    dlg = ts.ConsentDialog(tab.tr_, "OA", True, tab.settings, tab)
+    for _ in range(9):
+        dlg.profiles.click()
+    check(not dlg.always.isVisibleTo(dlg), "9x umschalten reicht nicht")
+    dlg.profiles.click()
+    check(dlg.always.isVisibleTo(dlg), "10x umschalten zeigt „immer aktiv“")
+    dlg.always.setChecked(True)
+    check(tab.settings.get("ts_profiles_always") is True and dlg.profiles.isChecked(), "immer aktiv gespeichert")
+    dlg = ts.ConsentDialog(tab.tr_, "OA", True, tab.settings, tab)
+    check(dlg.profiles.isChecked() and dlg.always.isVisibleTo(dlg) and dlg.always.isChecked(), "beim nächsten Mal vorbelegt")
+    dlg.agree.setChecked(True)
+    dlg.accept()
+    check(notice["shown"] == 2 and dlg.result() == QDialog.DialogCode.Accepted, "ohne Profilhinweis gestartet")
+    dlg.always.setChecked(False)
+    check(tab.settings.get("ts_profiles_always") is False, "immer aktiv wieder aus")
     tab.conn.setCurrentIndex(tab.conn.findData("oa"))
     tab.model.setCurrentIndex(tab.model.findData("gpt-4o-transcribe-diarize"))
     tab.sum_conn.setCurrentIndex(tab.sum_conn.findData("bot"))

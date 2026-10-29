@@ -569,3 +569,5 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-29: Merged reworked server favourites (#70: FavoritesPanel with folders, password per favourite) into the KI
   branch; AIAccessRow re-added to favorites.py, overwrite() keeps "ai". DHCP 1.7.1 / DNS 1.3.1 (above #70's 1.6.1/1.2.1,
   unreleased 1.7.0/1.3.0 zips removed). Linux: QT_AUDIO_BACKEND=pulseaudio when no PipeWire daemon (CI segfault).
+- 2026-10-29: Clank 1.0.1: ProfileNotice (Art. 9 DSGVO, responsibility with the user) before recording with speaker
+  profiles; hidden "always" option after 10 opt-in toggles in 6 s (Stef). test_speech 78 checks.

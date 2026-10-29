@@ -366,6 +366,10 @@ ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal is
 - [ ] Mitschrift: Pakete installieren, Einwilligung, Mikrofon + Systemton (Teams/Zoom-Testanruf), zwei Sprecher
       erkannt, umbenennen, Sprecherprofil speichern, nächste Mitschrift erkennt die Person; Zusammenfassung,
       Export. Im Ordner Transcripts nur Text, keine Audiodatei.
+- [ ] Sprecherprofile: Opt-in anhaken und starten -> roter Hinweis „biometrische Daten (Art. 9 DSGVO)“, Start erst nach
+      Bestätigungshaken; Abbrechen nimmt das Opt-in zurück. Versteckt: Opt-in 10x schnell umschalten (in 6 s) ->
+      Haken „immer verwenden, ohne Hinweis“ erscheint; angehakt ist das Opt-in beim nächsten Mal vorbelegt und der
+      Profilhinweis entfällt (Einwilligung zur Aufnahme bleibt). Haken wieder raus -> Hinweis kommt wieder.
 - [ ] Sprachassistent: Weckwort einrichten (Vosk-Modell), „Hey Clank, wie spät ist es?“, Antwort mit Systemstimme;
       Folgefrage ohne Weckwort; „Sprechen“-Knopf; Stimme eines Anbieters (OpenAI) zum Vorlesen.
 - [ ] Sprache auf Englisch/Französisch umstellen: Texte vollständig (KI-Texte in allen 23 Sprachen ergänzt,
