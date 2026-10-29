@@ -1,4 +1,4 @@
-"""Funktionen des KI-Studios für Assistenten: Arbeitsbereich lesen, Dateien ändern, Git, Befehle.
+"""Funktionen von Clank für Assistenten: Arbeitsbereich lesen, Dateien ändern, Git, Befehle.
 
 Pfade sind immer relativ zum Arbeitsbereich ("<Eintrag>/unter/datei"). Lesen ab Stufe 3, Dateien schreiben und
 Befehle ausführen ab Stufe 4 mit Bestätigung: das Fenster zeigt den Befehl bzw. die Änderung (Diff) und die
@@ -26,34 +26,34 @@ class StudioAI:
         tr = ctx.tr
         path = {"path": {"type": "string", "description": "Path relative to the workspace: '<entry>/sub/file'. "
                                                             "Empty = all entries."}}
-        add("studio_workspace", "KI-Studio: folders and repositories the user shared in the current workspace "
+        add("studio_workspace", "Clank: folders and repositories the user shared in the current workspace "
             "(name, kind, read-only, Git branch, remote URL).", self.workspace, level=AI_OVERVIEW)
-        add("studio_list", "KI-Studio: list files and folders of the workspace.", self.list, level=AI_READ,
+        add("studio_list", "Clank: list files and folders of the workspace.", self.list, level=AI_READ,
             parameters={"type": "object", "properties": {
                 **path, "depth": {"type": "integer", "description": "1-6, default 1"},
                 "pattern": {"type": "string", "description": "File name filter like *.ps1"}}})
-        add("studio_read", "KI-Studio: read a text file of the workspace (optionally a line range).", self.read,
+        add("studio_read", "Clank: read a text file of the workspace (optionally a line range).", self.read,
             level=AI_READ, parameters={"type": "object", "properties": {
                 **path, "start_line": {"type": "integer"}, "lines": {"type": "integer"}}, "required": ["path"]})
-        add("studio_search", "KI-Studio: search text in the workspace files (case-insensitive; remote repositories: "
+        add("studio_search", "Clank: search text in the workspace files (case-insensitive; remote repositories: "
             "file names only).", self.search, level=AI_READ,
             parameters={"type": "object", "properties": {
                 "query": {"type": "string"}, **path, "pattern": {"type": "string"},
                 "regex": {"type": "boolean"}}, "required": ["query"]})
-        add("studio_git", "KI-Studio: Git information of a local repository in the workspace: status, log, diff "
+        add("studio_git", "Clank: Git information of a local repository in the workspace: status, log, diff "
             "(working tree or staged) or show (one commit).", self.git, level=AI_READ,
             parameters={"type": "object", "properties": {
                 "action": {"type": "string", "enum": ["status", "log", "diff", "show"]}, **path,
                 "commit": {"type": "string"}, "staged": {"type": "boolean"}, "count": {"type": "integer"}},
                 "required": ["action"]})
-        add("studio_write_file", "KI-Studio: create or overwrite a text file in the workspace with the complete new "
+        add("studio_write_file", "Clank: create or overwrite a text file in the workspace with the complete new "
             "content. The user sees the diff and confirms first. Give a short explanation.", self.write,
             level=AI_CHANGE, parameters={"type": "object", "properties": {
                 **path, "content": {"type": "string"},
                 "explanation": {"type": "string", "description": "One or two sentences: what and why"}},
                 "required": ["path", "content", "explanation"]},
             summary=lambda a: self._write_summary(a, tr))
-        add("studio_run_command", "KI-Studio: run a shell command in a local workspace folder (PowerShell on "
+        add("studio_run_command", "Clank: run a shell command in a local workspace folder (PowerShell on "
             "Windows, bash on Linux unless 'shell' says otherwise). The user sees the command with your "
             "explanation and confirms first. Prefer read-only commands; never run destructive commands without "
             "the user asking for it.", self.run, level=AI_CHANGE,
@@ -90,7 +90,7 @@ class StudioAI:
                 except WorkspaceError:
                     pass
             out.append(e)
-        return {"entries": out, "hint": "" if out else "Empty workspace. The user can add folders in KI-Studio."}
+        return {"entries": out, "hint": "" if out else "Empty workspace. The user can add folders in Clank."}
 
     def list(self, args, call):
         ws = self._ws(call)

@@ -227,3 +227,9 @@
 - Gemini OpenAI-compat tool calls: thought signature in tool_call.extra_content must be sent back; parallel calls share index 0.
 - huggingface.co is blocked in the cloud sandbox: Piper voice list/downloads can't be tested here (fallback list in local_speech).
 - Windows Narrator "natural" voices are mostly not exposed to OneCore/SAPI apps; QTextToSpeech shows only what Windows exposes.
+- pip --target --upgrade replaces loaded .pyd (numpy) -> WinError 5 on Windows. Install without --upgrade and with the
+  target in PYTHONPATH so pip treats present packages as satisfied; call importlib.invalidate_caches() after install.
+- Debian system python: building sdists (e.g. vosk's dependency `srt`) fails with "install_layout" (patched setuptools)
+  -> environment-only; in CI/venv fine. Optional AI parts must never abort a tool install.
+- check_locales scans app .py files for tr("…") keys: app files holding tool keys need `# i18n: tool-texts`;
+  "tool.name" in app code via a constant (TOOL_NAME).

@@ -1,4 +1,4 @@
-"""Clank – KI-Studio ohne echten Anbieter prüfen (Fake-Server mit vorgegebenen Funktionsaufrufen).
+"""Clank – KI-Chat ohne echten Anbieter prüfen (Fake-Server mit vorgegebenen Funktionsaufrufen).
 
     python scripts/ai_check/test_studio.py [--shots ORDNER]
 

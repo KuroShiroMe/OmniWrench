@@ -848,6 +848,7 @@ Ollama: lokale Modelle auf dem eigenen Rechner.
 - **Kann:** Chat, Funktionen, Bildeingabe
 - **Voraussetzung:** Kostenlos. Läuft auf dem eigenen Rechner oder Server und braucht dafür genug Arbeitsspeicher bzw. eine Grafikkarte.
 - **🔞 NSFW-fähig** (je nach Modell, Schalter im Assistenten)
+- **In OmniWrench einrichten:** **🦙 Ollama einrichten …** im Verbindungsdialog installiert Ollama, startet es und lädt Modelle, siehe [KI lokal mit Ollama](KI-lokal-mit-Ollama)
 - [Dokumentation](https://ollama.com)
 
 ### LM Studio
@@ -1111,7 +1112,7 @@ Msty: Desktop-Programm für lokale und Cloud-Modelle.
 
 ## Bilder, Musik, Video und Sprache
 
-Genutzt in [Clank – KI-Studio](Tool-Clank-KI-Studio) (Bilder, Medien, Mitschrift).
+Genutzt in den KI-Tools ([Pixelizer](Tool-Pixelizer), [Groovitron](Tool-Groovitron), [Vidcomic](Tool-Vidcomic), [Kreeli](Tool-Kreeli)).
 
 ### fal.ai
 
@@ -1548,4 +1549,5 @@ Le Chat Pro: das Chat-Abo von Mistral.
 
 - [KI-Assistenten](KI-Assistenten) – Assistenten verbinden, Chatleiste, Kosten
 - [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)
-- [Clank – KI-Studio](Tool-Clank-KI-Studio) – Bilder, Musik, Video, Mitschrift
+- [KI-Tools](Tools) – Bilder, Musik, Video, Transkription, Sprachassistent
+- [KI lokal mit Ollama](KI-lokal-mit-Ollama)

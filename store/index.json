@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T12:51:06+00:00",
+  "generated": "2026-10-29T14:49:29+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -72,13 +72,13 @@
     },
     {
       "id": "ai.clank",
-      "name": "Clank – AI Studio",
-      "version": "1.0.2",
-      "description": "AI studio: chats with projects and templates, folders and repositories, images, music, video, group chat, documents, schedules, MCP, transcripts and voice assistant.",
-      "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary. The \"Music\" and \"Video\" tabs create tracks and clips (Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate and more), play them and edit them with ffmpeg: trim, convert to MP3 or GIF, add music to a video, remove sound, save a still. On Windows Clank downloads ffmpeg on request. Plus: templates for recurring questions (with placeholders), screenshots straight into the chat, documents written with the assistant and exported as HTML, PDF or ODT, and schedules that ask the assistant questions at fixed times. The \"MCP\" tab connects external MCP servers, and OmniWrench offers its own functions to other AI programs as a local MCP server (token, changes confirmed here in the program). \"Transcript\" transcribes meetings from microphone and system sound live – only with the consent of all participants, with speaker recognition, optional speaker profiles and a summary; the text is stored, never the recording. The \"Voice assistant\" listens offline for a wake word (\"Hey Clank\"), records the question and reads the answer aloud.",
+      "name": "Clank – AI chat",
+      "version": "1.1.0",
+      "description": "AI chat with projects, templates, folders and repositories, and screenshots.",
+      "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. Plus templates for recurring questions (with placeholders) and screenshots straight into the chat. Images, music, video, group chat, documents, schedules, transcription, voice assistant and MCP are separate AI tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
       "author": "KuroShiro",
-      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Clank-KI-Studio",
-      "category": "automation",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Clank",
+      "category": "ai",
       "icon": "bot",
       "color": "#8b5cf6",
       "entry": "tool:Clank",
@@ -94,76 +94,140 @@
         "ChatGPT",
         "Claude",
         "Copilot",
+        "Gemini",
         "Ollama",
         "Git",
         "GitHub",
         "GitLab",
         "Azure DevOps",
-        "Projects",
-        "MCP",
-        "Transcription",
-        "Voice assistant",
-        "Images",
-        "Music",
-        "Video"
+        "Projects"
       ],
       "screenshots": [
         {
           "file": "screenshots/chat.png",
           "caption": "Chat with the connected assistants, projects and workspace",
           "url": "screenshots/ai.clank/chat.png",
-          "sha256": "42c8ea633d256b3827442d65d4d77a3f8753cbbca1be99e84422fd2c66012da0",
-          "size": 111422
-        },
-        {
-          "file": "screenshots/images.png",
-          "caption": "Create images with the connected image providers",
-          "url": "screenshots/ai.clank/images.png",
-          "sha256": "ec2449f7249e0d0e38633e7c8c64c996e0b3d69a4ea1265c0ab38963a32c21f8",
-          "size": 226751
-        },
-        {
-          "file": "screenshots/group.png",
-          "caption": "Group chat: several assistants discuss a topic",
-          "url": "screenshots/ai.clank/group.png",
-          "sha256": "eb9451d37685880200123ff750e45fb24c3c3e401776a20b584c3d7728effd84",
-          "size": 76447
-        },
-        {
-          "file": "screenshots/mcp.png",
-          "caption": "Connect MCP servers and offer OmniWrench as an MCP server",
-          "url": "screenshots/ai.clank/mcp.png",
-          "sha256": "43f9c5d9c05695632f6da962e33c0959b232e4c8040fbbe3e08f9aa29f5c471a",
-          "size": 111186
+          "sha256": "0eae2175bb5ab1d4456f31d04e46c905103a1e7a2df1863ff37b3d35565f369f",
+          "size": 100860
         }
       ],
       "single_instance": false,
       "requirements": {},
       "translations": {
         "de": {
-          "name": "Clank – KI-Studio",
-          "description": "KI-Studio: Chats mit Projekten und Vorlagen, Ordner und Repositories, Bilder, Musik, Video, Gruppenchat, Dokumente, Zeitpläne, MCP, Mitschrift und Sprachassistent.",
-          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Einstellungen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online lesen oder lokal klonen). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Änderungen sehen, Dateiänderungen vorschlagen (als Diff angezeigt) und Befehle ausführen (mit Erklärung angezeigt) – beides erst nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, regelt wie bei jedem Tool die Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Im Reiter „Bilder“ entstehen Bilder mit den verbundenen Bild-Anbietern (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), auf Wunsch mit Vorlagebildern; die Galerie zeigt die Bilder der KI-Datenablage. Im „Gruppenchat“ besprechen mehrere Assistenten ein Thema der Reihe nach – mit Bremsen für Runden, Beiträge, Länge, Zeit und Token, Pause je Runde, Ende bei Einigkeit oder Wiederholung, Einwürfen und Zusammenfassung. Die Reiter „Musik“ und „Video“ erzeugen Stücke und Clips (u. a. Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate), spielen sie ab und bearbeiten sie mit ffmpeg: kürzen, als MP3 oder GIF, Musik unter ein Video legen, Ton entfernen, Standbild speichern. ffmpeg lädt Clank unter Windows auf Wunsch herunter. Dazu: Vorlagen für wiederkehrende Fragen (mit Platzhaltern), Bildschirmfotos direkt in den Chat, Dokumente mit dem Assistenten schreiben und als HTML, PDF oder ODT exportieren, und Zeitpläne, die dem Assistenten zu festen Zeiten Fragen stellen. Im Reiter „MCP“ werden fremde MCP-Server angebunden, und OmniWrench stellt seine eigenen Funktionen anderen KI-Programmen als lokaler MCP-Server bereit (Token, Bestätigung von Änderungen hier im Programm). Die „Mitschrift“ schreibt Besprechungen von Mikrofon und Systemton live mit – nur nach Einwilligung aller Beteiligten, mit Sprechererkennung, optionalen Sprecherprofilen und Zusammenfassung; gespeichert wird der Text, nie die Aufnahme. Der „Sprachassistent“ hört offline auf ein Weckwort („Hey Clank“), nimmt die Frage auf und liest die Antwort vor.",
-          "category": "Automatisierung & Entwicklung",
-          "screenshot.chat": "Chat mit den verbundenen Assistenten, Projekten und Arbeitsbereich",
-          "screenshot.images": "Bilder mit den verbundenen Bild-Anbietern erzeugen",
-          "screenshot.group": "Gruppenchat: mehrere Assistenten besprechen ein Thema",
+          "name": "Clank – KI-Chat",
+          "description": "KI-Chat mit Projekten, Vorlagen, Ordnern und Repositories sowie Bildschirmfotos.",
+          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Einstellungen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online gelesen oder lokal geklont). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Unterschiede sehen, Dateiänderungen vorschlagen (als Diff) und Befehle ausführen (mit Erklärung) – beides nur nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, steht wie bei jedem Tool auf der Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Dazu Vorlagen für wiederkehrende Fragen (mit Platzhaltern) und Bildschirmfotos direkt in den Chat. Bilder, Musik, Video, Gruppenchat, Dokumente, Zeitpläne, Transkription, Sprachassistent und MCP sind eigene KI-Tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
+          "screenshot.chat": "Chat mit den verbundenen Assistenten, Projekten und Arbeitsbereich"
+        },
+        "en": {
+          "name": "Clank – AI chat",
+          "description": "AI chat with projects, templates, folders and repositories, and screenshots.",
+          "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. Plus templates for recurring questions (with placeholders) and screenshots straight into the chat. Images, music, video, group chat, documents, schedules, transcription, voice assistant and MCP are separate AI tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
+          "screenshot.chat": "Chat with the connected assistants, projects and workspace"
+        }
+      },
+      "download_url": "packages/ai.clank-1.1.0.zip",
+      "sha256": "0a3b58d7e5c6b687bc172dac9002c2bb0938ce5679d14286b7384eb321c7c2fc",
+      "size": 37382
+    },
+    {
+      "id": "ai.gadgetron",
+      "name": "Gadgetron – MCP",
+      "version": "1.0.0",
+      "description": "Connect MCP servers and offer OmniWrench as an MCP server to other AI programs.",
+      "long_description": "Connects external MCP servers (HTTP or local programs, protocol version 2026-07-28 and older): their tools become functions for the chat panel and all AI tools, with the AI access level of Gadgetron and confirmation for anything that changes something. OmniWrench can also act as a local MCP server for other AI programs (Claude Desktop, VS Code …), protected by a token; changes are confirmed here in the program. For clients that only speak stdio: OmniWrench --mcp-stdio.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Gadgetron",
+      "category": "ai",
+      "icon": "plug-zap",
+      "color": "#64748b",
+      "entry": "tool:Gadgetron",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "MCP",
+        "Model Context Protocol",
+        "Server"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/mcp.png",
+          "caption": "Connect MCP servers and offer OmniWrench as an MCP server",
+          "url": "screenshots/ai.gadgetron/mcp.png",
+          "sha256": "98f175337c3302aca7fc6395c36b9036d26b803fb0d21feb99a35550e2fa2c7c",
+          "size": 97749
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Gadgetron – MCP",
+          "description": "MCP-Server anbinden und OmniWrench anderen KI-Programmen als MCP-Server anbieten.",
+          "long_description": "Bindet fremde MCP-Server an (HTTP oder lokale Programme, Protokollversion 2026-07-28 und älter): Ihre Werkzeuge werden Funktionen für die Chatleiste und alle KI-Tools, mit der KI-Zugriffsstufe von Gadgetron und Bestätigung bei allem, was etwas ändert. Umgekehrt bietet OmniWrench sich anderen KI-Programmen (Claude Desktop, VS Code …) als lokaler MCP-Server an, geschützt mit Token; Änderungen werden hier im Programm bestätigt. Für Programme, die nur stdio können: OmniWrench --mcp-stdio.",
           "screenshot.mcp": "MCP-Server anbinden und OmniWrench als MCP-Server anbieten"
         },
         "en": {
-          "name": "Clank – AI Studio",
-          "description": "AI studio: chats with projects and templates, folders and repositories, images, music, video, group chat, documents, schedules, MCP, transcripts and voice assistant.",
-          "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary. The \"Music\" and \"Video\" tabs create tracks and clips (Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate and more), play them and edit them with ffmpeg: trim, convert to MP3 or GIF, add music to a video, remove sound, save a still. On Windows Clank downloads ffmpeg on request. Plus: templates for recurring questions (with placeholders), screenshots straight into the chat, documents written with the assistant and exported as HTML, PDF or ODT, and schedules that ask the assistant questions at fixed times. The \"MCP\" tab connects external MCP servers, and OmniWrench offers its own functions to other AI programs as a local MCP server (token, changes confirmed here in the program). \"Transcript\" transcribes meetings from microphone and system sound live – only with the consent of all participants, with speaker recognition, optional speaker profiles and a summary; the text is stored, never the recording. The \"Voice assistant\" listens offline for a wake word (\"Hey Clank\"), records the question and reads the answer aloud.",
-          "category": "Automation & Development",
-          "screenshot.chat": "Chat with the connected assistants, projects and workspace",
-          "screenshot.images": "Create images with the connected image providers",
-          "screenshot.group": "Group chat: several assistants discuss a topic",
+          "name": "Gadgetron – MCP",
+          "description": "Connect MCP servers and offer OmniWrench as an MCP server to other AI programs.",
+          "long_description": "Connects external MCP servers (HTTP or local programs, protocol version 2026-07-28 and older): their tools become functions for the chat panel and all AI tools, with the AI access level of Gadgetron and confirmation for anything that changes something. OmniWrench can also act as a local MCP server for other AI programs (Claude Desktop, VS Code …), protected by a token; changes are confirmed here in the program. For clients that only speak stdio: OmniWrench --mcp-stdio.",
           "screenshot.mcp": "Connect MCP servers and offer OmniWrench as an MCP server"
         }
       },
-      "download_url": "packages/ai.clank-1.0.2.zip",
-      "sha256": "7c5c52b88b682329a2ffcf803a9547accdb21c124892f892ca12270de940bb2a",
-      "size": 138684
+      "download_url": "packages/ai.gadgetron-1.0.0.zip",
+      "sha256": "8b2c66e37b4dcbf768f0f6b49d647f3f75764824c1f22d0c7a0f92b0c96b0303",
+      "size": 12884
+    },
+    {
+      "id": "ai.groovitron",
+      "name": "Groovitron – Music",
+      "version": "1.0.0",
+      "description": "Create music with the connected providers, play it and edit it with ffmpeg.",
+      "long_description": "Creates tracks with the music providers connected in OmniWrench (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate and more), with or without lyrics. Tracks are played inside OmniWrench on the current default audio device and can be trimmed or converted to MP3 with ffmpeg. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic).",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Groovitron",
+      "category": "ai",
+      "icon": "music",
+      "color": "#f59e0b",
+      "entry": "tool:Groovitron",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Music",
+        "Musik",
+        "Lyria",
+        "ElevenLabs",
+        "ffmpeg"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Groovitron – Musik",
+          "description": "Musik mit den verbundenen Anbietern erzeugen, abspielen und mit ffmpeg bearbeiten.",
+          "long_description": "Erzeugt Musikstücke mit den in OmniWrench verbundenen Musik-Anbietern (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate und weitere), mit oder ohne Liedtext. Die Stücke laufen direkt in OmniWrench auf dem aktuellen Standard-Ausgabegerät und lassen sich mit ffmpeg kürzen oder in MP3 umwandeln. Unter Windows lädt OmniWrench ffmpeg auf Wunsch herunter (einmal für Groovitron und Vidcomic)."
+        },
+        "en": {
+          "name": "Groovitron – Music",
+          "description": "Create music with the connected providers, play it and edit it with ffmpeg.",
+          "long_description": "Creates tracks with the music providers connected in OmniWrench (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate and more), with or without lyrics. Tracks are played inside OmniWrench on the current default audio device and can be trimmed or converted to MP3 with ffmpeg. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic)."
+        }
+      },
+      "download_url": "packages/ai.groovitron-1.0.0.zip",
+      "sha256": "94b6c8cad284fc206295096c775ed178c06efc553f6d12ea701b60e2a6345b38",
+      "size": 6381
     },
     {
       "id": "gfx.iconforge",
@@ -233,6 +297,140 @@
       "download_url": "packages/gfx.iconforge-1.2.0.zip",
       "sha256": "c70b02b1514fb6934c629179a39de7fe9a1ab3e5a1f4dba7597927aeb6aa0a2e",
       "size": 31238
+    },
+    {
+      "id": "ai.infobot",
+      "name": "Infobot – Documents",
+      "version": "1.0.0",
+      "description": "Write documents with an assistant and export them as HTML, PDF or ODT.",
+      "long_description": "Writes documents together with a connected assistant: guides, reports, concepts, minutes, e-mails or free text. The assistant drafts and revises on request; the document can be edited by hand, is saved in the AI data storage and exported as HTML, PDF or ODT, or handed to the chat panel.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Infobot",
+      "category": "ai",
+      "icon": "file-text",
+      "color": "#10b981",
+      "entry": "tool:Infobot",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Documents",
+        "Dokumente",
+        "PDF",
+        "ODT",
+        "HTML"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Infobot – Dokumente",
+          "description": "Dokumente mit einem Assistenten schreiben und als HTML, PDF oder ODT exportieren.",
+          "long_description": "Schreibt Dokumente zusammen mit einem verbundenen Assistenten: Anleitungen, Berichte, Konzepte, Protokolle, E-Mails oder freien Text. Der Assistent entwirft und überarbeitet auf Zuruf; das Dokument lässt sich von Hand bearbeiten, wird in der KI-Datenablage gespeichert und als HTML, PDF oder ODT exportiert oder an die Chatleiste übergeben."
+        },
+        "en": {
+          "name": "Infobot – Documents",
+          "description": "Write documents with an assistant and export them as HTML, PDF or ODT.",
+          "long_description": "Writes documents together with a connected assistant: guides, reports, concepts, minutes, e-mails or free text. The assistant drafts and revises on request; the document can be edited by hand, is saved in the AI data storage and exported as HTML, PDF or ODT, or handed to the chat panel."
+        }
+      },
+      "download_url": "packages/ai.infobot-1.0.0.zip",
+      "sha256": "f6b19aec147239351c970c47023c8cd3f80ba3a921525736ba8af13fb0d1e275",
+      "size": 8790
+    },
+    {
+      "id": "ai.kreeli",
+      "name": "Kreeli – Transcription",
+      "version": "1.0.0",
+      "description": "Live transcription of microphone and system sound with speaker recognition and summary.",
+      "long_description": "Transcribes meetings from microphone and system sound live – only with the consent of all participants. Speech recognition by a connected provider (OpenAI, Gemini, Groq, Mistral, Deepgram …) or completely offline with Whisper local. Speaker recognition, optional encrypted speaker profiles (with their own notice, Art. 9 GDPR) and a summary by an assistant. Only text is stored, never the recording.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Kreeli",
+      "category": "ai",
+      "icon": "captions",
+      "color": "#14b8a6",
+      "entry": "tool:Kreeli",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Transcription",
+        "Transkription",
+        "Whisper",
+        "Meeting"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Kreeli – Transkription",
+          "description": "Live-Transkription von Mikrofon und Systemton mit Sprechererkennung und Zusammenfassung.",
+          "long_description": "Schreibt Besprechungen von Mikrofon und Systemton live mit – nur mit Einwilligung aller Beteiligten. Die Spracherkennung übernimmt ein verbundener Anbieter (OpenAI, Gemini, Groq, Mistral, Deepgram …) oder ganz offline Whisper lokal. Dazu Sprechererkennung, auf Wunsch verschlüsselte Sprecherprofile (mit eigenem Hinweis, Art. 9 DSGVO) und eine Zusammenfassung durch einen Assistenten. Gespeichert wird nur Text, nie die Aufnahme."
+        },
+        "en": {
+          "name": "Kreeli – Transcription",
+          "description": "Live transcription of microphone and system sound with speaker recognition and summary.",
+          "long_description": "Transcribes meetings from microphone and system sound live – only with the consent of all participants. Speech recognition by a connected provider (OpenAI, Gemini, Groq, Mistral, Deepgram …) or completely offline with Whisper local. Speaker recognition, optional encrypted speaker profiles (with their own notice, Art. 9 GDPR) and a summary by an assistant. Only text is stored, never the recording."
+        }
+      },
+      "download_url": "packages/ai.kreeli-1.0.0.zip",
+      "sha256": "291ceaf7777bb4e2184ab556cff303aa52fe64e2d1302863506d884abec96d29",
+      "size": 21802
+    },
+    {
+      "id": "ai.mr-zurkon",
+      "name": "Mr. Zurkon – Voice assistant",
+      "version": "1.0.0",
+      "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
+      "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Mr-Zurkon",
+      "category": "ai",
+      "icon": "mic-vocal",
+      "color": "#a855f7",
+      "entry": "tool:MrZurkon",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Voice assistant",
+        "Sprachassistent",
+        "Vosk",
+        "Piper",
+        "Whisper"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Mr. Zurkon – Sprachassistent",
+          "description": "Mit dem Assistenten sprechen: Weckwort offline, Spracherkennung und vorgelesene Antworten.",
+          "long_description": "Hört offline auf ein Weckwort („Hey Zurkon“, Vosk), nimmt die Frage auf und liest die Antwort vor – mit einer Systemstimme, Piper (offline, natürliche Stimmen) oder der Stimme eines verbundenen Anbieters. Die Spracherkennung übernimmt ein Anbieter oder offline Whisper lokal bzw. Vosk. Sprache und Stimme sind frei wählbar. Das Gespräch läuft in einem eingebetteten Chat mit denselben Assistenten, Funktionen und Bestätigungen wie die Chatleiste. Die Ausgabe geht auf das aktuelle Standard-Ausgabegerät."
+        },
+        "en": {
+          "name": "Mr. Zurkon – Voice assistant",
+          "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
+          "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device."
+        }
+      },
+      "download_url": "packages/ai.mr-zurkon-1.0.0.zip",
+      "sha256": "692e8c42045010c97ddf21da63bc4fef8451c6d0d1e9f157231b4317adfc1998",
+      "size": 16770
     },
     {
       "id": "net.ms-dhcp-extended",
@@ -655,6 +853,158 @@
       "size": 36397
     },
     {
+      "id": "ai.orvus",
+      "name": "Orvus – Schedules",
+      "version": "1.0.0",
+      "description": "Ask an assistant questions at fixed times (once, daily, weekly, every N hours).",
+      "long_description": "Schedules questions to a connected assistant: once, daily, weekly or every N hours. Every run becomes a new chat (optionally in a project) and can be opened in the chat panel. Schedules run while Orvus is open; missed runs can be caught up when it opens. Functions that change something (level 4) are never executed by scheduled runs because nobody can confirm them.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Orvus",
+      "category": "ai",
+      "icon": "calendar-clock",
+      "color": "#6366f1",
+      "entry": "tool:Orvus",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Schedules",
+        "Zeitpläne",
+        "Automation"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Orvus – Zeitpläne",
+          "description": "Fragen zu festen Zeiten an einen Assistenten stellen (einmalig, täglich, wöchentlich, alle N Stunden).",
+          "long_description": "Plant Fragen an einen verbundenen Assistenten: einmalig, täglich, wöchentlich oder alle N Stunden. Jeder Lauf wird ein neuer Chat (auf Wunsch in einem Projekt) und lässt sich in der Chatleiste öffnen. Zeitpläne laufen, solange Orvus geöffnet ist; verpasste Läufe holt Orvus beim Öffnen auf Wunsch nach. Funktionen, die etwas ändern (Stufe 4), führen geplante Läufe nie aus, weil niemand bestätigen kann."
+        },
+        "en": {
+          "name": "Orvus – Schedules",
+          "description": "Ask an assistant questions at fixed times (once, daily, weekly, every N hours).",
+          "long_description": "Schedules questions to a connected assistant: once, daily, weekly or every N hours. Every run becomes a new chat (optionally in a project) and can be opened in the chat panel. Schedules run while Orvus is open; missed runs can be caught up when it opens. Functions that change something (level 4) are never executed by scheduled runs because nobody can confirm them."
+        }
+      },
+      "download_url": "packages/ai.orvus-1.0.0.zip",
+      "sha256": "51e9bfb41f716fe18d7b3298d8cdabb13f23a9d58fe0ae2f0439f14f9c3d2e35",
+      "size": 9965
+    },
+    {
+      "id": "ai.pixelizer",
+      "name": "Pixelizer – Images",
+      "version": "1.0.0",
+      "description": "Create images with the connected image providers, with reference images and a gallery.",
+      "long_description": "Creates images with the image providers connected in OmniWrench (Settings > AI assistants): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax and local ComfyUI/LocalAI. Optionally with up to four reference images. The gallery shows the images of the AI data storage; images can be copied, opened, deleted or attached to the chat panel.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Pixelizer",
+      "category": "ai",
+      "icon": "image",
+      "color": "#ec4899",
+      "entry": "tool:Pixelizer",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Images",
+        "Bilder",
+        "OpenAI",
+        "Gemini",
+        "Flux",
+        "Stability AI"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/images.png",
+          "caption": "Create images with the connected image providers",
+          "url": "screenshots/ai.pixelizer/images.png",
+          "sha256": "e1086525e05b7fa99c2454a4142a5f696cf7194e97f852b8a12f5d76cf6752e8",
+          "size": 213920
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Pixelizer – Bilder",
+          "description": "Bilder mit den verbundenen Bild-Anbietern erzeugen, mit Referenzbildern und Galerie.",
+          "long_description": "Erzeugt Bilder mit den in OmniWrench verbundenen Bild-Anbietern (Einstellungen > KI-Assistenten): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax sowie lokal ComfyUI/LocalAI. Auf Wunsch mit bis zu vier Referenzbildern. Die Galerie zeigt die Bilder der KI-Datenablage; Bilder lassen sich kopieren, öffnen, löschen oder an die Chatleiste anhängen.",
+          "screenshot.images": "Bilder mit den verbundenen Bild-Anbietern erzeugen"
+        },
+        "en": {
+          "name": "Pixelizer – Images",
+          "description": "Create images with the connected image providers, with reference images and a gallery.",
+          "long_description": "Creates images with the image providers connected in OmniWrench (Settings > AI assistants): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax and local ComfyUI/LocalAI. Optionally with up to four reference images. The gallery shows the images of the AI data storage; images can be copied, opened, deleted or attached to the chat panel.",
+          "screenshot.images": "Create images with the connected image providers"
+        }
+      },
+      "download_url": "packages/ai.pixelizer-1.0.0.zip",
+      "sha256": "78957ddcbaaeca0e4e8eba1a21bba66c684b2cd9d6305b54181668f3e75a23dc",
+      "size": 9155
+    },
+    {
+      "id": "ai.qforce",
+      "name": "Q-Force – Group chat",
+      "version": "1.0.0",
+      "description": "Several assistants discuss a topic in turn, with brakes and a summary.",
+      "long_description": "In the group chat several connected assistants discuss a topic in turn, each with an optional role. Brakes keep it under control: rounds, contributions, length, time and tokens, a pause per round, stop on agreement or repetition. You can interject at any time; at the end an assistant writes a summary. Per-minute limits of the providers are respected (Q-Force waits and keeps a distance). Pseudonymization is applied before sending.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Q-Force",
+      "category": "ai",
+      "icon": "users",
+      "color": "#0ea5e9",
+      "entry": "tool:QForce",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Group chat",
+        "Gruppenchat",
+        "Discussion"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/group.png",
+          "caption": "Several assistants discuss a topic in turn",
+          "url": "screenshots/ai.qforce/group.png",
+          "sha256": "59af6c8003b732a5094267b6c1f767333ef77ea3d38a8aa98e4ab898ddb416ec",
+          "size": 62043
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Q-Force – Gruppenchat",
+          "description": "Mehrere Assistenten besprechen ein Thema reihum, mit Bremsen und Zusammenfassung.",
+          "long_description": "Im Gruppenchat besprechen mehrere verbundene Assistenten ein Thema reihum, jeder auf Wunsch mit eigener Rolle. Bremsen halten das Gespräch im Rahmen: Runden, Beiträge, Länge, Zeit und Tokens, Pause je Runde, Stopp bei Einigkeit oder Wiederholung. Einwürfe sind jederzeit möglich; am Ende schreibt ein Assistent eine Zusammenfassung. Minutenlimits der Anbieter werden beachtet (Q-Force wartet und hält Abstand). Vor dem Senden wird verfremdet.",
+          "screenshot.group": "Mehrere Assistenten besprechen ein Thema reihum"
+        },
+        "en": {
+          "name": "Q-Force – Group chat",
+          "description": "Several assistants discuss a topic in turn, with brakes and a summary.",
+          "long_description": "In the group chat several connected assistants discuss a topic in turn, each with an optional role. Brakes keep it under control: rounds, contributions, length, time and tokens, a pause per round, stop on agreement or repetition. You can interject at any time; at the end an assistant writes a summary. Per-minute limits of the providers are respected (Q-Force waits and keeps a distance). Pseudonymization is applied before sending.",
+          "screenshot.group": "Several assistants discuss a topic in turn"
+        }
+      },
+      "download_url": "packages/ai.qforce-1.0.0.zip",
+      "sha256": "26552fee128dfac3ca14896fedcb53d6d57919abb635508914acbfe14890d408",
+      "size": 18733
+    },
+    {
       "id": "net.subnet-calculator",
       "name": "Subnet Calculator",
       "version": "1.2.6",
@@ -724,6 +1074,52 @@
       "download_url": "packages/net.subnet-calculator-1.2.6.zip",
       "sha256": "f36a1bd808b109fb73a26e743cf66143ab2ca4f447ed7f0e7997b882c8b417a8",
       "size": 7770
+    },
+    {
+      "id": "ai.vidcomic",
+      "name": "Vidcomic – Video",
+      "version": "1.0.0",
+      "description": "Create video clips with the connected providers, play them and edit them with ffmpeg.",
+      "long_description": "Creates clips with the video providers connected in OmniWrench (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate and more), optionally from a start image. Clips are played inside OmniWrench and can be edited with ffmpeg: trim, convert to GIF, remove sound, add music, save a still. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic).",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Vidcomic",
+      "category": "ai",
+      "icon": "clapperboard",
+      "color": "#ef4444",
+      "entry": "tool:Vidcomic",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Video",
+        "Veo",
+        "Runway",
+        "Luma",
+        "Sora",
+        "ffmpeg"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Vidcomic – Video",
+          "description": "Videoclips mit den verbundenen Anbietern erzeugen, abspielen und mit ffmpeg bearbeiten.",
+          "long_description": "Erzeugt Clips mit den in OmniWrench verbundenen Video-Anbietern (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate und weitere), auf Wunsch aus einem Startbild. Die Clips laufen direkt in OmniWrench und lassen sich mit ffmpeg bearbeiten: kürzen, in GIF umwandeln, Ton entfernen, Musik unterlegen, Standbild speichern. Unter Windows lädt OmniWrench ffmpeg auf Wunsch herunter (einmal für Groovitron und Vidcomic)."
+        },
+        "en": {
+          "name": "Vidcomic – Video",
+          "description": "Create video clips with the connected providers, play them and edit them with ffmpeg.",
+          "long_description": "Creates clips with the video providers connected in OmniWrench (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate and more), optionally from a start image. Clips are played inside OmniWrench and can be edited with ffmpeg: trim, convert to GIF, remove sound, add music, save a still. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic)."
+        }
+      },
+      "download_url": "packages/ai.vidcomic-1.0.0.zip",
+      "sha256": "933fa629f24dce1bd9840b2c6926b873f702fe574374e331d8cad2622cc33864",
+      "size": 6530
     }
   ]
 }

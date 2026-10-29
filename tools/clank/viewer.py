@@ -1,4 +1,4 @@
-"""Dateiansicht des KI-Studios: Text mit einfacher Hervorhebung (Schlüsselwörter, Texte, Kommentare, Diff)."""
+"""Dateiansicht von Clank: Text mit einfacher Hervorhebung (Schlüsselwörter, Texte, Kommentare, Diff)."""
 
 from __future__ import annotations
 

@@ -30,7 +30,8 @@
 | **Assistent fragen …** | Rechtsklick in Tabellen der Tools | Ausgewählte Zeilen erklären oder prüfen lassen |
 | **KI-Zugriff** | *Einstellungen › KI-Zugriff* und Einstellungen jedes Tools | Was Assistenten sehen und ändern dürfen, Verfremdung |
 | **KI-Datenablage** | *Einstellungen › KI-Datenablage* | Wo Chats, Projekte, Bilder, Musik, Videos und Mitschriften liegen |
-| **[Clank – KI-Studio](Tool-Clank-KI-Studio)** | Tool aus dem Store | Großer Arbeitsplatz: Arbeitsbereich mit Ordnern und Repositories, Bilder, Musik, Video, Gruppenchat, MCP, Mitschrift, Sprachassistent |
+| **Funktionen** | *Einstellungen › KI-Funktionen* | Standard-Assistent je Funktion, letzte Prüfung, Volumen, Audio-Ausgabegerät |
+| **KI-Tools** | Bereich „KI-Tools“ im Store | [Clank](Tool-Clank) (Chat mit Arbeitsbereich), [Pixelizer](Tool-Pixelizer), [Groovitron](Tool-Groovitron), [Vidcomic](Tool-Vidcomic), [Q-Force](Tool-Q-Force), [Infobot](Tool-Infobot), [Orvus](Tool-Orvus), [Kreeli](Tool-Kreeli), [Mr. Zurkon](Tool-Mr-Zurkon), [Gadgetron](Tool-Gadgetron) |
 
 Ohne verbundenen Assistenten zeigt die Chatleiste einen Hinweis mit dem Knopf **Einstellungen öffnen**. Alles
 andere im Programm funktioniert unverändert – die KI-Funktionen sind ein Angebot, keine Voraussetzung.
@@ -117,7 +118,7 @@ Ein Projekt bündelt Chats zu einem Thema und gibt dem Assistenten **Anweisungen
 Projekts gelten – z. B. „Netzwerkumzug Standort Berlin: Antworten mit PowerShell-Beispielen.“
 
 - Anlegen: Projektauswahl › **Neues Projekt …**; ändern: **⋯** › **Projekt bearbeiten …**.
-- In [Clank](Tool-Clank-KI-Studio) bekommt jedes Projekt zusätzlich einen eigenen Arbeitsbereich (Ordner und
+- In [Clank](Tool-Clank) bekommt jedes Projekt zusätzlich einen eigenen Arbeitsbereich (Ordner und
   Repositories).
 
 ## Assistent fragen …
@@ -145,7 +146,7 @@ installieren. Tools bieten eigene Funktionen an, z. B.:
 | [NetProbe](Tool-NetProbe) | Ergebnisse und Befunde | Test starten (erzeugt Netzwerkverkehr) |
 | [IconForge](Tool-IconForge) | Symbolpakete, Suche, Symbol anzeigen | – |
 | [AD Benutzerabfrage](Tool-AD-Benutzerabfrage) | Suchergebnisse | – |
-| [Clank – KI-Studio](Tool-Clank-KI-Studio) | Arbeitsbereich: Dateien auflisten, lesen, suchen, Git-Status und Änderungen | Datei ändern, Befehl ausführen |
+| [Clank – KI-Chat](Tool-Clank) | Arbeitsbereich: Dateien auflisten, lesen, suchen, Git-Status und Änderungen | Datei ändern, Befehl ausführen |
 
 Welche Funktionen ein Assistent tatsächlich bekommt, hängt von der Stufe im
 [KI-Zugriff](KI-Zugriff-und-Verfremdung) ab (Standard: nur „Beschreibung“). Ändernde Funktionen verlangen
@@ -187,7 +188,7 @@ stehen in der Kategorie „Nicht verfügbar“, damit klar ist, warum sie fehlen
 
 OmniWrench selbst kostet nichts. Abgerechnet wird beim Anbieter: Mit API-Schlüssel nach Verbrauch, mit
 „Mit ChatGPT anmelden“ über das Kontingent des Abos, lokale Modelle kosten nur Rechenzeit. Bilder, Musik und
-vor allem Videos sind deutlich teurer als Text; die Reiter in Clank weisen darauf hin.
+vor allem Videos sind deutlich teurer als Text; die KI-Tools weisen darauf hin.
 
 Was man je Anmeldeart braucht, zeigt der Dialog **Assistent hinzufügen** in der Zeile **Voraussetzung**:
 
@@ -198,7 +199,7 @@ Was man je Anmeldeart braucht, zeigt der Dialog **Assistent hinzufügen** in der
 | API-Konto mit kostenloser Stufe (Begrenzungen) | Gemini (Google AI Studio), Mistral, Groq, Cerebras, OpenRouter, Hugging Face, Cohere |
 | Cloud-Abonnement mit freigeschaltetem Modell | Azure OpenAI, Bedrock, Vertex AI, watsonx und die Firmen-Clouds |
 | Microsoft-365-Copilot-Lizenz und Freigabe durch die IT | Microsoft 365 Copilot |
-| kostenlos, läuft lokal | Ollama, LM Studio, llama.cpp, vLLM und andere lokale Modelle |
+| kostenlos, läuft lokal | Ollama (direkt aus OmniWrench einrichtbar, siehe [KI lokal mit Ollama](KI-lokal-mit-Ollama)), LM Studio, llama.cpp, vLLM und andere lokale Modelle |
 
 Kostenlose Stufen ändern sich häufig, und bei manchen werden Eingaben zum Training genutzt (z. B. Google
 außerhalb der EU, Mistral im „Experiment“-Tarif). Für Firmendaten besser ein bezahltes Konto oder ein lokales Modell
@@ -216,15 +217,15 @@ Unter *Einstellungen › KI-Assistenten* zeigt **🔍 Fähigkeiten prüfen** fü
   OpenAI und Anthropic zeigen Verbrauch und Restguthaben nur auf ihrer Webseite – der Bericht verlinkt sie.
 
 Ob eine Funktion im Tarif wirklich enthalten ist, zeigt sich manchmal erst beim ersten Versuch. In
-[Clank](Tool-Clank-KI-Studio#ki-übersicht) zeigt der Reiter **KI-Übersicht** dieselben Angaben je Funktion und
-legt dort den Standard-Assistenten fest.
+*Einstellungen › KI-Funktionen* zeigt dieselben Angaben je Funktion und legt dort den
+Standard-Assistenten fest.
 
 ## Fehlerbehebung
 
 | Problem | Ursache / Lösung |
 |---|---|
 | „Diese Funktion ist in Ihrem Tarif … nicht enthalten“ | Kostenlose Stufe ohne diese Funktion (z. B. Gemini-Bilder). Abrechnung beim Anbieter einrichten oder einen anderen Anbieter wählen |
-| „Das Limit des Anbieters ist gerade erreicht. Bitte in … s erneut versuchen“ | Minutenlimit der kostenlosen Stufe (Gemini: wenige Anfragen pro Minute). Kurz warten; Clanks Gruppenchat wartet von selbst |
+| „Das Limit des Anbieters ist gerade erreicht. Bitte in … s erneut versuchen“ | Minutenlimit der kostenlosen Stufe (Gemini: wenige Anfragen pro Minute). Kurz warten; [Q-Force](Tool-Q-Force) wartet von selbst |
 | „Der Anbieter ist gerade überlastet“ | OmniWrench hat schon zweimal neu versucht. Etwas später erneut fragen oder über den Modellknopf ein anderes Modell wählen |
 | „Kein API-Schlüssel hinterlegt“ | Schlüssel unter *Einstellungen › KI-Assistenten › Bearbeiten* eintragen |
 | „Die Anmeldung ist abgelaufen“ | **Neu anmelden** in der Verbindung |
@@ -239,6 +240,7 @@ legt dort den Standard-Assistenten fest.
 ## Siehe auch
 - [KI-Anbieter](KI-Anbieter) – alle Anbieter, Modelle, kostenlos testen, NSFW
 - [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)
-- [Clank – KI-Studio](Tool-Clank-KI-Studio)
+- [Clank – KI-Chat](Tool-Clank)
+- [KI lokal mit Ollama](KI-lokal-mit-Ollama)
 - [Datenablage und Datenschutz](Datenablage-und-Datenschutz)
 - [Tresor und Anmeldung](Tresor-und-Anmeldung)

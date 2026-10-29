@@ -1,0 +1,33 @@
+{
+  "id": "ai.gadgetron",
+  "name": "Gadgetron – MCP",
+  "version": "1.0.0",
+  "description": "Connect MCP servers and offer OmniWrench as an MCP server to other AI programs.",
+  "long_description": "Connects external MCP servers (HTTP or local programs, protocol version 2026-07-28 and older): their tools become functions for the chat panel and all AI tools, with the AI access level of Gadgetron and confirmation for anything that changes something. OmniWrench can also act as a local MCP server for other AI programs (Claude Desktop, VS Code …), protected by a token; changes are confirmed here in the program. For clients that only speak stdio: OmniWrench --mcp-stdio.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Gadgetron",
+  "category": "ai",
+  "icon": "plug-zap",
+  "color": "#64748b",
+  "entry": "tool:Gadgetron",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "MCP",
+    "Model Context Protocol",
+    "Server"
+  ],
+  "screenshots": [
+    {
+      "file": "screenshots/mcp.png",
+      "caption": "Connect MCP servers and offer OmniWrench as an MCP server"
+    }
+  ],
+  "single_instance": true,
+  "requirements": {}
+}

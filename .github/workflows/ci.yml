@@ -79,19 +79,21 @@ jobs:
         run: |
           python -m pip install dnspython
           python scripts/ai_check/test_tool_ai.py
-      - name: KI-Studio (Clank) mit Fake-Assistent
+      - name: Clank – KI-Chat mit Fake-Assistent
         run: python scripts/ai_check/test_studio.py
-      - name: Clank Bilder und Gruppenchat mit Fake-Anbietern
+      - name: Pixelizer (Bilder) und Q-Force (Gruppenchat) mit Fake-Anbietern
         run: python scripts/ai_check/test_media_group.py
-      - name: Clank Musik und Video mit Fake-Anbietern und ffmpeg
+      - name: Groovitron (Musik) und Vidcomic (Video) mit Fake-Anbietern und ffmpeg
         run: |
           sudo apt-get install -y -q ffmpeg
           python scripts/ai_check/test_music_video.py
-      - name: Clank Vorlagen, Dokumente, Bildschirmfoto und Zeitpläne
+      - name: Clank-Vorlagen, Bildschirmfoto, Infobot (Dokumente) und Orvus (Zeitpläne)
         run: python scripts/ai_check/test_extras.py
-      - name: MCP-Client und -Server (Fake-Server, stdio-Brücke)
+      - name: Gadgetron – MCP-Client und -Server (Fake-Server, stdio-Brücke)
         run: python scripts/ai_check/test_mcp.py
-      - name: Mitschrift und Sprachassistent (Fake-Anbieter, synthetische Stimmen)
+      - name: Kreeli (Transkription) und Mr. Zurkon (Sprachassistent) mit Fake-Anbietern
         run: |
           python -m pip install numpy
           python scripts/ai_check/test_speech.py
+      - name: KI-Tools (Ollama einrichten, Installation mit Auswahl, Übernahme aus Clank)
+        run: python scripts/ai_check/test_ai_tools.py

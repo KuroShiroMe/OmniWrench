@@ -95,6 +95,12 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app.svg")))
         self.resize(scaling.window_size(self))  # Startgröße relativ zum Bildschirm (1k bis 8k)
 
+        from omniwrench import sdk
+        from .ai_kit import choose_options
+        from .workers import call_in_gui
+        sdk.set_install_chooser(lambda title, text, options: call_in_gui(
+            lambda: choose_options(self, title, text, options)))
+
         self._build_dock_manager()
         self._build_menus()
         self._build_statusbar()

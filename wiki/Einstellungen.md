@@ -1,6 +1,6 @@
 # Einstellungen
 
-> **Kurz:** *Extras › Einstellungen …* (`Strg+,`) enthält alle Programmeinstellungen in neun Reitern.
+> **Kurz:** *Extras › Einstellungen …* (`Strg+,`) enthält alle Programmeinstellungen, links in die Gruppen **Programm** und **KI** gegliedert.
 > Jedes Tool hat zusätzlich eigene Einstellungen (Rechtsklick › *Einstellungen …*).
 
 **Gilt für:** Hauptprogramm ab Version 0.7.0 (KI-Reiter ab 0.9.0) · Windows und Linux
@@ -13,6 +13,7 @@
 - [Sicherheit](#sicherheit)
 - [Passwortmanager](#passwortmanager)
 - [KI-Assistenten](#ki-assistenten)
+- [KI-Funktionen](#ki-funktionen)
 - [KI-Datenablage](#ki-datenablage)
 - [KI-Zugriff](#ki-zugriff)
 - [Einstellungen eines Tools](#einstellungen-eines-tools)
@@ -80,7 +81,25 @@ Darunter:
 |---|---|---|
 | „Assistent fragen …“ verwendet | den Hauptassistenten (★) | Oder den gerade in der Chatleiste gewählten Assistenten, oder jedes Mal nachfragen |
 
-Siehe [KI-Assistenten](KI-Assistenten).
+Beim Anbieter **Ollama** installiert **🦙 Ollama einrichten …** Ollama, startet es und lädt Modelle (siehe
+[KI lokal mit Ollama](KI-lokal-mit-Ollama)). Siehe [KI-Assistenten](KI-Assistenten).
+
+## KI-Funktionen
+
+Legt fest, welcher Assistent für welche Funktion standardmäßig verwendet wird: Chat, Bilder, Musik, Video,
+Dokumente, Gruppenchat, Zeitpläne, Transkription (Erkennung, Zusammenfassung) und Sprachassistent (Erkennung,
+Vorlesen). Die [KI-Tools](Tools) übernehmen die Auswahl beim nächsten Öffnen. Für Spracherkennung und Vorlesen
+stehen auch die lokalen Möglichkeiten zur Wahl (💻 Whisper lokal, Vosk, Systemstimme, Piper).
+
+| Spalte | Inhalt |
+|---|---|
+| Status | Ergebnis der letzten Prüfung: verfügbar, nicht verfügbar, unklar |
+| Volumen / Guthaben | Guthaben oder verbleibende Anfragen, soweit der Anbieter sie meldet, mit Zeitpunkt der Prüfung |
+| Voraussetzung | z. B. „API-Konto mit Abrechnung“ |
+
+**Ausgewählte prüfen** und **Alle prüfen** fragen die Anbieter neu ab; **Details …** zeigt den ganzen Bericht.
+Darunter **Audioausgabe** der KI-Tools: „Standardgerät des Systems“ (folgt einem Wechsel, z. B. aufs Headset)
+oder ein festes Gerät.
 
 ## KI-Datenablage
 

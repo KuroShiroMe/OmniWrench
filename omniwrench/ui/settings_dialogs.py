@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QHBoxLayout,
     QHeaderView, QInputDialog, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
@@ -284,6 +284,70 @@ class ToolSettingsDialog(QDialog):
 
 
 # ============================================================ Hauptprogramm
+class NavPages(QWidget):
+    """Seitenleiste mit Gruppen statt vieler Reiter: links die Bereiche, rechts die Seite.
+    API wie QTabWidget (addTab, setCurrentWidget, currentWidget, currentChanged), dazu addGroup."""
+    currentChanged = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QListWidget, QStackedWidget
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        self.nav = QListWidget()
+        self.nav.setObjectName("SettingsNav")
+        self.nav.setFixedWidth(220)
+        self.nav.setSpacing(1)
+        lay.addWidget(self.nav)
+        self.stack = QStackedWidget()
+        lay.addWidget(self.stack, 1)
+        self.nav.currentRowChanged.connect(self._row_changed)
+
+    def addGroup(self, title: str) -> None:  # noqa: N802 - Qt-Stil
+        from PySide6.QtWidgets import QListWidgetItem
+        item = QListWidgetItem(title.upper())
+        item.setFlags(Qt.ItemFlag.NoItemFlags)
+        font = item.font()
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 0.85)
+        item.setFont(font)
+        self.nav.addItem(item)
+
+    def addTab(self, widget: QWidget, text: str) -> int:  # noqa: N802
+        from PySide6.QtWidgets import QListWidgetItem
+        idx = self.stack.addWidget(widget)
+        item = QListWidgetItem("  " + text)
+        item.setData(Qt.ItemDataRole.UserRole, idx)
+        self.nav.addItem(item)
+        if self.nav.currentRow() < 0:
+            self.nav.setCurrentItem(item)
+        return idx
+
+    def _row_changed(self, row: int) -> None:
+        item = self.nav.item(row)
+        idx = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        if idx is None:
+            return
+        self.stack.setCurrentIndex(idx)
+        self.currentChanged.emit(idx)
+
+    def setCurrentWidget(self, widget: QWidget) -> None:  # noqa: N802
+        idx = self.stack.indexOf(widget)
+        for row in range(self.nav.count()):
+            if self.nav.item(row).data(Qt.ItemDataRole.UserRole) == idx:
+                self.nav.setCurrentRow(row)
+                return
+
+    def currentWidget(self) -> QWidget:  # noqa: N802
+        return self.stack.currentWidget()
+
+    def count(self) -> int:
+        return self.stack.count()
+
+    def widget(self, i: int) -> QWidget:
+        return self.stack.widget(i)
+
+
 class AppSettingsDialog(QDialog):
     def __init__(self, settings: AppSettings, vault: Vault, parent: QWidget | None = None,
                  tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None,
@@ -298,24 +362,33 @@ class AppSettingsDialog(QDialog):
         self.setWindowTitle(tr("appsettings.title"))
         fit_to_screen(self, 980, 600)
         lay = QVBoxLayout(self)
-        tabs = QTabWidget()
-        tabs.addTab(self._general_tab(), tr("appsettings.tab_general"))
-        tabs.addTab(self._display_tab(), tr("appsettings.tab_display"))
-        tabs.addTab(self._repo_tab(), tr("appsettings.tab_repos"))
-        tabs.addTab(self._update_tab(), tr("appsettings.tab_updates"))
-        tabs.addTab(self._security_tab(), tr("appsettings.tab_security"))
+        tabs = NavPages()
+        tabs.addGroup(tr("appsettings.group_program"))
+        tabs.addTab(self._general_tab(), "⚙ " + tr("appsettings.tab_general"))
+        tabs.addTab(self._display_tab(), "🎨 " + tr("appsettings.tab_display"))
+        tabs.addTab(self._repo_tab(), "📦 " + tr("appsettings.tab_repos"))
+        tabs.addTab(self._update_tab(), "⟳ " + tr("appsettings.tab_updates"))
+        tabs.addTab(self._security_tab(), "🔒 " + tr("appsettings.tab_security"))
         pwm = QWidget()
         pwm_lay = QVBoxLayout(pwm)
         pwm_lay.addWidget(PasswordManagerWidget(pwm))
-        tabs.addTab(pwm, tr("pwm.title"))
+        tabs.addTab(pwm, "🔑 " + tr("pwm.title"))
+        tabs.addGroup(tr("appsettings.group_ai"))
         self.ai_connections = AIConnectionsPage(settings, vault)
-        tabs.addTab(self.ai_connections, tr("ai.tab_assistants"))
+        tabs.addTab(self.ai_connections, "✦ " + tr("ai.tab_assistants"))
+        from .ai_defaults import DefaultsPage
+        self.ai_defaults = DefaultsPage(settings, vault)
+        tabs.addTab(self.ai_defaults, "🧭 " + tr("ai.tab_defaults"))
         self.ai_storage = AIStoragePage(settings, vault)
-        tabs.addTab(self.ai_storage, tr("ai.tab_storage"))
+        tabs.addTab(self.ai_storage, "🗄 " + tr("ai.tab_storage"))
         self.ai_access = AIAccessPage(settings, vault, "app")
-        tabs.addTab(self.ai_access, tr("ai.tab_access"))
+        tabs.addTab(self.ai_access, "🛡 " + tr("ai.tab_access"))
+        tabs.currentChanged.connect(lambda _i: self.ai_defaults.refresh()
+                                    if tabs.currentWidget() is self.ai_defaults else None)
         if initial_tab == "ai":
             tabs.setCurrentWidget(self.ai_connections)
+        elif initial_tab == "ai_defaults":
+            tabs.setCurrentWidget(self.ai_defaults)
         self.tabs = tabs
         lay.addWidget(tabs, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)

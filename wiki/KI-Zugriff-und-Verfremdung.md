@@ -40,7 +40,7 @@ eingestellte Stufe erlaubt – was darüber liegt, „kennt“ er gar nicht.
 | **Je Tool** | Rechtsklick auf das Tool › *Einstellungen* › Reiter **KI-Zugriff**. Standard: „Wie im Hauptprogramm (…)“ |
 | **Je Assistent** | **Ausnahmen je Assistent …** auf beiden Seiten, z. B. mehr für ein lokales Modell, weniger für einen Cloud-Dienst |
 | **Je Server** | In [MS DHCP](Tool-MS-DHCP-Extended-Management#favoriten) und [MS DNS Extended Management](Tool-MS-DNS-Extended-Management#favoriten): Zeile **KI-Zugriff** auf der Anmeldeseite, gespeichert mit dem Favoriten |
-| **Externe KI-Programme** | Ausnahme für „MCP-Server (externe KI-Programme)“, wenn [Clank](Tool-Clank-KI-Studio#mcp) OmniWrench als MCP-Server anbietet |
+| **Externe KI-Programme** | Ausnahme für „MCP-Server (externe KI-Programme)“, wenn [Gadgetron](Tool-Gadgetron) OmniWrench als MCP-Server anbietet |
 
 ## Vererbung und Ausnahmen
 
@@ -80,7 +80,7 @@ man selbst sieht immer die echten Werte, der Anbieter nie.
   [KI-Datenablage](KI-Assistenten#ki-datenablage) verschlüsselt ist).
 
 **Ausnahmen:** Beschreibungen für Bilder, Musik und Videos gehen unverfremdet an den Anbieter (Platzhalter
-ergeben in Bildern keinen Sinn) – die Reiter in Clank weisen darauf hin.
+ergeben in Bildern keinen Sinn) – die KI-Tools weisen darauf hin.
 
 ## Bestätigung von Änderungen
 
@@ -88,7 +88,7 @@ Funktionen der Stufe 4 laufen nie ohne Rückfrage. Der Dialog zeigt, was der Ass
 die Änderungen als Diff, bei Befehlen den Befehl mit Erklärung, bei DHCP/DNS die betroffenen Einträge).
 
 - **Erlauben** / **Ablehnen**; „Antwort für diese Sitzung merken“ spart Rückfragen bei gleichartigen Aktionen.
-- Geplante Läufe ([Clank › Planung](Tool-Clank-KI-Studio#planung)) führen ändernde Funktionen **nie** aus.
+- Geplante Läufe ([Orvus](Tool-Orvus)) führen ändernde Funktionen **nie** aus.
 - Änderungen über den MCP-Server werden ebenfalls hier im Programm bestätigt.
 
 ## Was nie an Assistenten geht
@@ -108,5 +108,5 @@ die Änderungen als Diff, bei Befehlen den Befehl mit Erklärung, bei DHCP/DNS d
 
 ## Siehe auch
 - [KI-Assistenten](KI-Assistenten)
-- [Clank – KI-Studio](Tool-Clank-KI-Studio)
+- [Clank – KI-Chat](Tool-Clank)
 - [Datenablage und Datenschutz](Datenablage-und-Datenschutz)

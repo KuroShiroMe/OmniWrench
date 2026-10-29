@@ -596,3 +596,9 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   group chat waits on per-minute limits and keeps a learned gap per connection (group.rate_wait),
   speech: gemini_audio (STT + TTS, 30 voices), Groq Whisper, Mistral Voxtral, Whisper local (faster-whisper) and
   Piper (local_speech.py), voice language selectable (va_lang), voice list per language/provider, test button.
+- 2026-10-29 (KI round 4, Stef: "teile Clank in lauter einzelne Tools auf"): category "KI-Tools" (ai) with Clank 1.1.0
+  (chat) + Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron (names by Stef).
+  Shared AI dir + package folder (fix WinError 5, no re-asking after restart), opt-out install dialog with progress
+  bar, current default audio device, Vosk hint gone when ready, settings sidebar groups + page KI-Funktionen,
+  Ollama install/start/model download (app ai/ollama.py, ui/ai_ollama.py). Settings migrate once from Clank 1.0.x.
+  Wiki: 10 tool pages + KI-lokal-mit-Ollama; site card "Zehn KI-Tools". TESTLISTE 12f.

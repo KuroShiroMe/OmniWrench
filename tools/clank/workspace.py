@@ -1,4 +1,4 @@
-"""Arbeitsbereich des KI-Studios: freigegebene Ordner, lokale Git-Repositories und entfernte Repositories.
+"""Arbeitsbereich von Clank: freigegebene Ordner, lokale Git-Repositories und entfernte Repositories.
 
 Ein Eintrag (root) ist ein dict:
     {"id": "r-1a2b", "kind": "folder" | "git" | "remote", "name": "...", "path": "C:/...",   # folder/git
@@ -105,7 +105,7 @@ class Workspace:
         """"Name/unter/pfad" -> (root, "unter/pfad"). Ohne Namen: einziger Eintrag."""
         rel = (rel or "").replace("\\", "/").strip().strip("/")
         if not self.roots:
-            raise WorkspaceError("The workspace is empty. Ask the user to add a folder or repository in KI-Studio.")
+            raise WorkspaceError("The workspace is empty. Ask the user to add a folder or repository in Clank.")
         head, _, rest = rel.partition("/")
         for r in self.roots:
             if r["name"].lower() == head.lower():
@@ -216,7 +216,7 @@ class Workspace:
     def check_writable(self, rel: str) -> tuple[dict, Path]:
         root, path = self.resolve(rel)
         if root.get("readonly"):
-            raise WorkspaceError(f"'{root['name']}' is read-only in KI-Studio.")
+            raise WorkspaceError(f"'{root['name']}' is read-only in Clank.")
         if path.is_dir():
             raise WorkspaceError(f"Is a folder: {rel}")
         return root, path

@@ -276,12 +276,45 @@ class ToolContext(_ContextBase):
             self._open_settings()
 
 
+_install_chooser: "Callable[[str, str, list], list[str] | None] | None" = None
+
+
+def set_install_chooser(fn) -> None:
+    """Hauptfenster: Dialog für InstallContext.choose (wird aus dem Installations-Thread aufgerufen)."""
+    global _install_chooser
+    _install_chooser = fn
+
+
 class InstallContext(_ContextBase):
     """Wird an die Funktionen in install.py übergeben."""
 
     def __init__(self, *args, progress: Callable[[str], None] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self._progress = progress
+
+    def choose(self, title: str, text: str, options: list[tuple[str, str, bool]]) -> list[str]:
+        """Fragt bei der Installation, welche optionalen Teile installiert werden sollen (Opt-out: vorbelegt ist,
+        was in options True hat). options: [(ID, Anzeigetext, vorbelegt)]. Liefert die gewählten IDs; ohne
+        Oberfläche (Tests, Kommandozeile) die vorbelegten."""
+        defaults = [oid for oid, _label, on in options if on]
+        if _install_chooser is None or not options:
+            return defaults
+        try:
+            chosen = _install_chooser(title, text, options)
+        except Exception:  # noqa: BLE001 - im Zweifel die Vorgabe
+            return defaults
+        return defaults if chosen is None else list(chosen)
+
+    def ai_packages(self, packages: list[str]) -> None:
+        """Installiert Zusatzpakete der KI-Tools in den gemeinsamen Paketordner (mit Fortschritt im Protokoll)."""
+        from omniwrench.ai import audio
+        need = audio.missing(tuple(packages))
+        if not need:
+            return
+        self.report(tr("prog.pip_install", packages=", ".join(audio.PIP_NAMES.get(p, p) for p in need)))
+        err = audio.install_packages(need, self.report)
+        if err:
+            raise RuntimeError(tr("err.pip") + "\n" + err)
 
     def report(self, message: str) -> None:
         """Schreibt eine Zeile in das Installationsprotokoll."""

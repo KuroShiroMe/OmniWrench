@@ -37,7 +37,7 @@ SEP = os.pathsep  # Trenner für --add-data (Windows ";", sonst ":")
 # Hauptprogramm sie selbst importiert
 QT_MODULES = ["QtCore", "QtGui", "QtWidgets", "QtSvg", "QtSvgWidgets", "QtNetwork", "QtPrintSupport",
               "QtConcurrent", "QtXml",
-              # KI-Studio (Clank): Wiedergabe Musik/Video, Mikrofon, Vorlesen – Tools werden nicht analysiert
+              # KI-Tools (Musik, Video, Transkription, Sprachassistent) – Tools werden nicht analysiert
               "QtMultimedia", "QtMultimediaWidgets", "QtTextToSpeech"]
 
 # Teile der Standardbibliothek, die ein Admin-Tool nie braucht

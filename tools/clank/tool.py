@@ -1,4 +1,7 @@
-"""Clank – KI-Studio: Chats mit Projekten, Arbeitsbereich aus Ordnern und Repositories, Dateiansicht.
+"""Clank – KI-Chat: Chats mit Projekten, Arbeitsbereich aus Ordnern und Repositories, Dateiansicht.
+
+Bilder, Musik, Video, Gruppenchat, Dokumente, Zeitpläne, Transkription, Sprachassistent und MCP sind seit 1.1.0
+eigene KI-Tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).
 
 Nutzt die KI-Dienste des Hauptprogramms (ToolContext.ai_services, ab OmniWrench 0.9.0): dieselben
 Verbindungen, dieselbe Datenablage und dasselbe Chat-Widget wie die Chatleiste. Projekte und Chats sind
@@ -14,7 +17,7 @@ from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, QUrl
 from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
-    QInputDialog, QLabel, QMenu, QMessageBox, QSplitter, QTabWidget, QToolButton, QVBoxLayout, QWidget,
+    QHBoxLayout, QInputDialog, QLabel, QMenu, QMessageBox, QSplitter, QTabWidget, QToolButton, QVBoxLayout, QWidget,
 )
 
 from omniwrench.sdk import ToolBase, run_async
@@ -24,17 +27,8 @@ from . import workspace as wsm
 from .ai import StudioAI
 from .chats import ChatList
 from .explorer import WorkspacePanel
-from .grouptab import GroupTab
-from .documents import DocumentsTab
-from .images import ImagesTab
-from .schedule import ScheduleTab
 from .screenshot import Screenshot
 from .templates import TemplatesPanel
-from .transcript import TranscriptTab
-from .voice import VoiceTab
-from .mcptab import MCPTab
-from .mediatab import MediaTab
-from .overview import OverviewTab, apply_defaults
 from .viewer import FileViewer
 
 MAX_VIEW = 400_000
@@ -60,39 +54,17 @@ class Clank(ToolBase):
         self.roots: list[dict] = [dict(r) for r in ctx.settings.get("workspace") or [] if isinstance(r, dict)]
         self._remotes: dict[str, rm.Remote] = {}
 
-        self.modes = QTabWidget()
-        self.modes.setDocumentMode(True)
-        lay.addWidget(self.modes, 1)
-        self.modes.addTab(self._build_chat(), "💬 " + tr("mode.chat"))
-        self.images = ImagesTab(self)
-        self.images.to_chat.connect(self.image_to_chat)
-        self.modes.addTab(self.images, "🖼 " + tr("mode.images"))
-        self.music = MediaTab(self, "music")
-        self.modes.addTab(self.music, "🎵 " + tr("mode.music"))
-        self.video = MediaTab(self, "video")
-        self.modes.addTab(self.video, "🎬 " + tr("mode.video"))
-        self.group = GroupTab(self)
-        self.modes.addTab(self.group, "👥 " + tr("mode.group"))
-        self.docs = DocumentsTab(self)
-        self.modes.addTab(self.docs, "📄 " + tr("mode.docs"))
-        self.plans = ScheduleTab(self)
-        self.modes.addTab(self.plans, "⏰ " + tr("mode.plans"))
-        self.transcript = TranscriptTab(self)
-        self.modes.addTab(self.transcript, "📝 " + tr("mode.transcript"))
-        self.voice = VoiceTab(self)
-        self.modes.addTab(self.voice, "🗣 " + tr("mode.voice"))
-        self.mcp = MCPTab(self)
-        self.modes.addTab(self.mcp, "🔌 " + tr("mode.mcp"))
-        self.overview = OverviewTab(self)
-        self.modes.addTab(self.overview, "🧭 " + tr("mode.overview"))
+        head = QHBoxLayout()
+        head.addStretch()
         shot = QToolButton(text="📷 " + tr("shot.button"))
         shot.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
         shot_menu = QMenu(shot)
         shot_menu.addAction(tr("shot.region"), lambda: self.screenshot(True))
         shot_menu.addAction(tr("shot.full"), lambda: self.screenshot(False))
         shot.setMenu(shot_menu)
-        self.modes.setCornerWidget(shot, Qt.Corner.TopRightCorner)
-        self.modes.currentChanged.connect(self._mode_changed)
+        head.addWidget(shot)
+        lay.addLayout(head)
+        lay.addWidget(self._build_chat(), 1)
 
         self.ai = StudioAI(self)
         self._level_timer = QTimer(self.root)
@@ -100,7 +72,6 @@ class Clank(ToolBase):
         self._level_timer.start(4000)
         last = ctx.settings.get("last_project") or ""
         self.set_project(last if self.storage.load_project(last) else "") if last else self.set_project("")
-        apply_defaults(self)
         return self.root
 
     def _build_chat(self) -> QWidget:
@@ -152,13 +123,7 @@ class Clank(ToolBase):
         v.reveal.connect(lambda: self.reveal(self.viewer.path))
         return split
 
-    def _mode_changed(self, idx: int) -> None:
-        w = self.modes.widget(idx)
-        if hasattr(w, "refresh"):
-            w.refresh()
-
     def use_template(self, text: str) -> None:
-        self.modes.setCurrentIndex(0)
         self.panel.input.setPlainText(text)
         self.panel.focus_input()
 
@@ -172,7 +137,6 @@ class Clank(ToolBase):
 
     def image_to_chat(self, path: str) -> None:
         self.panel.add_attachment(Path(path))
-        self.modes.setCurrentIndex(0)
         self.panel.focus_input()
 
     # --- Projekte und Chats --------------------------------------------------------------------------
@@ -304,7 +268,7 @@ class Clank(ToolBase):
         self.context.notify(text)
 
     def _system_extra(self) -> str:
-        parts = ["You are running inside the KI-Studio tool (\"Clank\") of OmniWrench, a general AI workplace "
+        parts = ["You are running inside the AI chat tool (\"Clank\") of OmniWrench, a general AI workplace "
                  "for any kind of task."]
         if self.roots:
             lines = []
@@ -318,10 +282,7 @@ class Clank(ToolBase):
                          "with a short explanation. The user confirms both.")
         else:
             parts.append("No workspace is shared. Only if the user asks about files: folders or repositories can "
-                         f"be added on the tab '{self.tr('side.workspace')}' in KI-Studio.")
-        voice = getattr(self, "voice", None)
-        if voice is not None and voice.system_hint():
-            parts.append(voice.system_hint())
+                         f"be added on the tab '{self.tr('side.workspace')}' in Clank.")
         return "\n\n".join(parts)
 
     # --- Dateiansicht --------------------------------------------------------------------------------
@@ -410,10 +371,7 @@ class Clank(ToolBase):
     # --- Lebenszyklus --------------------------------------------------------------------------------
     def can_close(self) -> bool:
         panel = getattr(self, "panel", None)
-        busy = panel is not None and panel._running
-        busy = busy or any(getattr(getattr(self, n, None), "running", False)
-                           for n in ("images", "music", "video", "group", "docs", "transcript"))
-        if busy:
+        if panel is not None and panel._running:
             return QMessageBox.question(self.root, self.tr("tool.name"), self.tr("ui.close_running")) \
                 == QMessageBox.StandardButton.Yes
         return True
@@ -422,14 +380,6 @@ class Clank(ToolBase):
         panel = getattr(self, "panel", None)
         if panel is not None and panel._running:
             panel.stop()
-        for name in ("images", "music", "video", "group"):
-            tab = getattr(self, name, None)
-            if tab is not None and tab.running:
-                tab.stop()
-        for name in ("docs", "plans", "transcript", "voice", "mcp"):
-            tab = getattr(self, name, None)
-            if tab is not None:
-                tab.shutdown()
         timer = getattr(self, "_level_timer", None)
         if timer is not None:
             timer.stop()

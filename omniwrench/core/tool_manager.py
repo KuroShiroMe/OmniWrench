@@ -112,6 +112,9 @@ class ToolManager(QObject):
         lib = tool.path / "_lib"
         if lib.is_dir() and str(lib) not in sys.path:
             sys.path.insert(0, str(lib))
+        if tool.manifest.category == "ai":
+            from omniwrench.ai import audio
+            audio.ensure_path()                 # gemeinsame Zusatzpakete der KI-Tools
 
         if pkg not in sys.modules:
             spec = importlib.util.spec_from_file_location(

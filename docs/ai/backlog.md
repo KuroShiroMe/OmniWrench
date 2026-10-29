@@ -5,6 +5,10 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
 ## Open / to verify with user
 - [ ] KI-Integration (branch claude/project-thread-ie207t, app 0.9.0, Clank 1.0.0): ALL stages incl. final stage done
       2026-10-29 round 3 (Clank 1.0.2): scan, KI-Übersicht, Whisper local/Piper/Gemini speech, group rate waits -> TESTLISTE 12e.
+      2026-10-29 round 4: split into 10 KI-Tools (Clank 1.1.0 + Pixelizer … Gadgetron), Ollama setup dialog,
+      opt-out install, shared AI dir -> TESTLISTE 12f. Open: Phoenix (project hub, answers P1–P10 from Stef),
+      Orvus/Gadgetron only run while their tab is open (background service later?), Mr. Zurkon layout with chat dock
+      open is narrow, site/img/clank.webp re-render after split, Ollama install on Windows untested (winget/setup).
       Open: verify on Windows whether natural Narrator voices appear via winrt; faster-whisper/piper wheels exist for cp314 win_amd64 (checked 2026-10-29).
       2026-10-29, PR open -> Stef tests (docs/TESTLISTE.md section 12), then merge + tag v0.9.0 (Stef pushes tags).
       Later: realtime STT (gpt-live-transcribe), OpenAI TTS successor before 2027-01-06, gpt-4o-transcribe-diarize

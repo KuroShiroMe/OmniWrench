@@ -1,5 +1,5 @@
 """MCP prüfen: Client (stdio/HTTP, neue und alte Fassung), Server (HTTP, Token, Header, Stufen, Verfremdung),
-stdio-Brücke und der Reiter „MCP“ im KI-Studio.
+stdio-Brücke und Gadgetron (MCP).
 
     python scripts/ai_check/test_mcp.py [--shots ORDNER]
 """
@@ -9,7 +9,6 @@ from __future__ import annotations
 import http.server
 import json
 import os
-import shutil
 import socket
 import subprocess
 import sys
@@ -28,7 +27,6 @@ from PySide6.QtWidgets import QApplication, QDialog, QMessageBox  # noqa: E402
 from omniwrench.ai import functions, mcp  # noqa: E402
 from omniwrench.ai import mcp_server as mcps  # noqa: E402
 from omniwrench.core import credentials, paths  # noqa: E402
-from omniwrench.core.manifest import ToolManifest  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
 from omniwrench.core.vault import Vault  # noqa: E402
@@ -383,23 +381,18 @@ def main() -> int:
     test_stdio(script)
     test_server_http(settings)
 
-    # --- Reiter im KI-Studio --------------------------------------------------------------------------
+    # --- Gadgetron --------------------------------------------------------------------------------------
     manager = ToolManager(vault)
-    source = ROOT / "tools" / "clank"
-    manifest = ToolManifest.load(source)
-    shutil.copytree(source, paths.TOOLS_DIR / manifest.id, ignore=shutil.ignore_patterns("__pycache__", "*.png"))
-    manager.refresh()
-    tid = manifest.id
+    import aikit
+    tid = aikit.install(manager, "gadgetron")["gadgetron"]
     from omniwrench.ui.main_window import MainWindow
     win = MainWindow(settings, vault, manager)
     win.resize(1500, 900)
     win.show()
     rs.pump(0.5)
-    win.open_tool(tid)
-    rs.pump(0.5)
-    tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
-    tab = tool.mcp
-    check(tool.modes.indexOf(tab) >= 0, "Reiter MCP vorhanden")
+    tool = aikit.open_tool(win, tid, rs.pump)
+    tab = tool.page
+    check(tid == "ai.gadgetron" and tab.isVisible(), "Gadgetron geöffnet")
     server = dict(mcp.new_server("Fake"), command=sys.executable, args=["-I", str(script), "modern"])
     tab.save_servers([server])
     tab.connect_server(server)
@@ -452,9 +445,7 @@ def main() -> int:
     c.close()
     acc = dict(settings.get("ai_access") or {})
     if shots:
-        tool.modes.setCurrentWidget(tab)
-        rs.pump(0.3)
-        win.grab().save(str(shots / "clank_mcp.png"))
+        win.grab().save(str(shots / "gadgetron.png"))
     QDialog.exec = orig_exec
     win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))
     rs.pump(0.3)

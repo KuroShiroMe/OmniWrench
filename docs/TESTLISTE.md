@@ -306,7 +306,7 @@ Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorite
       weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“ nennt den DHCP-Server. Nicht erreichbarer weiterer
       Server: nur Protokolleintrag, Anmeldung läuft durch.
 
-## 12. KI-Assistenten und Clank – KI-Studio (0.9.0)
+## 12. KI-Assistenten und KI-Tools (0.9.0)
 
 Neu, nur unter Linux mit Fake-Anbietern geprüft (scripts/test_ai.py, scripts/ai_check/*). Für echte Tests reicht
 ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal ist kostenlos.
@@ -409,6 +409,29 @@ ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal is
 - [ ] Vorlesen mit **Systemstimme**: Liste zeigt die installierten Windows-Stimmen (OneCore und SAPI); andere Stimme hörbar.
       Bitte notieren, ob natürliche Windows-Stimmen in der Liste auftauchen.
 - [ ] Vorlesen und Erkennung mit **Gemini** (Stimme z. B. Puck) und Erkennung mit **Groq** (Whisper), falls verbunden.
+
+### 12f. KI-Tools einzeln, Installation, Ollama (Clank 1.1.0 + 9 neue Tools)
+Wichtig: **zuerst Clank auf 1.1.0 aktualisieren, bevor Clank geöffnet wird** (sonst hält die alte Version numpy offen).
+- [ ] Store › Bereich **KI-Tools**: Clank, Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli,
+      Mr. Zurkon, Gadgetron – alle mit Beschreibung, Wiki-Link, Clank/Pixelizer/Q-Force/Gadgetron mit Screenshot.
+- [ ] Clank 1.0.2 -> 1.1.0 aktualisieren: Hinweis „aufgeteilt“ im Protokoll; Clank zeigt nur noch den Chat.
+- [ ] Übernahme: Mr. Zurkon, Kreeli, Orvus, Q-Force, Gadgetron öffnen – Einstellungen/Zeitpläne/MCP-Server/Token aus
+      Clank 1.0.x sind da.
+- [ ] Mr. Zurkon installieren: Dialog „Optionale Teile“ mit Weckwort, Whisper, Piper (alle angehakt). Fortschritts-
+      balken mit Prozent bei Paketen und Downloads, **kein WinError 5**. Danach Tool öffnen: kein Vosk-Hinweis mehr,
+      Weckwort bereit, „Hey Zurkon“ funktioniert, Antwort im Chat rechts.
+- [ ] Kreeli installieren, Whisper abwählen -> Tool bietet „Offline-Sprache einrichten“ später an.
+- [ ] OmniWrench neu starten: kein KI-Tool fragt erneut nach Paketen.
+- [ ] Groovitron installieren (Windows): ffmpeg-Download mit Prozent; Vidcomic danach ohne Download (gemeinsam).
+- [ ] Audio: Einstellungen › **KI-Funktionen** › Audioausgabe „Standardgerät des Systems“. Während OmniWrench läuft
+      Standardgerät in Windows wechseln (z. B. Headset) -> Probehören/Musik kommt aus dem neuen Gerät.
+- [ ] Einstellungen: links Gruppen **Programm** und **KI**; **KI-Funktionen** setzt Standard je Funktion, die Tools
+      übernehmen ihn beim Öffnen (z. B. Pixelizer zeigt den gewählten Bild-Anbieter).
+- [ ] **An den Chat anhängen** in Pixelizer/Infobot, **Ergebnis öffnen** in Orvus -> landet in Clank bzw. Chatleiste.
+- [ ] Ollama (Windows, ohne Ollama): Einstellungen › KI-Assistenten › Hinzufügen › Ollama › **🦙 Ollama einrichten …**
+      -> **Ollama installieren** (winget oder Setup, Fortschritt), läuft danach; Modell `llama3.2:3b` laden (Prozent,
+      GB), Fenster schließen -> Modell in der Liste der Verbindung; Chat antwortet. **Löschen** entfernt das Modell.
+- [ ] Ollama läuft schon: Fenster zeigt Version, kein Installieren-Knopf.
 
 ## Kein Test, nur Einstellung
 

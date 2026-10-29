@@ -1,4 +1,4 @@
-"""Clank: Musik und Video ohne echte Anbieter prüfen (Fake-Server), ffmpeg-Bearbeitungen.
+"""Groovitron (Musik) und Vidcomic (Video): Anbieter-Schnittstellen und Oberfläche ohne echte Anbieter.
 
     python scripts/ai_check/test_music_video.py [--shots ORDNER]
 
@@ -26,7 +26,6 @@ from scripts import render_screenshots as rs  # noqa: E402  (Temp-Home, offscree
 from PySide6.QtWidgets import QApplication, QDialog, QInputDialog, QMessageBox  # noqa: E402
 
 from omniwrench.core import credentials, paths  # noqa: E402
-from omniwrench.core.manifest import ToolManifest  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
 from omniwrench.core.vault import Vault  # noqa: E402
@@ -283,11 +282,8 @@ def main() -> int:
     settings.set("ai_storage_mode", "central")
     settings.set("ai_storage_root", tempfile.mkdtemp(prefix="mv_data_"))
     manager = ToolManager(vault)
-    source = ROOT / "tools" / "clank"
-    manifest = ToolManifest.load(source)
-    shutil.copytree(source, paths.TOOLS_DIR / manifest.id, ignore=shutil.ignore_patterns("__pycache__", "*.png"))
-    manager.refresh()
-    tid = manifest.id
+    import aikit
+    ids = aikit.install(manager, "groovitron", "vidcomic")
 
     from omniwrench.ai.connections import ConnectionStore
     store = ConnectionStore(settings, vault)
@@ -305,36 +301,33 @@ def main() -> int:
     win.resize(1500, 900)
     win.show()
     rs.pump(0.5)
-    win.open_tool(tid)
-    rs.pump(0.5)
-    tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
-    check(tool.modes.count() >= 5, "Reiter Chat, Bilder, Musik, Video, Gruppenchat")
-    ff = sys.modules[type(tool).__module__.rsplit(".", 1)[0] + ".ffmpeg"]
+    tool = aikit.open_tool(win, ids["groovitron"], rs.pump)
+    from omniwrench.ai import ffmpeg as ff
+    from omniwrench.ui import ai_media as mtab
 
     # ohne ffmpeg: ausgegraut
     real_which = shutil.which
     shutil.which = lambda name, *a, **k: None if name in ("ffmpeg", "ffprobe") else real_which(name, *a, **k)
-    tool.modes.setCurrentWidget(tool.music)
+    tool.page.refresh()
     rs.pump(0.2)
-    check(tool.music.stack.currentIndex() == 0 and "ffmpeg" in tool.music.ff_page.label.text(), "ohne ffmpeg: Hinweis")
+    check(tool.page.stack.currentIndex() == 0 and "ffmpeg" in tool.page.ff_page.label.text(), "ohne ffmpeg: Hinweis")
     if shots:
         win.grab().save(str(shots / "clank_no_ffmpeg.png"))
     shutil.which = real_which
     settings_tool = tool.context.settings
     settings_tool.set("ffmpeg_path", FFMPEG)
-    tool.music.ff_page.changed.emit()
+    tool.page.ff_page.changed.emit()
     rs.pump(0.2)
-    check(tool.music.stack.currentIndex() == 2, "mit ffmpeg: Musik bereit")
+    check(tool.page.stack.currentIndex() == 2, "mit ffmpeg: Musik bereit")
 
     # Musik erzeugen und zu MP3 / kürzen
-    mt = tool.music
+    mt = tool.page
     mt.prompt.setPlainText("Ruhiger Beat für die Hotline")
     mt.duration.setValue(20)
     check(mt.generate(), "Musik gestartet")
     check(wait(lambda: not mt.running), "Musik fertig")
     check(mt.files.count() == 1 and mt._current is not None, f"Musikliste ({mt.status.text()})")
     track = mt._current
-    mtab = sys.modules[type(tool).__module__.rsplit(".", 1)[0] + ".mediatab"]
     mtab.TrimDialog.exec = lambda self: (self.start.setValue(0.5), self.end.setValue(1.5),
                                          QDialog.DialogCode.Accepted)[-1]
     mt.trim()
@@ -343,9 +336,11 @@ def main() -> int:
     check(0.8 < ff.duration(FFMPEG, trimmed) < 1.3, f"Länge nach Kürzen {ff.duration(FFMPEG, trimmed)}")
 
     # Video erzeugen, Vorschaubild, Musik unterlegen, GIF
-    tool.modes.setCurrentWidget(tool.video)
+    vtool = aikit.open_tool(win, ids["vidcomic"], rs.pump)
+    vtool.context.settings.set("ffmpeg_path", FFMPEG)
+    vt = vtool.page
+    vt.refresh()
     rs.pump(0.2)
-    vt = tool.video
     check(vt.stack.currentIndex() == 2 and vt.model_box.currentText() == "grok-imagine-video-1.5", "Video bereit")
     vt.prompt.setPlainText("Ein Schraubenschlüssel dreht sich")
     check(vt.generate(), "Video gestartet")
@@ -367,12 +362,11 @@ def main() -> int:
     if shots:
         vt.files.setCurrentRow(0)
         rs.pump(0.3)
-        win.grab().save(str(shots / "clank_video.png"))
-        tool.modes.setCurrentWidget(mt)
-        rs.pump(0.3)
-        win.grab().save(str(shots / "clank_music.png"))
-    win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))
-    rs.pump(0.3)
+        win.grab().save(str(shots / "vidcomic.png"))
+        aikit.open_tool(win, ids["groovitron"], rs.pump)
+        win.grab().save(str(shots / "groovitron.png"))
+    for tid in ids.values():
+        aikit.close_tool(win, tid, rs.pump)
     print(f"OK: {OK} Prüfungen")
     return 0
 

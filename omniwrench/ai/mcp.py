@@ -6,7 +6,7 @@ Unterstützt die aktuelle Fassung 2026-07-28 (ohne Sitzung, Version in jedem Req
     stdio: zuerst server/discover; bei einem unbekannten Fehler oder Zeitüberschreitung -> initialize.
     HTTP:  zuerst ein moderner Request; 400/404/405 ohne bekannten modernen Fehler -> initialize.
 Genutzt werden nur Werkzeuge (tools/list, tools/call). Rückfragen des Servers (elicitation, sampling)
-werden abgelehnt. Qt-frei; die Oberfläche steht in tools/clank/mcptab.py.
+werden abgelehnt. Qt-frei; die Oberfläche steht in tools/gadgetron/mcptab.py.
 
 Server-Eintrag (Tool-Einstellung "mcp_servers"):
     {"id", "name", "transport": "stdio"|"http", "command", "args": [..], "env": {..}, "cwd",

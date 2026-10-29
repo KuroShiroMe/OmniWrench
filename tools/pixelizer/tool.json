@@ -1,0 +1,36 @@
+{
+  "id": "ai.pixelizer",
+  "name": "Pixelizer – Images",
+  "version": "1.0.0",
+  "description": "Create images with the connected image providers, with reference images and a gallery.",
+  "long_description": "Creates images with the image providers connected in OmniWrench (Settings > AI assistants): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax and local ComfyUI/LocalAI. Optionally with up to four reference images. The gallery shows the images of the AI data storage; images can be copied, opened, deleted or attached to the chat panel.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Pixelizer",
+  "category": "ai",
+  "icon": "image",
+  "color": "#ec4899",
+  "entry": "tool:Pixelizer",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Images",
+    "Bilder",
+    "OpenAI",
+    "Gemini",
+    "Flux",
+    "Stability AI"
+  ],
+  "screenshots": [
+    {
+      "file": "screenshots/images.png",
+      "caption": "Create images with the connected image providers"
+    }
+  ],
+  "single_instance": true,
+  "requirements": {}
+}

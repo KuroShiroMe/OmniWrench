@@ -49,7 +49,7 @@ und Videos, jeweils Unterordner `OmniWrench`). Ort und Verschlüsselung: *Einste
 |---|---|
 | `vault.json` | Schlüssel und Anmeldungen der Assistenten, Schlüssel der verschlüsselten KI-Daten |
 | `%LOCALAPPDATA%\…\ai-index\` | Suchindex über dieses Wiki für die Assistenten (wird neu aufgebaut) |
-| `mcp_server.json` (Einstellungsordner) | Port und Token des MCP-Servers von [Clank](Tool-Clank-KI-Studio#mcp), solange er läuft |
+| `mcp_server.json` (Einstellungsordner) | Port und Token des MCP-Servers von [Gadgetron](Tool-Gadgetron), solange er läuft |
 
 ## Sichern und umziehen
 
@@ -70,7 +70,7 @@ Anforderung geladen oder, wenn ausdrücklich eingeschaltet, beim Start automatis
 Es gibt keine Telemetrie und kein Konto.
 
 **KI-Assistenten:** Fragen gehen nur an die Anbieter, die man selbst verbunden hat, und nur beim Senden einer
-Nachricht (bzw. bei Zeitplänen in Clank). Was sie von den Tools sehen, regelt der
+Nachricht (bzw. bei Zeitplänen in [Orvus](Tool-Orvus)). Was sie von den Tools sehen, regelt der
 [KI-Zugriff](KI-Zugriff-und-Verfremdung) (Standard: nur Beschreibungen); Adressen und Namen werden vorher
 verfremdet. Lokale Modelle (Ollama, LM Studio …) verlassen den Rechner gar nicht.
 

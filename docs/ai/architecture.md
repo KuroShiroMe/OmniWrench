@@ -414,7 +414,34 @@ docs/README.md                internal docs index, points to the wiki
   ui_base.set_ask_hook(context): Grid/FindingsView context menus get "Assistent fragen …" with the selected rows
   as "Column: value" text (Grid.selection_text). Test: scripts/ai_check/test_tool_ai.py (fake backends, CI Linux).
 
-## Clank – KI-Studio (ai.clank, tools/clank, since 0.9.0, min_app 0.9.0)
+## KI-Tools split (2026-10-29, Clank 1.1.0 + 9 tools, category "ai", min_app 0.9.0)
+- Stef: "teile Clank in lauter einzelne Tools auf". Category `ai` (AREAS, label "KI-Tools"). Tools: ai.clank (chat,
+  workspace, templates, screenshot), ai.pixelizer (images.py), ai.groovitron / ai.vidcomic (app ui/ai_media.py
+  MediaTab(host, kind)), ai.qforce (grouptab.py, group.py), ai.infobot (documents.py), ai.orvus (schedule.py),
+  ai.kreeli (transcript.py, speakers.py), ai.mr-zurkon (folder tools/mr_zurkon, voice.py: embedded chat_widget in a
+  splitter), ai.gadgetron (mcptab.py). Wiki page per tool (Tool-<Name>), names from docs/ai/rc-names.md.
+- Shared app code: `omniwrench/ai/{audio,local_speech,ffmpeg,ollama,defaults}.py`, `omniwrench/ui/ai_kit.py`
+  (AITool base: make_page(), build_tool sets tool.tr/services/page/root; CLANK_KEYS/CLANK_DEFAULTS copy settings once
+  from TOOL_SETTINGS_DIR/ai.clank.json (marker "clank_imported"), take_over_clank(old) hook, clank_secret(key);
+  helpers Section, NoBotPage, DepsPage, LocalWhisper, Player(settings), ProgressDialog, install_with_progress,
+  ask_once, safe_name). TOOL_NAME constant so check_locales doesn't treat "tool.name" as app key.
+- Shared AI dir `audio.shared_dir()` = LOCAL_DIR/ai {lib, whisper, piper, vosk, ffmpeg}. pip without --upgrade and
+  PYTHONPATH=lib (no WinError 5 on loaded .pyd); ensure_path() invalidates import caches; tool_manager._import_module
+  calls audio.ensure_path() for category "ai".
+- Install: InstallContext.choose(title, text, [(id, label, default)]) = opt-out dialog (sdk.set_install_chooser from
+  main window; headless -> defaults; smoke test sets a chooser returning []). ctx.ai_packages(list). Optional parts
+  are installed one by one and may fail without aborting the install. TaskDialog._append: "NN %" sets the bar.
+- Defaults: app setting `ai_defaults` (ai/defaults.py, FUNCTIONS incl. ts_stt/ts_summary/va_stt/va_tts, LOCAL options);
+  page Einstellungen › KI-Funktionen (ui/ai_defaults.py, + audio output device OUTPUT_KEY, "" = current system
+  default, re-read before each play). Tools use services.default(fn)/set_default(fn, v).
+- AIServices: send_to_chat(name, text), send_file_to_chat(path), open_thread(id), open_defaults().
+- Ollama: ai/ollama.py (RECOMMENDED models, executable/version/models, install_windows: winget then OllamaSetup.exe
+  /VERYSILENT, start, pull NDJSON -> "status NN % (x/y GB)", delete); ui/ai_ollama.py OllamaDialog, button in
+  ConnectionDialog for provider id "ollama" (refills model combo). Linux: shows LINUX_COMMAND + copy.
+- i18n: ui/ai_media.py has marker `# i18n: tool-texts` (check_locales skips it; keys live in the tool locales).
+- Tests: scripts/ai_check/aikit.py (install/open_tool/close_tool), test_ai_tools.py (43 checks).
+
+## Clank – KI-Studio (ai.clank, tools/clank, since 0.9.0, min_app 0.9.0) – history, split in 1.1.0 (see above)
 - `tool.py` Clank: QTabWidget `modes` (stage 4: "💬 Chat"; later images, group chat, media …). Chat tab = splitter
   sidebar (ChatList "Chats" / WorkspacePanel "Arbeitsbereich") | embedded AIPanel (ctx.ai_services().chat_widget(
   system_extra)) | FileViewer. Workspace roots per project (project["workspace"]) or settings "workspace" without

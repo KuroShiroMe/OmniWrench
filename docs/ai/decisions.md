@@ -341,3 +341,11 @@
 - Voices (Stef 2026-10-29): voice list follows the selected voice-assistant language (default = program language),
   other languages selectable. Free offline speech: faster-whisper (STT) + Piper (TTS), installed only on request.
 - Group chat must not abort on per-minute limits: wait (≤90 s), retry (3x), then keep a per-connection gap.
+- KI-Tools split (Stef 2026-10-29): each AI function is its own tool in category "KI-Tools" (ai); names (Stef):
+  Clank = KI-Chat, Pixelizer = Bilder, Groovitron = Musik, Vidcomic = Video, Q-Force = Gruppenchat, Infobot =
+  Dokumente, Orvus = Zeitpläne, Kreeli = Transkription (not "Mitschrift"), Mr. Zurkon = Sprachassistent, Gadgetron =
+  MCP; Phoenix = later project hub. Default assistants per function live in app settings (KI-Funktionen), not in Clank.
+- Install of AI tools asks opt-out questions (all optional parts pre-selected); packages/models shared in LOCAL_DIR/ai.
+- Local tools (Stef 2026-10-29): Ollama is installed/started/filled from OmniWrench (Windows winget/setup, Linux shows
+  the command); Whisper/Piper/Vosk/ffmpeg via tool install; ComfyUI/LocalAI only as wiki guide.
+- Audio output default = current system default device (follows changes), fixed device optional.

@@ -43,7 +43,7 @@ GROUPS = [("chat", "Große Chat-Anbieter", "Die bekannten Assistenten mit eigene
           ("router", "Sammelanbieter und schnelle Plattformen", "Ein Konto für viele Modelle, oft offene Modelle (Llama, Qwen, DeepSeek …) zu günstigen Preisen."),
           ("cn", "Anbieter aus China", "Günstig und leistungsfähig. Daten werden in China verarbeitet, vor der Nutzung Datenschutzvorgaben prüfen."),
           ("local", "Lokal auf dem eigenen Rechner oder Server", "Kostenlos, Daten verlassen das eigene Netz nicht. Braucht genug Arbeitsspeicher oder eine Grafikkarte. Die Modelle bestimmt der lokale Server."),
-          ("media", "Bilder, Musik, Video und Sprache", "Genutzt in [Clank – KI-Studio](Tool-Clank-KI-Studio) (Bilder, Medien, Mitschrift)."),
+          ("media", "Bilder, Musik, Video und Sprache", "Genutzt in den KI-Tools ([Pixelizer](Tool-Pixelizer), [Groovitron](Tool-Groovitron), [Vidcomic](Tool-Vidcomic), [Kreeli](Tool-Kreeli))."),
           ("custom", "Benutzerdefiniert", "Für Firmen-Bots, Gateways und alles, was nicht in der Liste steht."),
           ("na", "Nicht oder nur indirekt verfügbar", "Stehen zur Information in der Liste. Rot markierte Einträge hat der Anbieter eingestellt.")]
 def line(p):
@@ -71,6 +71,9 @@ def line(p):
         parts.append("**Hinweis:** " + de[f"ai.note.{note}"])
     links = []
     if p.get("key_url"): links.append(f"[Schlüssel/Konto]({p['key_url']})")
+    if p["id"] == "ollama":
+        parts.append("**In OmniWrench einrichten:** **🦙 Ollama einrichten …** im Verbindungsdialog installiert Ollama, "
+                     "startet es und lädt Modelle, siehe [KI lokal mit Ollama](KI-lokal-mit-Ollama)")
     if p.get("docs_url"): links.append(f"[Dokumentation]({p['docs_url']})")
     if links: parts.append(" · ".join(links))
     return parts
@@ -193,7 +196,8 @@ w("## Siehe auch")
 w("")
 w("- [KI-Assistenten](KI-Assistenten) – Assistenten verbinden, Chatleiste, Kosten")
 w("- [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)")
-w("- [Clank – KI-Studio](Tool-Clank-KI-Studio) – Bilder, Musik, Video, Mitschrift")
+w("- [KI-Tools](Tools) – Bilder, Musik, Video, Transkription, Sprachassistent")
+w("- [KI lokal mit Ollama](KI-lokal-mit-Ollama)")
 open(R + "wiki/KI-Anbieter.md", "w").write("\n".join(out) + "\n")
 heads = [anchor(l[4:]) for l in out if l.startswith("### ")] + [anchor(l[3:]) for l in out if l.startswith("## ")]
 bad = [a for a in re.findall(r"\]\(#([^)]+)\)", "\n".join(out)) if a not in heads]

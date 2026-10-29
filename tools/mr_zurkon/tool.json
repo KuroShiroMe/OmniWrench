@@ -1,0 +1,30 @@
+{
+  "id": "ai.mr-zurkon",
+  "name": "Mr. Zurkon – Voice assistant",
+  "version": "1.0.0",
+  "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
+  "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Mr-Zurkon",
+  "category": "ai",
+  "icon": "mic-vocal",
+  "color": "#a855f7",
+  "entry": "tool:MrZurkon",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Voice assistant",
+    "Sprachassistent",
+    "Vosk",
+    "Piper",
+    "Whisper"
+  ],
+  "screenshots": [],
+  "single_instance": true,
+  "requirements": {}
+}

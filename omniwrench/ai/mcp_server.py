@@ -7,7 +7,7 @@ Transport: Streamable HTTP auf 127.0.0.1 (nur dieser Rechner), Endpunkt /mcp, Pf
 initialize-Handshake (2025-11-25 … 2025-03-26).
 Für Clients, die nur stdio können: "OmniWrench --mcp-stdio" (bzw. python main.py --mcp-stdio) leitet stdin/stdout
 an den laufenden Server weiter; Port und Token stehen in CONFIG_DIR/mcp_server.json.
-Qt-frei; Start/Stopp und Oberfläche im KI-Studio (tools/clank/mcptab.py).
+Qt-frei; Start/Stopp und Oberfläche im Tool Gadgetron (tools/gadgetron/mcptab.py).
 """
 
 from __future__ import annotations
@@ -363,7 +363,7 @@ def stdio_bridge(stdin=None, stdout=None) -> int:
         except (OSError, ValueError):
             if mid is not None:
                 write(Core.error(mid, -32603, f"{APP_NAME} is not running or its MCP server is off. Start "
-                                              f"{APP_NAME}, open KI-Studio and switch on the MCP server."))
+                                              f"{APP_NAME}, open the tool Gadgetron and switch on the MCP server."))
             continue
         params = msg.get("params") if isinstance(msg, dict) and isinstance(msg.get("params"), dict) else {}
         meta = params.get("_meta") if isinstance(params.get("_meta"), dict) else {}

@@ -29,7 +29,7 @@ def _register_distlib_finder() -> None:
 
 
 def _run_mcp_stdio() -> int:
-    """"OmniWrench --mcp-stdio": MCP über stdin/stdout an den laufenden Server im KI-Studio weiterleiten."""
+    """"OmniWrench --mcp-stdio": MCP über stdin/stdout an den laufenden Server in Gadgetron weiterleiten."""
     import os
 
     from omniwrench.ai.mcp_server import stdio_bridge

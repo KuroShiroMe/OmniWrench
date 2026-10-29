@@ -9,7 +9,6 @@ from __future__ import annotations
 import base64
 import http.server
 import json
-import shutil
 import sys
 import tempfile
 import threading
@@ -24,7 +23,6 @@ import numpy as np  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QInputDialog, QMessageBox  # noqa: E402
 
 from omniwrench.core import credentials, paths  # noqa: E402
-from omniwrench.core.manifest import ToolManifest  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
 from omniwrench.core.vault import Vault  # noqa: E402
@@ -282,7 +280,7 @@ def test_more_speech(store, base) -> None:
     check(mime == "audio/wav" and data[:4] == b"RIFF" and b"Puck" in POSTS[-1][1], "Gemini Vorlesen als WAV")
     speech.transcribe(store, mi, wav, "voxtral-mini-latest", ["de"])
     check(b"response_format" not in POSTS[-1][1] and b"voxtral" in POSTS[-1][1], "Voxtral ohne response_format")
-    from tools.clank import local_speech as ls
+    from omniwrench.ai import local_speech as ls
     check(ls.piper_url("de_DE-thorsten-medium", ".onnx").endswith(
         "/de/de_DE/thorsten/medium/de_DE-thorsten-medium.onnx"), "Piper-Adresse")
     check(ls.piper_url("de_DE-eva_k-x_low", ".onnx.json").endswith("/de/de_DE/eva_k/x_low/de_DE-eva_k-x_low.onnx.json"),
@@ -318,29 +316,25 @@ def main() -> int:
     store.save(Connection(id="bot", name="Testbot", provider="ollama", base_url=base + "/chat/v1", model="f",
                           auth="none"))
     manager = ToolManager(vault)
-    source = ROOT / "tools" / "clank"
-    manifest = ToolManifest.load(source)
-    shutil.copytree(source, paths.TOOLS_DIR / manifest.id, ignore=shutil.ignore_patterns("__pycache__", "*.png"))
-    manager.refresh()
-    tid = manifest.id
+    import aikit
+    ids = aikit.install(manager, "kreeli", "mr_zurkon")
     from omniwrench.ui.main_window import MainWindow
     win = MainWindow(settings, vault, manager)
     win.resize(1500, 900)
     win.show()
     rs.pump(0.5)
-    win.open_tool(tid)
-    rs.pump(0.5)
-    tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
-    pkg = type(tool).__module__.rsplit(".", 1)[0]
-    au, sp, ts, va = (sys.modules[pkg + n] for n in (".audio", ".speakers", ".transcript", ".voice"))
+    from omniwrench.ai import audio as au
     real_missing = au.missing
     au.missing = lambda packages=au.PACKAGES: [p for p in real_missing(packages) if p != "soundcard"]
+    tool = aikit.open_tool(win, ids["kreeli"], rs.pump)
+    pkg = type(tool).__module__.rsplit(".", 1)[0]
+    sp, ts = (sys.modules[pkg + n] for n in (".speakers", ".transcript"))
     test_core(store, base, sp, au, Storage(settings, vault))
     test_more_speech(store, base)
 
-    # --- Reiter Mitschrift --------------------------------------------------------------------------
-    tab = tool.transcript
-    tool.modes.setCurrentWidget(tab)
+    # --- Kreeli – Transkription ---------------------------------------------------------------------
+    tab = tool.page
+    tab.refresh()
     rs.pump(0.3)
     check(tab.stack.currentIndex() == 2, "Mitschrift bereit (Anbieter vorhanden)")
     # Sprecherprofile: Hinweis beim Start, verstecktes „immer aktiv“ nach 10x Umschalten
@@ -400,7 +394,7 @@ def main() -> int:
     check(wait(lambda: len(tab.data["segments"]) >= 4), "Abschnitte transkribiert")
     if shots:
         rs.pump(0.3)
-        win.grab().save(str(shots / "clank_transcript.png"))
+        win.grab().save(str(shots / "kreeli.png"))
     tab.stop()
     check(wait(lambda: tab.worker is None) and wait(lambda: not tab._summarizing and tab.data.get("summary")),
           "beendet und automatisch zusammengefasst")
@@ -423,9 +417,9 @@ def main() -> int:
     tab.reload()
     check(tab.history.count() == 1, "Mitschrift in der Liste")
     tab.to_chat()
-    check(tool.panel.attachments and "Alice" in tool.panel.attachments[-1]["text"], "Mitschrift in den Chat")
-    tool.panel.attachments = []
-    tool.modes.setCurrentWidget(tab)
+    check(win.ai_panel.attachments and "Alice" in win.ai_panel.attachments[-1]["text"], "Mitschrift in die Chatleiste")
+    win.ai_panel.attachments = []
+    aikit.open_tool(win, ids["kreeli"], rs.pump)
 
     # Zweite Aufnahme: Deepgram (anonyme Sprecher) – Profil benennt die Stimme
     tab.conn.setCurrentIndex(tab.conn.findData("dg"))
@@ -448,11 +442,17 @@ def main() -> int:
     tab.delete(tab.data["id"])
     check(tab.history.count() == 2, "Mitschrift gelöscht")
 
-    # --- Sprachassistent ----------------------------------------------------------------------------
-    v = tool.voice
-    tool.modes.setCurrentWidget(v)
+    # --- Mr. Zurkon – Sprachassistent ---------------------------------------------------------------
+    zurkon = aikit.open_tool(win, ids["mr_zurkon"], rs.pump)
+    va = sys.modules[type(zurkon).__module__.rsplit(".", 1)[0] + ".voice"]
+    v = zurkon.page
+    v.refresh()
     rs.pump(0.3)
     check(v.stack.currentIndex() == 1, "Sprachassistent bereit")
+    check(v.panel is not win.ai_panel and v.panel.embedded, "eigener eingebetteter Chat")
+    check(v.name.text() == "Zurkon" and va.wake_phrases("", "")[0] == "hey Zurkon", "Weckwort „Hey Zurkon“")
+    check(not v.form.isRowVisible(v.engine_row) if v.wake_available() else v.form.isRowVisible(v.engine_row),
+          "Hinweis zur Weckwort-Erkennung nur ohne Einrichtung")
     check(va.matches("hey klang wie spät", ["hey clank"]) and va.matches("Hey, Clank!", ["hey clank"])
           and not va.matches("heute klappt es", ["hey clank"]), "Weckwort unscharf")
     check(va.speakable("# Titel\n\n**Fett** und `code`\n```\nx\n```\n- Punkt", 500, "(Code im Chat)") ==
@@ -460,7 +460,7 @@ def main() -> int:
     check(len(va.speakable("Satz eins. " * 200, 100)) <= 102, "Vorlesetext gekürzt")
     v.stt.setCurrentIndex(v.stt.findData("oa"))
     v.tts.setCurrentIndex(v.tts.findData(va.SYSTEM_VOICE))
-    tool.panel.bot.setCurrentIndex(tool.panel.bot.findData("bot"))
+    v.panel.bot.setCurrentIndex(v.panel.bot.findData("bot"))
     question = np.concatenate([silence(0.3), voice(*ALICE, 1.5, 9), silence(2.0)])
     v.make_source = lambda: FakeSource("mic", question)
     CHAT["text"] = "Es ist **zehn** Uhr."
@@ -468,7 +468,7 @@ def main() -> int:
     check(v.state == "command", "Knopf Sprechen: hört zu")
     check(wait(lambda: "Wie spät ist es?" in v.log.toPlainText()), "Frage erkannt")
     check(wait(lambda: v.state in ("followup", "off", "wake") and "zehn" in v.log.toPlainText()), "Antwort gelesen")
-    msgs = tool.panel.thread["messages"]
+    msgs = v.panel.thread["messages"]
     check(msgs[0]["content"] == "Wie spät ist es?" and "zehn" in msgs[-1]["content"], "Frage und Antwort im Chat")
     sys_prompt = next(json.loads(b) for p, b, h in reversed(POSTS) if p == "/chat/v1/chat/completions")
     check("read aloud" in json.dumps(sys_prompt), "Hinweis für Sprachausgabe im Systemtext")
@@ -480,7 +480,7 @@ def main() -> int:
         heard = ""
 
         def feed(self, samples):
-            return "hey clank" if float(np.abs(samples).max()) > 0.1 else ""
+            return "hey zurkon" if float(np.abs(samples).max()) > 0.1 else ""
 
         def reset(self):
             pass
@@ -520,41 +520,44 @@ def main() -> int:
     check(names and all(n.startswith("fr_") for n in names), f"Piper-Stimmen der gewählten Sprache {names[:3]}")
     v.lang_box.setCurrentIndex(0)
     v._save_settings()
-    check((tool.context.settings.get("va_voices") or {}).get(va.PIPER, "").startswith(tool.context.settings.get(
+    check((zurkon.context.settings.get("va_voices") or {}).get(va.PIPER, "").startswith(zurkon.context.settings.get(
         "va_lang") or "de"), "Stimme je Ausgabe gemerkt")
     v.tts.setCurrentIndex(v.tts.findData("gem"))
     check(v.voice.currentData() == "Puck", "Gemini-Stimme wiederhergestellt")
 
-    # KI-Übersicht: Standard je Funktion
-    ov = tool.overview
-    tool.modes.setCurrentWidget(ov)
-    rs.pump(0.3)
+    # Einstellungen › KI-Funktionen: Standard je Funktion
+    from omniwrench.ai import defaults
+    from omniwrench.ui.ai_defaults import DefaultsPage
+    ov = DefaultsPage(settings, vault)
     labels = [ov.table.item(i, 0).text() for i in range(ov.table.rowCount())]
-    check(len(labels) == 9 and "Chat" in labels[0], f"Übersicht: 9 Funktionen {labels[:2]}")
-    row = next(i for i, r in enumerate(ov.rows) if r.key == "va_tts")
+    check(len(labels) == len(defaults.FUNCTIONS) and "Chat" in labels[0], f"Übersicht: alle Funktionen {labels[:2]}")
+    row = defaults.FUNCTIONS.index("va_tts")
     box = ov.combos[row]
     box.setCurrentIndex(box.findData("oa"))
     ov._chosen(row)
-    check(tool.context.settings.get("va_tts") == "oa" and v.tts.currentData() == "oa", "Übersicht stellt Reiter um")
-    row = next(i for i, r in enumerate(ov.rows) if r.key == "ts_connection")
-    check(ov.combos[row].findData(va.WHISPER) >= 0, "Mitschrift: Whisper lokal in der Übersicht")
+    v.refresh()
+    check(defaults.get(settings, "va_tts") == "oa" and v.tts.currentData() == "oa", "Einstellung stellt das Tool um")
+    row = defaults.FUNCTIONS.index("ts_stt")
+    check(ov.combos[row].findData(va.WHISPER) >= 0, "Transkription: Whisper lokal in der Übersicht")
     from omniwrench.ai import scan
     store.settings.set(scan.SETTINGS_KEY, {"oa": {"ts": 1, "kinds": {"tts": {"status": "ok"}},
                                                   "account": {"balance": 4.5, "currency": "USD"}, "limits": {}}})
     ov.refresh()
-    row = next(i for i, r in enumerate(ov.rows) if r.key == "va_tts")
+    row = defaults.FUNCTIONS.index("va_tts")
     check("4.5" in ov.table.item(row, 3).text() and "✔" in ov.table.item(row, 2).text(),
           f"Prüfergebnis und Guthaben angezeigt ({ov.table.item(row, 3).text()})")
+    # Wiedergabe auf dem aktuellen Gerät, Systemstimme je Ansage neu
+    from omniwrench.ui import ai_kit
+    check(ai_kit.output_device(settings) is not None, "Ausgabegerät ermittelt")
     if shots:
-        rs.pump(0.3)
-        win.grab().save(str(shots / "clank_overview.png"))
-        tool.modes.setCurrentWidget(v)
+        ov.resize(1100, 600)
+        ov.grab().save(str(shots / "ai_defaults.png"))
         v.setup.head.setChecked(True)
         v.stt.setCurrentIndex(v.stt.findData(va.WHISPER))
         rs.pump(0.3)
-        win.grab().save(str(shots / "clank_voice.png"))
-    win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))
-    rs.pump(0.5)
+        win.grab().save(str(shots / "mr_zurkon.png"))
+    for t in ids.values():
+        aikit.close_tool(win, t, rs.pump)
     check(v.state == "off", "beim Schließen ausgeschaltet")
     print(f"OK: {OK} Prüfungen")
     return 0

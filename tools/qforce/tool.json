@@ -1,0 +1,33 @@
+{
+  "id": "ai.qforce",
+  "name": "Q-Force – Group chat",
+  "version": "1.0.0",
+  "description": "Several assistants discuss a topic in turn, with brakes and a summary.",
+  "long_description": "In the group chat several connected assistants discuss a topic in turn, each with an optional role. Brakes keep it under control: rounds, contributions, length, time and tokens, a pause per round, stop on agreement or repetition. You can interject at any time; at the end an assistant writes a summary. Per-minute limits of the providers are respected (Q-Force waits and keeps a distance). Pseudonymization is applied before sending.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Q-Force",
+  "category": "ai",
+  "icon": "users",
+  "color": "#0ea5e9",
+  "entry": "tool:QForce",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Group chat",
+    "Gruppenchat",
+    "Discussion"
+  ],
+  "screenshots": [
+    {
+      "file": "screenshots/group.png",
+      "caption": "Several assistants discuss a topic in turn"
+    }
+  ],
+  "single_instance": true,
+  "requirements": {}
+}

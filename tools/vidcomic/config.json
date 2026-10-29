@@ -1,0 +1,11 @@
+{
+  "settings": [
+    {
+      "key": "ffmpeg_path",
+      "type": "string",
+      "label": "ffmpeg program",
+      "default": "",
+      "description": "Empty = automatic (copy downloaded by OmniWrench or ffmpeg on the PATH)."
+    }
+  ]
+}

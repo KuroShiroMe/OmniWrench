@@ -193,6 +193,10 @@ def main() -> int:
     from omniwrench.ui.credentials import install_auth_handler
     install_auth_handler()
 
+    # Optionale Teile (Whisper, Piper, Vosk, ffmpeg: mehrere hundert MB) im Smoke-Test nicht laden
+    from omniwrench import sdk
+    sdk.set_install_chooser(lambda _title, _text, _options: [])
+
     # Tools aus dem lokalen Store installieren (prüft auch ZIPs und sha256)
     index = json.loads((ROOT / "store" / "index.json").read_text(encoding="utf-8"))
     sources = {validate_package(p).id: p for p in (ROOT / "tools").iterdir() if (p / "tool.json").is_file()}

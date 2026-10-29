@@ -1,10 +1,10 @@
-"""Clank: Bilder und Gruppenchat ohne echte Anbieter prüfen (Fake-Server für alle Bild-Schnittstellen).
+"""Pixelizer (Bilder) und Q-Force (Gruppenchat) ohne echte Anbieter prüfen (Fake-Server für alle Bild-Schnittstellen).
 
     python scripts/ai_check/test_media_group.py [--shots ORDNER]
 
 Bild-Schnittstellen (OpenAI-kompatibel inkl. Vorlagebild, Gemini, Black Forest Labs, fal.ai, Replicate,
 Stability, Ideogram, MiniMax) mit Schlüssel-Kopfzeilen und Abfragen; Speichern mit JSON-Beschreibung;
-Gruppen-Ablauf mit allen Bremsen; Reiter „Bilder“ und „Gruppenchat“ im Hauptfenster.
+Gruppen-Ablauf mit allen Bremsen; beide Tools im Hauptfenster.
 """
 
 from __future__ import annotations
@@ -12,7 +12,6 @@ from __future__ import annotations
 import base64
 import http.server
 import json
-import shutil
 import struct
 import sys
 import tempfile
@@ -27,7 +26,6 @@ from scripts import render_screenshots as rs  # noqa: E402  (Temp-Home, offscree
 from PySide6.QtWidgets import QApplication, QMessageBox  # noqa: E402
 
 from omniwrench.core import credentials, paths  # noqa: E402
-from omniwrench.core.manifest import ToolManifest  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
 from omniwrench.core.vault import Vault  # noqa: E402
@@ -333,11 +331,8 @@ def main() -> int:
     settings.set("ai_storage_mode", "central")
     settings.set("ai_storage_root", tempfile.mkdtemp(prefix="media_data_"))
     manager = ToolManager(vault)
-    source = ROOT / "tools" / "clank"
-    manifest = ToolManifest.load(source)
-    shutil.copytree(source, paths.TOOLS_DIR / manifest.id, ignore=shutil.ignore_patterns("__pycache__", "*.png"))
-    manager.refresh()
-    tid = manifest.id
+    import aikit
+    ids = aikit.install(manager, "pixelizer", "qforce")
 
     from omniwrench.ai.connections import Connection, ConnectionStore
     from omniwrench.ai.storage import Storage
@@ -345,8 +340,8 @@ def main() -> int:
     storage = Storage(settings, vault)
     base = fake_server()
     test_media(store, base, storage)
-    sys.path.insert(0, str(source.parent))
-    import clank.group as group  # noqa: E402
+    sys.path.insert(0, str(ROOT / "tools"))
+    import qforce.group as group  # noqa: E402
     test_group_engine(group)
 
     # Oberfläche: nur Chat-Bots + ein Bildanbieter
@@ -362,15 +357,11 @@ def main() -> int:
     win.resize(1500, 900)
     win.show()
     rs.pump(0.5)
-    win.open_tool(tid)
-    rs.pump(0.5)
-    tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
-    check(tool.modes.count() >= 5, "Reiter Chat, Bilder, Musik, Video, Gruppenchat")
+    tool = aikit.open_tool(win, ids["pixelizer"], rs.pump)
+    check(tool.context.manifest.category == "ai", "Kategorie KI-Tools")
 
     # Bilder
-    tool.modes.setCurrentWidget(tool.images)
-    rs.pump(0.2)
-    img = tool.images
+    img = tool.page
     check(img.stack.currentIndex() == 1 and img.conn_box.count() == 1, "Bildanbieter in der Auswahl")
     check(img.model_box.currentText() == "grok-imagine-image", "Modelle aus dem Katalog")
     img.prompt.setPlainText("Ein Schraubenschlüssel im Weltall, Comicstil")
@@ -384,17 +375,18 @@ def main() -> int:
     if shots:
         win.grab().save(str(shots / "clank_images.png"))
     first = img._path(img.gallery.item(0))
-    tool.image_to_chat(str(first))
-    check(tool.modes.currentIndex() == 0 and tool.panel.attachments and
-          tool.panel.attachments[-1]["kind"] == "image", "Bild an den Chat angehängt")
+    img.to_chat.emit(str(first))
+    rs.pump(0.2)
+    check(win.ai_panel.attachments and win.ai_panel.attachments[-1]["kind"] == "image", "Bild an die Chatleiste angehängt")
+    from omniwrench.ai import defaults
+    check(defaults.get(settings, "image") == "m-xai", "Standard-Bildanbieter gemerkt")
     store.remove("m-xai")
     img.refresh()
     check(img.stack.currentIndex() == 0, "ohne Bildanbieter: Hinweis-Seite")
 
     # Gruppenchat
-    tool.modes.setCurrentWidget(tool.group)
-    rs.pump(0.2)
-    g = tool.group
+    tool = aikit.open_tool(win, ids["qforce"], rs.pump)
+    g = tool.page
     check(g.stack.currentIndex() == 1 and g.table.rowCount() == 2, "zwei Teilnehmer vorbelegt")
     g.table.cellWidget(0, 2).setText("Sicherheit")
     g.topic.setPlainText("Wie sichern wir den Server 10.1.2.3 ab?")
@@ -420,8 +412,8 @@ def main() -> int:
         g.new_group()
         rs.pump(0.2)
         win.grab().save(str(shots / "clank_group_setup.png"))
-    win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))
-    rs.pump(0.3)
+    for tid in ids.values():
+        aikit.close_tool(win, tid, rs.pump)
     print(f"OK: {OK} Prüfungen")
     return 0
 

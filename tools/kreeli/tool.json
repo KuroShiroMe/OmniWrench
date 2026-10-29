@@ -1,0 +1,29 @@
+{
+  "id": "ai.kreeli",
+  "name": "Kreeli – Transcription",
+  "version": "1.0.0",
+  "description": "Live transcription of microphone and system sound with speaker recognition and summary.",
+  "long_description": "Transcribes meetings from microphone and system sound live – only with the consent of all participants. Speech recognition by a connected provider (OpenAI, Gemini, Groq, Mistral, Deepgram …) or completely offline with Whisper local. Speaker recognition, optional encrypted speaker profiles (with their own notice, Art. 9 GDPR) and a summary by an assistant. Only text is stored, never the recording.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Kreeli",
+  "category": "ai",
+  "icon": "captions",
+  "color": "#14b8a6",
+  "entry": "tool:Kreeli",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Transcription",
+    "Transkription",
+    "Whisper",
+    "Meeting"
+  ],
+  "screenshots": [],
+  "single_instance": true,
+  "requirements": {}
+}

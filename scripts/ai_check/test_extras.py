@@ -8,7 +8,6 @@ from __future__ import annotations
 import datetime as dt
 import http.server
 import json
-import shutil
 import sys
 import tempfile
 import threading
@@ -23,7 +22,6 @@ from PySide6.QtGui import QColor, QMouseEvent, QPainter, QPixmap  # noqa: E402
 from PySide6.QtWidgets import QApplication, QDialog, QMessageBox  # noqa: E402
 
 from omniwrench.core import credentials, paths  # noqa: E402
-from omniwrench.core.manifest import ToolManifest  # noqa: E402
 from omniwrench.core.settings import AppSettings  # noqa: E402
 from omniwrench.core.tool_manager import ToolManager  # noqa: E402
 from omniwrench.core.vault import Vault  # noqa: E402
@@ -133,11 +131,9 @@ def main() -> int:
     data_root = Path(tempfile.mkdtemp(prefix="extras_data_"))
     settings.set("ai_storage_root", str(data_root))
     manager = ToolManager(vault)
-    source = ROOT / "tools" / "clank"
-    manifest = ToolManifest.load(source)
-    shutil.copytree(source, paths.TOOLS_DIR / manifest.id, ignore=shutil.ignore_patterns("__pycache__", "*.png"))
-    manager.refresh()
-    tid = manifest.id
+    import aikit
+    ids = aikit.install(manager, "clank", "infobot", "orvus")
+    tid = ids["clank"]
     from omniwrench.ai.connections import Connection, ConnectionStore
     store = ConnectionStore(settings, vault)
     store.save(Connection(id="bot", name="Testbot", provider="ollama", base_url=fake_server(), model="f",
@@ -151,8 +147,8 @@ def main() -> int:
     rs.pump(0.5)
     tool = next(o for o in win.open_tools.values() if o.tool_id == tid).instance
     pkg = type(tool).__module__.rsplit(".", 1)[0]
-    tm, sm, shot_mod = (sys.modules[pkg + n] for n in (".templates", ".schedule", ".screenshot"))
-    check(tool.modes.count() >= 7, "7 Reiter")
+    tm, shot_mod = (sys.modules[pkg + n] for n in (".templates", ".screenshot"))
+    check(not hasattr(tool, "modes") and tool.context.manifest.version >= "1.1.0", "Clank ohne Reiter (nur Chat)")
 
     # Vorlagen
     check(tm.placeholders("A {{Skript}} B {{ Server }} {{Skript}}") == ["Skript", "Server"], "Platzhalter")
@@ -173,9 +169,7 @@ def main() -> int:
     tool.panel.input.clear()
 
     # Dokumente
-    tool.modes.setCurrentWidget(tool.docs)
-    rs.pump(0.2)
-    docs = tool.docs
+    docs = aikit.open_tool(win, ids["infobot"], rs.pump).page
     check(docs.stack.currentIndex() == 1 and docs.conn_box.count() == 1, "Dokumente bereit")
     SEEN.clear()
     docs.editor.setPlainText("Server 10.1.2.3 im Büro")
@@ -203,7 +197,12 @@ def main() -> int:
         check(target and Path(target).stat().st_size > 100, f"Export {fmt}")
     check(b"%PDF" in (out / "doc.pdf").read_bytes()[:8], "PDF gültig")
     if shots:
-        win.grab().save(str(shots / "clank_docs.png"))
+        win.grab().save(str(shots / "infobot.png"))
+    docs.to_chat()
+    rs.pump(0.2)
+    check(win.ai_panel.attachments and win.ai_panel.attachments[-1]["kind"] == "text", "Dokument an die Chatleiste")
+    win.ai_panel.attachments = []
+    aikit.open_tool(win, tid, rs.pump)
 
     # Bildschirmfoto: Speichern + Bereichsauswahl (offscreen ist der Bildschirm leer)
     pix = QPixmap(400, 300)
@@ -230,10 +229,10 @@ def main() -> int:
     check(tool.panel.attachments and tool.panel.attachments[-1]["kind"] == "image", "Bild im Chat")
 
     # Zeitpläne
+    orvus = aikit.open_tool(win, ids["orvus"], rs.pump)
+    sm = sys.modules[type(orvus).__module__.rsplit(".", 1)[0] + ".schedule"]
     test_schedule_logic(sm)
-    tool.modes.setCurrentWidget(tool.plans)
-    rs.pump(0.2)
-    plans = tool.plans
+    plans = orvus.page
     job = sm.new_job("DHCP-Bericht", "Fasse die DHCP-Befunde zusammen.")
     plans.save_jobs([sm.plan(job, __import__("time").time())])
     plans.table.selectRow(0)
@@ -243,26 +242,25 @@ def main() -> int:
     check(wait(lambda: not plans._busy), "Zeitplan gelaufen")
     j = plans.jobs()[0]
     check(j["last_status"] == "ok" and j["last_thread"], f"Status {j['last_status']}")
-    th = tool.storage.load_thread(j["last_thread"])
+    th = orvus.services.storage.load_thread(j["last_thread"])
     check(th and th["messages"][-1]["content"] == "Keine Befunde." and th["title"].startswith("⏰"), "Chat gespeichert")
     check("nobody is watching" in SEEN[-1]["messages"][0]["content"], "Systemtext für geplante Läufe")
     plans.open_result()
-    check(tool.modes.currentIndex() == 0 and tool.panel.thread["id"] == j["last_thread"], "Ergebnis geöffnet")
+    rs.pump(0.2)
+    check(win.ai_panel.thread and win.ai_panel.thread["id"] == j["last_thread"], "Ergebnis in der Chatleiste geöffnet")
     # fälliger Lauf über tick()
     plans.save_jobs([dict(j, next_run=1, enabled=True)])
     sm.ScheduleTab._owner = None
     plans.tick()
     check(wait(lambda: not plans._busy) and plans.jobs()[0]["last_run"] > j["last_run"], "fälliger Lauf über tick")
     if shots:
-        tool.modes.setCurrentWidget(plans)
-        rs.pump(0.2)
-        win.grab().save(str(shots / "clank_plans.png"))
-        tool.modes.setCurrentIndex(0)
+        win.grab().save(str(shots / "orvus.png"))
+        aikit.open_tool(win, tid, rs.pump)
         tool.side.setCurrentIndex(2)
         rs.pump(0.2)
         win.grab().save(str(shots / "clank_templates.png"))
-    win.close_tool(next(n for n, o in win.open_tools.items() if o.tool_id == tid))
-    rs.pump(0.3)
+    for t in ids.values():
+        aikit.close_tool(win, t, rs.pump)
     check(sm.ScheduleTab._owner is None, "Zeitpläne beim Schließen freigegeben")
     print(f"OK: {OK} Prüfungen")
     return 0

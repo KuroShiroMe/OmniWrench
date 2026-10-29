@@ -41,14 +41,6 @@
       "default": "",
       "group": "Repositories",
       "description": "Empty = OmniWrench-Repos in the user folder."
-    },
-    {
-      "key": "ffmpeg_path",
-      "type": "string",
-      "label": "ffmpeg program",
-      "default": "",
-      "group": "Media",
-      "description": "Empty = automatic (downloaded copy or ffmpeg on the PATH). Needed for the music and video tabs."
     }
   ]
 }

@@ -334,7 +334,7 @@ class ProjectDialog(QDialog):
 
 
 class AIPanel(QWidget):
-    """Chat mit einem Assistenten. embedded=True: eingebettet in ein Tool (KI-Studio), ohne eigenen Verlauf und
+    """Chat mit einem Assistenten. embedded=True: eingebettet in ein Tool (Clank, Mr. Zurkon), ohne eigenen Verlauf und
     Projektauswahl - das Tool steuert Projekt und Chat über set_project()/open_thread()/new_chat()."""
 
     PAGE_EMPTY, PAGE_CHAT, PAGE_HISTORY = range(3)

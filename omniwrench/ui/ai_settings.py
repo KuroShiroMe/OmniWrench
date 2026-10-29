@@ -15,7 +15,6 @@ from PySide6.QtWidgets import (
 
 from omniwrench.ai import adapters, oauth, providers, storage
 from omniwrench.ai import models as ai_models_mod
-from omniwrench.ai.chat import error_text
 from omniwrench.ai.connections import Connection, ConnectionStore
 from omniwrench.core import credentials
 from omniwrench.core.i18n import tr
@@ -493,6 +492,8 @@ class ConnectionDialog(QDialog):
         mrow.addWidget(self.load_models_btn)
         self.model_label = tr("ai.edit.model")
         form.addRow(self.model_label, mrow)
+        if p is not None and p.id == "ollama":
+            form.addRow("", make_button("🦙 " + tr("ai.ollama.button"), on_click=self._ollama))
 
         # Inhalte für Erwachsene: nur bei Anbietern, die das können; Opt-in mit Rückfrage
         self.nsfw = QCheckBox(tr("ai.nsfw.allow"))
@@ -683,6 +684,18 @@ class ConnectionDialog(QDialog):
 
         run_async(self._adapter_task(task), done, self._show_error)
 
+    def _ollama(self) -> None:
+        """Ollama installieren, starten, Modelle laden; danach die Modellliste neu holen."""
+        from .ai_ollama import OllamaDialog
+        dlg = OllamaDialog(self.base_url.text().strip(), self)
+        dlg.exec()
+        names = dlg.models()
+        if names:
+            keep = self.model.currentText()
+            self.model.clear()
+            self.model.addItems(names)
+            self.model.setCurrentText(keep if keep in names else names[0])
+
     def _test(self) -> None:
         self.test_status.setText(tr("ai.edit.testing"))
         ok = theme.current["success"]
@@ -848,7 +861,7 @@ class AIAccessPage(QWidget):
 
     def __init__(self, settings, vault, source: str = "app", parent=None):
         super().__init__(parent)
-        from PySide6.QtWidgets import QButtonGroup, QFrame, QRadioButton, QScrollArea
+        from PySide6.QtWidgets import QButtonGroup, QFrame, QRadioButton
         from omniwrench.ai import access
         self.settings = settings
         self.source = source
@@ -957,7 +970,7 @@ class AIAccessPage(QWidget):
         form = QFormLayout()
         combos = {}
         from omniwrench.ai.mcp_server import CONN_ID as MCP_ID
-        # Externe Programme über den MCP-Server des KI-Studios zählen wie ein eigener Assistent
+        # Externe Programme über den MCP-Server (Gadgetron) zählen wie ein eigener Assistent
         entries = [(c.id, c.name) for c in self.store.list()] + [(MCP_ID, tr("ai.access.mcp_server"))]
         for cid, name in entries:
             combo = QComboBox()
