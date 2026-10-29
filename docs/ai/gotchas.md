@@ -199,3 +199,6 @@
   callbacks touch deleted widgets ("Internal C++ object … already deleted"). Bind timers to a widget
   (`QTimer.singleShot(ms, self.root, fn)`) and set a `_closed` flag in shutdown() that every late callback checks
   (DNS tool 1.1.2).
+- Tool changes on an open PR branch: bump the tool version again for every pushed rework (even if the version was never
+  released). Stef tests from source; tools run from the INSTALLED copy and the dev store only offers an update when the
+  version is higher (same version + new zip = old code stays installed).

@@ -48,7 +48,7 @@ that are not plain test steps.
       DNS RPC API (DnssrvUpdateRecord) instead of AgeAllRecords, virtualised record table for very large zones.
       1.1.0 replication (TESTLISTE 9a) untested on Windows: DsReplicaSyncAllW via ctypes, GetDistinguishedName out
       param name "Name", LastSuccessfulXfr units. Idea: repl column also in search results.
-- [ ] Server favourites (DHCP 1.6.0, DNS 1.2.0): Windows tests open (TESTLISTE 11). Ideas: export/import of
+- [ ] Server favourites (DHCP 1.6.1, DNS 1.2.1): Windows tests open (TESTLISTE 11). Ideas: export/import of
       favourites (share with colleagues), favourite name in the top bar after login, AI level per favourite (KI thread).
 
 ## Later (mentioned by user or proposed)

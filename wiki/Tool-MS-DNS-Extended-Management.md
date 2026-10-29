@@ -412,7 +412,7 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 
 | Version | Änderungen |
 |---|---|
-| 1.2.0 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
+| 1.2.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
 | 1.1.2 | Fehlermeldung „Internal C++ object … already deleted“ beim Schließen, wenn noch eine Replikations-Nachprüfung ausstand (behoben) |
 | 1.1.1 | „Replikation anstoßen“ scheiterte an AD-Zonen mit „Objekt nicht gefunden“ (0x80041002) beim Ermitteln der Partition (behoben) |
 | 1.1.0 | Replikation: Spalte **Repliziert** je Eintrag, Stand je Server, Nachprüfen nach eigenen Änderungen, **Replikation anstoßen** (AD-Replikation der DNS-Partition bzw. Übertragung zu sekundären Servern) mit klarer Meldung bei fehlendem Recht |

@@ -283,7 +283,7 @@ Neu, nur unter Linux (offscreen) geprüft.
 - [ ] Kleines Fenster (ca. 1000 px) mit offener Detailleiste: Store blendet den Bereichsbaum aus, Karten bleiben
       lesbar. Skalierung 150–200 %, helles Farbschema.
 
-## 11. Server-Favoriten (DHCP 1.6.0, DNS 1.2.0)
+## 11. Server-Favoriten (DHCP 1.6.1, DNS 1.2.1)
 
 Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorites.py). In beiden Tools gleich testen.
 - [ ] Anmeldeseite: links die Liste „Favoriten“, ☆ rechts neben dem Serverfeld. Ordner anlegen (Ordner-Knopf),

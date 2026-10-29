@@ -499,7 +499,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
-| 1.6.0 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen und Ansicht IPv4/IPv6 |
+| 1.6.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen und Ansicht IPv4/IPv6 |
 | 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |
