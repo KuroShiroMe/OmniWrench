@@ -420,6 +420,8 @@ Wichtig: **zuerst Clank auf 1.1.0 aktualisieren, bevor Clank geöffnet wird** (s
 - [ ] Mr. Zurkon installieren: Dialog „Optionale Teile“ mit Weckwort, Whisper, Piper (alle angehakt). Fortschritts-
       balken mit Prozent bei Paketen und Downloads, **kein WinError 5**. Danach Tool öffnen: kein Vosk-Hinweis mehr,
       Weckwort bereit, „Hey Zurkon“ funktioniert, Antwort im Chat rechts.
+- [ ] Mr. Zurkon › Vorlesen mit Systemstimme: Stimmenliste füllt sich erst beim Aufklappen (kurze Pause), kein Absturz;
+      **Probehören** mit einer gewählten Stimme.
 - [ ] Kreeli installieren, Whisper abwählen -> Tool bietet „Offline-Sprache einrichten“ später an.
 - [ ] OmniWrench neu starten: kein KI-Tool fragt erneut nach Paketen.
 - [ ] Groovitron installieren (Windows): ffmpeg-Download mit Prozent; Vidcomic danach ohne Download (gemeinsam).
