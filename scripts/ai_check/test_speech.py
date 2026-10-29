@@ -376,7 +376,7 @@ def main() -> int:
     check(v.stack.currentIndex() == 1, "Sprachassistent bereit")
     check(va.matches("hey klang wie spät", ["hey clank"]) and va.matches("Hey, Clank!", ["hey clank"])
           and not va.matches("heute klappt es", ["hey clank"]), "Weckwort unscharf")
-    check(va.speakable("# Titel\n\n**Fett** und `code`\n```\nx\n```\n- Punkt", 500) ==
+    check(va.speakable("# Titel\n\n**Fett** und `code`\n```\nx\n```\n- Punkt", 500, "(Code im Chat)") ==
           "Titel Fett und code (Code im Chat) Punkt", "Vorlesetext ohne Markdown")
     check(len(va.speakable("Satz eins. " * 200, 100)) <= 102, "Vorlesetext gekürzt")
     v.stt.setCurrentIndex(v.stt.findData("oa"))

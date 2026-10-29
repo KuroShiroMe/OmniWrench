@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.netprobe` |
-| **Stand der Seite** | Version 1.2.3 |
+| **Stand der Seite** | Version 1.3.0 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | Ping, Traceroute, Port Scan, Subnet Scan, DNS, DNSSEC, HTTP, TLS, SMB, RDP, NTP, Link Test, Throughput, Load Test |
 | **Plattformen** | Windows, Linux |
@@ -170,6 +170,18 @@ oder ein zweites NetProbe läuft:
 Last entsteht nur gegenüber einer Gegenstelle, die bewusst mit demselben Token gestartet wurde. Dauer,
 Verbindungszahl und Portanzahl sind begrenzt.
 
+### KI-Assistenten
+Ab OmniWrench 0.9.0 können [KI-Assistenten](KI-Assistenten) die Ergebnisse von NetProbe lesen – so weit der
+[KI-Zugriff](KI-Zugriff-und-Verfremdung) es erlaubt (Standard: nur Beschreibung).
+
+| Stufe | Funktionen für Assistenten |
+|---|---|
+| 2 – Übersicht | Geprüfte Ziele mit Zustand, IP und Anzahl Befunde je Schwere |
+| 3 – Lesen | Befunde und Rohdaten der Tests eines Ziels |
+| 4 – Ändern mit Bestätigung | Test starten (erzeugt Netzwerkverkehr, daher immer mit Bestätigung) |
+
+Im Rechtsklickmenü der Ergebnisse steht **Assistent fragen …**.
+
 ## Einstellungen
 
 | Einstellung | Standard | Bedeutung |
@@ -212,6 +224,7 @@ Die Testauswahl und Parameter stehen im Tool unter **Optionen**.
 
 | Version | Änderungen |
 |---|---|
+| 1.3.0 | **KI-Assistenten**: Ergebnisse und Befunde für Assistenten, Test starten mit Bestätigung, „Assistent fragen …“ |
 | 1.2.3 | läuft auch unter Linux |
 | 1.2.2 | Bereich und Tags neu |
 | 1.2.1 | Mini-Tool als eigenständige .exe (ohne Python) |

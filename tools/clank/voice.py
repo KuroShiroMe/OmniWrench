@@ -147,9 +147,9 @@ class WakeDetector:
         return json.loads(rec.FinalResult()).get("text", "")
 
 
-def speakable(text: str, limit: int) -> str:
+def speakable(text: str, limit: int, code_hint: str = "(Code)") -> str:
     """Antwort zum Vorlesen: ohne Markdown, Code nur als Hinweis, gekürzt."""
-    t = re.sub(r"```.*?```", " (Code im Chat) ", text, flags=re.S)
+    t = re.sub(r"```.*?```", f" {code_hint} ", text, flags=re.S)
     t = re.sub(r"`([^`]*)`", r"\1", t)
     t = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", t)
     t = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", t)
@@ -599,8 +599,8 @@ class VoiceTab(QWidget):
                          and m.get("content")), "")
         if not text:
             text = self.tr_("va.failed")
-        self.log.append(f"<b>{self.tr_('va.bot')}:</b> {html.escape(text[:2000])}")
-        self.speak(speakable(text, self.limit.value()))
+        self.log.append(f"<b>{self.tr_('va.bot')}:</b> {html.escape(speakable(text, 2000, self.tr_('va.code')))}")
+        self.speak(speakable(text, self.limit.value(), self.tr_("va.code")))
 
     # --- Vorlesen -----------------------------------------------------------------------------------
     def speak(self, text: str) -> None:

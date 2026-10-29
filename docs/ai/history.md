@@ -551,3 +551,11 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   speech_models universal-3-pro/universal-2 (speech_model, best, nano deprecated); Deepgram diarize_model v2.
   EXE build now bundles QtMultimedia/QtMultimediaWidgets/QtTextToSpeech (were missing for Clank media tabs).
   Test test_speech.py (69 checks).
+- 2026-10-29: KI-Integration final stage: 273 ai.* app keys translated into the 21 other locales (real languages by
+  hand, dialects via word maps, pt = pt-BR), Clank screenshots (screenshots/render.py with MainWindow + fake
+  OpenAI-compatible server: chat, images, group, mcp), Clank description incl. MCP/transcript/voice, voice log
+  without Markdown, code hint translatable (va.code). UI wording "Optionen" -> "Einstellungen" in de/en (menu is
+  Extras > Einstellungen). Wiki: KI-Assistenten, KI-Zugriff-und-Verfremdung, Tool-Clank-KI-Studio (new), AI sections
+  + version rows in DHCP 1.7.0/DNS 1.3.0/NetProbe 1.3.0/IconForge 1.2.0/AD 1.4.0 pages, Einstellungen (3 AI tabs),
+  Datenablage, SDK page (ai_function & co.), Home/Sidebar/Tools. Landing page: 3 AI feature cards + Clank image.
+  TESTLISTE section 12. Provider check: no new changes since Etappe 7c (same day).

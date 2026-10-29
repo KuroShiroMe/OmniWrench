@@ -8,6 +8,8 @@
 - [Einstellungen](Einstellungen)
 - [Tresor und Anmeldung](Tresor-und-Anmeldung)
 - [Passwortmanager](Passwortmanager)
+- [KI-Assistenten](KI-Assistenten)
+- [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung)
 - [Sprachen](Sprachen)
 - [Datenablage und Datenschutz](Datenablage-und-Datenschutz)
 - [Fehlerbehebung](Fehlerbehebung)
@@ -20,6 +22,7 @@
 - [NetProbe](Tool-NetProbe)
 - [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management)
 - [MS DNS Extended Management](Tool-MS-DNS-Extended-Management)
+- [Clank – KI-Studio](Tool-Clank-KI-Studio)
 
 **[Entwicklung](Entwicklung)**
 - [Schnellstart](Entwicklung-Schnellstart)

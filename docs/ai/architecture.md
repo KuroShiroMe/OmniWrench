@@ -418,6 +418,8 @@ docs/README.md                internal docs index, points to the wiki
 - App side for embedding: ui/ai_services.py AIServices(window); AIPanel(embedded=True, system_extra) hides history
   button + project combo, set_project(), add_text_attachment(), signal threadSaved(thread_id, project_id).
 - Test: scripts/ai_check/test_studio.py (fake scripted server, 36 checks, CI Linux). R&C name list: docs/ai/rc-names.md.
+  Store screenshots: tools/clank/screenshots/render.py builds its own MainWindow + fake streaming server (chat,
+  images, group, mcp).
 - Etappe 5 (images + group chat): app `ai/media.py` (Media/Request, ImageGen per catalog media.image.api:
   openai_images (+ /images/edits for reference images), chatgpt_image (Responses + image_generation tool for
   ChatGPT sign-in), gemini_image (native generateContent, base without /openai, x-goog-api-key), bfl (polling_url),

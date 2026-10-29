@@ -12,8 +12,10 @@
 | [NetProbe](Tool-NetProbe) | Netzwerk & Konnektivität | Netzwerk-Tests, Portscan, DNS, Leitungstest | ✔ | ✔ | `dnspython` |
 | [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management) | Netzwerk & Konnektivität | Microsoft-DHCP-Server verwalten und prüfen | ✔ | – | RSAT: DHCP |
 | [MS DNS Extended Management](Tool-MS-DNS-Extended-Management) | Netzwerk & Konnektivität | Microsoft-DNS-Server verwalten und prüfen (IPv4/IPv6, PTR, Aufräumen) | ✔ | – | `pywin32`, `dnspython` |
+| [Clank – KI-Studio](Tool-Clank-KI-Studio) | Automatisierung & Entwicklung | KI-Arbeitsplatz: Chat mit Arbeitsbereich, Bilder, Musik, Video, Gruppenchat, Dokumente, Planung, MCP, Mitschrift, Sprachassistent | ✔ | ✔ | verbundener KI-Assistent; optional Git, ffmpeg ² |
 
 ¹ ohne die Konnektoren Microsoft SecretManagement und Netwrix Password Secure
+² Mitschrift und Sprachassistent installieren `numpy`, `soundcard` und für das Weckwort `vosk` bei Bedarf selbst
 
 Voraussetzungen installiert OmniWrench selbst (siehe [Store und Tools › Voraussetzungen](Store-und-Tools#voraussetzungen)).
 

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T00:06:43+00:00",
+  "generated": "2026-10-29T00:40:29+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -74,8 +74,8 @@
       "id": "ai.clank",
       "name": "Clank – AI Studio",
       "version": "1.0.0",
-      "description": "AI studio: chats with projects, shared folders and repositories, file view, commands with confirmation.",
-      "long_description": "Works with the assistants connected in OmniWrench (options > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat.",
+      "description": "AI studio: chats with projects and templates, folders and repositories, images, music, video, group chat, documents, schedules, MCP, transcripts and voice assistant.",
+      "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary. The \"Music\" and \"Video\" tabs create tracks and clips (Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate and more), play them and edit them with ffmpeg: trim, convert to MP3 or GIF, add music to a video, remove sound, save a still. On Windows Clank downloads ffmpeg on request. Plus: templates for recurring questions (with placeholders), screenshots straight into the chat, documents written with the assistant and exported as HTML, PDF or ODT, and schedules that ask the assistant questions at fixed times. The \"MCP\" tab connects external MCP servers, and OmniWrench offers its own functions to other AI programs as a local MCP server (token, changes confirmed here in the program). \"Transcript\" transcribes meetings from microphone and system sound live – only with the consent of all participants, with speaker recognition, optional speaker profiles and a summary; the text is stored, never the recording. The \"Voice assistant\" listens offline for a wake word (\"Hey Clank\"), records the question and reads the answer aloud.",
       "author": "KuroShiro",
       "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Clank-KI-Studio",
       "category": "automation",
@@ -99,28 +99,71 @@
         "GitHub",
         "GitLab",
         "Azure DevOps",
-        "Projects"
+        "Projects",
+        "MCP",
+        "Transcription",
+        "Voice assistant",
+        "Images",
+        "Music",
+        "Video"
       ],
-      "screenshots": [],
+      "screenshots": [
+        {
+          "file": "screenshots/chat.png",
+          "caption": "Chat with the connected assistants, projects and workspace",
+          "url": "screenshots/ai.clank/chat.png",
+          "sha256": "42c8ea633d256b3827442d65d4d77a3f8753cbbca1be99e84422fd2c66012da0",
+          "size": 111422
+        },
+        {
+          "file": "screenshots/images.png",
+          "caption": "Create images with the connected image providers",
+          "url": "screenshots/ai.clank/images.png",
+          "sha256": "ec2449f7249e0d0e38633e7c8c64c996e0b3d69a4ea1265c0ab38963a32c21f8",
+          "size": 226751
+        },
+        {
+          "file": "screenshots/group.png",
+          "caption": "Group chat: several assistants discuss a topic",
+          "url": "screenshots/ai.clank/group.png",
+          "sha256": "eb9451d37685880200123ff750e45fb24c3c3e401776a20b584c3d7728effd84",
+          "size": 76447
+        },
+        {
+          "file": "screenshots/mcp.png",
+          "caption": "Connect MCP servers and offer OmniWrench as an MCP server",
+          "url": "screenshots/ai.clank/mcp.png",
+          "sha256": "43f9c5d9c05695632f6da962e33c0959b232e4c8040fbbe3e08f9aa29f5c471a",
+          "size": 111186
+        }
+      ],
       "single_instance": false,
       "requirements": {},
       "translations": {
         "de": {
           "name": "Clank – KI-Studio",
-          "description": "KI-Studio: Chats mit Projekten und Vorlagen, Ordner und Repositories, Bilder, Musik, Video, Gruppenchat, Dokumente und Zeitpläne.",
-          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Optionen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online lesen oder lokal klonen). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Änderungen sehen, Dateiänderungen vorschlagen (als Diff angezeigt) und Befehle ausführen (mit Erklärung angezeigt) – beides erst nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, regelt wie bei jedem Tool die Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Im Reiter „Bilder“ entstehen Bilder mit den verbundenen Bild-Anbietern (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), auf Wunsch mit Vorlagebildern; die Galerie zeigt die Bilder der KI-Datenablage. Im „Gruppenchat“ besprechen mehrere Assistenten ein Thema der Reihe nach – mit Bremsen für Runden, Beiträge, Länge, Zeit und Token, Pause je Runde, Ende bei Einigkeit oder Wiederholung, Einwürfen und Zusammenfassung. Die Reiter „Musik“ und „Video“ erzeugen Stücke und Clips (u. a. Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate), spielen sie ab und bearbeiten sie mit ffmpeg: kürzen, als MP3 oder GIF, Musik unter ein Video legen, Ton entfernen, Standbild speichern. ffmpeg lädt Clank unter Windows auf Wunsch herunter. Dazu: Vorlagen für wiederkehrende Fragen (mit Platzhaltern), Bildschirmfotos direkt in den Chat, Dokumente mit dem Assistenten schreiben und als HTML, PDF oder ODT exportieren, und Zeitpläne, die dem Assistenten zu festen Zeiten Fragen stellen.",
-          "category": "Automatisierung & Entwicklung"
+          "description": "KI-Studio: Chats mit Projekten und Vorlagen, Ordner und Repositories, Bilder, Musik, Video, Gruppenchat, Dokumente, Zeitpläne, MCP, Mitschrift und Sprachassistent.",
+          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Einstellungen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online lesen oder lokal klonen). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Änderungen sehen, Dateiänderungen vorschlagen (als Diff angezeigt) und Befehle ausführen (mit Erklärung angezeigt) – beides erst nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, regelt wie bei jedem Tool die Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Im Reiter „Bilder“ entstehen Bilder mit den verbundenen Bild-Anbietern (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), auf Wunsch mit Vorlagebildern; die Galerie zeigt die Bilder der KI-Datenablage. Im „Gruppenchat“ besprechen mehrere Assistenten ein Thema der Reihe nach – mit Bremsen für Runden, Beiträge, Länge, Zeit und Token, Pause je Runde, Ende bei Einigkeit oder Wiederholung, Einwürfen und Zusammenfassung. Die Reiter „Musik“ und „Video“ erzeugen Stücke und Clips (u. a. Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate), spielen sie ab und bearbeiten sie mit ffmpeg: kürzen, als MP3 oder GIF, Musik unter ein Video legen, Ton entfernen, Standbild speichern. ffmpeg lädt Clank unter Windows auf Wunsch herunter. Dazu: Vorlagen für wiederkehrende Fragen (mit Platzhaltern), Bildschirmfotos direkt in den Chat, Dokumente mit dem Assistenten schreiben und als HTML, PDF oder ODT exportieren, und Zeitpläne, die dem Assistenten zu festen Zeiten Fragen stellen. Im Reiter „MCP“ werden fremde MCP-Server angebunden, und OmniWrench stellt seine eigenen Funktionen anderen KI-Programmen als lokaler MCP-Server bereit (Token, Bestätigung von Änderungen hier im Programm). Die „Mitschrift“ schreibt Besprechungen von Mikrofon und Systemton live mit – nur nach Einwilligung aller Beteiligten, mit Sprechererkennung, optionalen Sprecherprofilen und Zusammenfassung; gespeichert wird der Text, nie die Aufnahme. Der „Sprachassistent“ hört offline auf ein Weckwort („Hey Clank“), nimmt die Frage auf und liest die Antwort vor.",
+          "category": "Automatisierung & Entwicklung",
+          "screenshot.chat": "Chat mit den verbundenen Assistenten, Projekten und Arbeitsbereich",
+          "screenshot.images": "Bilder mit den verbundenen Bild-Anbietern erzeugen",
+          "screenshot.group": "Gruppenchat: mehrere Assistenten besprechen ein Thema",
+          "screenshot.mcp": "MCP-Server anbinden und OmniWrench als MCP-Server anbieten"
         },
         "en": {
           "name": "Clank – AI Studio",
-          "description": "AI studio: chats with projects and templates, folders and repositories, images, music, video, group chat, documents and schedules.",
-          "long_description": "Works with the assistants connected in OmniWrench (options > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary. The \"Music\" and \"Video\" tabs create tracks and clips (Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate and more), play them and edit them with ffmpeg: trim, convert to MP3 or GIF, add music to a video, remove sound, save a still. On Windows Clank downloads ffmpeg on request. Plus: templates for recurring questions (with placeholders), screenshots straight into the chat, documents written with the assistant and exported as HTML, PDF or ODT, and schedules that ask the assistant questions at fixed times.",
-          "category": "Automation & Development"
+          "description": "AI studio: chats with projects and templates, folders and repositories, images, music, video, group chat, documents, schedules, MCP, transcripts and voice assistant.",
+          "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. The \"Images\" tab creates images with the connected image providers (OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax), optionally with reference images; the gallery shows the images of the AI data storage. In the \"Group chat\" several assistants discuss a topic in turn – with brakes for rounds, contributions, length, time and tokens, pause per round, stop on agreement or repetition, interjections and a summary. The \"Music\" and \"Video\" tabs create tracks and clips (Gemini Lyria/Omni Flash, ElevenLabs, MiniMax, Stability, Mureka, xAI, Runway, Luma, Seedance, fal.ai, Replicate and more), play them and edit them with ffmpeg: trim, convert to MP3 or GIF, add music to a video, remove sound, save a still. On Windows Clank downloads ffmpeg on request. Plus: templates for recurring questions (with placeholders), screenshots straight into the chat, documents written with the assistant and exported as HTML, PDF or ODT, and schedules that ask the assistant questions at fixed times. The \"MCP\" tab connects external MCP servers, and OmniWrench offers its own functions to other AI programs as a local MCP server (token, changes confirmed here in the program). \"Transcript\" transcribes meetings from microphone and system sound live – only with the consent of all participants, with speaker recognition, optional speaker profiles and a summary; the text is stored, never the recording. The \"Voice assistant\" listens offline for a wake word (\"Hey Clank\"), records the question and reads the answer aloud.",
+          "category": "Automation & Development",
+          "screenshot.chat": "Chat with the connected assistants, projects and workspace",
+          "screenshot.images": "Create images with the connected image providers",
+          "screenshot.group": "Group chat: several assistants discuss a topic",
+          "screenshot.mcp": "Connect MCP servers and offer OmniWrench as an MCP server"
         }
       },
       "download_url": "packages/ai.clank-1.0.0.zip",
-      "sha256": "5e3703eb596122fa25cb7f05a89bb547da3065da83c2dd23c18a81efbe2f1548",
-      "size": 122559
+      "sha256": "ff1ff68aca60330d7d3b3be080a78aae1539142e7d32ec9c6645099df0c83da6",
+      "size": 124013
     },
     {
       "id": "gfx.iconforge",

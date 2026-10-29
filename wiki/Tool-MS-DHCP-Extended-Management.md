@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dhcp-extended` |
-| **Stand der Seite** | Version 1.5.0 |
+| **Stand der Seite** | Version 1.7.0 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | DHCP, DHCPv6, IPv6, Scopes, Failover, Reservations, Leases, DHCP Options, RSAT, Microsoft |
 | **Plattformen** | Windows |
@@ -119,8 +119,7 @@ springt die Auswahl auf „Kein Favorit“.
 
 Kennwörter werden **nie** im Favoriten gespeichert: Bei „Andere Anmeldedaten“ nur der Benutzer, bei „Gespeicherte
 Anmeldedaten“ nur der Verweis auf den Eintrag (das Kennwort bleibt im Tresor bzw. Passwortmanager). Fehlt der
-Eintrag später, weist die Anmeldeseite darauf hin. Favoriten sind für weitere Einstellungen je Server vorbereitet
-(z. B. die geplanten KI-Einstellungen).
+Eintrag später, weist die Anmeldeseite darauf hin. Favoriten speichern außerdem den [KI-Zugriff je Server](#ki-assistenten).
 
 ### Aufbau des Hauptfensters
 Das Hauptfenster hat ein eigenes Dock-System: feste Seiten **Übersicht**, **Server-Optionen**, **Failover**,
@@ -427,6 +426,25 @@ Klappt das, im Tool auf der Seite „Ereignisprotokoll“ **Laden** drücken. Fe
 **Protokoll** zeigt alle ausgeführten Aktionen und Befehle der Sitzung (z. B. die `netsh`-Befehle der
 Replikation); **Leeren** löscht die Anzeige.
 
+### KI-Assistenten
+Ab OmniWrench 0.9.0 können [KI-Assistenten](KI-Assistenten) mit dem DHCP-Tool arbeiten – so weit der
+[KI-Zugriff](KI-Zugriff-und-Verfremdung) es erlaubt (Standard: nur Beschreibung). Das Tool muss geöffnet und
+angemeldet sein; Daten kommen aus dem Zwischenspeicher oder werden wie in der Oberfläche live gelesen.
+
+| Stufe | Funktionen für Assistenten |
+|---|---|
+| 1 – Beschreibung | Status: angemeldeter Server, Protokoll, Rechte, Failover-Partner |
+| 2 – Übersicht | Alle Scopes mit Zustand, Auslastung, Failover-Beziehung und Anzahl Befunde je Schwere |
+| 3 – Lesen | Befunde (je Scope/Schwere), ein Scope mit Leases, Reservierungen, Optionen und DNS-Einstellungen, Client suchen (IP, MAC, Name), Failover, Server-Optionen (IPv4/IPv6) |
+| 4 – Ändern mit Bestätigung | Reservierung anlegen / entfernen – als Transaktion wie in der Oberfläche, inklusive Replikation auf den Failover-Partner |
+
+- **Assistent fragen …** steht im Rechtsklickmenü aller Tabellen (Leases, Reservierungen, Befunde …) und schickt
+  die markierten Zeilen mit.
+- **KI-Zugriff je Server:** Auf der Anmeldeseite legt die Zeile **KI-Zugriff** Stufe und Verfremdung für diesen
+  Server fest („wie im Tool eingestellt“, 0–4; Verfremdung wie im Tool / an / aus). Die Angabe wird mit dem
+  [Favoriten](#favoriten) gespeichert und gilt, solange man angemeldet ist. Ausnahmen je Assistent aus den
+  Tool-Einstellungen gelten weiterhin.
+
 ## Einstellungen
 
 | Einstellung | Standard | Bedeutung |
@@ -489,6 +507,7 @@ Replikation); **Leeren** löscht die Anzeige.
 
 | Version | Änderungen |
 |---|---|
+| 1.7.0 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Scopes, Clients, Failover, Reservierungen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
 | 1.6.0 | **Favoriten**: Server mit Anmeldeart, Verbindungseinstellungen und Ansicht IPv4/IPv6 speichern, auf der Anmeldeseite auswählen und verwalten (ohne Kennwörter) |
 | 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |

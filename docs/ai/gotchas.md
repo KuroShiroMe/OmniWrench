@@ -205,3 +205,8 @@
   scripts/build_exe.py QT_MODULES (QtMultimedia/QtTextToSpeech were missing until 2026-10-29).
 - soundcard on Windows uses COM: call CoInitializeEx in every recording thread. Vosk small models have a fixed
   vocabulary: invented wake names ("Clank") are heard as similar words -> fuzzy match + user variants.
+- omniwrench/locales/pt.json is Portuguese (Brazil) (_meta.name) - use pt-BR words (arquivo, salvar, usuário,
+  senha, conectado), not pt-PT (ficheiro, guardar, utilizador). Settings dialog = menu "Extras > Einstellungen"
+  (not "Optionen") - UI texts and wiki must say "Einstellungen".
+- Clank screenshots need the main window (ai_services): screenshots/render.py builds a MainWindow itself and must set
+  ai_storage_mode central with a root inside the temp home, otherwise it reads/writes the real Documents folder.

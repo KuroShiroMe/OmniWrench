@@ -12,6 +12,7 @@
 - [Hintergrundarbeit](#hintergrundarbeit)
 - [Zugangsdaten](#zugangsdaten)
 - [Eigene Passwortmanager-Anbieter](#eigene-passwortmanager-anbieter)
+- [KI-Assistenten](#ki-assistenten)
 - [Hooks](#hooks)
 - [PowerShell](#powershell)
 - [Sicherheit](#sicherheit)
@@ -159,6 +160,51 @@ def register_all(ctx):
 ```
 
 Vollständiges Beispiel: [omnivault/connectors.py](https://github.com/KuroShiroMe/OmniWrench/blob/main/tools/omnivault/connectors.py).
+
+## KI-Assistenten
+
+Ab OmniWrench 0.9.0 können Tools den [KI-Assistenten](KI-Assistenten) eigene Funktionen anbieten und
+„Assistent fragen …“ in Kontextmenüs einbauen. Ältere Programmversionen haben diese Methoden nicht – deshalb
+immer mit `hasattr(self.context, "ai_function")` prüfen, dann läuft das Tool überall.
+
+```python
+from omniwrench.sdk import AI_READ, AI_CHANGE
+
+def create_widget(self, parent=None):
+    ...
+    if hasattr(self.context, "ai_function"):
+        self.context.ai_function(
+            "demo_list_items", "Demo tool: list the items shown in the table (name, state).",
+            self._ai_items, level=AI_READ)
+        self.context.ai_function(
+            "demo_delete_item", "Demo tool: delete one item by name.", self._ai_delete, level=AI_CHANGE,
+            parameters={"type": "object", "properties": {"name": {"type": "string"}}, "required": ["name"]},
+            summary=lambda args: self.context.tr("ai.confirm_delete", name=args.get("name", "")))
+    return root
+
+def _ai_items(self, args, call):
+    return call.in_gui(lambda: [{"name": i.name, "state": i.state} for i in self.items])
+```
+
+| Methode | Zweck |
+|---|---|
+| `ai_function(name, description, handler, parameters=None, level=AI_READ, confirm=False, summary=None)` | Funktion anbieten, solange der Tab offen ist. Name und Beschreibung **englisch** (für das Sprachmodell), `parameters` als JSON-Schema. `handler(args, call)` läuft im Hintergrund; `call.in_gui(fn)` führt `fn` im GUI-Thread aus. Rückgabe: Text oder JSON-fähige Daten |
+| `level` | Mindeststufe: `AI_DESCRIBE` (1), `AI_OVERVIEW` (2), `AI_READ` (3), `AI_CHANGE` (4). Ab `AI_CHANGE` fragt das Programm immer nach; `summary(args)` liefert den Text dafür (in der Sprache des Benutzers) |
+| `ai_remove_functions()` | Funktionen entfernen (passiert beim Schließen des Tabs automatisch) |
+| `ai_set_access(level, pseudo)` | Stufe/Verfremdung vorübergehend setzen, z. B. aus einem Server-Favoriten; `None` = Einstellung des Tools |
+| `ai_level()` | Wirksame Stufe des Tools |
+| `add_ask_action(menu, context, title="")` | Eintrag „✦ Assistent fragen …“ in ein Kontextmenü; `context` ist Text oder eine Funktion, die Text liefert |
+| `ask_assistant(context, title="")` | „Assistent fragen …“ direkt öffnen |
+| `ai_services()` | Für KI-Tools wie Clank: Verbindungen, Datenablage, Chat-Widget des Hauptprogramms (`None` ohne Hauptfenster) |
+
+Regeln:
+- Funktionsnamen mit Tool-Kürzel beginnen (`dhcp_…`, `dns_…`), höchstens 64 Zeichen.
+- Rückgaben knapp halten (Assistenten haben ein begrenztes Gedächtnis); große Listen kürzen oder filterbar machen.
+- Werte unter Schlüsseln wie `host…`, `server…`, `user…` werden bei aktiver Verfremdung ersetzt – Namen also unter
+  solchen Schlüsseln liefern.
+- Ändernde Funktionen über denselben Ablauf wie die Oberfläche ausführen (Prüfungen, Transaktionen), nie an ihr
+  vorbei.
+- Geheimnisse nie zurückgeben.
 
 ## Hooks
 

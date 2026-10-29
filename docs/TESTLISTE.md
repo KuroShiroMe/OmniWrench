@@ -301,6 +301,71 @@ Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorite
       „DHCP-Server für den Abgleich“ eintragen. Anmelden: weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“
       nennt den DHCP-Server. Nicht erreichbarer weiterer Server: nur Protokolleintrag, Anmeldung läuft durch.
 
+## 12. KI-Assistenten und Clank – KI-Studio (0.9.0)
+
+Neu, nur unter Linux mit Fake-Anbietern geprüft (scripts/test_ai.py, scripts/ai_check/*). Für echte Tests reicht
+ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal ist kostenlos.
+
+### 12a. Verbindungen und Chatleiste
+- [ ] Einstellungen › KI-Assistenten › Hinzufügen: Anbieterliste mit Kategorien, Suche, Filtern; Sora rot
+      („Nicht mehr angeboten“).
+- [ ] ChatGPT „Im Browser anmelden“: Browser öffnet, nach Anmeldung „Angemeldet als …“. Modelle laden, Verbindung
+      testen. Ebenso ein API-Schlüssel (z. B. Claude) und einer per „Aus Passwortmanager …“.
+- [ ] Entra ID / Microsoft 365 Copilot (falls Lizenz da): Anmeldung, Frage, Antwort (nur Text).
+- [ ] Ollama lokal (Ohne Anmeldung, http://localhost:11434/v1): Modelle laden, Chat. Mit Firmen-Proxy: geht trotzdem.
+- [ ] ★ Hauptassistent setzen, Reihenfolge ▲/▼; Verbindung entfernen: Chats bleiben.
+- [ ] Chatleiste: Knopf „✦ Assistent“, Strg+Umschalt+A, ausklinken/andocken, Layout bleibt nach Neustart.
+- [ ] Frage stellen, Antwort streamt; Anhalten; Assistent mitten im Chat wechseln; Bild und Textdatei anhängen.
+- [ ] Projekt anlegen mit Anweisungen, Chat im Projekt; Verlauf: suchen, umbenennen, löschen, Ordner öffnen.
+- [ ] „Was kann OmniWrench?“ / „Wie richte ich das DHCP-Tool ein?“: Antwort nutzt das Wiki (Funktions-Hinweis).
+- [ ] „Öffne den Subnetzrechner“: Bestätigung erscheint, nach „Erlauben“ öffnet sich das Tool (Stufe 4 nötig).
+
+### 12b. KI-Datenablage
+- [ ] Standard: Chats unter Dokumente\OmniWrench\Chats als `.owai` (verschlüsselt). Verschlüsselung aus +
+      Speichern: Dateien werden zu `.json` + `.md`; wieder an: zurück zu `.owai`.
+- [ ] Ablage „Zentraler Speicherort“ wählen: Frage nach Verschieben, Daten landen im neuen Ordner.
+- [ ] OneDrive-umgeleiteter Dokumente-Ordner: Ordner wird richtig erkannt.
+
+### 12c. KI-Zugriff und Verfremdung
+- [ ] Einstellungen › KI-Zugriff: Stufen, Verfremdung, Vorschau. Tool-Einstellungen: Reiter „KI-Zugriff“ mit
+      „Wie im Hauptprogramm“. Ausnahme je Assistent setzen.
+- [ ] DHCP Stufe 3: „Welche Scopes sind fast voll?“ – Antwort mit echten Werten in der Anzeige; im gespeicherten
+      Chat (Verschlüsselung aus) stehen im `state.pseudo` die Platzhalter (NET1.x, HOST-1 …).
+- [ ] DHCP Stufe 4: „Lege eine Reservierung für … an“ – Bestätigung mit Details, danach im Tool sichtbar, Partner
+      repliziert. „Ablehnen“ ändert nichts.
+- [ ] DNS Stufe 4: Eintrag anlegen und löschen lassen.
+- [ ] Favorit mit KI-Zugriff 0 vs. 4 (Zeile „KI-Zugriff“ auf der Anmeldeseite): Assistent sieht den Server nicht /
+      darf ändern. Abmelden setzt zurück.
+- [ ] Rechtsklick in Leases/Einträgen/Befunden/NetProbe/AD-Ergebnissen › „Assistent fragen …“: Dialog zeigt die
+      Zeilen, neuer Chat in der Chatleiste.
+
+### 12d. Clank – KI-Studio
+- [ ] Installation aus dem Store; Hinweis, falls Git oder ffmpeg fehlen. Screenshots im Store.
+- [ ] Arbeitsbereich: Ordner und Git-Repository hinzufügen, Online-Repository (GitHub privat mit Token), lokal
+      klonen. Stufe 3: Assistent liest Dateien; Stufe 4: Dateiänderung mit Diff bestätigen, Befehl (PowerShell)
+      mit Erklärung bestätigen.
+- [ ] Vorlagen: „Skript prüfen“ mit Platzhalter; eigene Vorlage anlegen.
+- [ ] Bildschirmfoto: Bereich und ganzer Bildschirm (mehrere Monitore, 150 % Skalierung).
+- [ ] Bilder: OpenAI/Gemini, Vorlagebild, Galerie-Kontextmenü.
+- [ ] Musik/Video: ffmpeg-Download unter Windows, ein Stück und ein Video erzeugen, kürzen, als MP3/GIF,
+      Musik unterlegen.
+- [ ] Gruppenchat mit drei Teilnehmern, Einwurf, Bremse (z. B. 6 Beiträge), Zusammenfassung.
+- [ ] Dokumente: schreiben lassen, Markierung überarbeiten, Export PDF/ODT öffnen.
+- [ ] Planung: Zeitplan „alle 1 h“ + „Jetzt ausführen“; Ergebnis als Chat „⏰ …“; OmniWrench zu, später auf:
+      verpasster Lauf wird nachgeholt.
+- [ ] MCP-Client: z. B. `npx -y @modelcontextprotocol/server-filesystem C:\Temp` (stdio) verbinden, Werkzeuge
+      ansehen, Assistent liest eine Datei (mit Bestätigung, solange „vertrauen“ aus).
+- [ ] MCP-Server: einschalten, „Einrichtung kopieren“ für Claude Desktop (stdio) in dessen Konfiguration; Claude
+      Desktop sieht OmniWrench-Funktionen; Änderung wird in OmniWrench bestätigt. EXE-Version: `OmniWrench.exe
+      --mcp-stdio` startet ohne Fenster.
+- [ ] Mitschrift: Pakete installieren, Einwilligung, Mikrofon + Systemton (Teams/Zoom-Testanruf), zwei Sprecher
+      erkannt, umbenennen, Sprecherprofil speichern, nächste Mitschrift erkennt die Person; Zusammenfassung,
+      Export. Im Ordner Transcripts nur Text, keine Audiodatei.
+- [ ] Sprachassistent: Weckwort einrichten (Vosk-Modell), „Hey Clank, wie spät ist es?“, Antwort mit Systemstimme;
+      Folgefrage ohne Weckwort; „Sprechen“-Knopf; Stimme eines Anbieters (OpenAI) zum Vorlesen.
+- [ ] Sprache auf Englisch/Französisch umstellen: Texte vollständig (KI-Texte in allen 23 Sprachen ergänzt,
+      Dialekte nur leicht eingefärbt).
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).
