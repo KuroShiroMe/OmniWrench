@@ -211,3 +211,4 @@
 - Clank screenshots need the main window (ai_services): screenshots/render.py builds a MainWindow itself and must set
   ai_storage_mode central with a root inside the temp home, otherwise it reads/writes the real Documents folder.
 - check_locales: `{{Vorlagen-Platzhalter}}` (Clank-Vorlagen) werden seit 0.9.0 ignoriert, nur `{name}` zählt als Format-Platzhalter. Neue `tr("key")` in Tool-Code immer auch in de+en ergänzen – CI findet fehlende Schlüssel.
+- Linux/Qt 6.12 Multimedia: ist libpipewire installiert (z. B. als ffmpeg-Abhängigkeit), aber kein PipeWire-Dienst läuft (CI, Server), stürzt der erste QMediaPlayer mit Segfault ab. `omniwrench/__init__.py` setzt dann `QT_AUDIO_BACKEND=pulseaudio`. Lokal nachstellen: `apt-get install libpipewire-0.3-0t64`.
