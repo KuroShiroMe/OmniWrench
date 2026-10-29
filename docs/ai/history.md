@@ -571,3 +571,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   unreleased 1.7.0/1.3.0 zips removed). Linux: QT_AUDIO_BACKEND=pulseaudio when no PipeWire daemon (CI segfault).
 - 2026-10-29: Clank 1.0.1: ProfileNotice (Art. 9 DSGVO, responsibility with the user) before recording with speaker
   profiles; hidden "always" option after 10 opt-in toggles in 6 s (Stef). test_speech 78 checks.
+- 2026-10-29: Stef's ChatGPT sign-in failed (invalid_authorize_request, ext_agent_host_id): host id now urn:uuid:<uuid>
+  (old values migrated), callback port 1455 preferred, registration without issued client_id rejected, id_token_hint
+  on re-auth. test_ai covers the flow against a fake token endpoint.

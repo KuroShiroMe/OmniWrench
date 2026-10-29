@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "El inicio de sesión no se completó a tiempo.",
   "ai.oauth.state_mismatch": "La respuesta del navegador no pertenece a este inicio de sesión.",
   "ai.oauth.no_code": "El proveedor no devolvió ningún código de inicio de sesión.",
+  "ai.oauth.no_client": "No se completó el registro en ChatGPT (no se recibió ningún ID de cliente). Inicie sesión de nuevo.",
   "ai.oauth.incomplete": "Rellene el ID de cliente, la URL de autorización y la URL de token.",
   "ai.error.missing_key": "No hay ninguna clave API guardada. Añádala en las opciones.",
   "ai.error.signed_out": "El inicio de sesión ha caducado. Vuelva a iniciar sesión en las opciones.",

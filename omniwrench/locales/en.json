@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "The sign-in was not completed in time.",
   "ai.oauth.state_mismatch": "The browser reply does not belong to this sign-in.",
   "ai.oauth.no_code": "The provider did not return a sign-in code.",
+  "ai.oauth.no_client": "ChatGPT registration was not completed (no client ID received). Please sign in again.",
   "ai.oauth.incomplete": "Please fill in client ID, authorization URL and token URL.",
   "ai.error.missing_key": "No API key stored. Please add it in the settings.",
   "ai.error.signed_out": "The sign-in has expired. Please sign in again in the settings.",

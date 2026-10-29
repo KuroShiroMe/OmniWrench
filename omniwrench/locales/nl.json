@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "De aanmelding is niet op tijd voltooid.",
   "ai.oauth.state_mismatch": "Het antwoord van de browser hoort niet bij deze aanmelding.",
   "ai.oauth.no_code": "De aanbieder heeft geen aanmeldcode teruggegeven.",
+  "ai.oauth.no_client": "De registratie bij ChatGPT is niet voltooid (geen client-ID ontvangen). Meld u opnieuw aan.",
   "ai.oauth.incomplete": "Vul client-ID, autorisatie-URL en token-URL in.",
   "ai.error.missing_key": "Geen API-sleutel opgeslagen. Voeg deze toe in de opties.",
   "ai.error.signed_out": "De aanmelding is verlopen. Meld u opnieuw aan in de opties.",

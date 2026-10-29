@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "Logowanie nie zostało ukończone na czas.",
   "ai.oauth.state_mismatch": "Odpowiedź przeglądarki nie należy do tego logowania.",
   "ai.oauth.no_code": "Dostawca nie zwrócił kodu logowania.",
+  "ai.oauth.no_client": "Rejestracja w ChatGPT nie została ukończona (nie otrzymano identyfikatora klienta). Zaloguj się ponownie.",
   "ai.oauth.incomplete": "Wypełnij identyfikator klienta, adres URL autoryzacji i adres URL tokenu.",
   "ai.error.missing_key": "Brak zapisanego klucza API. Dodaj go w opcjach.",
   "ai.error.signed_out": "Logowanie wygasło. Zaloguj się ponownie w opcjach.",

@@ -215,3 +215,6 @@
 - Tool changes on an open PR branch: bump the tool version again for every pushed rework (even if the version was never
   released). Stef tests from source; tools run from the INSTALLED copy and the dev store only offers an update when the
   version is higher (same version + new zip = old code stays installed).
+- Sign in with ChatGPT: `ext_agent_host_id` must look like `urn:uuid:<uuid>` (bare UUID -> invalid_authorize_request,
+  param ext_agent_host_id). First registration must return an issued `client_id` (oaiapp_...), else incomplete.
+  Callback only on 127.0.0.1 with path /auth/callback (port may vary). Docs: developers.openai.com/siwc/token-sharing-open-source/sign-in

@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "La connexion n'a pas été terminée à temps.",
   "ai.oauth.state_mismatch": "La réponse du navigateur n'appartient pas à cette connexion.",
   "ai.oauth.no_code": "Le fournisseur n'a renvoyé aucun code de connexion.",
+  "ai.oauth.no_client": "L'inscription auprès de ChatGPT n'a pas abouti (aucun ID client reçu). Veuillez vous reconnecter.",
   "ai.oauth.incomplete": "Veuillez renseigner l'ID client, l'URL d'autorisation et l'URL du jeton.",
   "ai.error.missing_key": "Aucune clé API enregistrée. Veuillez l'ajouter dans les options.",
   "ai.error.signed_out": "La connexion a expiré. Veuillez vous reconnecter dans les options.",

@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "Die Aamäldung wurde net rechtzeitig abgeschlossen.",
   "ai.oauth.state_mismatch": "Die Antwort des Browsers gehört net zu dieser Aamäldung.",
   "ai.oauth.no_code": "Der Anbieter hot koin Anmeldecode geliefert.",
+  "ai.oauth.no_client": "Die Registrierung bei ChatGPT wurde nicht abgeschlossen (keine Client-ID erhalten). Bitte erneut anmelden.",
   "ai.oauth.incomplete": "Bitte schee Client-ID, Autorisierungs-URL und Token-URL ausfüllen.",
   "ai.error.missing_key": "Koi API-Schlüssel hinterlegt. Bitte schee in den Optionen eintragen.",
   "ai.error.signed_out": "Die Aamäldung isch abgelaufen. Bitte schee in den Optionen neu aamälde.",

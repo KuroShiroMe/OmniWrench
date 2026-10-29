@@ -35,6 +35,7 @@ CHATGPT_TOKEN = "https://auth.openai.com/api/accounts/oauth/token"
 CHATGPT_SCOPES = "openid profile email offline_access resource.invoke chatgpt.tokens.use.direct"
 CHATGPT_RESOURCE = "https://api.openai.com/v1"
 CHATGPT_DYNAMIC_CLIENT = "dynamic_agent_client"
+CHATGPT_PORT = 1455
 
 OPENROUTER_AUTH = "https://openrouter.ai/auth"
 OPENROUTER_KEYS = "https://openrouter.ai/api/v1/auth/keys"
@@ -149,9 +150,14 @@ def _id_token_account(id_token: str) -> str:
 
 # ------------------------------------------------------------------- ChatGPT
 def host_id(settings) -> str:
+    """Kennung dieser Installation für „Sign in with ChatGPT“, einmal erzeugt und dann immer gleich.
+    OpenAI erwartet die Form urn:uuid:<uuid> (sonst invalid_authorize_request, param ext_agent_host_id)."""
     value = settings.get(HOST_ID_KEY, "")
+    if value and not value.startswith("urn:uuid:"):
+        value = "urn:uuid:" + value          # bis 0.9.0-Vorabstand ohne Präfix gespeichert
+        settings.set(HOST_ID_KEY, value)
     if not value:
-        value = str(uuid.uuid4())
+        value = f"urn:uuid:{uuid.uuid4()}"
         settings.set(HOST_ID_KEY, value)
     return value
 
@@ -160,7 +166,10 @@ def login_chatgpt(store: ConnectionStore, conn: Connection, stop: threading.Even
                   open_url: Callable[[str], None] | None = None) -> None:
     secrets_ = store.secrets(conn.id)
     client_id = secrets_.get("client_id") or CHATGPT_DYNAMIC_CLIENT
-    server = LoopbackServer("/auth/callback")
+    try:                                     # Port wie in OpenAIs Beispiel, sonst ein freier
+        server = LoopbackServer("/auth/callback", CHATGPT_PORT)
+    except OSError:
+        server = LoopbackServer("/auth/callback")
     verifier, challenge = _pkce()
     state, nonce = secrets.token_urlsafe(24), secrets.token_urlsafe(24)
     params = {
@@ -177,12 +186,17 @@ def login_chatgpt(store: ConnectionStore, conn: Connection, stop: threading.Even
     }
     if client_id == CHATGPT_DYNAMIC_CLIENT:
         params["agent_name_hint"] = "OmniWrench"
-    elif secrets_.get("account"):
-        params["login_hint"] = secrets_["account"]
+    else:
+        if secrets_.get("account"):
+            params["login_hint"] = secrets_["account"]
+        if secrets_.get("id_token"):
+            params["id_token_hint"] = secrets_["id_token"]
     _open(CHATGPT_AUTHORIZE + "?" + urllib.parse.urlencode(params), open_url)
     result = server.wait(stop)
     code = _check(result, state)
     client_id = result.get("client_id") or client_id
+    if client_id == CHATGPT_DYNAMIC_CLIENT:       # Erstregistrierung ohne ausgestellte Client-ID = unvollständig
+        raise AIError(tr("ai.oauth.no_client"), "auth", code="no_client")
     tok = aihttp.json_request("POST", CHATGPT_TOKEN, form={
         "grant_type": "authorization_code", "client_id": client_id, "code": code,
         "code_verifier": verifier, "redirect_uri": server.redirect_uri, "resource": CHATGPT_RESOURCE})

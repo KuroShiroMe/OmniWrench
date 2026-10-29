@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "D Omeidung is ned rechtzeitig fertig worn.",
   "ai.oauth.state_mismatch": "D Antwort vom Browser ghört ned zu dera Omeidung.",
   "ai.oauth.no_code": "Da Anbieter hod koan Omeidecode gliefert.",
+  "ai.oauth.no_client": "Die Registrierung bei ChatGPT wurde nicht abgeschlossen (keine Client-ID erhalten). Bitte erneut anmelden.",
   "ai.oauth.incomplete": "Bittschön Client-ID, Autorisierungs-URL und Token-URL ausfülln.",
   "ai.error.missing_key": "Koa API-Schlüssl hinterlegt. Bittschön in de Optionen eintragn.",
   "ai.error.signed_out": "D Omeidung is obglaffa. Bittschön in de Optionen nei omeidn.",

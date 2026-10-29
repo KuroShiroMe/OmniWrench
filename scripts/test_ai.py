@@ -58,7 +58,18 @@ class Fake(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self):  # noqa: N802
-        body = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
+        raw = self.rfile.read(int(self.headers.get("Content-Length", 0)))
+        if self.path.endswith("/oauth/token"):
+            from urllib.parse import parse_qs
+            received.append({"token_form": {k: v[0] for k, v in parse_qs(raw.decode()).items()}})
+            tok = json.dumps({"access_token": "at-1", "refresh_token": "rt-1", "expires_in": 3600}).encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(tok)))
+            self.end_headers()
+            self.wfile.write(tok)
+            return
+        body = json.loads(raw or b"{}")
         received.append(body)
         if (self.headers.get("Authorization") or self.headers.get("x-api-key")) not in ("Bearer sk-test", "sk-test"):
             err = b'{"error":{"message":"bad key","code":"invalid_api_key"}}'
@@ -196,6 +207,48 @@ def main() -> int:
     hits = knowledge.search("DHCP Reservierung")
     check(bool(hits) and hits[0]["page"].startswith("Tool-"), "Treffer im Wiki")
     check(bool(knowledge.read_page("Tool-IconForge")), "Wiki-Seite lesen")
+
+    print("Sign in with ChatGPT")
+    from urllib.parse import parse_qs, urlencode, urlsplit
+    from urllib.request import urlopen
+    from omniwrench.ai import oauth
+    oauth.CHATGPT_TOKEN = url.rsplit("/v1", 1)[0] + "/api/accounts/oauth/token"
+    settings.set(oauth.HOST_ID_KEY, "0b5c2f0e-1111-4222-8333-444455556666")     # Vorabstand ohne Präfix
+    seen: list[dict] = []
+
+    def browser(issued: str):
+        def open_url(u: str) -> None:
+            q = {k: v[0] for k, v in parse_qs(urlsplit(u).query).items()}
+            seen.append(q)
+            back = {"code": "c-1", "state": q["state"]}
+            if issued:
+                back["client_id"] = issued
+            threading.Thread(target=lambda: urlopen(q["redirect_uri"] + "?" + urlencode(back), timeout=10).read(),
+                             daemon=True).start()
+        return open_url
+    gpt = Connection(id=store.new_id(), name="ChatGPT", provider="chatgpt", auth=providers.AUTH_CHATGPT)
+    store.save(gpt)
+    try:
+        oauth.login_chatgpt(store, gpt, open_url=browser(""))
+        check(False, "Registrierung ohne Client-ID abgelehnt")
+    except Exception as e:  # noqa: BLE001
+        check(getattr(e, "code", "") == "no_client", "Registrierung ohne Client-ID abgelehnt")
+    received.clear()
+    oauth.login_chatgpt(store, gpt, open_url=browser("oaiapp_test"))
+    q = seen[-1]
+    check(q["ext_agent_host_id"] == "urn:uuid:0b5c2f0e-1111-4222-8333-444455556666", "Host-ID als urn:uuid (migriert)")
+    check(q["client_id"] == "dynamic_agent_client" and q["agent_name_hint"] == "OmniWrench", "Erstregistrierung")
+    check(urlsplit(q["redirect_uri"]).hostname == "127.0.0.1" and q["redirect_uri"].endswith("/auth/callback"),
+          "Rücksprung 127.0.0.1/auth/callback")
+    check(q["scope"] == oauth.CHATGPT_SCOPES and q["resource"] == "https://api.openai.com/v1"
+          and q["code_challenge_method"] == "S256", "Bereiche, Ressource, PKCE")
+    form = received[-1]["token_form"]
+    check(form["client_id"] == "oaiapp_test" and form["redirect_uri"] == q["redirect_uri"]
+          and form.get("code_verifier"), "Token-Tausch mit ausgestellter Client-ID")
+    check(store.secrets(gpt.id).get("client_id") == "oaiapp_test", "Client-ID gespeichert")
+    oauth.login_chatgpt(store, gpt, open_url=browser(""))
+    check(seen[-1]["client_id"] == "oaiapp_test" and "agent_name_hint" not in seen[-1]
+          and seen[-1]["ext_agent_host_id"] == q["ext_agent_host_id"], "erneute Anmeldung mit derselben Host-ID")
 
     server.shutdown()
     if failures:

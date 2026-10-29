@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "Přihlášení nebylo dokončeno včas.",
   "ai.oauth.state_mismatch": "Odpověď prohlížeče nepatří k tomuto přihlášení.",
   "ai.oauth.no_code": "Poskytovatel nevrátil přihlašovací kód.",
+  "ai.oauth.no_client": "Registrace u ChatGPT nebyla dokončena (nebylo přijato ID klienta). Přihlaste se prosím znovu.",
   "ai.oauth.incomplete": "Vyplňte ID klienta, autorizační URL a URL tokenu.",
   "ai.error.missing_key": "Není uložen žádný klíč API. Přidejte jej v možnostech.",
   "ai.error.signed_out": "Přihlášení vypršelo. Přihlaste se znovu v možnostech.",

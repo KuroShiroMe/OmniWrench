@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "Oturum açma zamanında tamamlanmadı.",
   "ai.oauth.state_mismatch": "Tarayıcı yanıtı bu oturum açmaya ait değil.",
   "ai.oauth.no_code": "Sağlayıcı bir oturum açma kodu döndürmedi.",
+  "ai.oauth.no_client": "ChatGPT kaydı tamamlanmadı (istemci kimliği alınmadı). Lütfen yeniden oturum açın.",
   "ai.oauth.incomplete": "Lütfen istemci kimliği, yetkilendirme URL'si ve belirteç URL'sini doldurun.",
   "ai.error.missing_key": "Kayıtlı API anahtarı yok. Lütfen seçeneklerde ekleyin.",
   "ai.error.signed_out": "Oturumun süresi doldu. Lütfen seçeneklerde yeniden oturum açın.",

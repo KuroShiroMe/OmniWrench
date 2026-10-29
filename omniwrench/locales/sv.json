@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "Inloggningen slutfördes inte i tid.",
   "ai.oauth.state_mismatch": "Webbläsarens svar hör inte till den här inloggningen.",
   "ai.oauth.no_code": "Leverantören returnerade ingen inloggningskod.",
+  "ai.oauth.no_client": "Registreringen hos ChatGPT slutfördes inte (inget klient-ID mottogs). Logga in igen.",
   "ai.oauth.incomplete": "Fyll i klient-ID, auktoriserings-URL och token-URL.",
   "ai.error.missing_key": "Ingen API-nyckel sparad. Lägg till den i alternativen.",
   "ai.error.signed_out": "Inloggningen har gått ut. Logga in igen i alternativen.",

@@ -490,6 +490,7 @@
   "ai.oauth.timeout": "L'accesso non è stato completato in tempo.",
   "ai.oauth.state_mismatch": "La risposta del browser non appartiene a questo accesso.",
   "ai.oauth.no_code": "Il fornitore non ha restituito alcun codice di accesso.",
+  "ai.oauth.no_client": "La registrazione presso ChatGPT non è stata completata (nessun ID client ricevuto). Accedere di nuovo.",
   "ai.oauth.incomplete": "Compilare ID client, URL di autorizzazione e URL del token.",
   "ai.error.missing_key": "Nessuna chiave API salvata. Aggiungerla nelle opzioni.",
   "ai.error.signed_out": "L'accesso è scaduto. Accedere di nuovo nelle opzioni.",
