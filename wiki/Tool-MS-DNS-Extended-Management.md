@@ -8,7 +8,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dns-extended` |
-| **Stand der Seite** | Version 1.3.0 |
+| **Stand der Seite** | Version 1.3.1 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | DNS, Zones, Records, Reverse Lookup, PTR, IPv6, Scavenging, WMI, Microsoft |
 | **Plattformen** | Windows |
@@ -428,8 +428,8 @@ angemeldet sein.
 
 | Version | Änderungen |
 |---|---|
-| 1.3.0 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Einträge, Suche, Einträge anlegen/löschen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
-| 1.2.0 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
+| 1.3.1 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Einträge, Suche, Einträge anlegen/löschen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
+| 1.2.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
 | 1.1.2 | Fehlermeldung „Internal C++ object … already deleted“ beim Schließen, wenn noch eine Replikations-Nachprüfung ausstand (behoben) |
 | 1.1.1 | „Replikation anstoßen“ scheiterte an AD-Zonen mit „Objekt nicht gefunden“ (0x80041002) beim Ermitteln der Partition (behoben) |
 | 1.1.0 | Replikation: Spalte **Repliziert** je Eintrag, Stand je Server, Nachprüfen nach eigenen Änderungen, **Replikation anstoßen** (AD-Replikation der DNS-Partition bzw. Übertragung zu sekundären Servern) mit klarer Meldung bei fehlendem Recht |

@@ -564,3 +564,8 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   passwords, no separate selection). Rebuilt: FavoritesPanel (folders, search, DnD, context menu, collapse), star at
   the server field, FavoriteDialog with login mode "stored" (password encrypted in the vault via context.secrets).
   Also fixed: DHCP _mode_changed had lost user/password enabling in the first favourites commit. Tests 59 checks.
+- 2026-10-29: Stef pulled the branch but still saw the old favourites: the tools run from the installed copy, and the
+  rework kept version 1.6.0/1.2.0, so the dev store offered no update. Bumped to DHCP 1.6.1 / DNS 1.2.1. Lesson in gotchas.
+- 2026-10-29: Merged reworked server favourites (#70: FavoritesPanel with folders, password per favourite) into the KI
+  branch; AIAccessRow re-added to favorites.py, overwrite() keeps "ai". DHCP 1.7.1 / DNS 1.3.1 (above #70's 1.6.1/1.2.1,
+  unreleased 1.7.0/1.3.0 zips removed). Linux: QT_AUDIO_BACKEND=pulseaudio when no PipeWire daemon (CI segfault).

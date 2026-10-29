@@ -7,7 +7,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dhcp-extended` |
-| **Stand der Seite** | Version 1.7.0 |
+| **Stand der Seite** | Version 1.7.1 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | DHCP, DHCPv6, IPv6, Scopes, Failover, Reservations, Leases, DHCP Options, RSAT, Microsoft |
 | **Plattformen** | Windows |
@@ -518,8 +518,8 @@ angemeldet sein; Daten kommen aus dem Zwischenspeicher oder werden wie in der Ob
 
 | Version | Änderungen |
 |---|---|
-| 1.7.0 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Scopes, Clients, Failover, Reservierungen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
-| 1.6.0 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen und Ansicht IPv4/IPv6 |
+| 1.7.1 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Scopes, Clients, Failover, Reservierungen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
+| 1.6.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen und Ansicht IPv4/IPv6 |
 | 1.5.0 | DHCPv6 mit vollem Umfang (Präfixe, Optionen, Reservierungen über DUID/IAID, Ausschlüsse, Leases, Definitionen, Server-Optionen, Prüfung, Transaktionen, Konfliktprüfung, Ereignisprotokoll), Umschalter IPv4/IPv6; optionaler DNS-Abgleich für Reservierungen und Leases |
 | 1.4.1 | Neue Seite „Ereignisprotokoll“ mit Lesehilfe (Bereich, Aktion, Scope, Objekt, Hinweis je Ereignis), Hinweis mit Link auf die Einrichtungsanleitung, wenn das Protokoll nicht lesbar ist |
 | 1.4.2 | Ereignisprotokoll lädt in einem eigenen Thread, die Oberfläche bleibt dabei bedienbar |

@@ -212,3 +212,6 @@
   ai_storage_mode central with a root inside the temp home, otherwise it reads/writes the real Documents folder.
 - check_locales: `{{Vorlagen-Platzhalter}}` (Clank-Vorlagen) werden seit 0.9.0 ignoriert, nur `{name}` zählt als Format-Platzhalter. Neue `tr("key")` in Tool-Code immer auch in de+en ergänzen – CI findet fehlende Schlüssel.
 - Linux/Qt 6.12 Multimedia: ist libpipewire installiert (z. B. als ffmpeg-Abhängigkeit), aber kein PipeWire-Dienst läuft (CI, Server), stürzt der erste QMediaPlayer mit Segfault ab. `omniwrench/__init__.py` setzt dann `QT_AUDIO_BACKEND=pulseaudio`. Lokal nachstellen: `apt-get install libpipewire-0.3-0t64`.
+- Tool changes on an open PR branch: bump the tool version again for every pushed rework (even if the version was never
+  released). Stef tests from source; tools run from the INSTALLED copy and the dev store only offers an update when the
+  version is higher (same version + new zip = old code stays installed).

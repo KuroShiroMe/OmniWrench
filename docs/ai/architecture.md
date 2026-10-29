@@ -297,7 +297,7 @@ docs/TOOL_ENTWICKLUNG.md      German developer guide for tool authors (keep in s
   UpdateFromDS on peers; file zones: ForceRefresh on connected secondaries. `MsDnsExtended.show_error(..., warning)` =
   popup with Detailansicht.
 
-## Server favourites (DHCP 1.6.0, DNS 1.2.0, 2026-10-28/29)
+## Server favourites (DHCP 1.6.1, DNS 1.2.1, 2026-10-28/29)
 - `tools/ms_dhcp_extended/favorites.py` == `tools/ms_dns_extended/favorites.py` (identical copy, no imports between
   tools; test checks equality). FavoriteStore(settings, context.secrets) on the undeclared tool setting "favorites"
   v2: {"version":2,"last":id,"panel":{open,collapsed[]},"folders":[{id,name,parent}],"items":[{id,name,folder,server,
