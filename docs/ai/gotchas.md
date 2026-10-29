@@ -233,3 +233,5 @@
   -> environment-only; in CI/venv fine. Optional AI parts must never abort a tool install.
 - check_locales scans app .py files for tr("…") keys: app files holding tool keys need `# i18n: tool-texts`;
   "tool.name" in app code via a constant (TOOL_NAME).
+- QTextToSpeech.allVoices(None) = access violation on Windows (None -> null QLocale ref); Linux CI hides it (engine
+  in Error state). Use availableLocales() + setLocale() + availableVoices(). Smoke test has faulthandler for such crashes.

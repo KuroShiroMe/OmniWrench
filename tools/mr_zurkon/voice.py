@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import difflib
 import html
+import importlib.util
 import json
 import re
 import tempfile
@@ -127,6 +128,22 @@ class WakeDetector:
         return json.loads(rec.FinalResult()).get("text", "")
 
 
+_VOICE_CACHE: dict[str, list[tuple[str, str, str]]] = {}
+
+
+def ready_tts(engine: str = "", parent=None):
+    """QTextToSpeech der Engine oder None, wenn sie sich nicht laden lässt.
+
+    Stimmen nie mit allVoices(None) abfragen: PySide reicht None als leere QLocale-Referenz durch, unter Windows ist
+    das eine Zugriffsverletzung (Absturz). Stattdessen availableLocales() + setLocale() + availableVoices()."""
+    from PySide6.QtTextToSpeech import QTextToSpeech
+    tts = QTextToSpeech(engine, parent) if engine else QTextToSpeech(parent)
+    if tts.state() == QTextToSpeech.State.Error:
+        tts.deleteLater()
+        return None
+    return tts
+
+
 def system_voices(lang: str) -> list[tuple[str, str, str]]:
     """Installierte Systemstimmen der Sprache über alle Engines: [(Engine, Name, Gebiet)].
     Windows: „winrt“ (OneCore, auch neuere natürliche Stimmen, soweit Windows sie freigibt) und „sapi“."""
@@ -135,12 +152,20 @@ def system_voices(lang: str) -> list[tuple[str, str, str]]:
         from PySide6.QtTextToSpeech import QTextToSpeech
     except ImportError:
         return []
+    if lang in _VOICE_CACHE:
+        return list(_VOICE_CACHE[lang])
     out, seen = [], set()
     engines = [e for e in QTextToSpeech.availableEngines() if e != "mock"]
     for engine in engines or [""]:
         try:
-            tts = QTextToSpeech(engine) if engine else QTextToSpeech()
-            found = tts.allVoices(None)
+            tts = ready_tts(engine)
+            if tts is None:
+                continue
+            found = []
+            for loc in tts.availableLocales():
+                if loc.name().split("_")[0] == lang:
+                    tts.setLocale(loc)
+                    found += list(tts.availableVoices())
         except Exception:  # noqa: BLE001 - Engine ohne Stimmen / nicht ladbar
             continue
         for v in found:
@@ -151,7 +176,9 @@ def system_voices(lang: str) -> list[tuple[str, str, str]]:
             out.append((engine if len(engines) > 1 else "", v.name(),
                         QLocale.territoryToString(loc.territory())))
         tts.deleteLater()
-    return sorted(out, key=lambda x: (x[0] != (engines[0] if engines else ""), x[1]))
+    out.sort(key=lambda x: (x[0] != (engines[0] if engines else ""), x[1]))
+    _VOICE_CACHE[lang] = out
+    return list(out)
 
 
 def speakable(text: str, limit: int, code_hint: str = "(Code)") -> str:
@@ -804,9 +831,7 @@ class VoiceTab(QWidget):
         run_async(work, done, failed)
 
     def _speak_system(self, text: str, voice: str = "") -> None:
-        try:
-            from PySide6.QtTextToSpeech import QTextToSpeech
-        except ImportError:
+        if importlib.util.find_spec("PySide6.QtTextToSpeech") is None:
             self._spoken()
             return
         engine, _, name = voice.partition("|")
@@ -814,12 +839,15 @@ class VoiceTab(QWidget):
             self._tts.stateChanged.disconnect(self._tts_state)
             self._tts.stop()
             self._tts.deleteLater()
-        self._tts = QTextToSpeech(engine, self) if engine else QTextToSpeech(self)
+        self._tts = ready_tts(engine, self)
+        if self._tts is None:
+            self._spoken()
+            return
         self._tts.stateChanged.connect(self._tts_state)
         from PySide6.QtCore import QLocale
         self._tts.setLocale(QLocale(self._lang()))
         if name:
-            match = next((v for v in self._tts.allVoices(None) if v.name() == name), None)
+            match = next((v for v in self._tts.availableVoices() if v.name() == name), None)
             if match is not None:
                 self._tts.setVoice(match)
         self._tts_started = False
