@@ -15,6 +15,12 @@ Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Ke
       branch/pin/tag threads, artifact preview (HTML/tables/diagrams), project memory .md, compare two answers,
       PDF preview + Office as text, image edit local+AI, music fade/normalize + video concat, "An IconForge senden",
       ComfyUI, group chat € limit/@Name/PASS, Word/Excel export.
+      Stef 2026-10-29 (after merge, she says when): (1) speaker profiles: keep opt-in, but saving profiles
+      permanently gets its own prominent warning (bold, DSGVO Art. 9 biometric data, responsibility lies with the
+      user, explicit "Ich habe verstanden" confirmation) instead of only a checkbox in the consent dialog.
+      (2) Rethink Clank "Projekte" as an assistant / project-management hub (not only chat projects): tasks like
+      switch configs, but also scheduling, email content analysis, meeting invitations, meeting summaries; later
+      email/calendar integration (Outlook/Graph, IMAP/CalDAV). Collect ideas, write a concept for Stef.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
