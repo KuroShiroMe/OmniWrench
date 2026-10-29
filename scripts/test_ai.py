@@ -28,6 +28,7 @@ from omniwrench.core.vault import Vault  # noqa: E402
 
 failures: list[str] = []
 received: list[dict] = []
+token_errors: list[int] = [0]      # so viele Token-Tausche mit invalid_grant ablehnen
 
 
 def check(cond: bool, what: str) -> None:
@@ -62,6 +63,14 @@ class Fake(http.server.BaseHTTPRequestHandler):
         if self.path.endswith("/oauth/token"):
             from urllib.parse import parse_qs
             received.append({"token_form": {k: v[0] for k, v in parse_qs(raw.decode()).items()}})
+            if token_errors[0]:
+                token_errors[0] -= 1
+                err = b'{"error":"invalid_grant","error_description":"code already used"}'
+                self.send_response(400)
+                self.send_header("Content-Length", str(len(err)))
+                self.end_headers()
+                self.wfile.write(err)
+                return
             tok = json.dumps({"access_token": "at-1", "refresh_token": "rt-1", "expires_in": 3600}).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -249,6 +258,21 @@ def main() -> int:
     oauth.login_chatgpt(store, gpt, open_url=browser(""))
     check(seen[-1]["client_id"] == "oaiapp_test" and "agent_name_hint" not in seen[-1]
           and seen[-1]["ext_agent_host_id"] == q["ext_agent_host_id"], "erneute Anmeldung mit derselben Host-ID")
+    gpt2 = Connection(id=store.new_id(), name="ChatGPT 2", provider="chatgpt", auth=providers.AUTH_CHATGPT)
+    store.save(gpt2)
+    token_errors[0] = 1
+    n = len(seen)
+    oauth.login_chatgpt(store, gpt2, open_url=browser("oaiapp_zwei"))
+    check(len(seen) == n + 2 and seen[-1]["client_id"] == "oaiapp_zwei" and "agent_name_hint" not in seen[-1],
+          "invalid_grant: einmal neu angemeldet, mit ausgestellter Client-ID")
+    check(store.secrets(gpt2.id).get("access_token") == "at-1", "danach angemeldet")
+    token_errors[0] = 2
+    try:
+        oauth.login_chatgpt(store, gpt2, open_url=browser(""))
+        check(False, "zweites invalid_grant gemeldet")
+    except Exception as e:  # noqa: BLE001
+        check(getattr(e, "code", "") == "invalid_grant" and "code already used" in str(e),
+              "zweites invalid_grant gemeldet (mit Beschreibung)")
 
     server.shutdown()
     if failures:

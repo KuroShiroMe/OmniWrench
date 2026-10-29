@@ -41,8 +41,9 @@ def _error_from_http(err: urllib.error.HTTPError) -> AIError:
         if isinstance(e, dict):
             message = e.get("message") or message
             code = str(e.get("code") or e.get("type") or "")
-        elif isinstance(e, str):
-            message = e
+        elif isinstance(e, str):              # OAuth: {"error": "invalid_grant", "error_description": "…"}
+            code = e
+            message = f"{e}: {data['error_description']}" if data.get("error_description") else e
     except ValueError:
         pass
     status = err.code

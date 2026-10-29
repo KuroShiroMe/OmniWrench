@@ -12,6 +12,7 @@ Alle Funktionen blockieren bis zur Rückkehr aus dem Browser und laufen deshalb 
 from __future__ import annotations
 
 import base64
+import logging
 import hashlib
 import html
 import http.server
@@ -29,6 +30,8 @@ from . import http as aihttp
 from . import providers
 from .connections import Connection, ConnectionStore
 from .http import AIError, Cancelled
+
+log = logging.getLogger(__name__)
 
 CHATGPT_AUTHORIZE = "https://auth.openai.com/api/accounts/authorize"
 CHATGPT_TOKEN = "https://auth.openai.com/api/accounts/oauth/token"
@@ -164,6 +167,21 @@ def host_id(settings) -> str:
 
 def login_chatgpt(store: ConnectionStore, conn: Connection, stop: threading.Event | None = None,
                   open_url: Callable[[str], None] | None = None) -> None:
+    """Sign in with ChatGPT. Lehnt der Token-Tausch den Code ab (invalid_grant), wird laut OpenAI der Code
+    verworfen und einmal neu angemeldet, dann mit der schon ausgestellten Client-ID."""
+    for attempt in range(2):
+        try:
+            _chatgpt_attempt(store, conn, stop, open_url)
+            return
+        except AIError as e:
+            issued = store.secrets(conn.id).get("client_id")
+            if attempt or e.code != "invalid_grant" or not issued:
+                raise
+            log.warning("ChatGPT: Token-Tausch abgelehnt (%s), neue Anmeldung mit %s", e, issued[:12])
+
+
+def _chatgpt_attempt(store: ConnectionStore, conn: Connection, stop: threading.Event | None,
+                     open_url: Callable[[str], None] | None) -> None:
     secrets_ = store.secrets(conn.id)
     client_id = secrets_.get("client_id") or CHATGPT_DYNAMIC_CLIENT
     try:                                     # Port wie in OpenAIs Beispiel, sonst ein freier
@@ -197,6 +215,10 @@ def login_chatgpt(store: ConnectionStore, conn: Connection, stop: threading.Even
     client_id = result.get("client_id") or client_id
     if client_id == CHATGPT_DYNAMIC_CLIENT:       # Erstregistrierung ohne ausgestellte Client-ID = unvollständig
         raise AIError(tr("ai.oauth.no_client"), "auth", code="no_client")
+    if secrets_.get("client_id") != client_id:   # ausgestellte Client-ID sofort behalten, auch wenn der Tausch scheitert
+        secrets_["client_id"] = client_id
+        store.set_secrets(conn.id, secrets_)
+    log.info("ChatGPT: Token-Tausch (client %s, redirect %s)", client_id[:12], server.redirect_uri)
     tok = aihttp.json_request("POST", CHATGPT_TOKEN, form={
         "grant_type": "authorization_code", "client_id": client_id, "code": code,
         "code_verifier": verifier, "redirect_uri": server.redirect_uri, "resource": CHATGPT_RESOURCE})
