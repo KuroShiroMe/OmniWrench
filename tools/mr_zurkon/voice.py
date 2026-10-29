@@ -209,6 +209,19 @@ def speakable(text: str, limit: int, code_hint: str = "(Code)") -> str:
 
 
 # ------------------------------------------------------------------ Steuerung
+class LazyCombo(QComboBox):
+    """Combo, die ihre Einträge erst beim Aufklappen nachlädt (before_popup)."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.before_popup = None
+
+    def showPopup(self) -> None:
+        if self.before_popup is not None:
+            self.before_popup()
+        super().showPopup()
+
+
 class _Bridge(QObject):
     woke = Signal(str)
     command = Signal(object)            # Samples des gesprochenen Satzes
@@ -351,7 +364,9 @@ class VoiceTab(QWidget):
         out.addWidget(self.tts, 2)
         self.tts_model = QComboBox()
         out.addWidget(self.tts_model, 1)
-        self.voice = QComboBox()
+        self.voice = LazyCombo()
+        self.voice.before_popup = self._load_system_voices
+        self._system_voices_wanted = False
         self.voice.setEditable(True)
         self.voice.setMinimumContentsLength(14)
         self.voice.currentIndexChanged.connect(lambda *_: self._update_local())
@@ -504,9 +519,14 @@ class VoiceTab(QWidget):
             self.voice.lineEdit().setPlaceholderText(tr("va.voice_hint"))
         if target == SYSTEM_VOICE:
             self.voice.addItem(tr("va.voice_default"), "")
-            for engine, name, loc in system_voices(lang):
-                label = f"{name} · {loc}" + (f" ({engine})" if engine else "")
-                self.voice.addItem(label, f"{engine}|{name}")
+            # Systemstimmen erst beim Aufklappen abfragen: die Engines (winrt/SAPI) starten langsam und stürzen in
+            # Sitzungen ohne Audiogerät teils ab – das Öffnen des Tools soll davon nie abhängen
+            if self._system_voices_wanted or lang in _VOICE_CACHE:
+                for engine, name, loc in system_voices(lang):
+                    label = f"{name} · {loc}" + (f" ({engine})" if engine else "")
+                    self.voice.addItem(label, f"{engine}|{name}")
+            elif saved:
+                self.voice.addItem(saved.partition("|")[2] or saved, saved)
         elif target == PIPER:
             have = set(ls.installed_voices(audio.shared_dir()))
             for name, mb in ls.piper_voices(audio.shared_dir(), lang):
@@ -525,6 +545,11 @@ class VoiceTab(QWidget):
             self.voice.setCurrentIndex(0)
         self.voice.blockSignals(False)
         self._update_local()
+
+    def _load_system_voices(self) -> None:
+        if self._voice_key() == SYSTEM_VOICE and not self._system_voices_wanted:
+            self._system_voices_wanted = True
+            self._fill_voices()
 
     def _voice_value(self) -> str:
         if self.voice.isEditable():
