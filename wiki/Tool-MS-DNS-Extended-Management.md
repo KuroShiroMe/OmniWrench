@@ -25,6 +25,7 @@
 - [Erste Schritte](#erste-schritte)
 - [Funktionen im Detail](#funktionen-im-detail)
   - [Anmeldung](#anmeldung)
+  - [Favoriten](#favoriten)
   - [Aufbau des Hauptfensters](#aufbau-des-hauptfensters)
   - [Übersicht](#übersicht)
   - [Zonen-Tab](#zonen-tab)
@@ -89,10 +90,11 @@ beide können gemeinsam oder einzeln verwendet werden.
 ## Funktionen im Detail
 
 ### Anmeldung
-![Anmeldung](images/ms-dns-anmeldung.png)
+![Anmeldung mit Favoritenliste](images/ms-dns-anmeldung.png)
 
 | Feld | Bedeutung |
 |---|---|
+| **Favoriten** (Liste links) und ☆ am Serverfeld | gespeicherte Server mit Anmeldung, siehe [Favoriten](#favoriten) |
 | **Server** | Name oder IP-Adresse des DNS-Servers; die zuletzt verwendeten Server stehen in der Liste |
 | **Angemeldeter Benutzer** | Windows-Anmeldung des Arbeitsplatzes (Kerberos/NTLM) |
 | **Gespeicherte Anmeldedaten** | Zugangsdaten aus dem Tresor oder einem Passwortmanager |
@@ -102,6 +104,36 @@ beide können gemeinsam oder einzeln verwendet werden.
 
 Für den **lokalen Computer** verwendet Windows immer das angemeldete Konto; andere Anmeldedaten werden dort
 ignoriert (Hinweis im Protokoll).
+
+### Favoriten
+Links neben der Anmeldung steht die **Favoritenliste**: Server, die regelmäßig verwaltet werden, mit Anmeldung und
+Verbindungseinstellungen, geordnet in **Ordnern** (z. B. ein Ordner je Kunde, beliebig verschachtelt). Zusätzlich kann ein Favorit **weitere Server** (z. B. ein DNS-Server in der DMZ, der nicht über die NS-Einträge gefunden wird) und den **DHCP-Server für den Abgleich** enthalten; beide werden nach der Anmeldung mit denselben Anmeldedaten verbunden bzw. eingestellt, nicht erreichbare Server stehen nur im Protokoll.
+
+- **Klick** auf einen Favoriten füllt die Anmeldemaske aus, **Doppelklick** meldet direkt an.
+- Der **Stern** neben dem Serverfeld speichert die aktuelle Anmeldemaske als neuen Favoriten. Ist ein Favorit
+  gewählt (Stern farbig), bietet er **überschreiben**, **als neuen Favoriten speichern** und **bearbeiten** an.
+- **+** in der Kopfzeile legt einen Favoriten von Hand an, der Ordner-Knopf einen Ordner. Rechtsklick bietet
+  Verbinden, Bearbeiten, Duplizieren, Verschieben nach, Löschen bzw. für Ordner neuer Favorit/Unterordner,
+  Umbenennen, Löschen (Inhalt wandert eine Ebene nach oben). Favoriten und Ordner lassen sich mit der Maus
+  verschieben, `Entf` löscht, `F2` bearbeitet.
+- Das Suchfeld filtert nach Name, Server und Notiz. Der Knopf rechts oben klappt die Liste ein (schmale Leiste
+  „Favoriten“ zum Aufklappen); auf- und zugeklappte Ordner und der zuletzt gewählte Favorit bleiben gespeichert.
+  Wird der Server von Hand geändert, ist kein Favorit mehr ausgewählt.
+
+![Favorit bearbeiten](images/ms-dns-favoriten.png)
+
+| Anmeldung im Favoriten | Bedeutung |
+|---|---|
+| Angemeldeter Benutzer | Windows-Anmeldung des Arbeitsplatzes |
+| Anmeldedaten aus dem Passwortmanager | Verweis auf einen Eintrag (🔑 wählt aus allen verbundenen Passwortmanagern); das Kennwort bleibt dort |
+| Benutzer und Kennwort im Favoriten speichern | eigenes Kennwort je Favorit, **verschlüsselt im Tresor** von OmniWrench – ideal für mehrere Kunden mit eigenen Konten |
+| Nur Benutzer speichern | Kennwort wird bei jeder Anmeldung eingegeben |
+
+Dazu kommen Notiz und die Verbindungseinstellungen (weitere DNS-Server der Zonen verbinden, Prüfung nach der Anmeldung, weitere Server durch Komma getrennt, DHCP-Server für den Abgleich). Wird ein Favorit mit
+eigenem Kennwort gewählt, stehen Benutzer und Kennwort direkt in „Andere Anmeldedaten“. Ein in der Maske
+eingegebenes Kennwort wird beim Speichern über den Stern mit übernommen. Geht ein Kennwort beim Zurücksetzen des
+Masterpassworts verloren, weisen Anmeldeseite und Dialog darauf hin. Kennwörter stehen nie in den Einstellungen.
+Favoriten sind für weitere Einstellungen je Server vorbereitet (z. B. die geplanten KI-Einstellungen).
 
 ### Aufbau des Hauptfensters
 - Oben: verbundener Server (mit Anzahl weiterer Server), **Aktualisieren** (automatische Aktualisierung),
@@ -338,8 +370,8 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
   abgebrochen, nimmt das Tool alle bereits gemachten Änderungen rückwärts zurück (Einträge, Zonen- und
   Servereinstellungen, neu angelegte Zonen). Schritte, die beim Zurücknehmen scheitern, werden einzeln genannt.
 - Kennwörter gelten nur für die Sitzung, liegen nur im Arbeitsspeicher und werden nirgends protokolliert.
-- Gespeichert werden nur die Einstellungen, die zuletzt verwendeten Server, die Spaltenanordnung und, falls
-  gewünscht, die Zugangsdaten im Tresor.
+- Gespeichert werden nur die Einstellungen, die zuletzt verwendeten Server, die Favoriten (Kennwörter von Favoriten nur verschlüsselt im Tresor), die
+  Spaltenanordnung und, falls gewünscht, die Zugangsdaten im Tresor.
 
 ## Grenzen und bekannte Einschränkungen
 - Nur Windows (WMI über DCOM). Windows Server als Arbeitsplatz wird von OmniWrench nicht unterstützt, als
@@ -380,6 +412,7 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 
 | Version | Änderungen |
 |---|---|
+| 1.2.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
 | 1.1.2 | Fehlermeldung „Internal C++ object … already deleted“ beim Schließen, wenn noch eine Replikations-Nachprüfung ausstand (behoben) |
 | 1.1.1 | „Replikation anstoßen“ scheiterte an AD-Zonen mit „Objekt nicht gefunden“ (0x80041002) beim Ermitteln der Partition (behoben) |
 | 1.1.0 | Replikation: Spalte **Repliziert** je Eintrag, Stand je Server, Nachprüfen nach eigenen Änderungen, **Replikation anstoßen** (AD-Replikation der DNS-Partition bzw. Übertragung zu sekundären Servern) mit klarer Meldung bei fehlendem Recht |

@@ -34,6 +34,7 @@ from omniwrench.ui.widgets import make_button
 from . import checks as ck
 from . import dialogs as dlg
 from . import eventlog
+from . import favorites as fv
 from . import ip6calc as ip6
 from .page_draft import DraftTab
 from .page_events import EventsPage
@@ -77,6 +78,7 @@ class MsDhcpExtended(ToolBase):
         self.runner.failed.connect(self._failed)
         self.scanner = Scanner(self._new_backend, lambda: self.svc, lambda t, e=False: self.bridge.log.emit(t, e))
         self.queue: list = []
+        self._login_fav: dict | None = None   # Favorit der laufenden Anmeldung (Ansicht IPv4/IPv6)
         self.tabs: dict[QWidget, ads.CDockWidget] = {}
         self.scan: dict | None = None
         self._classes: dict[bool, tuple[list[str], list[str]]] = {}     # v6? -> (Hersteller-, Benutzerklassen)
@@ -177,6 +179,14 @@ class MsDhcpExtended(ToolBase):
         cl.addLayout(th)
         grid = QGridLayout()
         grid.setColumnStretch(1, 1)
+        self.favs = fv.FavoriteStore(self.settings, self.context.secrets)
+        self.fav_panel = fv.FavoritesPanel(tr, self.favs, self.fav_capture, [
+            {"key": "auto_partner", "label": tr("login.auto_partner"), "type": "check", "default": True},
+            {"key": "auto_scan", "label": tr("login.auto_scan"), "type": "check", "default": True},
+            {"key": "family", "label": tr("fav.family"), "type": "choice", "items": [(4, "IPv4"), (6, "IPv6")],
+             "default": 4}], self.fav_cred_items)
+        self.fav_panel.applied.connect(self.fav_apply)
+        self.fav_panel.activated.connect(self.fav_activated)
         grid.addWidget(QLabel(tr("login.server")), 0, 0)
         self.server = QComboBox()
         self.server.setEditable(True)
@@ -184,7 +194,12 @@ class MsDhcpExtended(ToolBase):
         self.server.setEditText(self.settings.get("last_server") or "")
         self.server.lineEdit().setPlaceholderText(tr("login.server_ph"))
         self.server.lineEdit().returnPressed.connect(self._login_clicked)
-        grid.addWidget(self.server, 0, 1)
+        self.server.editTextChanged.connect(self.fav_panel.server_edited)
+        srow = QHBoxLayout()
+        srow.setSpacing(2)
+        srow.addWidget(self.server, 1)
+        srow.addWidget(self.fav_panel.star_button())
+        grid.addLayout(srow, 0, 1)
         self.ad_btn = make_button(tr("login.from_ad"), on_click=lambda: self.run(self.ad_flow()))
         grid.addWidget(self.ad_btn, 0, 2)
         grid.addWidget(QLabel(tr("login.auth")), 1, 0, Qt.AlignmentFlag.AlignTop)
@@ -234,12 +249,75 @@ class MsDhcpExtended(ToolBase):
         row.addWidget(self.login_status, 1)
         cl.addLayout(row)
         self._mode_changed()
-        return page
+        self.fav_panel.restore()
+        outer = QWidget()
+        ol = QHBoxLayout(outer)
+        ol.setContentsMargins(0, 0, 0, 0)
+        ol.setSpacing(0)
+        ol.addWidget(self.fav_panel)
+        ol.addWidget(page, 1)
+        return outer
 
     def _mode_changed(self) -> None:
         self.cred_field.setEnabled(self.m_vault.isChecked())
         self.user.setEnabled(self.m_manual.isChecked())
         self.password.setEnabled(self.m_manual.isChecked())
+
+    # --- Favoriten -----------------------------------------------------------------------------------
+    def fav_capture(self) -> dict:
+        """Anmeldemaske als Favorit. Ein eingegebenes Kennwort wird nur im Tresor gespeichert (Anmeldeart "stored")."""
+        login: dict = {"mode": "sso"}
+        out = {"server": self.server.currentText().strip(), "login": login, "options": {
+            "auto_partner": self.auto_partner.isChecked(), "auto_scan": self.auto_scan.isChecked(), "family": self.family}}
+        if self.m_vault.isChecked():
+            login.update(mode="vault", cred=fv.cred_key(self.cred_field.selected_item()))
+        elif self.m_manual.isChecked():
+            login.update(mode="stored" if self.password.text() else "manual", user=self.user.text().strip())
+            if self.password.text():
+                out["password"] = self.password.text()
+        return out
+
+    def fav_cred_items(self) -> list[dict]:
+        return self.cred_field.value()["items"]
+
+    def fav_apply(self, fav: dict | None) -> None:
+        if not fav:
+            return
+        login, opts = fav.get("login") or {}, fav.get("options") or {}
+        self.server.setEditText(fav.get("server", ""))
+        mode = login.get("mode", "sso")
+        {"vault": self.m_vault, "manual": self.m_manual, "stored": self.m_manual}.get(mode, self.m_sso).setChecked(True)
+        self.login_status.setText("")
+        self.password.clear()
+        if mode in ("manual", "stored"):
+            self.user.setText(login.get("user", ""))
+            pw = self.favs.password(fav["id"]) if mode == "stored" else None
+            if pw is not None:
+                self.password.setText(pw)
+            else:
+                if mode == "stored":
+                    self.login_status.setText(self.tr("fav.pw_missing"))
+                self.password.setFocus()
+        elif mode == "vault":
+            items = self.cred_field.value()["items"]
+            key = login.get("cred") or {}
+            idx = fv.match_cred(items, key)
+            if idx < 0 and key.get("ref"):          # Eintrag aus dem Passwortmanager: Verweis in die Liste übernehmen
+                items.append(dict(key))
+                idx = len(items) - 1
+                self.settings.set("credential", {"items": items, "selected": idx})
+                self.cred_field.set_value({"items": items, "selected": idx})
+            if idx >= 0:
+                self.cred_field.combo.setCurrentIndex(idx)
+            else:
+                self.login_status.setText(self.tr("fav.cred_missing"))
+        for key, box in (("auto_partner", self.auto_partner), ("auto_scan", self.auto_scan)):
+            if key in opts:
+                box.setChecked(bool(opts[key]))
+
+    def fav_activated(self, fav: dict) -> None:
+        """Doppelklick in der Favoritenliste: Maske ist gefüllt, direkt anmelden."""
+        self._login_clicked()
 
     def _build_main(self) -> QWidget:
         tr = self.tr
@@ -479,6 +557,8 @@ class MsDhcpExtended(ToolBase):
         if not server:
             warn(self.root, self.tr("login.title"), self.tr("login.err_server"))
             return
+        fav = self.fav_panel.current()
+        self._login_fav = fav if fav and fav["server"].lower() == server.lower() else None
         if self.m_vault.isChecked():
             self.login_status.setText(self.tr("login.cred_loading"))
             self.cred_field.resolve_async(lambda cred: self.run(self.login_flow(server, cred, True)))
@@ -532,6 +612,9 @@ class MsDhcpExtended(ToolBase):
         self._ev_seen = set()
         self._poll_error = ""
         self._apply_refresh_timer()
+        fav = self._login_fav
+        if fav and (fav.get("options") or {}).get("family") in (4, 6):
+            self.set_family(fav["options"]["family"])
         if self.auto_scan.isChecked():
             self.start_scan()
 

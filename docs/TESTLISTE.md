@@ -283,6 +283,29 @@ Neu, nur unter Linux (offscreen) geprüft.
 - [ ] Kleines Fenster (ca. 1000 px) mit offener Detailleiste: Store blendet den Bereichsbaum aus, Karten bleiben
       lesbar. Skalierung 150–200 %, helles Farbschema.
 
+## 11. Server-Favoriten (DHCP 1.6.1, DNS 1.2.1)
+
+Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorites.py). In beiden Tools gleich testen.
+- [ ] Anmeldeseite: links die Liste „Favoriten“, ☆ rechts neben dem Serverfeld. Ordner anlegen (Ordner-Knopf),
+      Unterordner per Rechtsklick, umbenennen, löschen (Inhalt wandert eine Ebene hoch).
+- [ ] Maske ausfüllen mit „Andere Anmeldedaten“ + Kennwort, ☆: Dialog hat „Benutzer und Kennwort im Favoriten
+      speichern“ vorausgewählt, Ordner wählen, OK. In `tool_settings\net.ms-dhcp-extended.json` bzw.
+      `net.ms-dns-extended.json` steht unter "favorites" KEIN Kennwort.
+- [ ] Zwei Favoriten verschiedener Kunden mit verschiedenen Konten/Kennwörtern: Klick füllt Benutzer + Kennwort,
+      Doppelklick meldet direkt an (ohne weitere Auswahl).
+- [ ] + in der Liste: Favorit von Hand anlegen, auch mit „Anmeldedaten aus dem Passwortmanager“ (🔑 wählt einen
+      Eintrag, z. B. aus OmniVault/KeePass); beim Wählen steht der Eintrag unter „Gespeicherte Anmeldedaten“.
+- [ ] „Nur Benutzer speichern“: beim Wählen ist das Kennwortfeld leer und hat den Fokus.
+- [ ] Ziehen und Ablegen von Favoriten und Ordnern; Suche; Liste einklappen/aufklappen; Tool schließen und neu
+      öffnen: Zustand, zugeklappte Ordner und zuletzt gewählter Favorit sind wieder da.
+- [ ] ☆ bei gewähltem Favorit: überschreiben / als neuen speichern / bearbeiten. Server von Hand ändern: Stern grau.
+- [ ] Favorit löschen: Kennwort ist aus dem Tresor weg (Duplizieren übernimmt es).
+- [ ] Masterpasswort zurücksetzen (Testtresor!): Favorit mit Kennwort zeigt Hinweis, Kennwort neu eingeben.
+- [ ] DHCP: Favorit mit Ansicht IPv6 → nach der Anmeldung steht die Ansicht auf IPv6.
+- [ ] DNS: Favorit mit „Weitere Server“ (z. B. Server außerhalb der Domäne) und „DHCP-Server für den Abgleich“:
+      weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“ nennt den DHCP-Server. Nicht erreichbarer weiterer
+      Server: nur Protokolleintrag, Anmeldung läuft durch.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).
