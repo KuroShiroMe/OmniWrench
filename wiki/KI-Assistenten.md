@@ -179,12 +179,28 @@ OmniWrench selbst kostet nichts. Abgerechnet wird beim Anbieter: Mit API-Schlüs
 „Mit ChatGPT anmelden“ über das Kontingent des Abos, lokale Modelle kosten nur Rechenzeit. Bilder, Musik und
 vor allem Videos sind deutlich teurer als Text; die Reiter in Clank weisen darauf hin.
 
+Was man je Anmeldeart braucht, zeigt der Dialog **Assistent hinzufügen** in der Zeile **Voraussetzung**:
+
+| Voraussetzung | Gilt für |
+|---|---|
+| ChatGPT Plus oder Pro (Free reicht nicht, Go nennt OpenAI derzeit nicht) | Mit ChatGPT anmelden |
+| API-Konto mit Guthaben, nach Verbrauch; Chat-Abos (ChatGPT Plus, Claude Pro …) gelten nicht | API-Schlüssel der meisten Anbieter, z. B. OpenAI, Claude, xAI, DeepSeek, Bild-/Musik-/Videodienste |
+| API-Konto mit kostenloser Stufe (Begrenzungen) | Gemini (Google AI Studio), Mistral, Groq, Cerebras, OpenRouter, Hugging Face, Cohere |
+| Cloud-Abonnement mit freigeschaltetem Modell | Azure OpenAI, Bedrock, Vertex AI, watsonx und die Firmen-Clouds |
+| Microsoft-365-Copilot-Lizenz und Freigabe durch die IT | Microsoft 365 Copilot |
+| kostenlos, läuft lokal | Ollama, LM Studio, llama.cpp, vLLM und andere lokale Modelle |
+
+Kostenlose Stufen ändern sich häufig, und bei manchen werden Eingaben zum Training genutzt (z. B. Google
+außerhalb der EU, Mistral im „Experiment“-Tarif). Für Firmendaten besser ein bezahltes Konto oder ein lokales Modell
+nehmen.
+
 ## Fehlerbehebung
 
 | Problem | Ursache / Lösung |
 |---|---|
 | „Kein API-Schlüssel hinterlegt“ | Schlüssel unter *Einstellungen › KI-Assistenten › Bearbeiten* eintragen |
 | „Die Anmeldung ist abgelaufen“ | **Neu anmelden** in der Verbindung |
+| ChatGPT: Plan reicht nicht | „Mit ChatGPT anmelden“ braucht Plus oder Pro; sonst API-Schlüssel nutzen |
 | „Anfragelimit erreicht“ / „Guthaben aufgebraucht“ | Beim Anbieter Kontingent prüfen; kurz warten |
 | „Keine Verbindung zum Anbieter“ | Proxy/Firewall prüfen. Lokale Adressen (`localhost`, `127.x`) gehen nie über den Proxy |
 | Anmeldung im Browser bleibt hängen | Browser-Fenster schließen, erneut versuchen; bei Entra ID die Freigabe der App durch die IT prüfen |

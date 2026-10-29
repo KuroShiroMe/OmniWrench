@@ -323,3 +323,5 @@
   Stef asked to make it "less obvious in the code"; I kept it plain + commented (public repo, privacy-relevant code
   should stay reviewable).
 - Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.
+- Requirements (Stef 2026-10-29): every provider/auth shows what is needed (plan, API credit, free tier, licence,
+  local). Keep `requires` in providers.json current during the provider check of every build.

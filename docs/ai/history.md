@@ -574,3 +574,6 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
 - 2026-10-29: Stef's ChatGPT sign-in failed (invalid_authorize_request, ext_agent_host_id): host id now urn:uuid:<uuid>
   (old values migrated), callback port 1455 preferred, registration without issued client_id rejected, id_token_hint
   on re-auth. test_ai covers the flow against a fake token endpoint.
+- 2026-10-29: "Voraussetzung" row in the add-assistant dialog (Provider.requirement(auth), catalog field "requires",
+  defaults by auth/category; ai.req.* in 23 locales). Sign in with ChatGPT needs Plus/Pro (OpenAI SIWC quickstart;
+  Go not listed). Wiki KI-Assistenten: requirement table + free tiers note.

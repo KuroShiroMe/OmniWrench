@@ -1,6 +1,6 @@
 {
  "format": 1,
- "updated": "2026-10-28",
+ "updated": "2026-10-29",
  "categories": [
   "recommended",
   "chat",
@@ -63,6 +63,9 @@
       "gpt-4o-mini-tts"
      ]
     }
+   },
+   "requires": {
+    "oauth_chatgpt": "chatgpt_plus"
    }
   },
   {
@@ -148,6 +151,9 @@
       "gemini-omni-1.1-flash"
      ]
     }
+   },
+   "requires": {
+    "*": "api_free_tier"
    }
   },
   {
@@ -225,7 +231,10 @@
    "key_url": "https://console.mistral.ai/api-keys",
    "docs_url": "https://docs.mistral.ai",
    "status": "active",
-   "recommended": true
+   "recommended": true,
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "m365copilot",
@@ -300,7 +309,10 @@
    ],
    "key_url": "https://dashboard.cohere.com/api-keys",
    "docs_url": "https://docs.cohere.com",
-   "status": "active"
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "deepseek",
@@ -775,7 +787,10 @@
    "key_url": "https://openrouter.ai/settings/keys",
    "docs_url": "https://openrouter.ai/docs",
    "status": "active",
-   "recommended": true
+   "recommended": true,
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "together",
@@ -872,7 +887,10 @@
    "models": [],
    "key_url": "https://console.groq.com/keys",
    "docs_url": "https://console.groq.com/docs",
-   "status": "active"
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "cerebras",
@@ -895,7 +913,10 @@
    "models": [],
    "key_url": "https://cloud.cerebras.ai",
    "docs_url": "https://inference-docs.cerebras.ai",
-   "status": "active"
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "huggingface",
@@ -919,7 +940,10 @@
    "models": [],
    "key_url": "https://huggingface.co/settings/tokens",
    "docs_url": "https://huggingface.co/docs/inference-providers",
-   "status": "active"
+   "status": "active",
+   "requires": {
+    "*": "api_free_tier"
+   }
   },
   {
    "id": "vercel",

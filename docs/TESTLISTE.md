@@ -331,6 +331,10 @@ ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal is
 - [ ] Ablage „Zentraler Speicherort“ wählen: Frage nach Verschieben, Daten landen im neuen Ordner.
 - [ ] OneDrive-umgeleiteter Dokumente-Ordner: Ordner wird richtig erkannt.
 
+- [ ] Voraussetzung im Dialog „Assistent hinzufügen“: ChatGPT mit „Mit ChatGPT anmelden“ zeigt „Plus oder Pro“,
+      mit API-Schlüssel „API-Konto mit Guthaben“; Gemini „kostenlose Stufe“; Ollama „kostenlos, läuft lokal“.
+- [ ] Mit ChatGPT anmelden (Plus): Anmeldung, Verbindung testen, Frage in der Chatleiste.
+
 ### 12c. KI-Zugriff und Verfremdung
 - [ ] Einstellungen › KI-Zugriff: Stufen, Verfremdung, Vorschau. Tool-Einstellungen: Reiter „KI-Zugriff“ mit
       „Wie im Hauptprogramm“. Ausnahme je Assistent setzen.

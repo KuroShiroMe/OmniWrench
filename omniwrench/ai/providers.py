@@ -58,11 +58,26 @@ class Provider:
     key_prefix: str = ""
     base_url_editable: bool = False
     list_models: bool = False
+    requires: dict = field(default_factory=dict)   # Anmeldeart (oder "*") -> Schlüssel ai.req.<…>
 
     @classmethod
     def from_dict(cls, data: dict) -> "Provider":
         known = cls.__dataclass_fields__
         return cls(**{k: v for k, v in data.items() if k in known})
+
+    def requirement(self, auth: str) -> str:
+        """Was man für diese Anmeldeart braucht (Abo, API-Konto, Lizenz …) als Schlüssel für ai.req.<…>."""
+        if auth in self.requires or "*" in self.requires:
+            return self.requires.get(auth, self.requires.get("*", ""))
+        if auth == AUTH_NONE or "local" in self.categories:
+            return "local"
+        if auth == AUTH_ENTRA:
+            return "m365_license"
+        if auth == AUTH_CUSTOM or "custom" in self.categories:
+            return ""
+        if "enterprise" in self.categories:
+            return "cloud_contract"
+        return "api_paid"
 
     @property
     def removed(self) -> bool:

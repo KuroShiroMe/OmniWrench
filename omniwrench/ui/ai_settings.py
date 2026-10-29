@@ -390,6 +390,8 @@ class ConnectionDialog(QDialog):
         self.auth.setCurrentIndex(max(self.auth.findData(self.conn.auth), 0))
         self.auth.currentIndexChanged.connect(self._auth_changed)
         form.addRow(tr("ai.edit.auth"), self.auth)
+        self.plan_info = label("", "Muted", wrap=True)
+        form.addRow(tr("ai.req.label"), self.plan_info)
 
         # API-Schlüssel
         self.key_box = QWidget()
@@ -504,6 +506,10 @@ class ConnectionDialog(QDialog):
                 parts.append(f"<a href='{p.key_url}'>{tr('ai.edit.key_link')}</a>")
             self.key_info.setText(" · ".join(parts))
             self.key.setEnabled(not self.key_ref)
+        req = p.requirement(a) if p else ""
+        self.plan_info.setText(tr(f"ai.req.{req}") if req else "")
+        self.plan_info.setVisible(bool(req))
+        self.form.labelForField(self.plan_info).setVisible(bool(req))
         if browser:
             self._update_login_status()
 

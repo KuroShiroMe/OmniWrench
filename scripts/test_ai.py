@@ -134,6 +134,13 @@ def main() -> int:
     check(all(p.api in providers.CHAT_APIS + ("media_only", "none") for p in providers.all_providers()),
           "nur bekannte Protokolle")
     check(providers.get("sora") is not None and providers.get("sora").removed, "eingestellter Anbieter markiert")
+    req = {(pid, a): providers.get(pid).requirement(a) for pid, a in (
+        ("openai", "oauth_chatgpt"), ("openai", "api_key"), ("anthropic", "api_key"), ("gemini", "api_key"),
+        ("ollama", "none"), ("m365copilot", "entra"), ("azure_openai", "api_key"), ("custom", "api_key"))}
+    check(req == {("openai", "oauth_chatgpt"): "chatgpt_plus", ("openai", "api_key"): "api_paid",
+                  ("anthropic", "api_key"): "api_paid", ("gemini", "api_key"): "api_free_tier",
+                  ("ollama", "none"): "local", ("m365copilot", "entra"): "m365_license",
+                  ("azure_openai", "api_key"): "cloud_contract", ("custom", "api_key"): ""}, f"Voraussetzungen {req}")
 
     print("Adapter und Chat-Ablauf")
     store = ConnectionStore(settings, vault)
