@@ -3,8 +3,9 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
-- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 1-6 + 7a + 7b done (app 0.9.0, Clank 1.0.0), open: 7c
-      transcription + voice agent. MCP later: resources/prompts, subscriptions/listen, OAuth for remote MCP servers. App locales: only en/de have the ai.* keys
+- [ ] KI-Integration (branch claude/project-thread-ie207t, Stef tests only the end product): stages 1-7 done (app 0.9.0, Clank 1.0.0), open: final stage
+      (21 locales, wiki, landing page, TESTLISTE, PR). Speech later: realtime STT (gpt-live-transcribe), OpenAI TTS
+      successor before 2027-01-06, gpt-4o-transcribe-diarize ends 2027-02-26 (then only local speaker matching). MCP later: resources/prompts, subscriptions/listen, OAuth for remote MCP servers. App locales: only en/de have the ai.* keys
       so far, other 21 locales get translated in one pass at the end. Wiki pages + landing page + TESTLISTE at the end.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).

@@ -648,5 +648,9 @@
   "ai.fav.hint": "What assistants may see of this server while you are logged in. Saved with the favourite. Exceptions per assistant from the tool settings still apply.",
   "ai.panel.confirm_explanation": "Explanation of the assistant:",
   "ai.store.type_documents": "Documents",
-  "ai.access.mcp_server": "MCP server (external AI programs)"
+  "ai.access.mcp_server": "MCP server (external AI programs)",
+  "ai.transcript.untitled": "Transcript",
+  "ai.transcript.consent_note": "Consent of all participants confirmed on {time}.",
+  "ai.transcript.summary": "Summary",
+  "ai.transcript.transcript": "Transcript"
 }

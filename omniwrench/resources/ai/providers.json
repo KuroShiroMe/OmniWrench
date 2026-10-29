@@ -58,8 +58,8 @@
     "speech": {
      "api": "openai_audio",
      "models": [
+      "gpt-transcribe",
       "gpt-4o-transcribe-diarize",
-      "gpt-4o-transcribe",
       "gpt-4o-mini-tts"
      ]
     }
@@ -1507,7 +1507,10 @@
      "api": "elevenlabs_speech",
      "models": [
       "scribe_v2",
-      "eleven_multilingual_v2"
+      "eleven_v4_turbo",
+      "eleven_v4",
+      "eleven_multilingual_v2",
+      "eleven_flash_v2_5"
      ]
     }
    }
@@ -1785,7 +1788,8 @@
     "speech": {
      "api": "assemblyai",
      "models": [
-      "universal"
+      "universal-3-pro",
+      "universal-2"
      ]
     }
    }

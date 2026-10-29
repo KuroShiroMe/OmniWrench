@@ -36,7 +36,9 @@ SEP = os.pathsep  # Trenner für --add-data (Windows ";", sonst ":")
 # Qt-Module, die Tools (auch künftige aus dem Store) nutzen dürfen, ohne dass das
 # Hauptprogramm sie selbst importiert
 QT_MODULES = ["QtCore", "QtGui", "QtWidgets", "QtSvg", "QtSvgWidgets", "QtNetwork", "QtPrintSupport",
-              "QtConcurrent", "QtXml"]
+              "QtConcurrent", "QtXml",
+              # KI-Studio (Clank): Wiedergabe Musik/Video, Mikrofon, Vorlesen – Tools werden nicht analysiert
+              "QtMultimedia", "QtMultimediaWidgets", "QtTextToSpeech"]
 
 # Teile der Standardbibliothek, die ein Admin-Tool nie braucht
 STDLIB_EXCLUDE = {"tkinter", "turtle", "turtledemo", "idlelib", "test", "lib2to3", "ensurepip", "venv",

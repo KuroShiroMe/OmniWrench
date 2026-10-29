@@ -278,6 +278,42 @@ class Storage:
     def delete_project(self, project_id: str) -> None:
         shutil.rmtree(self.project_dir(project_id), ignore_errors=True)
 
+    # -------------------------------------------------------- Mitschriften (Transkription)
+    def transcript_dir(self, transcript_id: str) -> Path:
+        return self.path("transcripts") / transcript_id
+
+    def save_transcript(self, data: dict) -> None:
+        from .speech import transcript_markdown
+        data.setdefault("id", self.new_id())
+        data["updated"] = int(time.time())
+        self.write_doc(self.transcript_dir(data["id"]) / "transcript", data, transcript_markdown(data))
+
+    def load_transcript(self, transcript_id: str) -> dict | None:
+        try:
+            return self.read_doc(self.transcript_dir(transcript_id) / "transcript")
+        except Exception:
+            return None
+
+    def delete_transcript(self, transcript_id: str) -> None:
+        shutil.rmtree(self.transcript_dir(transcript_id), ignore_errors=True)
+
+    def list_transcripts(self) -> list[dict]:
+        """Kopfdaten (id, title, created, updated, duration, locked) aller Mitschriften, neueste zuerst."""
+        base = self.path("transcripts")
+        out = []
+        if base.is_dir():
+            for d in base.iterdir():
+                if not d.is_dir() or not self.doc_exists(d / "transcript"):
+                    continue
+                try:
+                    t = self.read_doc(d / "transcript") or {}
+                except Exception:
+                    t = {"title": d.name, "updated": int(d.stat().st_mtime), "locked": True}
+                out.append({k: t.get(k) for k in ("title", "created", "updated", "duration", "locked")}
+                           | {"id": t.get("id") or d.name})
+        out.sort(key=lambda t: t.get("created") or t.get("updated") or 0, reverse=True)
+        return out
+
     # ---------------------------------------------------------- Umbauten
     def convert_all(self, encrypt: bool) -> int:
         """Schreibt alle Chats/Projekte im gewünschten Format neu (nach Umschalten der Verschlüsselung)."""
@@ -298,6 +334,15 @@ class Storage:
                 if data:
                     self.write_doc(d / "thread", data, thread_markdown(data), encrypt=encrypt)
                     count += 1
+        from .speech import transcript_markdown
+        for t in self.list_transcripts():
+            if t.get("locked"):
+                continue
+            base = self.transcript_dir(t["id"]) / "transcript"
+            data = self.read_doc(base)
+            if data:
+                self.write_doc(base, data, transcript_markdown(data), encrypt=encrypt)
+                count += 1
         return count
 
     @staticmethod

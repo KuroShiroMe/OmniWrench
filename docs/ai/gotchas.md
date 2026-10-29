@@ -201,3 +201,7 @@
   (DNS tool 1.1.2).
 - MCP 2026-07-28 is stateless and NOT wire-compatible with 2025-11-25 (no initialize, _meta per request, required
   HTTP headers). Clients must probe and fall back; a server answering only one era breaks the other. Keep both.
+- Tools are loaded dynamically, so PyInstaller never sees their Qt imports: every Qt module a tool may use must be in
+  scripts/build_exe.py QT_MODULES (QtMultimedia/QtTextToSpeech were missing until 2026-10-29).
+- soundcard on Windows uses COM: call CoInitializeEx in every recording thread. Vosk small models have a fixed
+  vocabulary: invented wake names ("Clank") are heard as similar words -> fuzzy match + user variants.

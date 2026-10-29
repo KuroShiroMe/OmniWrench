@@ -30,6 +30,8 @@ from .images import ImagesTab
 from .schedule import ScheduleTab
 from .screenshot import Screenshot
 from .templates import TemplatesPanel
+from .transcript import TranscriptTab
+from .voice import VoiceTab
 from .mcptab import MCPTab
 from .mediatab import MediaTab
 from .viewer import FileViewer
@@ -74,6 +76,10 @@ class Clank(ToolBase):
         self.modes.addTab(self.docs, "📄 " + tr("mode.docs"))
         self.plans = ScheduleTab(self)
         self.modes.addTab(self.plans, "⏰ " + tr("mode.plans"))
+        self.transcript = TranscriptTab(self)
+        self.modes.addTab(self.transcript, "📝 " + tr("mode.transcript"))
+        self.voice = VoiceTab(self)
+        self.modes.addTab(self.voice, "🗣 " + tr("mode.voice"))
         self.mcp = MCPTab(self)
         self.modes.addTab(self.mcp, "🔌 " + tr("mode.mcp"))
         shot = QToolButton(text="📷 " + tr("shot.button"))
@@ -308,6 +314,9 @@ class Clank(ToolBase):
         else:
             parts.append("The workspace is empty; the user can add folders or repositories on the tab "
                          f"'{self.tr('side.workspace')}' in KI-Studio.")
+        voice = getattr(self, "voice", None)
+        if voice is not None and voice.system_hint():
+            parts.append(voice.system_hint())
         return "\n\n".join(parts)
 
     # --- Dateiansicht --------------------------------------------------------------------------------
@@ -397,7 +406,8 @@ class Clank(ToolBase):
     def can_close(self) -> bool:
         panel = getattr(self, "panel", None)
         busy = panel is not None and panel._running
-        busy = busy or any(getattr(getattr(self, n, None), "running", False) for n in ("images", "music", "video", "group", "docs"))
+        busy = busy or any(getattr(getattr(self, n, None), "running", False)
+                           for n in ("images", "music", "video", "group", "docs", "transcript"))
         if busy:
             return QMessageBox.question(self.root, self.tr("tool.name"), self.tr("ui.close_running")) \
                 == QMessageBox.StandardButton.Yes
@@ -411,7 +421,7 @@ class Clank(ToolBase):
             tab = getattr(self, name, None)
             if tab is not None and tab.running:
                 tab.stop()
-        for name in ("docs", "plans", "mcp"):
+        for name in ("docs", "plans", "transcript", "voice", "mcp"):
             tab = getattr(self, name, None)
             if tab is not None:
                 tab.shutdown()

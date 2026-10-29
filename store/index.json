@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-28T21:23:39+00:00",
+  "generated": "2026-10-29T00:06:43+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -119,8 +119,8 @@
         }
       },
       "download_url": "packages/ai.clank-1.0.0.zip",
-      "sha256": "cfcaf34b3c046ef244f464c4aee1dd0565ec59ebeaa834b1857134f400403a65",
-      "size": 93211
+      "sha256": "5e3703eb596122fa25cb7f05a89bb547da3065da83c2dd23c18a81efbe2f1548",
+      "size": 122559
     },
     {
       "id": "gfx.iconforge",

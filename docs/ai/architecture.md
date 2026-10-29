@@ -475,3 +475,24 @@ docs/README.md                internal docs index, points to the wiki
   (source ai.clank; read-only only if server "trusted" + readOnlyHint, else level 4 + confirm with JSON args),
   per-tool disable, server switch (settings mcp_server_on/port, one owner), copy setup (stdio/VS Code/HTTP).
   Test test_mcp.py (fake stdio server modern/legacy/silent, legacy HTTP fake, own server, bridge subprocess).
+- Speech (stage 7c): `omniwrench/ai/speech.py` (Qt-free) Speech(ImageGen): transcribe -> [Segment(text, start, end,
+  speaker, known)] for openai_audio (gpt-transcribe with languages[]; gpt-4o-transcribe-diarize diarized_json +
+  known_speaker_names[]/references[] data URLs, max 4), elevenlabs_speech (scribe_v2 words grouped by speaker_id),
+  deepgram (/listen nova-3 diarize_model=latest utterances, "Token" key), assemblyai (upload + transcript
+  speech_models [universal-3-pro, universal-2] + polling); synthesize -> mp3 (openai /audio/speech, elevenlabs
+  /text-to-speech/<voice>); transcript_markdown. Storage: save/load/list/delete_transcript
+  (<transcripts>/<id>/transcript, encrypted like chats, convert_all includes them).
+  Clank `audio.py`: missing()/install_packages() (pip into <tool>/_lib at runtime, frozen-aware), Chunker (energy VAD,
+  100 ms frames, adaptive noise floor, min_speech/silence_end/max_chunk), Source (soundcard mic or loopback of
+  speaker, COM init per thread on Windows), Recorder. `speakers.py`: numpy MFCC mean/std embedding (38 dims, lifter),
+  cosine similarity, ProfileStore (<transcripts>/speakers/profiles, ALWAYS encrypted, sample <=10 s WAV b64),
+  SessionSpeakers (session centroids -> profiles -> new "Sprecher n"; by_name for provider names / own mic name).
+  `transcript.py` TranscriptTab: DepsPage (numpy+soundcard) / NoBotPage / main; ConsentDialog every start (agree
+  required, profiles opt-in, copy notice), red banner, worker thread queue (chunk -> STT -> speaker per segment;
+  provider labels kept consistent inside a chunk; mic = own name unless "several people"), embeddings and audio only
+  in memory (_stored() strips them), speakers tab rename/save profile/merge, summary via documents.ask_once
+  (auto at end), to chat, export md. `voice.py` VoiceTab: states off/wake/command/thinking/speaking/followup; wake
+  word offline via Vosk small model (VOSK_MODELS per language, download to data_dir/vosk, zip path check), fuzzy
+  matches() + user variants; "Sprechen" button works without Vosk; STT provider or Offline (Vosk); asks via
+  studio.panel (system_hint for spoken answers through Clank._system_extra), speaks with QTextToSpeech (timeout
+  fallback) or provider mp3 via QMediaPlayer. Test test_speech.py (fake providers, synthetic voices).

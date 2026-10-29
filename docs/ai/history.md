@@ -543,3 +543,11 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   _meta, new HTTP headers) -> client speaks it plus legacy initialize; Clank tab "MCP" (connect stdio/HTTP servers,
   tools for assistants) and OmniWrench as MCP server (localhost HTTP + token, stdio bridge `--mcp-stdio`). Test
   test_mcp.py (72 checks).
+- 2026-10-29: Etappe 7c: Clank tabs "Mitschrift" (live transcription of mic + system audio, consent dialog, speaker
+  recognition with named encrypted profiles, summary) and "Sprachassistent" (wake word "Hey <name>" offline via
+  Vosk, push-to-talk, answers read aloud). Provider check: OpenAI gpt-transcribe/gpt-live-transcribe new,
+  whisper-1/gpt-4o(-mini)-transcribe(-diarize) shut down 2027-02-26, TTS tts-1/gpt-4o-mini-tts snapshots
+  2027-01-06 (successor realtime only); ElevenLabs eleven_v4/_turbo new, scribe_v1 deprecated; AssemblyAI
+  speech_models universal-3-pro/universal-2 (speech_model, best, nano deprecated); Deepgram diarize_model v2.
+  EXE build now bundles QtMultimedia/QtMultimediaWidgets/QtTextToSpeech (were missing for Clank media tabs).
+  Test test_speech.py (69 checks).

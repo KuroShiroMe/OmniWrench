@@ -648,5 +648,9 @@
   "ai.fav.hint": "Was Assistenten von diesem Server sehen dürfen, solange Sie angemeldet sind. Wird mit dem Favoriten gespeichert. Ausnahmen je Assistent aus den Tool-Einstellungen gelten weiterhin.",
   "ai.panel.confirm_explanation": "Erklärung des Assistenten:",
   "ai.store.type_documents": "Dokumente",
-  "ai.access.mcp_server": "MCP-Server (externe KI-Programme)"
+  "ai.access.mcp_server": "MCP-Server (externe KI-Programme)",
+  "ai.transcript.untitled": "Mitschrift",
+  "ai.transcript.consent_note": "Einwilligung aller Teilnehmenden bestätigt am {time}.",
+  "ai.transcript.summary": "Zusammenfassung",
+  "ai.transcript.transcript": "Mitschrift"
 }

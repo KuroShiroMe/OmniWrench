@@ -308,4 +308,9 @@
   schedules). Server only on 127.0.0.1 with mandatory token, same access levels/pseudonymization/confirmation as
   built-in assistants (exception key "mcp-server"); never re-exports foreign MCP tools. Client: tool annotations only
   trusted when the user ticks "Server vertrauen", otherwise every MCP tool = level 4 with confirmation.
+- Speech (my choices 2026-10-29, stage 7c): no audio is stored, only text; voice features only in memory unless a
+  speaker profile is saved (opt-in in the consent dialog, profiles always encrypted). Consent dialog on EVERY
+  recording start + red banner. Wake word only offline (Vosk) - never stream all mic audio to a cloud provider;
+  without Vosk only push-to-talk. Default voice = system voice (free, offline). numpy/soundcard/vosk installed on
+  demand into the tool's _lib, not at tool install.
 - Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.
