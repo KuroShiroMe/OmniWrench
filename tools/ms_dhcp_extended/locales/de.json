@@ -1397,5 +1397,7 @@
   "fav.mode_stored": "Anmeldung: {user} (Kennwort im Favoriten)",
   "fav.err_cred": "Bitte Anmeldedaten aus dem Passwortmanager wählen.",
   "fav.err_pw": "Bitte ein Kennwort eingeben.",
-  "fav.family": "Ansicht nach der Anmeldung"
+  "fav.family": "Ansicht nach der Anmeldung",
+  "ai.fn.res_add": "Reservierung {ip} für {mac} in Scope {scope} auf {server} anlegen?",
+  "ai.fn.res_remove": "Reservierung {ip} aus Scope {scope} auf {server} entfernen?"
 }

@@ -472,7 +472,23 @@ class TaskDialog(QDialog):
         run_async(task, on_done=self._done, on_error=self._failed, on_progress=self._append)
 
     def _append(self, text: str) -> None:
+        """Protokollzeile; „NN %“ stellt den Balken und ersetzt die vorige Prozentzeile (Downloads)."""
+        import re
+        m = re.search(r"(\d{1,3})\s*%", text or "")
+        if m and getattr(self, "_percent_line", False):
+            cursor = self.log.textCursor()
+            cursor.movePosition(cursor.MoveOperation.End)
+            cursor.select(cursor.SelectionType.BlockUnderCursor)
+            cursor.removeSelectedText()
         self.log.appendPlainText(text)
+        self._percent_line = bool(m)
+        if m:
+            self.bar.setRange(0, 100)
+            self.bar.setValue(min(100, int(m.group(1))))
+            self.bar.setTextVisible(True)
+        elif self.bar.maximum() == 100:
+            self.bar.setRange(0, 0)
+            self.bar.setTextVisible(False)
 
     def _done(self, result) -> None:
         self.success = True

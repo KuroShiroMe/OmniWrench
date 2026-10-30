@@ -1,0 +1,46 @@
+{
+  "settings": [
+    {
+      "key": "shell",
+      "type": "choice",
+      "label": "Shell for commands",
+      "default": "auto",
+      "group": "Commands",
+      "options": [
+        {
+          "value": "auto",
+          "label": "Automatic (PowerShell on Windows, bash on Linux)"
+        },
+        {
+          "value": "powershell",
+          "label": "PowerShell"
+        },
+        {
+          "value": "cmd",
+          "label": "Command prompt (cmd)"
+        },
+        {
+          "value": "bash",
+          "label": "bash"
+        }
+      ]
+    },
+    {
+      "key": "command_timeout",
+      "type": "int",
+      "label": "Time limit per command (seconds)",
+      "default": 120,
+      "min": 10,
+      "max": 900,
+      "group": "Commands"
+    },
+    {
+      "key": "clone_dir",
+      "type": "path_dir",
+      "label": "Folder for cloned repositories",
+      "default": "",
+      "group": "Repositories",
+      "description": "Empty = OmniWrench-Repos in the user folder."
+    }
+  ]
+}

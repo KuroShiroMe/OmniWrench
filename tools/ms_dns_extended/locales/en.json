@@ -764,5 +764,7 @@
   "fav.mode_stored": "Login: {user} (password in the favourite)",
   "fav.err_cred": "Please pick credentials from the password manager.",
   "fav.err_pw": "Please enter a password.",
-  "fav.extra_servers_ph": "e.g. dmz-dns01, dc03.corp.example"
+  "fav.extra_servers_ph": "e.g. dmz-dns01, dc03.corp.example",
+  "ai.fn.rec_add": "Create record {rec} in zone {zone} on {server}?",
+  "ai.fn.rec_delete": "Delete record {rec} from zone {zone} on {server}?"
 }

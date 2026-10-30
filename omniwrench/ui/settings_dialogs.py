@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox, QComboBox, QDialog, QDialogButtonBox, QDoubleSpinBox, QFileDialog, QFormLayout, QHBoxLayout,
     QHeaderView, QInputDialog, QLineEdit, QListWidget, QListWidgetItem, QMessageBox, QPlainTextEdit,
@@ -19,6 +19,7 @@ from omniwrench.core.tool_manager import InstalledTool
 from omniwrench.core.vault import Vault
 from omniwrench.sdk import LANGUAGE_KEY
 
+from .ai_settings import AIAccessPage, AIConnectionsPage, AIStoragePage
 from .credentials import CredentialField, PasswordManagerWidget
 from .login_dialog import MIN_PASSWORD_LENGTH, CertificateCombo
 from .scaling import SCALE_CHOICES, fit_min_width, fit_to_screen, normalize
@@ -195,7 +196,8 @@ def build_settings_form(schema: list[SettingDef], values: dict[str, Any],
 
 
 class ToolSettingsDialog(QDialog):
-    def __init__(self, tool: InstalledTool, parent: QWidget | None = None):
+    def __init__(self, tool: InstalledTool, parent: QWidget | None = None, app_settings: AppSettings | None = None,
+                 vault: Vault | None = None):
         super().__init__(parent)
         self.tool = tool
         self.language_changed = False
@@ -214,6 +216,10 @@ class ToolSettingsDialog(QDialog):
                               "CardMeta"))
         head.addLayout(title, 1)
         lay.addLayout(head)
+        outer_lay = lay
+        general = QWidget()
+        lay = QVBoxLayout(general)
+        lay.setContentsMargins(0, 6, 0, 0)
 
         # --- Sprache des Tools
         lang_row = QFormLayout()
@@ -241,11 +247,25 @@ class ToolSettingsDialog(QDialog):
             lay.addWidget(form, 1)
             if any(f.sdef.is_secret for f in self.fields):
                 lay.addWidget(label("🔒 " + tr("settings.secrets_hint"), "Muted"))
+        if not tool.schema:
+            lay.addStretch()
+
+        # --- KI-Zugriff (jedes Tool, erbt vom Hauptprogramm)
+        self.ai_access = None
+        if app_settings is not None and vault is not None:
+            tabs = QTabWidget()
+            tabs.addTab(general, tr("appsettings.tab_general"))
+            self.ai_access = AIAccessPage(app_settings, vault, tool.id)
+            tabs.addTab(self.ai_access, tr("ai.tab_access"))
+            outer_lay.addWidget(tabs, 1)
+            fit_min_width(self, 860)
+        else:
+            outer_lay.addWidget(general, 1)
 
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
         buttons.accepted.connect(self._save)
         buttons.rejected.connect(self.reject)
-        lay.addWidget(buttons)
+        outer_lay.addWidget(buttons)
 
     def _save(self) -> None:
         missing = [f.text("label") for f in self.fields if f.sdef.required and f.is_empty()]
@@ -258,13 +278,80 @@ class ToolSettingsDialog(QDialog):
         self.language_changed = new_lang != (self.tool.settings.get(LANGUAGE_KEY) or AUTO)
         values[LANGUAGE_KEY] = new_lang
         self.tool.settings.update(values)
+        if self.ai_access is not None:
+            self.ai_access.save()
         self.accept()
 
 
 # ============================================================ Hauptprogramm
+class NavPages(QWidget):
+    """Seitenleiste mit Gruppen statt vieler Reiter: links die Bereiche, rechts die Seite.
+    API wie QTabWidget (addTab, setCurrentWidget, currentWidget, currentChanged), dazu addGroup."""
+    currentChanged = Signal(int)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        from PySide6.QtWidgets import QListWidget, QStackedWidget
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        self.nav = QListWidget()
+        self.nav.setObjectName("SettingsNav")
+        self.nav.setFixedWidth(220)
+        self.nav.setSpacing(1)
+        lay.addWidget(self.nav)
+        self.stack = QStackedWidget()
+        lay.addWidget(self.stack, 1)
+        self.nav.currentRowChanged.connect(self._row_changed)
+
+    def addGroup(self, title: str) -> None:  # noqa: N802 - Qt-Stil
+        from PySide6.QtWidgets import QListWidgetItem
+        item = QListWidgetItem(title.upper())
+        item.setFlags(Qt.ItemFlag.NoItemFlags)
+        font = item.font()
+        font.setBold(True)
+        font.setPointSizeF(font.pointSizeF() * 0.85)
+        item.setFont(font)
+        self.nav.addItem(item)
+
+    def addTab(self, widget: QWidget, text: str) -> int:  # noqa: N802
+        from PySide6.QtWidgets import QListWidgetItem
+        idx = self.stack.addWidget(widget)
+        item = QListWidgetItem("  " + text)
+        item.setData(Qt.ItemDataRole.UserRole, idx)
+        self.nav.addItem(item)
+        if self.nav.currentRow() < 0:
+            self.nav.setCurrentItem(item)
+        return idx
+
+    def _row_changed(self, row: int) -> None:
+        item = self.nav.item(row)
+        idx = item.data(Qt.ItemDataRole.UserRole) if item is not None else None
+        if idx is None:
+            return
+        self.stack.setCurrentIndex(idx)
+        self.currentChanged.emit(idx)
+
+    def setCurrentWidget(self, widget: QWidget) -> None:  # noqa: N802
+        idx = self.stack.indexOf(widget)
+        for row in range(self.nav.count()):
+            if self.nav.item(row).data(Qt.ItemDataRole.UserRole) == idx:
+                self.nav.setCurrentRow(row)
+                return
+
+    def currentWidget(self) -> QWidget:  # noqa: N802
+        return self.stack.currentWidget()
+
+    def count(self) -> int:
+        return self.stack.count()
+
+    def widget(self, i: int) -> QWidget:
+        return self.stack.widget(i)
+
+
 class AppSettingsDialog(QDialog):
     def __init__(self, settings: AppSettings, vault: Vault, parent: QWidget | None = None,
-                 tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None):
+                 tool_updates: Callable[[], int] | None = None, update_all: Callable[[], None] | None = None,
+                 initial_tab: str = ""):
         super().__init__(parent)
         self.settings = settings
         self.vault = vault
@@ -273,18 +360,35 @@ class AppSettingsDialog(QDialog):
         self.language_changed = False
         self.scale_changed = False
         self.setWindowTitle(tr("appsettings.title"))
-        fit_to_screen(self, 760, 540)
+        fit_to_screen(self, 980, 600)
         lay = QVBoxLayout(self)
-        tabs = QTabWidget()
-        tabs.addTab(self._general_tab(), tr("appsettings.tab_general"))
-        tabs.addTab(self._display_tab(), tr("appsettings.tab_display"))
-        tabs.addTab(self._repo_tab(), tr("appsettings.tab_repos"))
-        tabs.addTab(self._update_tab(), tr("appsettings.tab_updates"))
-        tabs.addTab(self._security_tab(), tr("appsettings.tab_security"))
+        tabs = NavPages()
+        tabs.addGroup(tr("appsettings.group_program"))
+        tabs.addTab(self._general_tab(), "⚙ " + tr("appsettings.tab_general"))
+        tabs.addTab(self._display_tab(), "🎨 " + tr("appsettings.tab_display"))
+        tabs.addTab(self._repo_tab(), "📦 " + tr("appsettings.tab_repos"))
+        tabs.addTab(self._update_tab(), "⟳ " + tr("appsettings.tab_updates"))
+        tabs.addTab(self._security_tab(), "🔒 " + tr("appsettings.tab_security"))
         pwm = QWidget()
         pwm_lay = QVBoxLayout(pwm)
         pwm_lay.addWidget(PasswordManagerWidget(pwm))
-        tabs.addTab(pwm, tr("pwm.title"))
+        tabs.addTab(pwm, "🔑 " + tr("pwm.title"))
+        tabs.addGroup(tr("appsettings.group_ai"))
+        self.ai_connections = AIConnectionsPage(settings, vault)
+        tabs.addTab(self.ai_connections, "✦ " + tr("ai.tab_assistants"))
+        from .ai_defaults import DefaultsPage
+        self.ai_defaults = DefaultsPage(settings, vault)
+        tabs.addTab(self.ai_defaults, "🧭 " + tr("ai.tab_defaults"))
+        self.ai_storage = AIStoragePage(settings, vault)
+        tabs.addTab(self.ai_storage, "🗄 " + tr("ai.tab_storage"))
+        self.ai_access = AIAccessPage(settings, vault, "app")
+        tabs.addTab(self.ai_access, "🛡 " + tr("ai.tab_access"))
+        tabs.currentChanged.connect(lambda _i: self.ai_defaults.refresh()
+                                    if tabs.currentWidget() is self.ai_defaults else None)
+        if initial_tab == "ai":
+            tabs.setCurrentWidget(self.ai_connections)
+        elif initial_tab == "ai_defaults":
+            tabs.setCurrentWidget(self.ai_defaults)
         self.tabs = tabs
         lay.addWidget(tabs, 1)
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Save | QDialogButtonBox.StandardButton.Cancel)
@@ -531,6 +635,8 @@ class AppSettingsDialog(QDialog):
         s.set("auto_update_tools", self.auto_update.isChecked(), save=False)
         s.set("close_update_window", self.close_update_window.isChecked(), save=False)
         s.save()
+        self.ai_storage.save()
+        self.ai_access.save()
         token = self.token.text().strip()
         if token != (self.vault.get("app:github_token", "") or ""):
             self.vault.set("app:github_token", token or None)

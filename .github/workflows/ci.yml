@@ -53,6 +53,8 @@ jobs:
         run: python -m pip install -r requirements.txt
       - name: Starttest (Tresor, Tool-Installation, alle Sprachen, alle Tools öffnen)
         run: python scripts/smoke_test.py
+      - name: KI-Bausteine (Protokolle, Verfremdung, Zugriff, Ablage, Wiki-Suche)
+        run: python scripts/test_ai.py
 
   smoke-linux:
     name: Starttest Linux
@@ -73,3 +75,25 @@ jobs:
         run: python scripts/smoke_test.py
       - name: Server-Favoriten (DHCP- und DNS-Tool mit Fake-Backends)
         run: python scripts/fav_check/test_favorites.py
+      - name: KI-Funktionen der Tools (DHCP, DNS, NetProbe, IconForge mit Fake-Backends)
+        run: |
+          python -m pip install dnspython
+          python scripts/ai_check/test_tool_ai.py
+      - name: Clank – KI-Chat mit Fake-Assistent
+        run: python scripts/ai_check/test_studio.py
+      - name: Pixelizer (Bilder) und Q-Force (Gruppenchat) mit Fake-Anbietern
+        run: python scripts/ai_check/test_media_group.py
+      - name: Groovitron (Musik) und Vidcomic (Video) mit Fake-Anbietern und ffmpeg
+        run: |
+          sudo apt-get install -y -q ffmpeg
+          python scripts/ai_check/test_music_video.py
+      - name: Clank-Vorlagen, Bildschirmfoto, Infobot (Dokumente) und Orvus (Zeitpläne)
+        run: python scripts/ai_check/test_extras.py
+      - name: Gadgetron – MCP-Client und -Server (Fake-Server, stdio-Brücke)
+        run: python scripts/ai_check/test_mcp.py
+      - name: Kreeli (Transkription) und Mr. Zurkon (Sprachassistent) mit Fake-Anbietern
+        run: |
+          python -m pip install numpy
+          python scripts/ai_check/test_speech.py
+      - name: KI-Tools (Ollama einrichten, Installation mit Auswahl, Übernahme aus Clank)
+        run: python scripts/ai_check/test_ai_tools.py

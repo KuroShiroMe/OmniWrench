@@ -38,6 +38,19 @@
   OmniWrench speichert dann alles dort statt im Profil.
 - **Umgebungsvariable** `OMNIWRENCH_HOME=<Ordner>`: alle Daten in diesem Ordner (für Tests und Sonderfälle).
 
+## KI-Daten
+
+Chats, Projekte, Dokumente, Bilder, Musik, Videos und Mitschriften der [KI-Assistenten](KI-Assistenten) liegen
+nicht im Programmordner, sondern in der **KI-Datenablage** (Standard: die eigenen Ordner Dokumente, Bilder, Musik
+und Videos, jeweils Unterordner `OmniWrench`). Ort und Verschlüsselung: *Einstellungen › KI-Datenablage*, Details unter
+[KI-Assistenten › KI-Datenablage](KI-Assistenten#ki-datenablage). Weitere Ablagen:
+
+| Datei / Ordner | Inhalt |
+|---|---|
+| `vault.json` | Schlüssel und Anmeldungen der Assistenten, Schlüssel der verschlüsselten KI-Daten |
+| `%LOCALAPPDATA%\…\ai-index\` | Suchindex über dieses Wiki für die Assistenten (wird neu aufgebaut) |
+| `mcp_server.json` (Einstellungsordner) | Port und Token des MCP-Servers von [Gadgetron](Tool-Gadgetron), solange er läuft |
+
 ## Sichern und umziehen
 
 Zum Sichern genügen die beiden Datenordner (bzw. `portable-data`). Installierte Tools lassen sich auch einfach
@@ -55,6 +68,11 @@ Abgerufen werden nur:
 Die Prüfung beim Start lässt sich unter *Einstellungen › Updates* abschalten. Tool-Pakete werden nur auf
 Anforderung geladen oder, wenn ausdrücklich eingeschaltet, beim Start automatisch aktualisiert (Standard: aus).
 Es gibt keine Telemetrie und kein Konto.
+
+**KI-Assistenten:** Fragen gehen nur an die Anbieter, die man selbst verbunden hat, und nur beim Senden einer
+Nachricht (bzw. bei Zeitplänen in [Orvus](Tool-Orvus)). Was sie von den Tools sehen, regelt der
+[KI-Zugriff](KI-Zugriff-und-Verfremdung) (Standard: nur Beschreibungen); Adressen und Namen werden vorher
+verfremdet. Lokale Modelle (Ollama, LM Studio …) verlassen den Rechner gar nicht.
 
 Verbindungen zu Active Directory, DHCP-Servern, Passwortmanagern oder anderen Systemen stellen nur die Tools her,
 die der Benutzer installiert und einrichtet. Was ein Tool im Netz tut, steht auf seiner Wiki-Seite unter

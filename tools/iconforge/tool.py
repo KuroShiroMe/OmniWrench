@@ -16,6 +16,7 @@ from omniwrench.sdk import ToolBase
 from omniwrench.ui.widgets import library_icon
 
 from . import export
+from .ai import IconForgeAI
 from .export import Style
 from .packs import IconRef, PackStore, load_licenses
 from .wizard import PackWizard
@@ -310,6 +311,7 @@ class IconForge(ToolBase):
         self.variant.currentIndexChanged.connect(self._load_items)
         self._fill_packs(select="lucide")
         self.search.setFocus()
+        self.ai = IconForgeAI(self)
         return self.root
 
     # ------------------------------------------------------------ Pakete

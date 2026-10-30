@@ -3,6 +3,34 @@
 Since 2026-10-17 open items are tracked as GitHub issues (#17–#38, labels). Keep this file and the issues in sync.
 
 ## Open / to verify with user
+- [ ] KI-Integration (branch claude/project-thread-ie207t, app 0.9.0, Clank 1.0.0): ALL stages incl. final stage done
+      2026-10-29 round 3 (Clank 1.0.2): scan, KI-Übersicht, Whisper local/Piper/Gemini speech, group rate waits -> TESTLISTE 12e.
+      2026-10-29 round 4: split into 10 KI-Tools (Clank 1.1.0 + Pixelizer … Gadgetron), Ollama setup dialog,
+      opt-out install, shared AI dir -> TESTLISTE 12f. Open: Phoenix (project hub, answers P1–P10 from Stef),
+      Orvus/Gadgetron only run while their tab is open (background service later?), Mr. Zurkon layout with chat dock
+      open is narrow, site/img/clank.webp re-render after split, Ollama install on Windows untested (winget/setup).
+      Open: verify on Windows whether natural Narrator voices appear via winrt; faster-whisper/piper wheels exist for cp314 win_amd64 (checked 2026-10-29).
+      2026-10-29, PR open -> Stef tests (docs/TESTLISTE.md section 12), then merge + tag v0.9.0 (Stef pushes tags).
+      Later: realtime STT (gpt-live-transcribe), OpenAI TTS successor before 2027-01-06, gpt-4o-transcribe-diarize
+      ends 2027-02-26 (then only local speaker matching). MCP later: resources/prompts, subscriptions/listen, OAuth
+      for remote MCP servers. Dialect locales got only a light word-map colouring for the 273 ai.* keys (native
+      check open like the other dialect texts). Non-de/en locales still say "options" in a few ai.* texts where
+      de/en now say "Einstellungen"/"settings" (menu name). Template repo (templates/tool-repo): mention AI SDK.
+      Not built from the feasibility doc tables (listed to Stef 2026-10-29, proposed as follow-up PR Clank 1.1/App 0.9.1):
+      cost per answer + monthly limit per connection (A6), "export unencrypted", full-text search over all chats,
+      branch/pin/tag threads, artifact preview (HTML/tables/diagrams), project memory .md, compare two answers,
+      PDF preview + Office as text, image edit local+AI, music fade/normalize + video concat, "An IconForge senden",
+      ComfyUI, group chat € limit/@Name/PASS, Word/Excel export.
+      Models/NSFW/catalog (2026-10-29): media/speech providers listed as info only (Leonardo, Krea, Pika, PixVerse,
+      Vidu, Freepik, Speechmatics, Cartesia, Azure Speech) -> direct adapters later if Stef wants. Clank image/music/video
+      model boxes still use catalog lists (no live query yet). NSFW switch affects chat only, not image prompts.
+      ChatGPT sign-in: model list via /models may fail -> picker shows "unknown"; catalog list used.
+      Stef 2026-10-29 (after merge, she says when): (1) speaker profiles: keep opt-in, but saving profiles
+      permanently gets its own prominent warning (bold, DSGVO Art. 9 biometric data, responsibility lies with the
+      user, explicit "Ich habe verstanden" confirmation) instead of only a checkbox in the consent dialog.
+      (2) Rethink Clank "Projekte" as an assistant / project-management hub (not only chat projects): tasks like
+      switch configs, but also scheduling, email content analysis, meeting invitations, meeting summaries; later
+      email/calendar integration (Outlook/Graph, IMAP/CalDAV). Collect ideas, write a concept for Stef.
 - Landing page kuroshiro.me: live. Open: enforce HTTPS (Stef), re-render site/img screenshots after KuroShiro rename (PR #53).
   Impressum/legal page if the site counts as geschäftsmäßig (Stef to decide, needs a postal address).
 **All open Windows tests live in `docs/TESTLISTE.md` (German, grouped by tool, created 2026-10-22).** Keep that file
@@ -49,7 +77,7 @@ that are not plain test steps.
       1.1.0 replication (TESTLISTE 9a) untested on Windows: DsReplicaSyncAllW via ctypes, GetDistinguishedName out
       param name "Name", LastSuccessfulXfr units. Idea: repl column also in search results.
 - [ ] Server favourites (DHCP 1.6.1, DNS 1.2.1): Windows tests open (TESTLISTE 11). Ideas: export/import of
-      favourites (share with colleagues), favourite name in the top bar after login, AI level per favourite (KI thread).
+      favourites (share with colleagues), favourite name in the top bar after login, AI level per favourite: done (KI thread, DHCP 1.7.1/DNS 1.3.1).
 
 ## Later (mentioned by user or proposed)
 - More password-manager connectors (Bitwarden, 1Password, HashiCorp Vault done in 1.1.0): KeePassXC (browser protocol),

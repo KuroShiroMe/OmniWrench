@@ -12,6 +12,10 @@ Fenster ausklinken, und das Layout bleibt beim nächsten Start erhalten. Zugangs
 einem Tresor, der mit Masterpasswort oder Smartcard geöffnet wird. Jedes Tool kann sie nutzen, ohne dass ein
 Passwort je im Klartext gespeichert wird.
 
+Seit Version 0.9.0 helfen **KI-Assistenten** mit: ChatGPT, Claude, Gemini, Copilot, lokale Modelle oder ein
+Firmen-Bot beantworten Fragen zu OmniWrench und zu den Daten der Tools – nur so viel, wie man ihnen erlaubt, und
+mit verfremdeten Adressen und Namen.
+
 OmniWrench läuft unter **Windows 10/11** und **Linux** und spricht 23 Sprachen und Dialekte.
 
 ![Startseite von OmniWrench](images/hauptprogramm-home.png)
@@ -33,6 +37,10 @@ OmniWrench läuft unter **Windows 10/11** und **Linux** und spricht 23 Sprachen 
 | [Einstellungen](Einstellungen) | Alle Programmeinstellungen und die Einstellungen je Tool |
 | [Tresor und Anmeldung](Tresor-und-Anmeldung) | Masterpasswort, Zertifikat/Smartcard, automatisches Sperren, Passwort vergessen |
 | [Passwortmanager](Passwortmanager) | Eingebauter Passwortmanager, Zugangsdaten in Tools, externe Manager |
+| [KI-Assistenten](KI-Assistenten) | Assistenten verbinden, Chatleiste, Projekte, „Assistent fragen …“, KI-Datenablage |
+| [KI-Anbieter](KI-Anbieter) | Alle unterstützten KI-Anbieter mit Stärken, Kosten, Modellen, kostenlos testen, NSFW |
+| [KI-Zugriff und Verfremdung](KI-Zugriff-und-Verfremdung) | Was Assistenten sehen und ändern dürfen, Verfremdung von Adressen und Namen |
+| [KI lokal mit Ollama](KI-lokal-mit-Ollama) | KI kostenlos auf dem eigenen Rechner: Ollama installieren, Modelle, Sprache offline |
 | [Sprachen](Sprachen) | Programmsprache, Dialekte, Sprache je Tool |
 | [Datenablage und Datenschutz](Datenablage-und-Datenschutz) | Wo welche Daten liegen, portable Daten, Netzwerkzugriffe |
 | [Fehlerbehebung](Fehlerbehebung) | Protokolle, häufige Probleme, Hilfe holen |
@@ -50,6 +58,16 @@ Eine Übersicht aller Tools mit Plattformen und Voraussetzungen steht auf der Se
 | [NetProbe](Tool-NetProbe) | Netzwerk-Testtool: Ping, Traceroute, Portscan, TLS, DNS, Leitungstest |
 | [MS DHCP Extended Management](Tool-MS-DHCP-Extended-Management) | Microsoft-DHCP-Server verwalten und prüfen |
 | [MS DNS Extended Management](Tool-MS-DNS-Extended-Management) | Microsoft-DNS-Server verwalten und prüfen |
+| [Clank – KI-Chat](Tool-Clank) | KI-Chat mit Projekten, Vorlagen, Arbeitsbereich (Ordner, Git, GitHub/GitLab/Azure DevOps), Bildschirmfoto |
+| [Pixelizer – Bilder](Tool-Pixelizer) | Bilder erzeugen, mit Vorlagebild und Galerie |
+| [Groovitron – Musik](Tool-Groovitron) | Musik erzeugen, abspielen, mit ffmpeg bearbeiten |
+| [Vidcomic – Video](Tool-Vidcomic) | Videoclips erzeugen, abspielen, mit ffmpeg bearbeiten |
+| [Q-Force – Gruppenchat](Tool-Q-Force) | Mehrere Assistenten besprechen ein Thema |
+| [Infobot – Dokumente](Tool-Infobot) | Dokumente schreiben lassen, Export HTML/PDF/ODT |
+| [Orvus – Zeitpläne](Tool-Orvus) | Fragen zu festen Zeiten an einen Assistenten |
+| [Kreeli – Transkription](Tool-Kreeli) | Besprechungen live transkribieren, Sprecher erkennen, zusammenfassen |
+| [Mr. Zurkon – Sprachassistent](Tool-Mr-Zurkon) | Weckwort, Spracherkennung, Antworten vorlesen |
+| [Gadgetron – MCP](Tool-Gadgetron) | MCP-Server anbinden, OmniWrench als MCP-Server anbieten |
 
 ## Eigene Tools entwickeln
 

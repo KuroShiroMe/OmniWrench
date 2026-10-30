@@ -1,0 +1,30 @@
+{
+  "id": "ai.infobot",
+  "name": "Infobot – Documents",
+  "version": "1.0.0",
+  "description": "Write documents with an assistant and export them as HTML, PDF or ODT.",
+  "long_description": "Writes documents together with a connected assistant: guides, reports, concepts, minutes, e-mails or free text. The assistant drafts and revises on request; the document can be edited by hand, is saved in the AI data storage and exported as HTML, PDF or ODT, or handed to the chat panel.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Infobot",
+  "category": "ai",
+  "icon": "file-text",
+  "color": "#10b981",
+  "entry": "tool:Infobot",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Documents",
+    "Dokumente",
+    "PDF",
+    "ODT",
+    "HTML"
+  ],
+  "screenshots": [],
+  "single_instance": true,
+  "requirements": {}
+}

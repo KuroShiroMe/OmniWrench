@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `gfx.iconforge` |
-| **Stand der Seite** | Version 1.1.4 |
+| **Stand der Seite** | Version 1.2.0 |
 | **Bereich** | Dokumentation & Design |
 | **Tags** | Icons, SVG, PNG, ICO, Visio, Lucide, Tabler, Material, Fluent, Font Awesome |
 | **Plattformen** | Windows, Linux |
@@ -144,6 +144,15 @@ Geladen wird jeweils die neueste Version, die mindestens 14 Tage alt ist.
 CC-BY-4.0 verlangt eine Namensnennung des Urhebers. Bei Markenlogos (Simple Icons) gelten zusätzlich die
 Markenrechte der Inhaber.
 
+### KI-Assistenten
+Ab OmniWrench 0.9.0 können [KI-Assistenten](KI-Assistenten) passende Symbole vorschlagen – so weit der
+[KI-Zugriff](KI-Zugriff-und-Verfremdung) es erlaubt (Standard: nur Beschreibung).
+
+| Stufe | Funktionen für Assistenten |
+|---|---|
+| 2 – Übersicht | Heruntergeladene Symbolpakete |
+| 3 – Lesen | Symbole suchen (englische Begriffe funktionieren am besten), ein Symbol im Tool anzeigen |
+
 ## Einstellungen
 
 | Einstellung | Standard | Bedeutung |
@@ -177,6 +186,7 @@ Markenrechte der Inhaber.
 
 | Version | Änderungen |
 |---|---|
+| 1.2.0 | **KI-Assistenten**: Symbolpakete, Suche und Anzeige für Assistenten |
 | 1.1.4 | läuft auch unter Linux |
 | 1.1.3 | Bereich und Tags neu |
 | 1.1.0 | Download-Assistent; Bibliotheksliste zeigt nur geladene Bibliotheken; Export oben in der rechten Leiste |

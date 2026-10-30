@@ -1,0 +1,28 @@
+{
+  "id": "ai.orvus",
+  "name": "Orvus – Schedules",
+  "version": "1.0.0",
+  "description": "Ask an assistant questions at fixed times (once, daily, weekly, every N hours).",
+  "long_description": "Schedules questions to a connected assistant: once, daily, weekly or every N hours. Every run becomes a new chat (optionally in a project) and can be opened in the chat panel. Schedules run while Orvus is open; missed runs can be caught up when it opens. Functions that change something (level 4) are never executed by scheduled runs because nobody can confirm them.",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Orvus",
+  "category": "ai",
+  "icon": "calendar-clock",
+  "color": "#6366f1",
+  "entry": "tool:Orvus",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Schedules",
+    "Zeitpläne",
+    "Automation"
+  ],
+  "screenshots": [],
+  "single_instance": true,
+  "requirements": {}
+}

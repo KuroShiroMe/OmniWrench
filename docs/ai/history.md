@@ -511,6 +511,54 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   IPv4/IPv6 view, DNS further servers + DHCP server for the comparison. "ai" section agreed with the KI thread.
   Tests: scripts/fav_check (39 checks), dns_check/test_logic, smoke_test, check_locales, check_store. Wiki sections
   "Favoriten" + new login images, TESTLISTE 11. Landing page checked: tool list is generated, nothing else to add.
+- 2026-10-28: KI-Integration planned with Stef (feasibility doc, mockups, provider research, question tables A1-A15,
+  B1-B12, answers in decisions.md). Stef: implement all stages automatically, she tests the end product.
+  Etappe 1 (branch claude/project-thread-ie207t): omniwrench/ai/ (providers catalog 63 entries, connections + vault
+  secrets, browser sign-in ChatGPT/OpenRouter/Entra/custom OAuth, adapters OpenAI Chat/Responses/Anthropic/Graph
+  Copilot, chat loop with function calls, local storage 3 modes + AES-GCM encryption), settings tabs KI-Assistenten /
+  KI-Datenablage, dockable chat panel with bot switch, detail level, projects, history. Tested against a local fake
+  server (all 3 protocols incl. tool calls), smoke test extended.
+- 2026-10-28: Etappe 2: wiki knowledge (FTS5), app functions, KI-Zugriff page for app + every tool (inheritance, exceptions), pseudonymization (on for everything), confirmation dialog with remember; scripts/test_ai.py in CI.
+- 2026-10-28: Etappe 3: tool SDK for AI (ToolContext.ai_function/ai_set_access/ask_assistant/add_ask_action), "Assistent
+  fragen …" dialog + mode setting, AI functions in DHCP 1.7.0, DNS 1.3.0, NetProbe 1.3.0, IconForge 1.2.0, AD lookup
+  1.4.0, AI level/pseudonymization per server favourite on the DHCP/DNS login page, context menus in tool tables.
+  Tests: scripts/ai_check/test_tool_ai.py (47 checks), fav_check adjusted, smoke test asks via context dialog.
+
+- 2026-10-28: Etappe 4: new tool "Clank – KI-Studio" (ai.clank 1.0.0): chat with projects/threads, workspace explorer
+  for local folders + GitHub/GitLab/Azure DevOps repos (browse via API, clone with token header), file viewer with
+  highlighting, AI functions for list/read/search/git/write/run command (diff resp. command + explanation in the
+  confirmation). App version 0.9.0 (min_app of Clank). R&C name list docs/ai/rc-names.md. Test test_studio.py (36).
+- 2026-10-28: Etappe 5: Clank tabs "Bilder" (ai/media.py with 9 image API kinds, gallery, reference images, to chat)
+  and "Gruppenchat" (2-6 assistants, modes, brakes, interjections, summary, saved encrypted). Provider check: Gemini
+  image models now gemini-nano-banana-2.1 (GA 2026-10-06, replaces deprecated gemini-3.1-flash-image), OpenAI
+  gpt-image-1-mini/1.5/chatgpt-image-latest shut down 2026-12-01 (not in catalog). Test test_media_group.py (68).
+- 2026-10-28: Etappe 6: Clank tabs "Musik" and "Video" (7 music + 8 video API kinds, playback, ffmpeg edits: trim,
+  MP3, GIF, add music, mute, still; ffmpeg download for Windows, greyed tabs without ffmpeg). Provider check: Veo 3.1
+  preview shut down 2026-10-22 -> Gemini Omni Flash (gemini-omni-1.1-flash, Interactions API); xAI grok-imagine-video
+  1.5 + 1.5-lite; Lyria 3.5 GA. Test test_music_video.py (71 checks).
+- 2026-10-28: Etappe 7a: Clank templates (8 built-in, own with {{placeholders}}), tab "Dokumente" (write/revise with
+  AI, export HTML/PDF/ODT, new storage type documents), screenshot (region/full screen to chat), tab "Planung"
+  (scheduled prompts while Clank is open). Test test_extras.py (40 checks).
+- 2026-10-28: Etappe 7b: MCP. Spec check: current MCP revision is 2026-07-28 (stateless, server/discover, per-request
+  _meta, new HTTP headers) -> client speaks it plus legacy initialize; Clank tab "MCP" (connect stdio/HTTP servers,
+  tools for assistants) and OmniWrench as MCP server (localhost HTTP + token, stdio bridge `--mcp-stdio`). Test
+  test_mcp.py (72 checks).
+- 2026-10-29: Etappe 7c: Clank tabs "Mitschrift" (live transcription of mic + system audio, consent dialog, speaker
+  recognition with named encrypted profiles, summary) and "Sprachassistent" (wake word "Hey <name>" offline via
+  Vosk, push-to-talk, answers read aloud). Provider check: OpenAI gpt-transcribe/gpt-live-transcribe new,
+  whisper-1/gpt-4o(-mini)-transcribe(-diarize) shut down 2027-02-26, TTS tts-1/gpt-4o-mini-tts snapshots
+  2027-01-06 (successor realtime only); ElevenLabs eleven_v4/_turbo new, scribe_v1 deprecated; AssemblyAI
+  speech_models universal-3-pro/universal-2 (speech_model, best, nano deprecated); Deepgram diarize_model v2.
+  EXE build now bundles QtMultimedia/QtMultimediaWidgets/QtTextToSpeech (were missing for Clank media tabs).
+  Test test_speech.py (69 checks).
+- 2026-10-29: KI-Integration final stage: 273 ai.* app keys translated into the 21 other locales (real languages by
+  hand, dialects via word maps, pt = pt-BR), Clank screenshots (screenshots/render.py with MainWindow + fake
+  OpenAI-compatible server: chat, images, group, mcp), Clank description incl. MCP/transcript/voice, voice log
+  without Markdown, code hint translatable (va.code). UI wording "Optionen" -> "Einstellungen" in de/en (menu is
+  Extras > Einstellungen). Wiki: KI-Assistenten, KI-Zugriff-und-Verfremdung, Tool-Clank-KI-Studio (new), AI sections
+  + version rows in DHCP 1.7.0/DNS 1.3.0/NetProbe 1.3.0/IconForge 1.2.0/AD 1.4.0 pages, Einstellungen (3 AI tabs),
+  Datenablage, SDK page (ai_function & co.), Home/Sidebar/Tools. Landing page: 3 AI feature cards + Clank image.
+  TESTLISTE section 12. Provider check: no new changes since Etappe 7c (same day).
 - 2026-10-29: Stef not happy with the dropdown: wants a collapsible list left of the login with folders, favourite
   button at the address field, manual creation, and a password per favourite (several customers, different
   passwords, no separate selection). Rebuilt: FavoritesPanel (folders, search, DnD, context menu, collapse), star at
@@ -518,3 +566,54 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   Also fixed: DHCP _mode_changed had lost user/password enabling in the first favourites commit. Tests 59 checks.
 - 2026-10-29: Stef pulled the branch but still saw the old favourites: the tools run from the installed copy, and the
   rework kept version 1.6.0/1.2.0, so the dev store offered no update. Bumped to DHCP 1.6.1 / DNS 1.2.1. Lesson in gotchas.
+- 2026-10-29: Merged reworked server favourites (#70: FavoritesPanel with folders, password per favourite) into the KI
+  branch; AIAccessRow re-added to favorites.py, overwrite() keeps "ai". DHCP 1.7.1 / DNS 1.3.1 (above #70's 1.6.1/1.2.1,
+  unreleased 1.7.0/1.3.0 zips removed). Linux: QT_AUDIO_BACKEND=pulseaudio when no PipeWire daemon (CI segfault).
+- 2026-10-29: Clank 1.0.1: ProfileNotice (Art. 9 DSGVO, responsibility with the user) before recording with speaker
+  profiles; hidden "always" option after 10 opt-in toggles in 6 s (Stef). test_speech 78 checks.
+- 2026-10-29: Stef's ChatGPT sign-in failed (invalid_authorize_request, ext_agent_host_id): host id now urn:uuid:<uuid>
+  (old values migrated), callback port 1455 preferred, registration without issued client_id rejected, id_token_hint
+  on re-auth. test_ai covers the flow against a fake token endpoint.
+- 2026-10-29: "Voraussetzung" row in the add-assistant dialog (Provider.requirement(auth), catalog field "requires",
+  defaults by auth/category; ai.req.* in 23 locales). Sign in with ChatGPT needs Plus/Pro (OpenAI SIWC quickstart;
+  Go not listed). Wiki KI-Assistenten: requirement table + free tiers note.
+- 2026-10-29: Gemini 404 "models/gemini-3.1-pro is not found" (catalog model ids stale). Built model choice in the
+  chat: ai/models.py (GET /models per connection, cached 12 h in settings "ai_model_cache", status ok/missing/unknown,
+  tags from model name or catalog "model_tags"), ui/ai_models.py ModelPicker, model button in AIPanel (also Clank);
+  catalog defaults that vanished are swapped for the best available model automatically. Model errors -> clear message.
+  NSFW: provider flag "nsfw", Connection.nsfw opt-in with confirm; off = SAFE_RULE appended to system prompt (adapters).
+  Catalog: Gemini/OpenAI/Grok/Claude models updated, +49 providers (112): GitHub Models, Cloudflare, NVIDIA NIM,
+  SambaNova, Novita, Nebius, Venice, Featherless, Chutes, Requesty, AI21, Reka, Upstage, Inception, Nscale, Regolo,
+  SiliconFlow, Doubao, ERNIE, Hunyuan, StepFun, Databricks, Snowflake, LiteLLM, Foundry Local, Docker Model Runner,
+  oobabooga, llamafile, AnythingLLM, Open WebUI, Lemonade, Xinference, SGLang, TabbyAPI, Msty + info-only media/speech.
+  Wiki page KI-Anbieter (generated: scripts/ai_wiki/build_ai_wiki.py + descriptions.py). Region filter "EU" fixed.
+- 2026-10-29 (KI round 3, after Stef's Gemini tests): neutral system prompt (no IT assumption, also Clank);
+  reasoning effort low for short/normal, medium for detailed (Gemini/OpenAI/xAI/Groq, auto-fallback on 400);
+  Gemini fixes: thought_signature echoed (tool_call.extra_content), parallel tool calls split by id, 503/"high demand"
+  retried 2x (2 s, 6 s) before text arrives; quota errors shortened (not_in_plan / retry_in / no_credit / busy).
+  "Fähigkeiten prüfen" (omniwrench/ai/scan.py + ui/ai_scan.py): functions/models per connection, balance APIs,
+  rate-limit headers, usage_url. Clank 1.0.2: tab KI-Übersicht (overview.py, default assistant per function),
+  group chat waits on per-minute limits and keeps a learned gap per connection (group.rate_wait),
+  speech: gemini_audio (STT + TTS, 30 voices), Groq Whisper, Mistral Voxtral, Whisper local (faster-whisper) and
+  Piper (local_speech.py), voice language selectable (va_lang), voice list per language/provider, test button.
+- 2026-10-29 (KI round 4, Stef: "teile Clank in lauter einzelne Tools auf"): category "KI-Tools" (ai) with Clank 1.1.0
+  (chat) + Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron (names by Stef).
+  Shared AI dir + package folder (fix WinError 5, no re-asking after restart), opt-out install dialog with progress
+  bar, current default audio device, Vosk hint gone when ready, settings sidebar groups + page KI-Funktionen,
+  Ollama install/start/model download (app ai/ollama.py, ui/ai_ollama.py). Settings migrate once from Clank 1.0.x.
+  Wiki: 10 tool pages + KI-lokal-mit-Ollama; site card "Zehn KI-Tools". TESTLISTE 12f.
+- 2026-10-30 (Stef: wake word "meh", slow answers, weather/news missing, bigger stylish display, more Ollama models):
+  Mr. Zurkon: WakeDetector AGC (env follower, 1–10x), sensitivity normal/high/max (0.72/0.64/0.56, max = name alone),
+  matches() space-insensitive with length guard; Chunker noise floor follows constant noise; voice chunks max 15 s;
+  Gemini STT thinkingLevel low (retry without on 400), 60 s timeout; THINK_TIMEOUT 60 s with phase counter + give-up.
+  New app module ai/live_info.py (Open-Meteo weather, Google News RSS, no keys, functions get_weather/get_news at
+  LEVEL_DESCRIBE, listener -> Mr. Zurkon). New tools/mr_zurkon/stage.py (QPainter display: state orb, animated weather,
+  news ticker); log small at bottom, settings collapsible, home place. Ollama: ~40 models (★ top 5, ✔ installed,
+  ⚠ > RAM, ollama.com link). Store screenshots weather/news. Wiki Tool-Mr-Zurkon, KI-Assistenten, KI-lokal-mit-Ollama;
+  TESTLISTE 12g. Provider overview images/music/video for Stef (docs/ai-medien-anbieter.md in project files).
+- 2026-10-30 (Stef: wants free methods only for testing): ComfyUI integration for images/music/video. New app module
+  ai/comfyui.py (presets sdxl-turbo, flux-schnell, ltx-video, ace-step; API-format workflows; /prompt, /history, /view;
+  find server 8188/8000; /internal/folder_paths; resumable HF downloads; winget Comfy.ComfyUI-Desktop; Linux git
+  command), media.py api "comfyui" for all kinds, ui/ai_comfyui.py dialog (button in comfyui connection editor, test
+  = /system_stats), media-only connections save without model, error texts ai.comfy.err.* (23 locales).
+  test_ai_tools 71 (fake ComfyUI). Wiki KI-lokal-mit-Ollama + Pixelizer/Groovitron/Vidcomic; TESTLISTE 12h.

@@ -194,14 +194,76 @@ class _ContextBase:
         return credentials.normalize_value(self.settings.get(key))["items"]
 
 
+# Zugriffsstufen für KI-Funktionen (Seite „KI-Zugriff“): Mindeststufe, ab der eine Funktion angeboten wird
+AI_DESCRIBE, AI_OVERVIEW, AI_READ, AI_CHANGE = 1, 2, 3, 4
+
+
 class ToolContext(_ContextBase):
     """Wird jeder Tool-Instanz beim Start übergeben."""
 
     def __init__(self, *args, notify: Callable[[str], None] | None = None,
-                 open_settings: Callable[[], None] | None = None, **kwargs):
+                 open_settings: Callable[[], None] | None = None,
+                 ask_assistant: Callable[..., None] | None = None, ai_services: Callable[[], Any] | None = None,
+                 **kwargs):
         super().__init__(*args, **kwargs)
         self._notify = notify
         self._open_settings = open_settings
+        self._ask_assistant = ask_assistant
+        self._ai_services = ai_services
+
+    # ------------------------------------------------------------ KI-Assistent (seit 0.9.0)
+    def ai_function(self, name: str, description: str, handler: Callable[[dict, Any], Any],
+                    parameters: dict | None = None, level: int = AI_READ, confirm: bool = False,
+                    summary: Callable[[dict], str] | None = None) -> None:
+        """Stellt dem Assistenten eine Funktion dieses Tools bereit (gilt, solange der Tab offen ist).
+
+        name/description auf Englisch (für das Sprachmodell), parameters als JSON-Schema.
+        handler(args, call) läuft im Hintergrund; call.in_gui(fn) führt fn im GUI-Thread aus,
+        call.level ist die wirksame Zugriffsstufe. Rückgabe: Text oder JSON-fähige Daten.
+        level: Mindeststufe (AI_DESCRIBE … AI_CHANGE). Ab AI_CHANGE fragt das Programm vor dem
+        Ausführen nach; summary(args) liefert dafür den Text (in der Sprache des Benutzers).
+        Werte unter Schlüsseln wie host/server/user werden bei aktiver Verfremdung ersetzt.
+        """
+        from omniwrench.ai import functions
+        functions.register(functions.Function(
+            name=name, description=description, handler=handler,
+            parameters=parameters or {"type": "object", "properties": {}}, source=self.manifest.id,
+            level=level, confirm=confirm or level >= AI_CHANGE, summary=summary, owner=self))
+
+    def ai_remove_functions(self) -> None:
+        """Entfernt alle Funktionen dieser Tool-Instanz (passiert beim Schließen des Tabs automatisch)."""
+        from omniwrench.ai import functions
+        functions.unregister_owner(self)
+
+    def ai_set_access(self, level: int | None = None, pseudo: bool | None = None) -> None:
+        """Vorübergehende KI-Zugriffsstufe/Verfremdung dieses Tools, z. B. aus dem gewählten Server-Favoriten.
+        None für beides = wieder die Einstellung des Tools verwenden."""
+        from omniwrench.ai import access
+        access.set_runtime(self.manifest.id, level, pseudo)
+
+    def ai_level(self) -> int:
+        """Wirksame Zugriffsstufe dieses Tools (ohne Ausnahmen je Assistent)."""
+        from omniwrench.ai import access
+        from omniwrench.core.settings import AppSettings
+        return access.level(AppSettings(), self.manifest.id)
+
+    def ai_services(self):
+        """KI-Dienste des Hauptprogramms (Verbindungen, Datenablage, Chat-Widget) für KI-Tools; None ohne Hauptfenster.
+        Siehe omniwrench.ui.ai_services.AIServices."""
+        return self._ai_services() if self._ai_services else None
+
+    def ask_assistant(self, context: str, title: str = "") -> None:
+        """Öffnet „Assistent fragen …“ mit einem Element des Tools als Kontext (Text, z. B. ein Lease)."""
+        if self._ask_assistant:
+            self._ask_assistant(context, title or self.manifest.display_name, self.manifest.id)
+
+    def add_ask_action(self, menu, context: "str | Callable[[], str]", title: str = ""):
+        """Fügt einem Kontextmenü den Eintrag „Assistent fragen …“ hinzu. context: Text oder Funktion."""
+        if not self._ask_assistant:
+            return None
+        act = menu.addAction("✦ " + tr("ai.ask.action"))
+        act.triggered.connect(lambda: self.ask_assistant(context() if callable(context) else context, title))
+        return act
 
     def notify(self, message: str) -> None:
         """Zeigt eine Meldung in der Statusleiste des Hauptprogramms."""
@@ -214,12 +276,45 @@ class ToolContext(_ContextBase):
             self._open_settings()
 
 
+_install_chooser: "Callable[[str, str, list], list[str] | None] | None" = None
+
+
+def set_install_chooser(fn) -> None:
+    """Hauptfenster: Dialog für InstallContext.choose (wird aus dem Installations-Thread aufgerufen)."""
+    global _install_chooser
+    _install_chooser = fn
+
+
 class InstallContext(_ContextBase):
     """Wird an die Funktionen in install.py übergeben."""
 
     def __init__(self, *args, progress: Callable[[str], None] | None = None, **kwargs):
         super().__init__(*args, **kwargs)
         self._progress = progress
+
+    def choose(self, title: str, text: str, options: list[tuple[str, str, bool]]) -> list[str]:
+        """Fragt bei der Installation, welche optionalen Teile installiert werden sollen (Opt-out: vorbelegt ist,
+        was in options True hat). options: [(ID, Anzeigetext, vorbelegt)]. Liefert die gewählten IDs; ohne
+        Oberfläche (Tests, Kommandozeile) die vorbelegten."""
+        defaults = [oid for oid, _label, on in options if on]
+        if _install_chooser is None or not options:
+            return defaults
+        try:
+            chosen = _install_chooser(title, text, options)
+        except Exception:  # noqa: BLE001 - im Zweifel die Vorgabe
+            return defaults
+        return defaults if chosen is None else list(chosen)
+
+    def ai_packages(self, packages: list[str]) -> None:
+        """Installiert Zusatzpakete der KI-Tools in den gemeinsamen Paketordner (mit Fortschritt im Protokoll)."""
+        from omniwrench.ai import audio
+        need = audio.missing(tuple(packages))
+        if not need:
+            return
+        self.report(tr("prog.pip_install", packages=", ".join(audio.PIP_NAMES.get(p, p) for p in need)))
+        err = audio.install_packages(need, self.report)
+        if err:
+            raise RuntimeError(tr("err.pip") + "\n" + err)
 
     def report(self, message: str) -> None:
         """Schreibt eine Zeile in das Installationsprotokoll."""

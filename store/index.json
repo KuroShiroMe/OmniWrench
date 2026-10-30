@@ -1,12 +1,12 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T08:20:12+00:00",
+  "generated": "2026-10-30T09:06:57+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
       "name": "AD User Lookup",
-      "version": "1.3.5",
+      "version": "1.4.0",
       "description": "Search users in Active Directory and show their details.",
       "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
       "author": "KuroShiro",
@@ -66,14 +66,173 @@
           "screenshot.details": "Details of a locked-out account including groups"
         }
       },
-      "download_url": "packages/ms.ad-user-lookup-1.3.5.zip",
-      "sha256": "2f64925f55be0925a5e5f8dd3a617fea693819e3833a218715a6677e0a46bf86",
-      "size": 6262
+      "download_url": "packages/ms.ad-user-lookup-1.4.0.zip",
+      "sha256": "bf99998b2316dadbc0f26f22095e5e0927a126eee5416ff263953597b2fbdbba",
+      "size": 6724
+    },
+    {
+      "id": "ai.clank",
+      "name": "Clank – AI chat",
+      "version": "1.1.0",
+      "description": "AI chat with projects, templates, folders and repositories, and screenshots.",
+      "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. Plus templates for recurring questions (with placeholders) and screenshots straight into the chat. Images, music, video, group chat, documents, schedules, transcription, voice assistant and MCP are separate AI tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Clank",
+      "category": "ai",
+      "icon": "bot",
+      "color": "#8b5cf6",
+      "entry": "tool:Clank",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Chat",
+        "ChatGPT",
+        "Claude",
+        "Copilot",
+        "Gemini",
+        "Ollama",
+        "Git",
+        "GitHub",
+        "GitLab",
+        "Azure DevOps",
+        "Projects"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/chat.png",
+          "caption": "Chat with the connected assistants, projects and workspace",
+          "url": "screenshots/ai.clank/chat.png",
+          "sha256": "0eae2175bb5ab1d4456f31d04e46c905103a1e7a2df1863ff37b3d35565f369f",
+          "size": 100860
+        }
+      ],
+      "single_instance": false,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Clank – KI-Chat",
+          "description": "KI-Chat mit Projekten, Vorlagen, Ordnern und Repositories sowie Bildschirmfotos.",
+          "long_description": "Arbeitet mit den in OmniWrench verbundenen Assistenten (Einstellungen > KI-Assistenten) und teilt Chats und Projekte mit der Chatleiste. Jedes Projekt bekommt einen eigenen Arbeitsbereich: lokale Ordner, Git-Repositories und Online-Repositories (GitHub, GitLab, Azure DevOps – online gelesen oder lokal geklont). Assistenten können den Arbeitsbereich auflisten, durchsuchen und lesen, Git-Status, Verlauf und Unterschiede sehen, Dateiänderungen vorschlagen (als Diff) und Befehle ausführen (mit Erklärung) – beides nur nach Bestätigung, auf Wunsch für die Sitzung gemerkt. Was Assistenten sehen dürfen, steht wie bei jedem Tool auf der Seite „KI-Zugriff“; die Verfremdung ersetzt Adressen und Namen vor dem Senden. Dateien öffnen sich in einer Ansicht mit Hervorhebung und lassen sich an den Chat anhängen. Dazu Vorlagen für wiederkehrende Fragen (mit Platzhaltern) und Bildschirmfotos direkt in den Chat. Bilder, Musik, Video, Gruppenchat, Dokumente, Zeitpläne, Transkription, Sprachassistent und MCP sind eigene KI-Tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
+          "screenshot.chat": "Chat mit den verbundenen Assistenten, Projekten und Arbeitsbereich"
+        },
+        "en": {
+          "name": "Clank – AI chat",
+          "description": "AI chat with projects, templates, folders and repositories, and screenshots.",
+          "long_description": "Works with the assistants connected in OmniWrench (Settings > AI assistants) and shares chats and projects with the chat panel. Every project gets its own workspace: local folders, Git repositories and online repositories (GitHub, GitLab, Azure DevOps – read online or cloned locally). Assistants can list, search and read the workspace, see Git status, log and diffs, propose file changes (shown as a diff) and run commands (shown with an explanation) – both only after confirmation, with an option to remember the answer for the session. What assistants may see is set on the page 'AI access' like for every tool; pseudonymization replaces addresses and names before sending. Files open in a viewer with highlighting and can be attached to the chat. Plus templates for recurring questions (with placeholders) and screenshots straight into the chat. Images, music, video, group chat, documents, schedules, transcription, voice assistant and MCP are separate AI tools (Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli, Mr. Zurkon, Gadgetron).",
+          "screenshot.chat": "Chat with the connected assistants, projects and workspace"
+        }
+      },
+      "download_url": "packages/ai.clank-1.1.0.zip",
+      "sha256": "0a3b58d7e5c6b687bc172dac9002c2bb0938ce5679d14286b7384eb321c7c2fc",
+      "size": 37382
+    },
+    {
+      "id": "ai.gadgetron",
+      "name": "Gadgetron – MCP",
+      "version": "1.0.0",
+      "description": "Connect MCP servers and offer OmniWrench as an MCP server to other AI programs.",
+      "long_description": "Connects external MCP servers (HTTP or local programs, protocol version 2026-07-28 and older): their tools become functions for the chat panel and all AI tools, with the AI access level of Gadgetron and confirmation for anything that changes something. OmniWrench can also act as a local MCP server for other AI programs (Claude Desktop, VS Code …), protected by a token; changes are confirmed here in the program. For clients that only speak stdio: OmniWrench --mcp-stdio.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Gadgetron",
+      "category": "ai",
+      "icon": "plug-zap",
+      "color": "#64748b",
+      "entry": "tool:Gadgetron",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "MCP",
+        "Model Context Protocol",
+        "Server"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/mcp.png",
+          "caption": "Connect MCP servers and offer OmniWrench as an MCP server",
+          "url": "screenshots/ai.gadgetron/mcp.png",
+          "sha256": "98f175337c3302aca7fc6395c36b9036d26b803fb0d21feb99a35550e2fa2c7c",
+          "size": 97749
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Gadgetron – MCP",
+          "description": "MCP-Server anbinden und OmniWrench anderen KI-Programmen als MCP-Server anbieten.",
+          "long_description": "Bindet fremde MCP-Server an (HTTP oder lokale Programme, Protokollversion 2026-07-28 und älter): Ihre Werkzeuge werden Funktionen für die Chatleiste und alle KI-Tools, mit der KI-Zugriffsstufe von Gadgetron und Bestätigung bei allem, was etwas ändert. Umgekehrt bietet OmniWrench sich anderen KI-Programmen (Claude Desktop, VS Code …) als lokaler MCP-Server an, geschützt mit Token; Änderungen werden hier im Programm bestätigt. Für Programme, die nur stdio können: OmniWrench --mcp-stdio.",
+          "screenshot.mcp": "MCP-Server anbinden und OmniWrench als MCP-Server anbieten"
+        },
+        "en": {
+          "name": "Gadgetron – MCP",
+          "description": "Connect MCP servers and offer OmniWrench as an MCP server to other AI programs.",
+          "long_description": "Connects external MCP servers (HTTP or local programs, protocol version 2026-07-28 and older): their tools become functions for the chat panel and all AI tools, with the AI access level of Gadgetron and confirmation for anything that changes something. OmniWrench can also act as a local MCP server for other AI programs (Claude Desktop, VS Code …), protected by a token; changes are confirmed here in the program. For clients that only speak stdio: OmniWrench --mcp-stdio.",
+          "screenshot.mcp": "Connect MCP servers and offer OmniWrench as an MCP server"
+        }
+      },
+      "download_url": "packages/ai.gadgetron-1.0.0.zip",
+      "sha256": "8b2c66e37b4dcbf768f0f6b49d647f3f75764824c1f22d0c7a0f92b0c96b0303",
+      "size": 12884
+    },
+    {
+      "id": "ai.groovitron",
+      "name": "Groovitron – Music",
+      "version": "1.0.0",
+      "description": "Create music with the connected providers, play it and edit it with ffmpeg.",
+      "long_description": "Creates tracks with the music providers connected in OmniWrench (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate and more), with or without lyrics. Tracks are played inside OmniWrench on the current default audio device and can be trimmed or converted to MP3 with ffmpeg. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic).",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Groovitron",
+      "category": "ai",
+      "icon": "music",
+      "color": "#f59e0b",
+      "entry": "tool:Groovitron",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Music",
+        "Musik",
+        "Lyria",
+        "ElevenLabs",
+        "ffmpeg"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Groovitron – Musik",
+          "description": "Musik mit den verbundenen Anbietern erzeugen, abspielen und mit ffmpeg bearbeiten.",
+          "long_description": "Erzeugt Musikstücke mit den in OmniWrench verbundenen Musik-Anbietern (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate und weitere), mit oder ohne Liedtext. Die Stücke laufen direkt in OmniWrench auf dem aktuellen Standard-Ausgabegerät und lassen sich mit ffmpeg kürzen oder in MP3 umwandeln. Unter Windows lädt OmniWrench ffmpeg auf Wunsch herunter (einmal für Groovitron und Vidcomic)."
+        },
+        "en": {
+          "name": "Groovitron – Music",
+          "description": "Create music with the connected providers, play it and edit it with ffmpeg.",
+          "long_description": "Creates tracks with the music providers connected in OmniWrench (Gemini Lyria, ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate and more), with or without lyrics. Tracks are played inside OmniWrench on the current default audio device and can be trimmed or converted to MP3 with ffmpeg. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic)."
+        }
+      },
+      "download_url": "packages/ai.groovitron-1.0.0.zip",
+      "sha256": "94b6c8cad284fc206295096c775ed178c06efc553f6d12ea701b60e2a6345b38",
+      "size": 6381
     },
     {
       "id": "gfx.iconforge",
       "name": "IconForge",
-      "version": "1.1.6",
+      "version": "1.2.0",
       "description": "Icons and pictograms from many free icon libraries - search, customise and export, e.g. for Visio.",
       "long_description": "Searchable grid of over 100,000 icons from more than 25 free libraries (Lucide built in, Tabler, Phosphor, Material, Fluent, Font Awesome and more downloaded on demand). Shows licence and permitted uses per icon, adjusts colour, stroke width and background and exports SVG, PNG, ICO, PDF or JPG in several sizes.",
       "author": "KuroShiro",
@@ -135,14 +294,163 @@
           "screenshot.style": "Colour, stroke width and background adjusted before export"
         }
       },
-      "download_url": "packages/gfx.iconforge-1.1.6.zip",
-      "sha256": "468a5faea3c6023fb237bb4bcf91f51d57215fb2bb77c44c7926b8ccf3df8221",
-      "size": 29778
+      "download_url": "packages/gfx.iconforge-1.2.0.zip",
+      "sha256": "c70b02b1514fb6934c629179a39de7fe9a1ab3e5a1f4dba7597927aeb6aa0a2e",
+      "size": 31238
+    },
+    {
+      "id": "ai.infobot",
+      "name": "Infobot – Documents",
+      "version": "1.0.0",
+      "description": "Write documents with an assistant and export them as HTML, PDF or ODT.",
+      "long_description": "Writes documents together with a connected assistant: guides, reports, concepts, minutes, e-mails or free text. The assistant drafts and revises on request; the document can be edited by hand, is saved in the AI data storage and exported as HTML, PDF or ODT, or handed to the chat panel.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Infobot",
+      "category": "ai",
+      "icon": "file-text",
+      "color": "#10b981",
+      "entry": "tool:Infobot",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Documents",
+        "Dokumente",
+        "PDF",
+        "ODT",
+        "HTML"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Infobot – Dokumente",
+          "description": "Dokumente mit einem Assistenten schreiben und als HTML, PDF oder ODT exportieren.",
+          "long_description": "Schreibt Dokumente zusammen mit einem verbundenen Assistenten: Anleitungen, Berichte, Konzepte, Protokolle, E-Mails oder freien Text. Der Assistent entwirft und überarbeitet auf Zuruf; das Dokument lässt sich von Hand bearbeiten, wird in der KI-Datenablage gespeichert und als HTML, PDF oder ODT exportiert oder an die Chatleiste übergeben."
+        },
+        "en": {
+          "name": "Infobot – Documents",
+          "description": "Write documents with an assistant and export them as HTML, PDF or ODT.",
+          "long_description": "Writes documents together with a connected assistant: guides, reports, concepts, minutes, e-mails or free text. The assistant drafts and revises on request; the document can be edited by hand, is saved in the AI data storage and exported as HTML, PDF or ODT, or handed to the chat panel."
+        }
+      },
+      "download_url": "packages/ai.infobot-1.0.0.zip",
+      "sha256": "f6b19aec147239351c970c47023c8cd3f80ba3a921525736ba8af13fb0d1e275",
+      "size": 8790
+    },
+    {
+      "id": "ai.kreeli",
+      "name": "Kreeli – Transcription",
+      "version": "1.0.0",
+      "description": "Live transcription of microphone and system sound with speaker recognition and summary.",
+      "long_description": "Transcribes meetings from microphone and system sound live – only with the consent of all participants. Speech recognition by a connected provider (OpenAI, Gemini, Groq, Mistral, Deepgram …) or completely offline with Whisper local. Speaker recognition, optional encrypted speaker profiles (with their own notice, Art. 9 GDPR) and a summary by an assistant. Only text is stored, never the recording.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Kreeli",
+      "category": "ai",
+      "icon": "captions",
+      "color": "#14b8a6",
+      "entry": "tool:Kreeli",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Transcription",
+        "Transkription",
+        "Whisper",
+        "Meeting"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Kreeli – Transkription",
+          "description": "Live-Transkription von Mikrofon und Systemton mit Sprechererkennung und Zusammenfassung.",
+          "long_description": "Schreibt Besprechungen von Mikrofon und Systemton live mit – nur mit Einwilligung aller Beteiligten. Die Spracherkennung übernimmt ein verbundener Anbieter (OpenAI, Gemini, Groq, Mistral, Deepgram …) oder ganz offline Whisper lokal. Dazu Sprechererkennung, auf Wunsch verschlüsselte Sprecherprofile (mit eigenem Hinweis, Art. 9 DSGVO) und eine Zusammenfassung durch einen Assistenten. Gespeichert wird nur Text, nie die Aufnahme."
+        },
+        "en": {
+          "name": "Kreeli – Transcription",
+          "description": "Live transcription of microphone and system sound with speaker recognition and summary.",
+          "long_description": "Transcribes meetings from microphone and system sound live – only with the consent of all participants. Speech recognition by a connected provider (OpenAI, Gemini, Groq, Mistral, Deepgram …) or completely offline with Whisper local. Speaker recognition, optional encrypted speaker profiles (with their own notice, Art. 9 GDPR) and a summary by an assistant. Only text is stored, never the recording."
+        }
+      },
+      "download_url": "packages/ai.kreeli-1.0.0.zip",
+      "sha256": "291ceaf7777bb4e2184ab556cff303aa52fe64e2d1302863506d884abec96d29",
+      "size": 21802
+    },
+    {
+      "id": "ai.mr-zurkon",
+      "name": "Mr. Zurkon – Voice assistant",
+      "version": "1.0.0",
+      "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
+      "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Weather (Open-Meteo) and news (Google News) work without an account and appear as a large animated display. Audio goes to the current default output device.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Mr-Zurkon",
+      "category": "ai",
+      "icon": "mic-vocal",
+      "color": "#a855f7",
+      "entry": "tool:MrZurkon",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Voice assistant",
+        "Sprachassistent",
+        "Vosk",
+        "Piper",
+        "Whisper"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/weather.png",
+          "caption": "Ask for the weather: animated forecast for your place",
+          "url": "screenshots/ai.mr-zurkon/weather.png",
+          "sha256": "603e3f58dd28e65bd0d6cdc287c066a36f97989fb795e89023e4263b6e06363a",
+          "size": 65366
+        },
+        {
+          "file": "screenshots/news.png",
+          "caption": "Ask for the news: headlines with live ticker",
+          "url": "screenshots/ai.mr-zurkon/news.png",
+          "sha256": "07806c6a38df48aee58d832f332a7cefa123847bfa0e044b707834ac97b9420d",
+          "size": 51822
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Mr. Zurkon – Sprachassistent",
+          "description": "Mit dem Assistenten sprechen: Weckwort offline, Spracherkennung und vorgelesene Antworten.",
+          "long_description": "Hört offline auf ein Weckwort („Hey Zurkon“, Vosk), nimmt die Frage auf und liest die Antwort vor – mit einer Systemstimme, Piper (offline, natürliche Stimmen) oder der Stimme eines verbundenen Anbieters. Die Spracherkennung übernimmt ein Anbieter oder offline Whisper lokal bzw. Vosk. Sprache und Stimme sind frei wählbar. Das Gespräch läuft in einem eingebetteten Chat mit denselben Assistenten, Funktionen und Bestätigungen wie die Chatleiste. Die Ausgabe geht auf das aktuelle Standard-Ausgabegerät."
+        },
+        "en": {
+          "name": "Mr. Zurkon – Voice assistant",
+          "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
+          "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device."
+        }
+      },
+      "download_url": "packages/ai.mr-zurkon-1.0.0.zip",
+      "sha256": "ec1a200e208d0ec4abaccfedd2c9e618c1d44cfe67d4131ab9d8f45d57cf9524",
+      "size": 25018
     },
     {
       "id": "net.ms-dhcp-extended",
       "name": "MS DHCP Extended Management",
-      "version": "1.6.1",
+      "version": "1.7.1",
       "description": "Manage Microsoft DHCP servers (IPv4 and IPv6): scopes, options, reservations, failover and a full configuration check.",
       "long_description": "Connects to a Microsoft DHCP server (IPv4 and DHCPv6) with the current account, stored credentials or a different login and keeps the failover partners in view. Servers used regularly are kept as favourites in a collapsible list with folders next to the login (e.g. one folder per customer), each with its own login – including a password stored encrypted in the vault – and connection settings; double-click connects. Every scope opens in its own tab with general settings, address pool, options, reservations, exclusions, leases and failover state; findings (errors, warnings, best practice) are calculated while you type and mark the affected fields. New scopes are created from a draft or duplicated from an existing scope, with addresses converted to the new network. Changes on failover scopes can be replicated to the partner automatically (works even when the partner is only reachable via RPC, like the DHCP console). Further pages: server options of every failover server with sync state, failover relationships (expandable to both servers) with all scopes of each server, option definitions (expert mode, locked by default) and a server-wide scan with distribution of findings that also compares everything with the failover partners (scopes, pools, exclusions, options, reservations, relationship settings, classes and definitions). Changes made by others (DHCP console, PowerShell, colleagues) are detected: before saving the tool checks whether the scope was changed since loading, an optional auto-refresh reloads the views, and the server's event log shows who changed what – also as its own page with reading aids (area, action, scope, object and a note per event). Every change runs as a transaction: if a step fails or the action is cancelled, everything already changed is undone automatically, on the server and on the partner. DHCPv6 with the same scope: prefixes, lifetimes, options, reservations by DUID and IAID, exclusions, leases, check, transactions and conflict detection; an IPv4/IPv6 switch selects the view. Optionally the check compares reservations and leases with DNS (name, address, PTR). Detects read-only access (DHCP Users) and hides editing functions accordingly. Talks to the server directly via the Windows DHCP API (RPC) – no PowerShell or WinRM. Replication to the partner uses netsh dhcp from the RSAT DHCP tools (added automatically during installation).",
       "author": "KuroShiro",
@@ -243,14 +551,14 @@
           "screenshot.ipv6": "DHCPv6 scopes in the same view (IPv4/IPv6 switch)"
         }
       },
-      "download_url": "packages/net.ms-dhcp-extended-1.6.1.zip",
-      "sha256": "df86dc9f13b2ceb18c2c5be91231f5a22cafabfc5aa6f029c8e302148dfa8e12",
-      "size": 242533
+      "download_url": "packages/net.ms-dhcp-extended-1.7.1.zip",
+      "sha256": "0db91706ed9b52b05d3f416f12dfc533db39365f3cb441bc151785008ec86516",
+      "size": 248101
     },
     {
       "id": "net.ms-dns-extended",
       "name": "MS DNS Extended Management",
-      "version": "1.2.1",
+      "version": "1.3.1",
       "description": "Manage Microsoft DNS servers: zones, records (IPv4 and IPv6), reverse lookup, aging/scavenging and a full configuration check.",
       "long_description": "Connects to one or more Microsoft DNS servers – domain controllers with AD-integrated zones as well as standalone servers outside a domain – with the current account, stored credentials or a different login. Servers used regularly are kept as favourites in a collapsible list with folders next to the login (e.g. one folder per customer), each with its own login – including a password stored encrypted in the vault – connection settings, further servers and the DHCP server for the comparison; double-click connects. Every zone opens in its own tab with all records (A, AAAA, CNAME, PTR, MX, TXT, SRV, NS and read-only display of all other types), general settings (dynamic updates, aging, zone transfers, notify) and its findings. Creating or changing an A/AAAA record keeps the matching PTR record in the reverse zone (IPv4 and ip6.arpa) in sync. New zones (primary, AD-integrated, secondary, stub, conditional forwarder) are created from a dialog, including IPv6 reverse zones. The check finds missing or orphaned PTR records, CNAME conflicts, dangling targets, duplicate addresses, risky zone settings (non-secure updates, transfers to any server, aging off), stale records and compares NS servers and forwarders by querying them (SOA serial, response). A scavenging preview shows which dynamic records would be deleted and whether the device still answers to ping. Optionally reads leases and reservations from a Microsoft DHCP server and compares them with DNS (missing, wrong or orphaned records). Search across all zones and servers, compare zones between servers, server settings, cache and the DNS server audit log with reading aids. With several servers connected, a column shows per record whether it has already replicated to the others, and replication can be triggered on demand (AD replication of the DNS partition or zone transfer to secondary servers). Changes made by others are detected through the SOA serial; every change runs as a transaction and is undone automatically if a step fails. Talks to the server via WMI (root\\MicrosoftDNS) – no PowerShell or RSAT needed.",
       "author": "KuroShiro",
@@ -333,14 +641,14 @@
           "screenshot.events": "DNS server audit log with reading aids"
         }
       },
-      "download_url": "packages/net.ms-dns-extended-1.2.1.zip",
-      "sha256": "cdb381cef9e0513a64658be7fab6b2080e48280be8854b3378413c6078722217",
-      "size": 141909
+      "download_url": "packages/net.ms-dns-extended-1.3.1.zip",
+      "sha256": "d0cd43f87f0ffc698ed8ef38910b7f68cec03ca8521207d0a1577d05d989046f",
+      "size": 147874
     },
     {
       "id": "net.netprobe",
       "name": "NetProbe",
-      "version": "1.2.5",
+      "version": "1.3.0",
       "description": "Comprehensive network test tool: ping, traceroute, port scan, TLS, DNS, a link test to a counterpart and a findings list per target.",
       "long_description": "Enter an IP address, DNS name, network (CIDR) or range and pick a test profile (quick overview to deep analysis, link test, or custom). Targets stay in a persistent list – networks appear as an expandable group with x/y host progress, and re-running a target updates its entry in place. For every target NetProbe runs a battery of tests you can switch on and off by category: ping with latency, jitter, TTL and warm-up pings, parallel traceroute with per-hop analysis, TCP port scan with a library of 130+ services and typical usage scenarios, HTTP and TLS inspection, SMB/RDP/NTP checks and full DNS diagnostics for names (records, name servers, SPF/DKIM/DMARC, DNSSEC, MTA-STS, CAA). The link test measures the real quality of the connection to a counterpart: true (application-level) latency, throughput in both directions, a multi-connection load test and a path port scan that shows what the infrastructure in between lets through – against another NetProbe or a tiny exported mini tool – available as a standalone program that needs no Python on the counterpart, or as a cross-platform Python script. Each target opens its own dockable tab: a profile card, a connectivity tab, ports, web, services, DNS, the link test and a findings tab listing errors, warnings and best-practice notes. Context menu and buttons offer repeat, delete and PDF export. No admin rights required.",
       "author": "KuroShiro",
@@ -428,9 +736,9 @@
           "screenshot.findings": "Findings: errors, warnings and best-practice notes per target"
         }
       },
-      "download_url": "packages/net.netprobe-1.2.5.zip",
-      "sha256": "5b5c1659bfc1ccfac69887d4177f56062d14b6a9b9fae771286dffbf07d4b76a",
-      "size": 83762
+      "download_url": "packages/net.netprobe-1.3.0.zip",
+      "sha256": "0725bd9b120ba5848bbe555c45f9ad71a6a4ddd75f3f623cfabd35fd8c455152",
+      "size": 86021
     },
     {
       "id": "sec.omnivault",
@@ -556,8 +864,160 @@
         }
       },
       "download_url": "packages/sec.omnivault-1.1.6.zip",
-      "sha256": "80dc4d76ba0e44cdff8b9248fb20a3c163fbd30e4570049f72cc9a3a17446828",
+      "sha256": "98ba414efb1c5457141a97890ea53f2f2592b6a81c9e0e52c2f700ae199af269",
       "size": 36397
+    },
+    {
+      "id": "ai.orvus",
+      "name": "Orvus – Schedules",
+      "version": "1.0.0",
+      "description": "Ask an assistant questions at fixed times (once, daily, weekly, every N hours).",
+      "long_description": "Schedules questions to a connected assistant: once, daily, weekly or every N hours. Every run becomes a new chat (optionally in a project) and can be opened in the chat panel. Schedules run while Orvus is open; missed runs can be caught up when it opens. Functions that change something (level 4) are never executed by scheduled runs because nobody can confirm them.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Orvus",
+      "category": "ai",
+      "icon": "calendar-clock",
+      "color": "#6366f1",
+      "entry": "tool:Orvus",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Schedules",
+        "Zeitpläne",
+        "Automation"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Orvus – Zeitpläne",
+          "description": "Fragen zu festen Zeiten an einen Assistenten stellen (einmalig, täglich, wöchentlich, alle N Stunden).",
+          "long_description": "Plant Fragen an einen verbundenen Assistenten: einmalig, täglich, wöchentlich oder alle N Stunden. Jeder Lauf wird ein neuer Chat (auf Wunsch in einem Projekt) und lässt sich in der Chatleiste öffnen. Zeitpläne laufen, solange Orvus geöffnet ist; verpasste Läufe holt Orvus beim Öffnen auf Wunsch nach. Funktionen, die etwas ändern (Stufe 4), führen geplante Läufe nie aus, weil niemand bestätigen kann."
+        },
+        "en": {
+          "name": "Orvus – Schedules",
+          "description": "Ask an assistant questions at fixed times (once, daily, weekly, every N hours).",
+          "long_description": "Schedules questions to a connected assistant: once, daily, weekly or every N hours. Every run becomes a new chat (optionally in a project) and can be opened in the chat panel. Schedules run while Orvus is open; missed runs can be caught up when it opens. Functions that change something (level 4) are never executed by scheduled runs because nobody can confirm them."
+        }
+      },
+      "download_url": "packages/ai.orvus-1.0.0.zip",
+      "sha256": "51e9bfb41f716fe18d7b3298d8cdabb13f23a9d58fe0ae2f0439f14f9c3d2e35",
+      "size": 9965
+    },
+    {
+      "id": "ai.pixelizer",
+      "name": "Pixelizer – Images",
+      "version": "1.0.0",
+      "description": "Create images with the connected image providers, with reference images and a gallery.",
+      "long_description": "Creates images with the image providers connected in OmniWrench (Settings > AI assistants): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax and local ComfyUI/LocalAI. Optionally with up to four reference images. The gallery shows the images of the AI data storage; images can be copied, opened, deleted or attached to the chat panel.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Pixelizer",
+      "category": "ai",
+      "icon": "image",
+      "color": "#ec4899",
+      "entry": "tool:Pixelizer",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Images",
+        "Bilder",
+        "OpenAI",
+        "Gemini",
+        "Flux",
+        "Stability AI"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/images.png",
+          "caption": "Create images with the connected image providers",
+          "url": "screenshots/ai.pixelizer/images.png",
+          "sha256": "e1086525e05b7fa99c2454a4142a5f696cf7194e97f852b8a12f5d76cf6752e8",
+          "size": 213920
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Pixelizer – Bilder",
+          "description": "Bilder mit den verbundenen Bild-Anbietern erzeugen, mit Referenzbildern und Galerie.",
+          "long_description": "Erzeugt Bilder mit den in OmniWrench verbundenen Bild-Anbietern (Einstellungen > KI-Assistenten): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax sowie lokal ComfyUI/LocalAI. Auf Wunsch mit bis zu vier Referenzbildern. Die Galerie zeigt die Bilder der KI-Datenablage; Bilder lassen sich kopieren, öffnen, löschen oder an die Chatleiste anhängen.",
+          "screenshot.images": "Bilder mit den verbundenen Bild-Anbietern erzeugen"
+        },
+        "en": {
+          "name": "Pixelizer – Images",
+          "description": "Create images with the connected image providers, with reference images and a gallery.",
+          "long_description": "Creates images with the image providers connected in OmniWrench (Settings > AI assistants): OpenAI, Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI, Ideogram, Recraft, MiniMax and local ComfyUI/LocalAI. Optionally with up to four reference images. The gallery shows the images of the AI data storage; images can be copied, opened, deleted or attached to the chat panel.",
+          "screenshot.images": "Create images with the connected image providers"
+        }
+      },
+      "download_url": "packages/ai.pixelizer-1.0.0.zip",
+      "sha256": "78957ddcbaaeca0e4e8eba1a21bba66c684b2cd9d6305b54181668f3e75a23dc",
+      "size": 9155
+    },
+    {
+      "id": "ai.qforce",
+      "name": "Q-Force – Group chat",
+      "version": "1.0.0",
+      "description": "Several assistants discuss a topic in turn, with brakes and a summary.",
+      "long_description": "In the group chat several connected assistants discuss a topic in turn, each with an optional role. Brakes keep it under control: rounds, contributions, length, time and tokens, a pause per round, stop on agreement or repetition. You can interject at any time; at the end an assistant writes a summary. Per-minute limits of the providers are respected (Q-Force waits and keeps a distance). Pseudonymization is applied before sending.",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Q-Force",
+      "category": "ai",
+      "icon": "users",
+      "color": "#0ea5e9",
+      "entry": "tool:QForce",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Group chat",
+        "Gruppenchat",
+        "Discussion"
+      ],
+      "screenshots": [
+        {
+          "file": "screenshots/group.png",
+          "caption": "Several assistants discuss a topic in turn",
+          "url": "screenshots/ai.qforce/group.png",
+          "sha256": "59af6c8003b732a5094267b6c1f767333ef77ea3d38a8aa98e4ab898ddb416ec",
+          "size": 62043
+        }
+      ],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Q-Force – Gruppenchat",
+          "description": "Mehrere Assistenten besprechen ein Thema reihum, mit Bremsen und Zusammenfassung.",
+          "long_description": "Im Gruppenchat besprechen mehrere verbundene Assistenten ein Thema reihum, jeder auf Wunsch mit eigener Rolle. Bremsen halten das Gespräch im Rahmen: Runden, Beiträge, Länge, Zeit und Tokens, Pause je Runde, Stopp bei Einigkeit oder Wiederholung. Einwürfe sind jederzeit möglich; am Ende schreibt ein Assistent eine Zusammenfassung. Minutenlimits der Anbieter werden beachtet (Q-Force wartet und hält Abstand). Vor dem Senden wird verfremdet.",
+          "screenshot.group": "Mehrere Assistenten besprechen ein Thema reihum"
+        },
+        "en": {
+          "name": "Q-Force – Group chat",
+          "description": "Several assistants discuss a topic in turn, with brakes and a summary.",
+          "long_description": "In the group chat several connected assistants discuss a topic in turn, each with an optional role. Brakes keep it under control: rounds, contributions, length, time and tokens, a pause per round, stop on agreement or repetition. You can interject at any time; at the end an assistant writes a summary. Per-minute limits of the providers are respected (Q-Force waits and keeps a distance). Pseudonymization is applied before sending.",
+          "screenshot.group": "Several assistants discuss a topic in turn"
+        }
+      },
+      "download_url": "packages/ai.qforce-1.0.0.zip",
+      "sha256": "26552fee128dfac3ca14896fedcb53d6d57919abb635508914acbfe14890d408",
+      "size": 18733
     },
     {
       "id": "net.subnet-calculator",
@@ -627,8 +1087,54 @@
         }
       },
       "download_url": "packages/net.subnet-calculator-1.2.6.zip",
-      "sha256": "2d5b383cae788771602ee2ae04cf55b29b9b435f173da33554866a62071a6ba5",
+      "sha256": "f36a1bd808b109fb73a26e743cf66143ab2ca4f447ed7f0e7997b882c8b417a8",
       "size": 7770
+    },
+    {
+      "id": "ai.vidcomic",
+      "name": "Vidcomic – Video",
+      "version": "1.0.0",
+      "description": "Create video clips with the connected providers, play them and edit them with ffmpeg.",
+      "long_description": "Creates clips with the video providers connected in OmniWrench (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate and more), optionally from a start image. Clips are played inside OmniWrench and can be edited with ffmpeg: trim, convert to GIF, remove sound, add music, save a still. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic).",
+      "author": "KuroShiro",
+      "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Vidcomic",
+      "category": "ai",
+      "icon": "clapperboard",
+      "color": "#ef4444",
+      "entry": "tool:Vidcomic",
+      "min_app_version": "0.9.0",
+      "platforms": [
+        "windows",
+        "linux"
+      ],
+      "tags": [
+        "AI",
+        "KI",
+        "Video",
+        "Veo",
+        "Runway",
+        "Luma",
+        "Sora",
+        "ffmpeg"
+      ],
+      "screenshots": [],
+      "single_instance": true,
+      "requirements": {},
+      "translations": {
+        "de": {
+          "name": "Vidcomic – Video",
+          "description": "Videoclips mit den verbundenen Anbietern erzeugen, abspielen und mit ffmpeg bearbeiten.",
+          "long_description": "Erzeugt Clips mit den in OmniWrench verbundenen Video-Anbietern (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate und weitere), auf Wunsch aus einem Startbild. Die Clips laufen direkt in OmniWrench und lassen sich mit ffmpeg bearbeiten: kürzen, in GIF umwandeln, Ton entfernen, Musik unterlegen, Standbild speichern. Unter Windows lädt OmniWrench ffmpeg auf Wunsch herunter (einmal für Groovitron und Vidcomic)."
+        },
+        "en": {
+          "name": "Vidcomic – Video",
+          "description": "Create video clips with the connected providers, play them and edit them with ffmpeg.",
+          "long_description": "Creates clips with the video providers connected in OmniWrench (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate and more), optionally from a start image. Clips are played inside OmniWrench and can be edited with ffmpeg: trim, convert to GIF, remove sound, add music, save a still. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic)."
+        }
+      },
+      "download_url": "packages/ai.vidcomic-1.0.0.zip",
+      "sha256": "933fa629f24dce1bd9840b2c6926b873f702fe574374e331d8cad2622cc33864",
+      "size": 6530
     }
   ]
 }

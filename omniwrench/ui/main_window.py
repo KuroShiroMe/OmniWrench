@@ -30,6 +30,10 @@ from omniwrench.core.vault import Vault
 from omniwrench.sdk import ToolBase
 
 from . import scaling, theme
+from omniwrench.ai import functions as ai_functions
+
+from .ai_panel import AIPanel
+from .ai_settings import ensure_catalog_update
 from .home_page import HomePage
 from .login_dialog import LoginDialog
 from .settings_dialogs import AppSettingsDialog, ToolSettingsDialog
@@ -91,6 +95,12 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(str(RESOURCES_DIR / "app.svg")))
         self.resize(scaling.window_size(self))  # Startgröße relativ zum Bildschirm (1k bis 8k)
 
+        from omniwrench import sdk
+        from .ai_kit import choose_options
+        from .workers import call_in_gui
+        sdk.set_install_chooser(lambda title, text, options: call_in_gui(
+            lambda: choose_options(self, title, text, options)))
+
         self._build_dock_manager()
         self._build_menus()
         self._build_statusbar()
@@ -100,6 +110,7 @@ class MainWindow(QMainWindow):
 
         if not force_restore:
             QTimer.singleShot(300, lambda: self.check_updates(manual=False))
+            QTimer.singleShot(2000, lambda: ensure_catalog_update(self.settings))
 
     # ================================================================ Aufbau
     def _build_dock_manager(self) -> None:
@@ -140,6 +151,16 @@ class MainWindow(QMainWindow):
         self.store_dock.toggleView(False)
         self.home_dock.setAsCurrentTab()
 
+        # KI-Assistent (rechts, bei Bedarf eingeblendet)
+        self.ai_panel = AIPanel(self)
+        self.ai_dock = ads.CDockWidget(self.dm, tr("ai.panel.title"))
+        self.ai_dock.setObjectName("ai-assistant")
+        self.ai_dock.setWidget(self.ai_panel)
+        self.ai_dock.setMinimumSizeHintMode(ads.CDockWidget.eMinimumSizeHintMode.MinimumSizeHintFromContent)
+        self.ai_area = self.dm.addDockWidget(ads.RightDockWidgetArea, self.ai_dock)
+        self.ai_dock.toggleView(False)
+        self.ai_dock.viewToggled.connect(lambda on: self.ai_button.setChecked(on))
+
         self.sidebar = Sidebar(self)
         splitter.addWidget(self.sidebar)
         splitter.addWidget(dock_host)
@@ -165,6 +186,7 @@ class MainWindow(QMainWindow):
         m.addAction(self.act_sidebar)
         m.addAction(tr("nav.home"), QKeySequence("Ctrl+H"), self.show_home)
         m.addAction(tr("nav.store"), QKeySequence("Ctrl+Shift+S"), self.show_store)
+        m.addAction("✦ " + tr("ai.panel.title"), QKeySequence("Ctrl+Shift+A"), self.toggle_assistant)
         m.addSeparator()
         m.addAction(tr("menu.reset_layout"), self.reset_layout)
 
@@ -183,6 +205,16 @@ class MainWindow(QMainWindow):
         m.addAction(tr("menu.log_folder"), lambda: self._open_path(LOG_DIR))
         m.addSeparator()
         m.addAction(tr("menu.about"), self._about)
+
+        # Schaltfläche „Assistent“ rechts in der Menüleiste
+        self.ai_button = QPushButton("✦ " + tr("ai.panel.button"))
+        self.ai_button.setObjectName("AIButton")
+        self.ai_button.setCheckable(True)
+        self.ai_button.setFlat(True)
+        self.ai_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.ai_button.setToolTip(tr("ai.panel.button_tip"))
+        self.ai_button.clicked.connect(lambda: self.toggle_assistant())
+        mb.setCornerWidget(self.ai_button, Qt.Corner.TopRightCorner)
 
     def _build_statusbar(self) -> None:
         sb = self.statusBar()
@@ -235,7 +267,8 @@ class MainWindow(QMainWindow):
         tool = self.manager.get(tool_id)
         try:
             instance = self.manager.create_instance(
-                tool_id, notify=self.notify, open_settings=lambda: self.open_tool_settings(tool_id))
+                tool_id, notify=self.notify, open_settings=lambda: self.open_tool_settings(tool_id),
+                ask_assistant=self.ask_assistant, ai_services=self.ai_services)
             return instance, instance.create_widget(None)
         except Exception as exc:  # noqa: BLE001
             log.error("Tool %s konnte nicht gestartet werden:\n%s", tool_id, traceback.format_exc())
@@ -327,6 +360,7 @@ class MainWindow(QMainWindow):
             entry.instance.shutdown()
         except Exception:  # noqa: BLE001
             log.exception("shutdown() von %s fehlgeschlagen", entry.tool_id)
+        ai_functions.unregister_owner(getattr(entry.instance, "context", None))
         tool = self.manager.get(entry.tool_id)
         if tool:
             for cb in entry.listeners:
@@ -367,7 +401,7 @@ class MainWindow(QMainWindow):
         tool = self.manager.get(tool_id)
         if tool is None:
             return
-        dlg = ToolSettingsDialog(tool, self)
+        dlg = ToolSettingsDialog(tool, self, app_settings=self.settings, vault=self.vault)
         if dlg.exec() and dlg.language_changed:
             self.reload_tool_tabs(tool_id)
 
@@ -707,12 +741,44 @@ class MainWindow(QMainWindow):
             self._force_quit = True
             self.close()
 
+    # ======================================================= Assistent
+    def toggle_assistant(self, show: bool | None = None) -> None:
+        show = self.ai_dock.isClosed() if show is None else show
+        if show:
+            if self.ai_dock.isClosed():
+                self.ai_dock.toggleView(True)
+            self.ai_dock.setAsCurrentTab()
+            self.ai_dock.raise_()
+            self.ai_panel.refresh()
+            QTimer.singleShot(0, self.ai_panel.focus_input)
+        else:
+            self.ai_dock.toggleView(False)
+        self.ai_button.setChecked(not self.ai_dock.isClosed())
+
+    def ai_services(self):
+        from .ai_services import AIServices
+        return AIServices(self)
+
+    def ask_assistant(self, context: str, title: str = "", tool_id: str = "") -> None:
+        """Kontextmenü „Assistent fragen …“ aus Tools (ToolContext.ask_assistant)."""
+        if not self.ai_panel.store.chat_connections():
+            self.toggle_assistant(True)   # zeigt den Hinweis „Optionen öffnen“
+            return
+        if self.ai_panel._running:
+            self.toggle_assistant(True)
+            QMessageBox.information(self, APP_NAME, tr("ai.ask.busy"))
+            return
+        self.toggle_assistant(True)
+        self.ai_panel.ask_about(context, title, tool_id)
+
     # ======================================================= Einstellungen
-    def open_app_settings(self) -> None:
+    def open_app_settings(self, initial_tab: str = "") -> None:
         old_repos = self.settings.get("repositories")
         dlg = AppSettingsDialog(self.settings, self.vault, self, tool_updates=lambda: len(self.tool_updates),
-                                update_all=self.update_all_tools)
-        if not dlg.exec():
+                                update_all=self.update_all_tools, initial_tab=initial_tab)
+        accepted = dlg.exec()
+        self.ai_panel.refresh()   # Verbindungen gelten sofort, auch bei „Abbrechen“
+        if not accepted:
             return
         theme.apply_theme(QApplication.instance(), self.settings.get("theme", "dark"))
         self.dm.setStyleSheet(self._ads_base_style + theme.ads_stylesheet())

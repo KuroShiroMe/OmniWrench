@@ -1397,5 +1397,7 @@
   "fav.mode_stored": "Login: {user} (password in the favourite)",
   "fav.err_cred": "Please pick credentials from the password manager.",
   "fav.err_pw": "Please enter a password.",
-  "fav.family": "View after login"
+  "fav.family": "View after login",
+  "ai.fn.res_add": "Create reservation {ip} for {mac} in scope {scope} on {server}?",
+  "ai.fn.res_remove": "Remove reservation {ip} from scope {scope} on {server}?"
 }

@@ -70,6 +70,17 @@ def build(tools_dir: Path, store_dir: Path, base_url: str | None) -> None:
 
     (store_dir / "index.json").write_text(json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"index.json mit {len(index['tools'])} Tool(s) geschrieben.")
+    publish_ai_providers(store_dir)
+
+
+def publish_ai_providers(store_dir: Path) -> None:
+    """Anbieterliste der KI-Assistenten in den Store kopieren (Programme laden sie von dort nach)."""
+    source = ROOT / "omniwrench" / "resources" / "ai" / "providers.json"
+    if source.is_file():
+        target = store_dir / "ai" / "providers.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, target)
+        print(f"KI-Anbieterliste -> {target.relative_to(ROOT)}")
 
 
 def publish_screenshots(tool_dir: Path, manifest, store_dir: Path, base_url: str | None) -> list[dict]:

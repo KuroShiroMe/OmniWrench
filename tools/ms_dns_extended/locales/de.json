@@ -764,5 +764,7 @@
   "fav.mode_stored": "Anmeldung: {user} (Kennwort im Favoriten)",
   "fav.err_cred": "Bitte Anmeldedaten aus dem Passwortmanager wählen.",
   "fav.err_pw": "Bitte ein Kennwort eingeben.",
-  "fav.extra_servers_ph": "z. B. dmz-dns01, dc03.corp.example"
+  "fav.extra_servers_ph": "z. B. dmz-dns01, dc03.corp.example",
+  "ai.fn.rec_add": "Eintrag {rec} in Zone {zone} auf {server} anlegen?",
+  "ai.fn.rec_delete": "Eintrag {rec} aus Zone {zone} auf {server} löschen?"
 }

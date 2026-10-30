@@ -306,6 +306,175 @@ Neu, nur unter Linux mit Fake-Backends geprüft (scripts/fav_check/test_favorite
       weitere Server verbunden (Protokoll), Prüfung › „mit DHCP“ nennt den DHCP-Server. Nicht erreichbarer weiterer
       Server: nur Protokolleintrag, Anmeldung läuft durch.
 
+## 12. KI-Assistenten und KI-Tools (0.9.0)
+
+Neu, nur unter Linux mit Fake-Anbietern geprüft (scripts/test_ai.py, scripts/ai_check/*). Für echte Tests reicht
+ein Anbieter mit API-Schlüssel oder „Mit ChatGPT anmelden“; Ollama lokal ist kostenlos.
+
+### 12a. Verbindungen und Chatleiste
+- [ ] Einstellungen › KI-Assistenten › Hinzufügen: Anbieterliste mit Kategorien, Suche, Filtern; Sora rot
+      („Nicht mehr angeboten“).
+- [ ] ChatGPT „Im Browser anmelden“: Browser öffnet, nach Anmeldung „Angemeldet als …“. Modelle laden, Verbindung
+      testen. Ebenso ein API-Schlüssel (z. B. Claude) und einer per „Aus Passwortmanager …“.
+- [ ] Entra ID / Microsoft 365 Copilot (falls Lizenz da): Anmeldung, Frage, Antwort (nur Text).
+- [ ] Ollama lokal (Ohne Anmeldung, http://localhost:11434/v1): Modelle laden, Chat. Mit Firmen-Proxy: geht trotzdem.
+- [ ] ★ Hauptassistent setzen, Reihenfolge ▲/▼; Verbindung entfernen: Chats bleiben.
+- [ ] Chatleiste: Knopf „✦ Assistent“, Strg+Umschalt+A, ausklinken/andocken, Layout bleibt nach Neustart.
+- [ ] Frage stellen, Antwort streamt; Anhalten; Assistent mitten im Chat wechseln; Bild und Textdatei anhängen.
+- [ ] Projekt anlegen mit Anweisungen, Chat im Projekt; Verlauf: suchen, umbenennen, löschen, Ordner öffnen.
+- [ ] „Was kann OmniWrench?“ / „Wie richte ich das DHCP-Tool ein?“: Antwort nutzt das Wiki (Funktions-Hinweis).
+- [ ] „Öffne den Subnetzrechner“: Bestätigung erscheint, nach „Erlauben“ öffnet sich das Tool (Stufe 4 nötig).
+
+### 12b. KI-Datenablage
+- [ ] Standard: Chats unter Dokumente\OmniWrench\Chats als `.owai` (verschlüsselt). Verschlüsselung aus +
+      Speichern: Dateien werden zu `.json` + `.md`; wieder an: zurück zu `.owai`.
+- [ ] Ablage „Zentraler Speicherort“ wählen: Frage nach Verschieben, Daten landen im neuen Ordner.
+- [ ] OneDrive-umgeleiteter Dokumente-Ordner: Ordner wird richtig erkannt.
+
+- [ ] Voraussetzung im Dialog „Assistent hinzufügen“: ChatGPT mit „Mit ChatGPT anmelden“ zeigt „Plus oder Pro“,
+      mit API-Schlüssel „API-Konto mit Guthaben“; Gemini „kostenlose Stufe“; Ollama „kostenlos, läuft lokal“.
+- [ ] Mit ChatGPT anmelden (Plus): Anmeldung, Verbindung testen, Frage in der Chatleiste.
+- [ ] Modellwahl Gemini: bestehende Verbindung mit `gemini-3.1-pro` öffnen. Chatleiste fragt die Modelle ab und
+      meldet „Modell gemini-3.1-pro gibt es nicht mehr, jetzt wird … verwendet“; Frage funktioniert.
+- [ ] Modellknopf in der Chatleiste (und in Clank): Liste mit ★, Kurzbeschreibung, Suche; Zeigen auf ein Modell
+      zeigt die Erklärung; „Auch andere Modelle zeigen“; eigenen Namen eintippen und übernehmen; „Was bedeuten die
+      Modelle?“ öffnet die Wiki-Seite KI-Anbieter. Modell wechseln mitten im Chat, nächste Antwort nennt das neue Modell.
+- [ ] Nicht vorhandenes Modell eintragen: Fehlermeldung „Der Anbieter kennt das gewählte Modell nicht …“, Knopf rot mit ⚠.
+- [ ] NSFW: Grok (oder Venice/Ollama) zeigt den Hinweis und den Schalter „NSFW-Inhalte erlauben (ab 18)“, Claude nicht.
+      Einschalten fragt nach (Nein = bleibt aus). Eingeschaltet: 🔞 vor dem Modell in der Chatleiste.
+- [ ] Neue Anbieter: GitHub Models mit GitHub-Token (models:read) verbinden, Modelle abfragen, Frage stellen.
+      Cloudflare: Speichern mit `<ACCOUNT_ID>` in der Adresse wird abgelehnt. Filter Region „EU“ zeigt Mistral, IONOS, STACKIT usw.
+
+### 12c. KI-Zugriff und Verfremdung
+- [ ] Einstellungen › KI-Zugriff: Stufen, Verfremdung, Vorschau. Tool-Einstellungen: Reiter „KI-Zugriff“ mit
+      „Wie im Hauptprogramm“. Ausnahme je Assistent setzen.
+- [ ] DHCP Stufe 3: „Welche Scopes sind fast voll?“ – Antwort mit echten Werten in der Anzeige; im gespeicherten
+      Chat (Verschlüsselung aus) stehen im `state.pseudo` die Platzhalter (NET1.x, HOST-1 …).
+- [ ] DHCP Stufe 4: „Lege eine Reservierung für … an“ – Bestätigung mit Details, danach im Tool sichtbar, Partner
+      repliziert. „Ablehnen“ ändert nichts.
+- [ ] DNS Stufe 4: Eintrag anlegen und löschen lassen.
+- [ ] Favorit mit KI-Zugriff 0 vs. 4 (Zeile „KI-Zugriff“ auf der Anmeldeseite): Assistent sieht den Server nicht /
+      darf ändern. Abmelden setzt zurück.
+- [ ] Rechtsklick in Leases/Einträgen/Befunden/NetProbe/AD-Ergebnissen › „Assistent fragen …“: Dialog zeigt die
+      Zeilen, neuer Chat in der Chatleiste.
+
+### 12d. Clank – KI-Studio
+- [ ] Installation aus dem Store; Hinweis, falls Git oder ffmpeg fehlen. Screenshots im Store.
+- [ ] Arbeitsbereich: Ordner und Git-Repository hinzufügen, Online-Repository (GitHub privat mit Token), lokal
+      klonen. Stufe 3: Assistent liest Dateien; Stufe 4: Dateiänderung mit Diff bestätigen, Befehl (PowerShell)
+      mit Erklärung bestätigen.
+- [ ] Vorlagen: „Skript prüfen“ mit Platzhalter; eigene Vorlage anlegen.
+- [ ] Bildschirmfoto: Bereich und ganzer Bildschirm (mehrere Monitore, 150 % Skalierung).
+- [ ] Bilder: OpenAI/Gemini, Vorlagebild, Galerie-Kontextmenü.
+- [ ] Musik/Video: ffmpeg-Download unter Windows, ein Stück und ein Video erzeugen, kürzen, als MP3/GIF,
+      Musik unterlegen.
+- [ ] Gruppenchat mit drei Teilnehmern, Einwurf, Bremse (z. B. 6 Beiträge), Zusammenfassung.
+- [ ] Dokumente: schreiben lassen, Markierung überarbeiten, Export PDF/ODT öffnen.
+- [ ] Planung: Zeitplan „alle 1 h“ + „Jetzt ausführen“; Ergebnis als Chat „⏰ …“; OmniWrench zu, später auf:
+      verpasster Lauf wird nachgeholt.
+- [ ] MCP-Client: z. B. `npx -y @modelcontextprotocol/server-filesystem C:\Temp` (stdio) verbinden, Werkzeuge
+      ansehen, Assistent liest eine Datei (mit Bestätigung, solange „vertrauen“ aus).
+- [ ] MCP-Server: einschalten, „Einrichtung kopieren“ für Claude Desktop (stdio) in dessen Konfiguration; Claude
+      Desktop sieht OmniWrench-Funktionen; Änderung wird in OmniWrench bestätigt. EXE-Version: `OmniWrench.exe
+      --mcp-stdio` startet ohne Fenster.
+- [ ] Mitschrift: Pakete installieren, Einwilligung, Mikrofon + Systemton (Teams/Zoom-Testanruf), zwei Sprecher
+      erkannt, umbenennen, Sprecherprofil speichern, nächste Mitschrift erkennt die Person; Zusammenfassung,
+      Export. Im Ordner Transcripts nur Text, keine Audiodatei.
+- [ ] Sprecherprofile: Opt-in anhaken und starten -> roter Hinweis „biometrische Daten (Art. 9 DSGVO)“, Start erst nach
+      Bestätigungshaken; Abbrechen nimmt das Opt-in zurück. Versteckt: Opt-in 10x schnell umschalten (in 6 s) ->
+      Haken „immer verwenden, ohne Hinweis“ erscheint; angehakt ist das Opt-in beim nächsten Mal vorbelegt und der
+      Profilhinweis entfällt (Einwilligung zur Aufnahme bleibt). Haken wieder raus -> Hinweis kommt wieder.
+- [ ] Sprachassistent: Weckwort einrichten (Vosk-Modell), „Hey Clank, wie spät ist es?“, Antwort mit Systemstimme;
+      Folgefrage ohne Weckwort; „Sprechen“-Knopf; Stimme eines Anbieters (OpenAI) zum Vorlesen.
+- [ ] Sprache auf Englisch/Französisch umstellen: Texte vollständig (KI-Texte in allen 23 Sprachen ergänzt,
+      Dialekte nur leicht eingefärbt).
+
+### 12e. Gemini-Fixes, Fähigkeiten prüfen, KI-Übersicht, Sprache (Clank 1.0.2)
+- [ ] Gemini-Chat: „Erzähl einen Witz“ – Antwort deutlich schneller als vorher, Witz nicht über IT-Leute.
+- [ ] Gemini-Chat: Frage, die Programmfunktionen braucht (z. B. „Welche Tools sind installiert?“) – kein Fehler
+      „thought_signature“ mehr, mehrere Funktionen gleichzeitig klappen.
+- [ ] Bei „high demand“ (503): OmniWrench versucht still neu; erst nach 3 Versuchen „Der Anbieter ist gerade überlastet“.
+- [ ] Bilder mit Gemini ohne Abrechnung: eine kurze Meldung „nicht in Ihrem Tarif“ statt Rohtext-Wand.
+- [ ] Einstellungen › KI-Assistenten › Gemini markieren › **🔍 Fähigkeiten prüfen**: Funktionen mit Status und Modellen,
+      Bilder mit Voraussetzung „Abrechnung“, Link zur Verbrauchsseite. Bei OpenRouter/DeepSeek: Guthaben sichtbar.
+- [ ] Gruppenchat mit 3× Gemini (kostenlos): bei Minutenlimit erscheint „Minutenlimit … geht in N s weiter“, danach
+      läuft er weiter und braucht keine zweite Wartepause.
+- [ ] Clank › **🧭 KI-Übersicht**: je Funktion Standard wählen (z. B. Vorlesen = Gemini) -> Reiter Sprachassistent
+      zeigt die Auswahl; **Alle prüfen** füllt Erlaubt?/Volumen; **Details …** öffnet den Bericht. Neustart: Chat startet
+      mit dem gewählten Standard.
+- [ ] Sprachassistent › Sprache auf Französisch: Piper-/Systemstimmen nur französisch; zurück auf Programmsprache.
+- [ ] Spracherkennung **Whisper lokal**: „Offline-Sprache einrichten“ (Rückfrage, Download faster-whisper + Modell small),
+      dann Frage sprechen -> deutlich genauer als Vosk. Auch in der Mitschrift wählbar.
+- [ ] Vorlesen mit **Piper**: Stimme (z. B. de_DE-thorsten-medium) wählen, einrichten, **Probehören**.
+- [ ] Vorlesen mit **Systemstimme**: Liste zeigt die installierten Windows-Stimmen (OneCore und SAPI); andere Stimme hörbar.
+      Bitte notieren, ob natürliche Windows-Stimmen in der Liste auftauchen.
+- [ ] Vorlesen und Erkennung mit **Gemini** (Stimme z. B. Puck) und Erkennung mit **Groq** (Whisper), falls verbunden.
+
+### 12f. KI-Tools einzeln, Installation, Ollama (Clank 1.1.0 + 9 neue Tools)
+Wichtig: **zuerst Clank auf 1.1.0 aktualisieren, bevor Clank geöffnet wird** (sonst hält die alte Version numpy offen).
+- [ ] Store › Bereich **KI-Tools**: Clank, Pixelizer, Groovitron, Vidcomic, Q-Force, Infobot, Orvus, Kreeli,
+      Mr. Zurkon, Gadgetron – alle mit Beschreibung, Wiki-Link, Clank/Pixelizer/Q-Force/Gadgetron mit Screenshot.
+- [ ] Clank 1.0.2 -> 1.1.0 aktualisieren: Hinweis „aufgeteilt“ im Protokoll; Clank zeigt nur noch den Chat.
+- [ ] Übernahme: Mr. Zurkon, Kreeli, Orvus, Q-Force, Gadgetron öffnen – Einstellungen/Zeitpläne/MCP-Server/Token aus
+      Clank 1.0.x sind da.
+- [ ] Mr. Zurkon installieren: Dialog „Optionale Teile“ mit Weckwort, Whisper, Piper (alle angehakt). Fortschritts-
+      balken mit Prozent bei Paketen und Downloads, **kein WinError 5**. Danach Tool öffnen: kein Vosk-Hinweis mehr,
+      Weckwort bereit, „Hey Zurkon“ funktioniert, Antwort im Chat rechts.
+- [ ] Mr. Zurkon › Vorlesen mit Systemstimme: Stimmenliste füllt sich erst beim Aufklappen (kurze Pause), kein Absturz;
+      **Probehören** mit einer gewählten Stimme.
+- [ ] Kreeli installieren, Whisper abwählen -> Tool bietet „Offline-Sprache einrichten“ später an.
+- [ ] OmniWrench neu starten: kein KI-Tool fragt erneut nach Paketen.
+- [ ] Groovitron installieren (Windows): ffmpeg-Download mit Prozent; Vidcomic danach ohne Download (gemeinsam).
+- [ ] Audio: Einstellungen › **KI-Funktionen** › Audioausgabe „Standardgerät des Systems“. Während OmniWrench läuft
+      Standardgerät in Windows wechseln (z. B. Headset) -> Probehören/Musik kommt aus dem neuen Gerät.
+- [ ] Einstellungen: links Gruppen **Programm** und **KI**; **KI-Funktionen** setzt Standard je Funktion, die Tools
+      übernehmen ihn beim Öffnen (z. B. Pixelizer zeigt den gewählten Bild-Anbieter).
+- [ ] **An den Chat anhängen** in Pixelizer/Infobot, **Ergebnis öffnen** in Orvus -> landet in Clank bzw. Chatleiste.
+- [ ] Ollama (Windows, ohne Ollama): Einstellungen › KI-Assistenten › Hinzufügen › Ollama › **🦙 Ollama einrichten …**
+      -> **Ollama installieren** (winget oder Setup, Fortschritt), läuft danach; Modell `llama3.2:3b` laden (Prozent,
+      GB), Fenster schließen -> Modell in der Liste der Verbindung; Chat antwortet. **Löschen** entfernt das Modell.
+- [ ] Ollama läuft schon: Fenster zeigt Version, kein Installieren-Knopf.
+
+### 12g. Mr. Zurkon: Weckwort, Antwortzeit, Wetter/Nachrichten; Ollama-Auswahl (Stef 2026-10-30)
+- [ ] Mr. Zurkon öffnen: oben Knöpfe, darunter **große Anzeige** (leuchtende Kugel), Einstellungen eingeklappt
+      (wenn schon eingerichtet), Verlauf klein unten.
+- [ ] Einstellungen: **Empfindlichkeit** „Empfindlich“ vorgewählt. „Hey Zurkon“ in **normaler Lautstärke** aus
+      ~1 m Abstand -> erkannt. Kugel pulsiert beim Sprechen. Zuletzt Gehörtes steht neben den Knöpfen.
+- [ ] Empfindlichkeit „Sehr empfindlich“: nur „Zurkon“ sagen -> reagiert.
+- [ ] Frage mit **Offline-STT** (Whisper lokal) und mit **Gemini**: Zähler „Sprache wird erkannt … s“ / „Antwort wird
+      erstellt … s“ läuft; Antwort deutlich schneller als bisher. Bei Lärm im Hintergrund (Radio leise an) endet die
+      Aufnahme trotzdem nach dem Satz (spätestens 15 s).
+- [ ] Bleibt eine Antwort aus (z. B. Netzwerk trennen): nach 60 s Meldung „… hat nach 60 s keine Antwort …“,
+      Mr. Zurkon wartet wieder auf das Weckwort.
+- [ ] **Heimatort** eintragen (z. B. eigene Stadt). „Hey Zurkon, wie wird das Wetter morgen?“ -> Wetteranzeige mit
+      Ort, Temperatur, Animation passend zum Wetter, Tageskarten mit deutschen Tagesnamen; Antwort vorgelesen.
+- [ ] „Wie ist das Wetter in Hamburg?“ -> Hamburg statt Heimatort.
+- [ ] „Was gibt es Neues?“ / „Nachrichten zu Microsoft“ -> Schlagzeilen mit rotem Laufband; Klick auf Meldung öffnet
+      Browser; **✕** zurück zur Kugel.
+- [ ] Chatleiste (nicht Mr. Zurkon): „Wie ist das Wetter in Berlin?“ -> Antwort mit Wetter, Mr. Zurkon-Anzeige
+      ändert sich **nicht**.
+- [ ] Ollama einrichten: Modellauswahl mit ~40 Einträgen, ★ Empfehlungen oben, ✔ bei geladenen Modellen, ⚠ bei
+      Modellen größer als der Arbeitsspeicher (Tooltip). Link „Alle Modelle auf ollama.com …“ öffnet den Browser.
+      Eigenen Namen eintippen (z. B. `smollm2:360m`) -> **Modell laden** lädt genau diesen.
+
+### 12h. Kostenlos lokal: ComfyUI für Bilder, Musik, Video (Stef 2026-10-30)
+Voraussetzung: NVIDIA-Grafikkarte mit 8 GB+ (sonst sehr langsam), ca. 40 GB frei für alle Modelle.
+- [ ] Einstellungen › KI-Assistenten › Hinzufügen › **ComfyUI** › **🎨 ComfyUI einrichten …**: ohne ComfyUI steht
+      „nicht installiert“ und **ComfyUI installieren**. Installieren -> winget-Fortschritt, danach Hinweis zur
+      Ersteinrichtung. ComfyUI Desktop starten, Ersteinrichtung abschließen, **Neu prüfen** -> „ComfyUI … läuft unter
+      http://127.0.0.1:8000“, Modellordner ausgefüllt.
+- [ ] Modelltabelle: 4 Modelle mit Größe und Status. `sdxl-turbo` wählen › **Modell laden** -> Rückfrage mit GB und
+      Ordner, Fortschritt in % und GB, danach ✔. Download mittendrin durch Beenden von OmniWrench abbrechen, erneut
+      laden -> setzt fort.
+- [ ] Fenster schließen, Verbindung speichern (ohne Modell möglich). **Testen** -> „✔ ComfyUI <Version>“.
+- [ ] Pixelizer › Anbieter ComfyUI, Modell `sdxl-turbo`, Format 16:9, Anzahl 2 -> 2 Bilder nach wenigen Sekunden.
+- [ ] Ohne geladenes Modell (z. B. `flux-schnell`) -> Meldung „In ComfyUI fehlt das Modell (…)“ statt Absturz.
+- [ ] Vidcomic › ComfyUI, `ltx-video`, 5 s, 16:9 -> MP4 mit 5 s (nach dem Laden von `ltx-video`).
+- [ ] Groovitron › ComfyUI, `ace-step`, Beschreibung „lofi, piano, female vocals“, eigener Liedtext, 30 s -> MP3 mit
+      Gesang; ohne Liedtext / „Nur instrumental“ -> Instrumental.
+- [ ] ComfyUI beenden, erneut erzeugen -> „ComfyUI ist nicht erreichbar …“. Abbrechen während der Erzeugung ->
+      ComfyUI bricht den Auftrag ab.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).

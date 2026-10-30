@@ -24,6 +24,7 @@ from omniwrench.ui.widgets import library_icon, make_button
 
 from . import findings as fx
 from . import pdfreport
+from .ai import NetProbeAI
 from .engine import (
     DONE, ERROR, NO_ANSWER, RUNNING, STOPPED, TEMPLATE_IDS, TEMPLATES_NEED_AGENT,
     Engine, TargetResult, template_options,
@@ -280,6 +281,7 @@ class NetProbe(ToolBase):
         self._bridge.finished.connect(self._on_finished)
         self._update_controls()
         self._on_template_changed()
+        self.ai = NetProbeAI(self)
         return root
 
     def _on_template_changed(self) -> None:
@@ -570,11 +572,26 @@ class NetProbe(ToolBase):
             act = QAction(library_icon(icon, 15), self.context.tr(key), menu)
             act.triggered.connect(slot)
             menu.addAction(act)
+        if hasattr(self.context, "add_ask_action"):
+            menu.addSeparator()
+            self.context.add_ask_action(menu, self._ask_text)
         menu.addSeparator()
         clear = QAction(self.context.tr("ui.clear_all"), menu)
         clear.triggered.connect(self._clear_all)
         menu.addAction(clear)
         menu.exec(self.list.viewport().mapToGlobal(pos))
+
+    def _ask_text(self) -> str:
+        """Ausgewählte Ziele mit Befunden als Text für „Assistent fragen …“."""
+        tr = self.context.tr
+        blocks = []
+        for res in self._selected_hosts()[:50]:
+            lines = [f"{res.label} ({res.ip or '–'}) – {res.status}"]
+            for f in res.findings:
+                params = {k: (", ".join(map(str, v)) if isinstance(v, (list, tuple)) else v) for k, v in f.params.items()}
+                lines.append(f"  [{f.level}] {tr(f'fx.{f.id}.title', **params)}: {tr(f'fx.{f.id}.detail', **params)}")
+            blocks.append("\n".join(lines))
+        return "\n\n".join(blocks)
 
     # ------------------------------------------------------------ Ergebnis-Tabs
     def _open_result(self, item: QTreeWidgetItem) -> None:

@@ -1,7 +1,7 @@
 {
   "id": "ms.ad-user-lookup",
   "name": "AD User Lookup",
-  "version": "1.3.5",
+  "version": "1.4.0",
   "description": "Search users in Active Directory and show their details.",
   "long_description": "Searches user accounts by name, logon name or e-mail and shows status, last logon, lockout state and groups. Requires the RSAT tools for Active Directory (added automatically during installation).",
   "author": "KuroShiro",

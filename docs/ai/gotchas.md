@@ -199,6 +199,45 @@
   callbacks touch deleted widgets ("Internal C++ object … already deleted"). Bind timers to a widget
   (`QTimer.singleShot(ms, self.root, fn)`) and set a `_closed` flag in shutdown() that every late callback checks
   (DNS tool 1.1.2).
+- MCP 2026-07-28 is stateless and NOT wire-compatible with 2025-11-25 (no initialize, _meta per request, required
+  HTTP headers). Clients must probe and fall back; a server answering only one era breaks the other. Keep both.
+- Tools are loaded dynamically, so PyInstaller never sees their Qt imports: every Qt module a tool may use must be in
+  scripts/build_exe.py QT_MODULES (QtMultimedia/QtTextToSpeech were missing until 2026-10-29).
+- soundcard on Windows uses COM: call CoInitializeEx in every recording thread. Vosk small models have a fixed
+  vocabulary: invented wake names ("Clank") are heard as similar words -> fuzzy match + user variants.
+- omniwrench/locales/pt.json is Portuguese (Brazil) (_meta.name) - use pt-BR words (arquivo, salvar, usuário,
+  senha, conectado), not pt-PT (ficheiro, guardar, utilizador). Settings dialog = menu "Extras > Einstellungen"
+  (not "Optionen") - UI texts and wiki must say "Einstellungen".
+- Clank screenshots need the main window (ai_services): screenshots/render.py builds a MainWindow itself and must set
+  ai_storage_mode central with a root inside the temp home, otherwise it reads/writes the real Documents folder.
+- check_locales: `{{Vorlagen-Platzhalter}}` (Clank-Vorlagen) werden seit 0.9.0 ignoriert, nur `{name}` zählt als Format-Platzhalter. Neue `tr("key")` in Tool-Code immer auch in de+en ergänzen – CI findet fehlende Schlüssel.
+- Linux/Qt 6.12 Multimedia: ist libpipewire installiert (z. B. als ffmpeg-Abhängigkeit), aber kein PipeWire-Dienst läuft (CI, Server), stürzt der erste QMediaPlayer mit Segfault ab. `omniwrench/__init__.py` setzt dann `QT_AUDIO_BACKEND=pulseaudio`. Lokal nachstellen: `apt-get install libpipewire-0.3-0t64`.
 - Tool changes on an open PR branch: bump the tool version again for every pushed rework (even if the version was never
   released). Stef tests from source; tools run from the INSTALLED copy and the dev store only offers an update when the
   version is higher (same version + new zip = old code stays installed).
+- Sign in with ChatGPT: `ext_agent_host_id` must look like `urn:uuid:<uuid>` (bare UUID -> invalid_authorize_request,
+  param ext_agent_host_id). First registration must return an issued `client_id` (oaiapp_...), else incomplete.
+  Callback only on 127.0.0.1 with path /auth/callback (port may vary). Docs: developers.openai.com/siwc/token-sharing-open-source/sign-in
+- Provider model ids go stale fast (Gemini 3.1 Pro -> gemini-3.1-pro-preview, 4-argon, 3.8-flash within weeks).
+  Never rely on catalog "models" alone: chat fetches /models. Gemini OpenAI-compat lists ids as "models/<name>" and
+  returns errors as a JSON LIST [{"error": …}] (http._error_from_http handles both).
+- Region filter compared country == "EU" (never true) -> now EU country set or category "eu".
+- Gemini free tier: ~5 requests/min per model; quota error text contains "billing details" even for per-minute limits
+  -> check "retry in Ns" BEFORE credit words (chat.quota_text, group.rate_wait). "limit: 0" = not in plan.
+- Gemini OpenAI-compat tool calls: thought signature in tool_call.extra_content must be sent back; parallel calls share index 0.
+- huggingface.co is blocked in the cloud sandbox: Piper voice list/downloads can't be tested here (fallback list in local_speech).
+- Windows Narrator "natural" voices are mostly not exposed to OneCore/SAPI apps; QTextToSpeech shows only what Windows exposes.
+- pip --target --upgrade replaces loaded .pyd (numpy) -> WinError 5 on Windows. Install without --upgrade and with the
+  target in PYTHONPATH so pip treats present packages as satisfied; call importlib.invalidate_caches() after install.
+- Debian system python: building sdists (e.g. vosk's dependency `srt`) fails with "install_layout" (patched setuptools)
+  -> environment-only; in CI/venv fine. Optional AI parts must never abort a tool install.
+- check_locales scans app .py files for tr("…") keys: app files holding tool keys need `# i18n: tool-texts`;
+  "tool.name" in app code via a constant (TOOL_NAME).
+- QTextToSpeech.allVoices(None) = access violation on Windows (None -> null QLocale ref); Linux CI hides it (engine
+  in Error state). Use availableLocales() + setLocale() + availableVoices(). Smoke test has faulthandler for such crashes.
+- Cloud sandbox proxy blocks open-meteo.com and news.google.com (403): test ai/live_info only with a mocked `_get`
+  (test_speech does). Fuzzy wake match: without a length guard "zurkon" alone matches "hey zurkon" at ratio 0.8.
+- ComfyUI Desktop listens on 8000, manual/portable ComfyUI on 8188 (find_server tries both). LTX-Video needs 8n+1
+  frames and width/height divisible by 32. huggingface.co is blocked in the cloud sandbox: test downloads via fake server.
+- test_ai_tools: PySide's exit cleanup (destroyQCoreApplication -> ~QObject) segfaults sporadically after all checks
+  (seen with and without ComfyUI part). Test ends with os._exit(0) after waitForDone. Watch for exit crashes in the app.

@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from omniwrench.core.categories import translation_keys as category_keys  # noqa: E402
+TOOL_TEXTS = "# i18n: tool-texts"
 KEY_PATTERN = re.compile(r"""\btr\(\s*["']([a-z0-9_]+(?:\.[a-z0-9_]+)+)["']""")
 
 
@@ -27,6 +28,8 @@ def load(path: Path) -> dict:
 
 
 def placeholders(text: str) -> set[str]:
+    # {{Vorlagen-Platzhalter}} sind übersetzter Text, keine Format-Platzhalter
+    text = re.sub(r"\{\{[^{}]*\}\}", "", text)
     return set(re.findall(r"\{(\w+)\}", text))
 
 
@@ -64,7 +67,10 @@ def compare(locales_dir: Path, required: set[str]) -> int:
 def app_keys() -> set[str]:
     keys: set[str] = set()
     for py in (ROOT / "omniwrench").rglob("*.py"):
-        keys |= set(KEY_PATTERN.findall(py.read_text(encoding="utf-8")))
+        text = py.read_text(encoding="utf-8")
+        if TOOL_TEXTS in text:                 # z. B. ui/ai_media.py: Texte aus den Sprachdateien der Tools
+            continue
+        keys |= set(KEY_PATTERN.findall(text))
     # dynamisch zusammengesetzte Schlüssel
     keys |= {f"req.{k}" for k in ("python", "windows_capabilities", "windows_features", "powershell_modules", "winget")}
     keys |= {"install.installing", "install.updating", "login.title_unlock", "login.please_login"}

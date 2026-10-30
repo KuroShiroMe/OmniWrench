@@ -8,7 +8,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `net.ms-dns-extended` |
-| **Stand der Seite** | Version 1.0.0 |
+| **Stand der Seite** | Version 1.3.1 |
 | **Bereich** | Netzwerk & Konnektivität |
 | **Tags** | DNS, Zones, Records, Reverse Lookup, PTR, IPv6, Scavenging, WMI, Microsoft |
 | **Plattformen** | Windows |
@@ -133,7 +133,7 @@ Dazu kommen Notiz und die Verbindungseinstellungen (weitere DNS-Server der Zonen
 eigenem Kennwort gewählt, stehen Benutzer und Kennwort direkt in „Andere Anmeldedaten“. Ein in der Maske
 eingegebenes Kennwort wird beim Speichern über den Stern mit übernommen. Geht ein Kennwort beim Zurücksetzen des
 Masterpassworts verloren, weisen Anmeldeseite und Dialog darauf hin. Kennwörter stehen nie in den Einstellungen.
-Favoriten sind für weitere Einstellungen je Server vorbereitet (z. B. die geplanten KI-Einstellungen).
+Favoriten speichern außerdem den [KI-Zugriff je Server](#ki-assistenten).
 
 ### Aufbau des Hauptfensters
 - Oben: verbundener Server (mit Anzahl weiterer Server), **Aktualisieren** (automatische Aktualisierung),
@@ -348,6 +348,22 @@ Protokoll nicht gelesen werden, erscheint ein Hinweis mit Link auf die Anleitung
 **Protokoll** zeigt alle Aktionen der Sitzung (Verbindungen, angelegte/gelöschte Einträge, Zonen- und
 Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht die Anzeige.
 
+### KI-Assistenten
+Ab OmniWrench 0.9.0 können [KI-Assistenten](KI-Assistenten) mit dem DNS-Tool arbeiten – so weit der
+[KI-Zugriff](KI-Zugriff-und-Verfremdung) es erlaubt (Standard: nur Beschreibung). Das Tool muss geöffnet und
+angemeldet sein.
+
+| Stufe | Funktionen für Assistenten |
+|---|---|
+| 1 – Beschreibung | Status: Server, Benutzer, Anzahl Zonen |
+| 2 – Übersicht | Zonen mit Art, AD-Integration, dynamischen Updates, Alterung und Anzahl Befunde je Schwere |
+| 3 – Lesen | Befunde (je Zone/Schwere), Einträge einer Zone (mit Filter), Suche über alle Zonen, Server-Einstellungen |
+| 4 – Ändern mit Bestätigung | Eintrag anlegen / löschen – über denselben Ablauf wie in der Oberfläche (mit Konfliktprüfung) |
+
+- **Assistent fragen …** steht im Rechtsklickmenü aller Tabellen und schickt die markierten Zeilen mit.
+- **KI-Zugriff je Server:** Zeile **KI-Zugriff** auf der Anmeldeseite, gespeichert mit dem
+  [Favoriten](#favoriten), gilt, solange man angemeldet ist.
+
 ## Einstellungen
 
 | Einstellung | Standard | Bedeutung |
@@ -412,6 +428,7 @@ Serveränderungen, Rücknahmen mit „↶“ bzw. „✗“); **Leeren** löscht
 
 | Version | Änderungen |
 |---|---|
+| 1.3.1 | **KI-Assistenten**: Funktionen für Assistenten (Übersicht, Befunde, Einträge, Suche, Einträge anlegen/löschen mit Bestätigung), „Assistent fragen …“ in allen Tabellen, KI-Zugriff je Server-Favorit |
 | 1.2.1 | **Favoriten**: ausklappbare Liste links neben der Anmeldung mit Ordnern, Suche, Ziehen und Ablegen; Stern am Serverfeld; je Favorit Anmeldung inkl. eigenem Kennwort (verschlüsselt im Tresor) oder Passwortmanager-Eintrag, Verbindungseinstellungen, weitere Server und DHCP-Server für den Abgleich |
 | 1.1.2 | Fehlermeldung „Internal C++ object … already deleted“ beim Schließen, wenn noch eine Replikations-Nachprüfung ausstand (behoben) |
 | 1.1.1 | „Replikation anstoßen“ scheiterte an AD-Zonen mit „Objekt nicht gefunden“ (0x80041002) beim Ermitteln der Partition (behoben) |

@@ -1,0 +1,31 @@
+{
+  "id": "ai.vidcomic",
+  "name": "Vidcomic – Video",
+  "version": "1.0.0",
+  "description": "Create video clips with the connected providers, play them and edit them with ffmpeg.",
+  "long_description": "Creates clips with the video providers connected in OmniWrench (Gemini Veo, OpenAI, xAI, Runway, Luma, Seedance, MiniMax, fal.ai, Replicate and more), optionally from a start image. Clips are played inside OmniWrench and can be edited with ffmpeg: trim, convert to GIF, remove sound, add music, save a still. On Windows OmniWrench downloads ffmpeg on request (once for Groovitron and Vidcomic).",
+  "author": "KuroShiro",
+  "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Vidcomic",
+  "category": "ai",
+  "icon": "clapperboard",
+  "color": "#ef4444",
+  "entry": "tool:Vidcomic",
+  "min_app_version": "0.9.0",
+  "platforms": [
+    "windows",
+    "linux"
+  ],
+  "tags": [
+    "AI",
+    "KI",
+    "Video",
+    "Veo",
+    "Runway",
+    "Luma",
+    "Sora",
+    "ffmpeg"
+  ],
+  "screenshots": [],
+  "single_instance": true,
+  "requirements": {}
+}

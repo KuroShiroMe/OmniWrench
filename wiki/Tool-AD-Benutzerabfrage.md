@@ -6,7 +6,7 @@
 | | |
 |---|---|
 | **Tool-ID** | `ms.ad-user-lookup` |
-| **Stand der Seite** | Version 1.3.3 |
+| **Stand der Seite** | Version 1.4.0 |
 | **Bereich** | Identität & Zugriff |
 | **Tags** | Active Directory, RSAT, User Accounts, Groups, Account Lockout, Service Desk |
 | **Plattformen** | Windows |
@@ -80,6 +80,12 @@ Ein Klick auf einen Treffer zeigt unter der Liste alle gelesenen Werte: Anmelden
 letzte Anmeldung, E-Mail, Abteilung, Position, Distinguished Name, Erstellungsdatum, letzter Passwortwechsel
 und die **Gruppen** (alphabetisch, nur direkte Mitgliedschaften). Der Text lässt sich markieren und kopieren.
 
+### KI-Assistenten
+Ab OmniWrench 0.9.0 können [KI-Assistenten](KI-Assistenten) die aktuellen Suchergebnisse lesen (Stufe 3 –
+Lesen im [KI-Zugriff](KI-Zugriff-und-Verfremdung); Standard: nur Beschreibung). Benutzernamen, E-Mail-Adressen
+und Domänen werden dabei verfremdet. Im Rechtsklickmenü der Ergebnisliste steht **Assistent fragen …** für die
+markierten Benutzer.
+
 ## Einstellungen
 
 | Einstellung | Standard | Bedeutung |
@@ -116,6 +122,7 @@ und die **Gruppen** (alphabetisch, nur direkte Mitgliedschaften). Der Text läss
 
 | Version | Änderungen |
 |---|---|
+| 1.4.0 | **KI-Assistenten**: Suchergebnisse für Assistenten, „Assistent fragen …“ |
 | 1.3.3 | Bereich und Tags neu |
 | 1.3.1 | Zugangsdaten werden im Hintergrund abgerufen |
 | 1.3.0 | Auswahl der Zugangsdaten direkt in der Suchzeile |

@@ -281,3 +281,76 @@
   One identical favorites.py per tool (tools stay independent); DHCP favourite restores the IPv4/IPv6 view, DNS
   favourite can add further servers and the DHCP server for the comparison; manual server edit deselects; last
   favourite, panel state and collapsed folders are remembered; deleting a folder moves its content up.
+## AI assistants (KI-Integration, 2026-10-28, Stef's answers A1-A15 / B1-B12 in the planning doc)
+- Everything local and readable (JSON/Markdown/PNG/MP3/MP4). Storage dropdown with 3 modes: "Eigene Dateien"
+  (Documents/Pictures/Music/Videos + OmniWrench subfolder), "Zentraler Speicherort" (one folder, subfolders per type),
+  "Je Typ" (folder per type). Encryption of chats/projects/transcripts ON by default with notice that other programs
+  can't read them; media never encrypted.
+- Any number of connections, also several accounts of one provider; one primary assistant (★). Browser sign-in where
+  officially possible (Sign in with ChatGPT, OpenRouter OAuth, Entra for M365 Copilot, custom OAuth), else API key
+  (vault or password manager reference). NO Claude subscription OAuth (forbidden since 02/2026, legal/GitHub risk) -
+  custom OAuth instead. No unofficial Grok OAuth. Stef tests only with Claude (API key) + ChatGPT subscription, no
+  extra costs. M365 Copilot: no alpha tag, experiences via wiki (Stef has no license).
+- Provider list via the store mechanism (store/ai/providers.json, built from omniwrench/resources/ai/providers.json).
+  Providers are never deleted: status "removed" -> red in lists + notice when used. **Rule: every time I build
+  something for OmniWrench, check providers for additions/removals/changed conditions and update providers.json.**
+- KI-Zugriff page for main program AND every tool without exception; tools inherit the main program level unless
+  changed; levels Nichts..Ändern mit Bestätigung; main default level 1 (Beschreibung); per-assistant exceptions.
+  Tools that log in (DHCP/DNS) get an AI level dropdown at login (favorites "ai" section: {"level": null|int,
+  "pseudo": null|bool}, null = inherit). Pseudonymization ON for everything by default.
+- Chat panel: dockable (right), minimal (bot dropdown switchable mid-chat, detail Kurz/Normal/Ausführlich, history,
+  projects). No bot -> message with "Optionen öffnen". Context menu "Assistent fragen …" with setting: always primary /
+  active / always ask (picker).
+- Tool (KI-Studio): Ratchet & Clank name -> **Clank – KI-Studio** (ai.clank, chosen 2026-10-28); R&C name list for
+  future tools in docs/ai/rc-names.md. Greyed tabs with hint + button
+  when no capable bot. Repos: Git, GitHub, GitLab, Azure DevOps. Commands: window with command + short explanation,
+  confirmation with "remember answer" (per session). ffmpeg asked at install; music/video tabs greyed until present.
+  Group chat with brakes, many options grouped and collapsible. Extras: templates, documents, screenshot, scheduling,
+  MCP client/server (server last), live transcription tab (system audio + mic, summary, speaker recognition with
+  named long-term profiles, prominent consent notice at start), live voice agent with wake word ("Hey <name>").
+- MCP (my choices 2026-10-28, stage 7b): client + server live in Clank (run only while Clank is open, like
+  schedules). Server only on 127.0.0.1 with mandatory token, same access levels/pseudonymization/confirmation as
+  built-in assistants (exception key "mcp-server"); never re-exports foreign MCP tools. Client: tool annotations only
+  trusted when the user ticks "Server vertrauen", otherwise every MCP tool = level 4 with confirmation.
+- Speech (my choices 2026-10-29, stage 7c): no audio is stored, only text; voice features only in memory unless a
+  speaker profile is saved (opt-in in the consent dialog, profiles always encrypted). Consent dialog on EVERY
+  recording start + red banner. Wake word only offline (Vosk) - never stream all mic audio to a cloud provider;
+  without Vosk only push-to-talk. Default voice = system voice (free, offline). numpy/soundcard/vosk installed on
+  demand into the tool's _lib, not at tool install.
+- Speaker profiles (Stef 2026-10-29): opt-in stays; starting with profiles shows ProfileNotice (bold, Art. 9 DSGVO,
+  user is responsible, confirm checkbox). Hidden by Stef's wish: toggling the opt-in 10x within 6 s reveals "always use
+  profiles without notice" (setting ts_profiles_always) - not in wiki/UI help. Recording consent dialog always stays.
+  Stef asked to make it "less obvious in the code"; I kept it plain + commented (public repo, privacy-relevant code
+  should stay reviewable).
+- Work pacing (Stef): no real 80 % usage limit possible -> work in packages, commit+push, pause ~5 h between packages.
+- Requirements (Stef 2026-10-29): every provider/auth shows what is needed (plan, API credit, free tier, licence,
+  local). Keep `requires` in providers.json current during the provider check of every build.
+- Models (Stef 2026-10-29): model choice lives in the chat (button next to the assistent), plug and play: list comes
+  from the provider, short explanation per model, availability shown. Catalog defaults that disappear are replaced
+  automatically; user-typed names are never changed.
+- NSFW (Stef 2026-10-29): providers that can produce adult content are marked (catalog "nsfw") and get a per-assistant
+  switch "NSFW-Inhalte erlauben (ab 18)", default off, confirm dialog (age + organisation, user responsibility).
+  Off = OmniWrench asks the model to stay work-safe; on = no extra rule. Provider rules always apply.
+- Wiki KI-Anbieter describes EVERY catalog provider (Stef 2026-10-29): new provider -> entry in
+  scripts/ai_wiki/descriptions.py, then run build_ai_wiki.py (aborts if a description is missing).
+- Catalog coverage (Stef 2026-10-29): cover as many providers as possible; ones without API or adapter stay listed
+  as "unavailable" with a note (via fal/Replicate, not integrated yet, no public API).
+- Answers neutral (Stef 2026-10-29): system prompt must not assume IT users; tool functions only when the question is about the program.
+- Clank defaults per function (Stef 2026-10-29): tab KI-Übersicht sets the default assistant per function and shows
+  capability + volume from the last scan; offline options (Whisper local, Vosk, system voice, Piper) count as free.
+- Voices (Stef 2026-10-29): voice list follows the selected voice-assistant language (default = program language),
+  other languages selectable. Free offline speech: faster-whisper (STT) + Piper (TTS), installed only on request.
+- Group chat must not abort on per-minute limits: wait (≤90 s), retry (3x), then keep a per-connection gap.
+- KI-Tools split (Stef 2026-10-29): each AI function is its own tool in category "KI-Tools" (ai); names (Stef):
+  Clank = KI-Chat, Pixelizer = Bilder, Groovitron = Musik, Vidcomic = Video, Q-Force = Gruppenchat, Infobot =
+  Dokumente, Orvus = Zeitpläne, Kreeli = Transkription (not "Mitschrift"), Mr. Zurkon = Sprachassistent, Gadgetron =
+  MCP; Phoenix = later project hub. Default assistants per function live in app settings (KI-Funktionen), not in Clank.
+- Install of AI tools asks opt-out questions (all optional parts pre-selected); packages/models shared in LOCAL_DIR/ai.
+- Local tools (Stef 2026-10-29): Ollama is installed/started/filled from OmniWrench (Windows winget/setup, Linux shows
+  the command); Whisper/Piper/Vosk/ffmpeg via tool install; ComfyUI/LocalAI only as wiki guide.
+- Audio output default = current system default device (follows changes), fixed device optional.
+- 2026-10-30: Weather/news for assistants without account: Open-Meteo + Google News RSS (app functions, LEVEL_DESCRIBE).
+  Mr. Zurkon shows them only for its own questions (voice or its embedded chat), not for other tools' chats.
+- 2026-10-30: Free local media = ComfyUI (not diffusers in-process: torch on Python 3.14 + GPU setup is ComfyUI's job).
+  OmniWrench ships fixed workflows for 4 presets + "ckpt:<file>" for own SD checkpoints; downloads go straight into
+  ComfyUI's models folder. Stef tests free methods only; paid providers are for the community to test.

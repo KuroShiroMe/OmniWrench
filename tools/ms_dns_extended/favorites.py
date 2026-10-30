@@ -12,7 +12,7 @@ Gespeichert in der Tool-Einstellung "favorites" (Klartext, ohne Passwörter):
                    "user": "...",                                         # bei "stored" und "manual"
                    "cred": {"ref", "name", "username"} | {"name", "username"}},   # bei "vault", nur Verweis
          "options": {...},     # toolspezifisch (Partner verbinden, Prüfung, …)
-         "ai": {}}]}           # reserviert für die KI-Einstellungen je Server
+         "ai": {"level": None | 0..4, "pseudo": None | bool}}]}   # KI-Zugriff je Server, None = wie im Tool
 
 Anmeldearten: "sso" angemeldeter Benutzer, "vault" Eintrag aus dem Passwortmanager (Verweis), "stored" Benutzer und
 Kennwort des Favoriten (Kennwort verschlüsselt im Tresor unter context.secrets "fav:<id>"), "manual" nur der
@@ -1003,8 +1003,60 @@ class FavoritesPanel(QWidget):
         if not confirm(self, self.tr("fav.save_tip"), self.tr("fav.overwrite_q", name=fav["name"])):
             return
         upd = {"id": fav["id"], "server": cur.get("server") or fav["server"], "login": cur.get("login") or {},
-               "options": cur.get("options") or {}}
+               "options": cur.get("options") or {}, "ai": cur.get("ai") or {}}
         if "password" in cur:
             upd["password"] = cur["password"]
         self.store.save(upd)
         self.refresh(fav["id"])
+
+
+class AIAccessRow(QWidget):
+    """KI-Zugriff je Server (Abschnitt "ai" des Favoriten): Stufe und Verfremdung, None = wie im Tool.
+
+    Nur sichtbar, wenn das Hauptprogramm KI kennt (ToolContext.ai_set_access, ab OmniWrench 0.9.0).
+    Texte kommen aus dem Hauptprogramm, damit Stufen überall gleich heißen.
+    """
+
+    def __init__(self, context, parent=None):
+        super().__init__(parent)
+        self.context = context
+        self.available = hasattr(context, "ai_set_access")
+        lay = QHBoxLayout(self)
+        lay.setContentsMargins(0, 0, 0, 0)
+        self.level = QComboBox()
+        self.pseudo = QComboBox()
+        if self.available:
+            from omniwrench.core.i18n import tr as app_tr
+            self.level.addItem(app_tr("ai.fav.level_inherit"), None)
+            for n in range(5):
+                self.level.addItem(f"{n} – {app_tr(f'ai.level.{n}')}", n)
+            self.pseudo.addItem(app_tr("ai.fav.pseudo_inherit"), None)
+            self.pseudo.addItem(app_tr("ai.fav.pseudo_on"), True)
+            self.pseudo.addItem(app_tr("ai.fav.pseudo_off"), False)
+            lay.addWidget(self.level, 1)
+            lay.addWidget(self.pseudo, 1)
+            lay.addWidget(help_icon(app_tr("ai.fav.hint")))
+        self.setVisible(self.available)
+
+    def value(self) -> dict:
+        if not self.available:
+            return {}
+        return {"level": self.level.currentData(), "pseudo": self.pseudo.currentData()}
+
+    def set_value(self, ai: dict | None) -> None:
+        ai = ai if isinstance(ai, dict) else {}
+        for combo, key in ((self.level, "level"), (self.pseudo, "pseudo")):
+            want = ai.get(key)
+            idx = next((i for i in range(combo.count()) if type(combo.itemData(i)) is type(want)
+                        and combo.itemData(i) == want), 0)
+            combo.setCurrentIndex(idx)
+
+    def apply(self) -> None:
+        """Nach dem Anmelden: Vorgabe für dieses Tool setzen (bis zum Abmelden)."""
+        if self.available:
+            v = self.value()
+            self.context.ai_set_access(v["level"], v["pseudo"])
+
+    def clear(self) -> None:
+        if self.available:
+            self.context.ai_set_access(None, None)

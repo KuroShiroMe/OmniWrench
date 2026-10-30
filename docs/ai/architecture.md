@@ -349,3 +349,190 @@ docs/README.md                internal docs index, points to the wiki
   fetch_screenshots() copies them into the installed tool (offline Home).
 - Template repo: scripts/screenshots.py (wrapper for OmniWrench's render_screenshots.py), store.py handles
   screenshots the same way; example tool ships screenshots/render.py + main.png.
+
+## AI assistants (omniwrench/ai/, since 0.9.0)
+- `providers.py` catalog from resources/ai/providers.json (112 providers, categories, auth kinds, capabilities, media
+  APIs). Newer copy from `<repo>/ai/providers.json` (store) cached in CACHE_DIR/ai, newest "updated" wins, entries
+  of the bundled file missing in the newer one are kept. build_store copies it to store/ai/, check_store verifies.
+- `models.py` model list per connection (Adapter.list_models, optional catalog `models_url`, strips Gemini
+  "models/"), cache settings "ai_model_cache" {conn: {ts, models, error}}, choices()/best()/tags()/is_model_error().
+  UI: ui/ai_models.py ModelPicker; AIPanel model button (_update_model, _fetch_models auto-swap of catalog defaults).
+- NSFW: Provider.nsfw + Connection.nsfw; Adapter.rules(system) appends SAFE_RULE unless allowed (all 4 adapters).
+- `connections.py` settings "ai_connections" (no secrets) + vault "app:ai:conn:<id>" ({api_key} or OAuth tokens,
+  ChatGPT issued client_id, account). key_ref = password manager reference. "ai_primary" = primary id.
+- `oauth.py` loopback http.server on 127.0.0.1 + PKCE: ChatGPT (dynamic client, ext_agent_host_id = settings
+  "ai_host_id", /auth/callback), OpenRouter (key exchange), Entra (default client Microsoft Graph CLI tools, tenant
+  organizations, redirect http://localhost:<port>/), custom OAuth (client secret in vault). access_token() refreshes.
+- `http.py` urllib + truststore SSL, SSE parser, AIError(kind auth/limit/quota/network/server/request/removed);
+  localhost/127.x bypass proxies.
+- `adapters.py` OpenAIChat (chat/completions, most providers), OpenAIResponses (OpenAI + ChatGPT sign-in, store
+  false), Anthropic (messages), GraphCopilot (beta copilot/conversations, no tools, conversation id in thread state).
+  Unified message format: user {content, images[{mime,data}]}, assistant {content, tool_calls[{id,name,arguments}]},
+  tool {tool_call_id, name, content}.
+- `chat.py` run(): loop up to 12 rounds with function calls, RunHooks (on_text/on_tool/on_message/confirm/level_for/
+  encode/decode for pseudonymization), system prompt with detail level + project instructions, trimming 200k chars.
+- `functions.py` registry Function(name, description, handler(args, ctx), parameters, source app|tool id, level 1-4,
+  confirm). available(level_for) filters by access level.
+- `storage.py` modes documents/central/per_type, Windows known folders via SHGetKnownFolderPath, XDG user-dirs.
+  Docs written as <base>.json (+.md) or encrypted <base>.owai (b"OWAI1"+nonce+AES-GCM, key vault "app:ai:data_key").
+  Chats <chats>/<id>/thread.*, projects <projects>/<pid>/project.* + files/ + threads/<id>/. convert_all() on toggle.
+- UI: `ui/ai_panel.py` AIPanel in CDockWidget "ai-assistant" (right area, hidden by default; menu bar corner button
+  "✦ Assistent", View menu, Ctrl+Shift+A). Background run works on a copy of the thread, merged on finish (stop
+  discards). Rounds after function calls continue in the same bubble. `ui/ai_settings.py` tabs "KI-Assistenten"
+  (AIConnectionsPage, changes apply at once) and "KI-Datenablage" (AIStoragePage, saved with the dialog) in
+  AppSettingsDialog (initial_tab="ai"). ConnectionDialog: ProviderPicker (categories, search, capability/auth/region
+  filters, removed red) -> form per auth kind, load models, test.
+- Smoke test: fake OpenAI server, empty-state check per language, real chat round trip in "de".
+- Etappe 2: `knowledge.py` wiki/*.md (APP_DIR/wiki or _MEIPASS/wiki, build_exe add-data) split at headings into
+  SQLite FTS5 (LOCAL_DIR/ai-index/knowledge.db, rebuilt on fingerprint change; word-count fallback).
+  `app_functions.py` registers source "app": program_info, list_installed_tools, list_store_tools,
+  search_documentation, read_documentation_page (level 1), list_open_tabs (2), open_tool/install_tool (4, confirm).
+  `access.py` settings "ai_access" (level, pseudo, pseudo_kinds, exceptions per connection) and "ai_access_tools"
+  {tool_id: {level|null, pseudo|null, exceptions}}; level(): tool exception > runtime (set_runtime from favorites) >
+  tool level > app exception > app level. `pseudo.py` Pseudonymizer(state=thread.state.pseudo): IPv4 (NETn.x keeps
+  /24), IPv6, MAC, email, FQDN (HOST-n.DOMAIN-m), DOMAIN\user; skips masks/loopback/public domains/file names;
+  encode_value() maps dict keys host*/server*/user* too; known values replaced in free text; rev map for exact decode.
+  Tool results are encoded at execution per tool pseudo setting (RunHooks.encode_result) and not re-encoded.
+  Streamed text is decoded on the whole raw buffer (placeholders split across chunks). UI: AIAccessPage (app tab
+  "KI-Zugriff" + tab in every ToolSettingsDialog), ConfirmDialog with "remember for this session".
+- `scripts/test_ai.py` (CI): fake server for all 3 protocols, pseudonymization, access, storage, wiki search.
+- Etappe 3 (tool SDK, 2026-10-28): ToolContext.ai_function(name, description, handler, parameters, level=AI_READ,
+  confirm, summary) registers with source=tool id, owner=context (MainWindow._shutdown_instance -> unregister_owner);
+  ai_set_access(level, pseudo) = access.set_runtime; ai_level(); ask_assistant(context, title); add_ask_action(menu,
+  text|fn). Tools check `hasattr/getattr(ctx, ...)` so they still run on older apps. MainWindow.ask_assistant ->
+  AIPanel.ask_about: AskDialog (question, context preview, assistant combo in mode "ask"), setting "ai_ask_mode"
+  primary|active|ask (combo on KI-Assistenten page), context capped at 60k chars, sent as new chat.
+  Tool modules `ai.py`: DhcpAI (dhcp_status L1, dhcp_overview L2, dhcp_findings/scope/find_client/failover/
+  server_options L3, dhcp_add_reservation/remove_reservation L4 via svc.atomic + after_change replication), DnsAI
+  (dns_status, dns_overview, dns_findings/records/search/server_settings, dns_add_record/delete_record via write_flow;
+  result checked against cache because write_flow returns silently on conflict cancel), NetProbeAI (results, result,
+  netprobe_start L4 because it sends traffic), IconForgeAI (packs, search, show), AD lookup (ad_user_results L3).
+  Live reads/writes run as flows on the tool's Runner (`_flow`: wrapper generator + threading.Event, waits for queued
+  UI flows, stop/timeout 600 s) so they never race the UI; cached data is read via call.in_gui.
+  favorites.AIAccessRow (shared copy in both server tools): login row "KI-Zugriff" (level inherit/0-4 + pseudo
+  inherit/on/off, app texts ai.fav.*), stored in favourite "ai", applied after login, cleared on logout/shutdown.
+  ui_base.set_ask_hook(context): Grid/FindingsView context menus get "Assistent fragen …" with the selected rows
+  as "Column: value" text (Grid.selection_text). Test: scripts/ai_check/test_tool_ai.py (fake backends, CI Linux).
+
+## KI-Tools split (2026-10-29, Clank 1.1.0 + 9 tools, category "ai", min_app 0.9.0)
+- Stef: "teile Clank in lauter einzelne Tools auf". Category `ai` (AREAS, label "KI-Tools"). Tools: ai.clank (chat,
+  workspace, templates, screenshot), ai.pixelizer (images.py), ai.groovitron / ai.vidcomic (app ui/ai_media.py
+  MediaTab(host, kind)), ai.qforce (grouptab.py, group.py), ai.infobot (documents.py), ai.orvus (schedule.py),
+  ai.kreeli (transcript.py, speakers.py), ai.mr-zurkon (folder tools/mr_zurkon, stage.py = QPainter display fed by ai/live_info listeners (weather/news), voice.py: embedded chat_widget in a
+  splitter), ai.gadgetron (mcptab.py). Wiki page per tool (Tool-<Name>), names from docs/ai/rc-names.md.
+- Shared app code: `omniwrench/ai/{audio,local_speech,ffmpeg,ollama,defaults}.py`, `omniwrench/ui/ai_kit.py`
+  (AITool base: make_page(), build_tool sets tool.tr/services/page/root; CLANK_KEYS/CLANK_DEFAULTS copy settings once
+  from TOOL_SETTINGS_DIR/ai.clank.json (marker "clank_imported"), take_over_clank(old) hook, clank_secret(key);
+  helpers Section, NoBotPage, DepsPage, LocalWhisper, Player(settings), ProgressDialog, install_with_progress,
+  ask_once, safe_name). TOOL_NAME constant so check_locales doesn't treat "tool.name" as app key.
+- Shared AI dir `audio.shared_dir()` = LOCAL_DIR/ai {lib, whisper, piper, vosk, ffmpeg}. pip without --upgrade and
+  PYTHONPATH=lib (no WinError 5 on loaded .pyd); ensure_path() invalidates import caches; tool_manager._import_module
+  calls audio.ensure_path() for category "ai".
+- Install: InstallContext.choose(title, text, [(id, label, default)]) = opt-out dialog (sdk.set_install_chooser from
+  main window; headless -> defaults; smoke test sets a chooser returning []). ctx.ai_packages(list). Optional parts
+  are installed one by one and may fail without aborting the install. TaskDialog._append: "NN %" sets the bar.
+- Defaults: app setting `ai_defaults` (ai/defaults.py, FUNCTIONS incl. ts_stt/ts_summary/va_stt/va_tts, LOCAL options);
+  page Einstellungen › KI-Funktionen (ui/ai_defaults.py, + audio output device OUTPUT_KEY, "" = current system
+  default, re-read before each play). Tools use services.default(fn)/set_default(fn, v).
+- AIServices: send_to_chat(name, text), send_file_to_chat(path), open_thread(id), open_defaults().
+- Ollama: ai/ollama.py (RECOMMENDED models, executable/version/models, install_windows: winget then OllamaSetup.exe
+  /VERYSILENT, start, pull NDJSON -> "status NN % (x/y GB)", delete); ui/ai_ollama.py OllamaDialog, button in
+  ConnectionDialog for provider id "ollama" (refills model combo). Linux: shows LINUX_COMMAND + copy.
+- i18n: ui/ai_media.py has marker `# i18n: tool-texts` (check_locales skips it; keys live in the tool locales).
+- Tests: scripts/ai_check/aikit.py (install/open_tool/close_tool), test_ai_tools.py (43 checks).
+
+## Clank – KI-Studio (ai.clank, tools/clank, since 0.9.0, min_app 0.9.0) – history, split in 1.1.0 (see above)
+- `tool.py` Clank: QTabWidget `modes` (stage 4: "💬 Chat"; later images, group chat, media …). Chat tab = splitter
+  sidebar (ChatList "Chats" / WorkspacePanel "Arbeitsbereich") | embedded AIPanel (ctx.ai_services().chat_widget(
+  system_extra)) | FileViewer. Workspace roots per project (project["workspace"]) or settings "workspace" without
+  project. Repo tokens in ctx.secrets (remote.token_key). can_close asks while a run is active.
+- `workspace.py` Workspace(roots): "<root>/<rel>" paths, resolve() refuses escapes, list_dir/read (size cap, binary
+  check)/search/diff/write (keeps CRLF). git()/run_command(command, cwd, shell auto|powershell|cmd|bash, timeout).
+- `remote.py` parse_url GitHub/GitLab/Azure DevOps, Remote(info, token, branch): tree/list_dir/read/search_paths via
+  REST; clone() passes the token via `-c http.extraHeader` (never in the URL or .git/config).
+- `ai.py` StudioAI: studio_workspace L2; studio_list/read/search/git (read-only subcommands) L3; studio_write_file L4
+  (summary = diff, ConfirmDialog highlights it); studio_run_command L4 (summary = code + explanation from the model).
+  Default level 1 hides them -> hint bar in WorkspacePanel with button to the tool's KI-Zugriff tab.
+- App side for embedding: ui/ai_services.py AIServices(window); AIPanel(embedded=True, system_extra) hides history
+  button + project combo, set_project(), add_text_attachment(), signal threadSaved(thread_id, project_id).
+- Test: scripts/ai_check/test_studio.py (fake scripted server, 36 checks, CI Linux). R&C name list: docs/ai/rc-names.md.
+  Store screenshots: tools/clank/screenshots/render.py builds its own MainWindow + fake streaming server (chat,
+  images, group, mcp).
+- Etappe 5 (images + group chat): app `ai/media.py` (Media/Request, ImageGen per catalog media.image.api:
+  openai_images (+ /images/edits for reference images), chatgpt_image (Responses + image_generation tool for
+  ChatGPT sign-in), gemini_image (native generateContent, base without /openai, x-goog-api-key), bfl (polling_url),
+  fal (queue status_url/response_url), replicate (Prefer: wait, then poll), stability_image + ideogram (multipart),
+  minimax_image; _poll with stop + timeout; save() = file + <file>.json in the images folder, never encrypted;
+  list_files/read_meta). SUPPORTED["music"/"video"] still empty (Etappe 6). Image prompts are NOT pseudonymized
+  (placeholders make no sense in pictures; hint text in the tab).
+  Clank `images.py` ImagesTab (NoBotPage greyed hint + button when no capable connection, gallery from storage,
+  preview with meta, context menu open/reveal/copy/reuse/as reference/to chat/delete). `group.py` (Qt-free):
+  options() with limits, GroupRun(thread, chat_fn, GroupHooks, stop) with brakes max_messages/time_limit/
+  token_budget/agree ([DONE] marker from all in a round)/repeat (difflib >= 0.9, min 60 chars)/cut (per-turn stop
+  event at 1.2 x max_chars)/pause_each_round, interjections via pending_user, final summary by participant 1;
+  history per participant: own = assistant, others "[Name]: text" as user (merged). No functions. GroupStore at
+  <chats>/groups/<id>/thread (write_doc -> encrypted like chats; list_threads ignores the folder). `grouptab.py`
+  GroupTab (collapsible Section widgets, participants table, transcript QTextBrowser with colored names,
+  pseudonymization per tool setting via Pseudonymizer(thread.state.pseudo)). Test scripts/ai_check/test_media_group.py.
+- Etappe 6 (music + video): media.MediaGen(ImageGen).generate(kind, req) dispatches `_music_<api>` /
+  `_video_<api>`; Request has duration/lyrics/instrumental/resolution. Music: gemini_lyria (generateContent, text
+  parts = lyrics), elevenlabs_music (/music -> mp3 bytes, xi-api-key), minimax_music (hex audio), stability_audio
+  (multipart, Accept audio/*), mureka (song|instrumental generate + query, choices[].url), fal, replicate. Video:
+  gemini_omni (POST /v1beta/interactions, response_format video delivery uri, poll /files/<id> ACTIVE, download
+  :download?alt=media), xai_video (/videos/generations + /videos/<request_id>, status done, video.url), minimax_video
+  (task -> query -> files/retrieve download_url, resolution 512P/768P/1080P), runway (X-Runway-Version 2024-11-06,
+  text_to_video|image_to_video, /tasks/<id> SUCCEEDED output[]), luma (/generations state completed assets.video),
+  seedance (BytePlus /contents/generations/tasks, params as "--ratio" in text), fal, replicate. Kling (JWT) and
+  ComfyUI not supported (not offered). Catalog: Gemini video = gemini_omni / gemini-omni-1.1-flash (Veo 3.1 preview
+  shut down 2026-10-22), xAI video models 1.5/1.5-lite.
+  Clank `ffmpeg.py`: find() = setting ffmpeg_path > <data_dir>/ffmpeg/ > PATH; download_windows() from BtbN
+  FFmpeg-Builds latest win64 gpl zip (only bin/ffmpeg.exe + ffprobe.exe); poster/trim/to_gif/to_mp3/mux/mute/
+  duration. `mediatab.py` MediaTab(kind music|video): pages FFmpegPage (greyed hint, download on Windows after
+  confirm, Linux package command, pick file, recheck) / NoBotPage / main (form, file list with video posters
+  <file>.poster.png, QMediaPlayer + QVideoWidget, fallback open externally), edits saved as new files with JSON
+  {edit, source}; GIF and stills go to images. WAV music is also converted to MP3. Test test_music_video.py (CI
+  installs ffmpeg).
+  Clank stage 7a: `templates.py` (built-in templates in tool locales tpl.<id>.name/.text, own ones in setting
+  "templates"; {{Placeholder}} asked by FillDialog; sidebar tab "Vorlagen" -> chat input). `documents.py` tab
+  "Dokumente": Markdown files in storage type "documents" (unencrypted, editable), editor + preview, write/revise
+  (selection) via ask_once (pseudonymized, no functions), export HTML/PDF (QPrinter)/ODT. `screenshot.py`: hides the
+  window 350 ms, grab_all over all screens, RegionPicker overlay, PNG + JSON {"screenshot": true} in images, attached
+  to chat (Wayland may deliver blank -> hint). `schedule.py` tab "Planung": jobs (once/daily/weekly/interval) in
+  tool setting "schedules", QTimer 30 s, catch-up of missed runs on open, run via chat.run without confirmation
+  (level-4 changes refused), result saved as thread "⏰ name · date"; only one Clank instance (`_owner`) runs jobs.
+- MCP (stage 7b): `omniwrench/ai/mcp.py` client, Qt-free, dual-era: modern 2026-07-28 (no session, `_meta` with
+  io.modelcontextprotocol/protocolVersion|clientInfo|clientCapabilities in every request, HTTP headers
+  MCP-Protocol-Version/Mcp-Method/Mcp-Name/Mcp-Param-* from x-mcp-header, base64 sentinel) and legacy initialize
+  (2025-11-25..2025-03-26, Mcp-Session-Id). Probe: stdio server/discover (PROBE_TIMEOUT, unknown error/timeout ->
+  initialize); HTTP 400/404/405 without modern error code (-32022/-32020/-32021) -> initialize. Only tools; input_required
+  (elicitation/sampling) answered with decline once. `omniwrench/ai/mcp_server.py`: FunctionHost (functions.available
+  with conn id "mcp-server" -> exceptions on KI-Zugriff page list it as pseudo assistant, never exposes mcp_* functions,
+  confirm for level 4, own Pseudonymizer state while running), Core (JSON-RPC both eras, resultType "complete" only for
+  modern), Server = ThreadingHTTPServer 127.0.0.1:<port>/mcp, Bearer token (Clank vault "mcp_server_token"), Origin
+  check, GET/DELETE 405, header validation; writes CONFIG_DIR/mcp_server.json {port, token, pid} for
+  `main.py --mcp-stdio` (stdio_bridge, forwards lines via HTTP). Clank `mcptab.py` tab "MCP": server list (tool
+  setting "mcp_servers", token in vault "mcp:<id>"), tools registered via ctx.ai_function as mcp_<server>_<tool>
+  (source ai.clank; read-only only if server "trusted" + readOnlyHint, else level 4 + confirm with JSON args),
+  per-tool disable, server switch (settings mcp_server_on/port, one owner), copy setup (stdio/VS Code/HTTP).
+  Test test_mcp.py (fake stdio server modern/legacy/silent, legacy HTTP fake, own server, bridge subprocess).
+- Speech (stage 7c): `omniwrench/ai/speech.py` (Qt-free) Speech(ImageGen): transcribe -> [Segment(text, start, end,
+  speaker, known)] for openai_audio (gpt-transcribe with languages[]; gpt-4o-transcribe-diarize diarized_json +
+  known_speaker_names[]/references[] data URLs, max 4), elevenlabs_speech (scribe_v2 words grouped by speaker_id),
+  deepgram (/listen nova-3 diarize_model=latest utterances, "Token" key), assemblyai (upload + transcript
+  speech_models [universal-3-pro, universal-2] + polling); synthesize -> mp3 (openai /audio/speech, elevenlabs
+  /text-to-speech/<voice>); transcript_markdown. Storage: save/load/list/delete_transcript
+  (<transcripts>/<id>/transcript, encrypted like chats, convert_all includes them).
+  Clank `audio.py`: missing()/install_packages() (pip into <tool>/_lib at runtime, frozen-aware), Chunker (energy VAD,
+  100 ms frames, adaptive noise floor, min_speech/silence_end/max_chunk), Source (soundcard mic or loopback of
+  speaker, COM init per thread on Windows), Recorder. `speakers.py`: numpy MFCC mean/std embedding (38 dims, lifter),
+  cosine similarity, ProfileStore (<transcripts>/speakers/profiles, ALWAYS encrypted, sample <=10 s WAV b64),
+  SessionSpeakers (session centroids -> profiles -> new "Sprecher n"; by_name for provider names / own mic name).
+  `transcript.py` TranscriptTab: DepsPage (numpy+soundcard) / NoBotPage / main; ConsentDialog every start (agree
+  required, profiles opt-in, copy notice), red banner, worker thread queue (chunk -> STT -> speaker per segment;
+  provider labels kept consistent inside a chunk; mic = own name unless "several people"), embeddings and audio only
+  in memory (_stored() strips them), speakers tab rename/save profile/merge, summary via documents.ask_once
+  (auto at end), to chat, export md. `voice.py` VoiceTab: states off/wake/command/thinking/speaking/followup; wake
+  word offline via Vosk small model (VOSK_MODELS per language, download to data_dir/vosk, zip path check), fuzzy
+  matches() + user variants; "Sprechen" button works without Vosk; STT provider or Offline (Vosk); asks via
+  studio.panel (system_hint for spoken answers through Clank._system_extra), speaks with QTextToSpeech (timeout
+  fallback) or provider mp3 via QMediaPlayer. Test test_speech.py (fake providers, synthetic voices).

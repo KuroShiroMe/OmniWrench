@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 AREAS: tuple[str, ...] = (
     "workplace", "identity", "network", "infrastructure", "cloud", "security",
-    "applications", "operations", "servicedesk", "automation", "documentation",
+    "applications", "operations", "servicedesk", "automation", "documentation", "ai",
 )
 OTHER = "other"  # Rückfall, übersetzt als category.other
 
