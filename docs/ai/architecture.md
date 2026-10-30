@@ -418,7 +418,7 @@ docs/README.md                internal docs index, points to the wiki
 - Stef: "teile Clank in lauter einzelne Tools auf". Category `ai` (AREAS, label "KI-Tools"). Tools: ai.clank (chat,
   workspace, templates, screenshot), ai.pixelizer (images.py), ai.groovitron / ai.vidcomic (app ui/ai_media.py
   MediaTab(host, kind)), ai.qforce (grouptab.py, group.py), ai.infobot (documents.py), ai.orvus (schedule.py),
-  ai.kreeli (transcript.py, speakers.py), ai.mr-zurkon (folder tools/mr_zurkon, voice.py: embedded chat_widget in a
+  ai.kreeli (transcript.py, speakers.py), ai.mr-zurkon (folder tools/mr_zurkon, stage.py = QPainter display fed by ai/live_info listeners (weather/news), voice.py: embedded chat_widget in a
   splitter), ai.gadgetron (mcptab.py). Wiki page per tool (Tool-<Name>), names from docs/ai/rc-names.md.
 - Shared app code: `omniwrench/ai/{audio,local_speech,ffmpeg,ollama,defaults}.py`, `omniwrench/ui/ai_kit.py`
   (AITool base: make_page(), build_tool sets tool.tr/services/page/root; CLANK_KEYS/CLANK_DEFAULTS copy settings once

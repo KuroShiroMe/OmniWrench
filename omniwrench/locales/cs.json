@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "dobrá univerzální volba s funkcemi",
   "ai.ollama.rec.vision": "rozumí obrázkům",
   "ai.ollama.rec.strong": "silný, potřebuje 16 GB",
-  "ai.ollama.rec.strong_eu": "silný, z Evropy"
+  "ai.ollama.rec.strong_eu": "silný, z Evropy",
+  "ai.ollama.rec.tiny": "drobný, běží téměř na každém PC",
+  "ai.ollama.rec.code": "programování",
+  "ai.ollama.rec.reasoning": "přemýšlí krok za krokem (pomalejší, důkladnější)",
+  "ai.ollama.rec.multilingual": "mnoho jazyků, vhodný k překladu",
+  "ai.ollama.rec.huge": "velmi silný, potřebuje 48 GB nebo více",
+  "ai.ollama.too_big": "⚠ větší než paměť tohoto PC ({ram} GB)",
+  "ai.ollama.library": "Všechny modely na ollama.com …"
 }

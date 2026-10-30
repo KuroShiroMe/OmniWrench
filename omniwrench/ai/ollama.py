@@ -26,13 +26,79 @@ LINUX_COMMAND = "curl -fsSL https://ollama.com/install.sh | sh"
 WINGET_ID = "Ollama.Ollama"
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
 # (Modell, ca. GB, Text-Schlüssel ai.ollama.rec.*) – Auswahl für den Einstieg; jedes andere Modell lässt sich eintippen
+# Auswahl im Dialog: (Name, ungefähre Größe in GB, Art -> Text ai.ollama.rec.<Art>), nach Art gruppiert.
+# Jeder andere Name aus ollama.com/library lässt sich zusätzlich eintippen.
 RECOMMENDED = (
-    ("llama3.2:3b", 2.0, "small"),
     ("qwen3:8b", 5.2, "allround"),
+    ("llama3.2:3b", 2.0, "small"),
     ("gemma3:12b", 8.1, "vision"),
     ("gpt-oss:20b", 14.0, "strong"),
     ("mistral-small3.2", 15.0, "strong_eu"),
+    # winzig / klein
+    ("qwen3:0.6b", 0.5, "tiny"),
+    ("gemma3:1b", 0.8, "tiny"),
+    ("llama3.2:1b", 1.3, "tiny"),
+    ("qwen3:1.7b", 1.4, "tiny"),
+    ("granite3.3:2b", 1.5, "small"),
+    ("qwen3:4b", 2.5, "small"),
+    ("phi4-mini", 2.5, "small"),
+    ("gemma3:4b", 3.3, "vision"),
+    # Allround
+    ("llama3.1:8b", 4.9, "allround"),
+    ("granite3.3:8b", 4.9, "allround"),
+    ("mistral-nemo", 7.1, "allround"),
+    ("aya-expanse:8b", 5.1, "multilingual"),
+    ("phi4", 9.1, "allround"),
+    ("qwen3:14b", 9.3, "allround"),
+    ("olmo2:13b", 8.4, "allround"),
+    # Bilder verstehen
+    ("granite3.2-vision", 2.4, "vision"),
+    ("minicpm-v", 5.5, "vision"),
+    ("qwen2.5vl:7b", 6.0, "vision"),
+    ("llama3.2-vision", 7.8, "vision"),
+    ("gemma3:27b", 17.0, "vision"),
+    # Nachdenken
+    ("deepseek-r1:8b", 5.2, "reasoning"),
+    ("deepseek-r1:14b", 9.0, "reasoning"),
+    ("magistral", 14.0, "reasoning"),
+    ("qwen3:30b", 19.0, "strong"),
+    ("qwen3:32b", 20.0, "strong"),
+    ("deepseek-r1:32b", 20.0, "reasoning"),
+    # Programmieren
+    ("qwen2.5-coder:7b", 4.7, "code"),
+    ("qwen2.5-coder:14b", 9.0, "code"),
+    ("deepseek-coder-v2:16b", 8.9, "code"),
+    ("devstral", 14.0, "code"),
+    ("qwen3-coder:30b", 19.0, "code"),
+    # Profi-Hardware
+    ("llama3.3", 43.0, "huge"),
+    ("gpt-oss:120b", 65.0, "huge"),
+    ("qwen3:235b", 142.0, "huge"),
 )
+TOP = 5                                  # die ersten fünf sind die Empfehlungen (★)
+LIBRARY_URL = "https://ollama.com/search"
+
+
+def total_ram_gb() -> float:
+    """Arbeitsspeicher des PCs in GB (0, wenn unbekannt)."""
+    try:
+        if os.name == "nt":
+            import ctypes
+
+            class MemStatus(ctypes.Structure):
+                _fields_ = [("dwLength", ctypes.c_ulong), ("dwMemoryLoad", ctypes.c_ulong),
+                            ("ullTotalPhys", ctypes.c_ulonglong), ("ullAvailPhys", ctypes.c_ulonglong),
+                            ("ullTotalPageFile", ctypes.c_ulonglong), ("ullAvailPageFile", ctypes.c_ulonglong),
+                            ("ullTotalVirtual", ctypes.c_ulonglong), ("ullAvailVirtual", ctypes.c_ulonglong),
+                            ("ullAvailExtendedVirtual", ctypes.c_ulonglong)]
+            st = MemStatus()
+            st.dwLength = ctypes.sizeof(MemStatus)
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(st)):
+                return st.ullTotalPhys / 1e9
+            return 0.0
+        return os.sysconf("SC_PAGE_SIZE") * os.sysconf("SC_PHYS_PAGES") / 1e9
+    except (AttributeError, OSError, ValueError):
+        return 0.0
 
 
 def root_url(base_url: str = "") -> str:

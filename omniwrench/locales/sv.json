@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "bra allroundval med funktioner",
   "ai.ollama.rec.vision": "förstår bilder",
   "ai.ollama.rec.strong": "kraftfull, kräver 16 GB",
-  "ai.ollama.rec.strong_eu": "kraftfull, från Europa"
+  "ai.ollama.rec.strong_eu": "kraftfull, från Europa",
+  "ai.ollama.rec.tiny": "pytteliten, körs på nästan alla datorer",
+  "ai.ollama.rec.code": "programmering",
+  "ai.ollama.rec.reasoning": "tänker steg för steg (långsammare, grundligare)",
+  "ai.ollama.rec.multilingual": "många språk, bra för översättning",
+  "ai.ollama.rec.huge": "mycket stark, kräver 48 GB eller mer",
+  "ai.ollama.too_big": "⚠ större än datorns minne ({ram} GB)",
+  "ai.ollama.library": "Alla modeller på ollama.com …"
 }

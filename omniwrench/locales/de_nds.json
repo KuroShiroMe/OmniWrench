@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "gute Allround-Wahl mit Funktionen",
   "ai.ollama.rec.vision": "versteht Biller",
   "ai.ollama.rec.strong": "stark, braucht 16 GB",
-  "ai.ollama.rec.strong_eu": "stark, ut Europa"
+  "ai.ollama.rec.strong_eu": "stark, ut Europa",
+  "ai.ollama.rec.tiny": "winzig, läuft auf fast jedem PC",
+  "ai.ollama.rec.code": "Programmieren",
+  "ai.ollama.rec.reasoning": "denkt Schritt für Schritt (langsamer, gründlicher)",
+  "ai.ollama.rec.multilingual": "viele Sprachen, gut zum Übersetzen",
+  "ai.ollama.rec.huge": "sehr stark, braucht 48 GB oder mehr",
+  "ai.ollama.too_big": "⚠ größer als der Arbeitsspeicher dieses PCs ({ram} GB)",
+  "ai.ollama.library": "Alle Modelle auf ollama.com …"
 }

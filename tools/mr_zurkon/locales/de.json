@@ -77,5 +77,20 @@
   "install.opt_piper": "Piper: natürliche Stimmen offline (ca. 80 MB)",
   "install.loading_vosk": "Lade Sprachmodell für das Weckwort …",
   "install.loading_whisper": "Lade Whisper-Modell {model} …",
-  "install.loading_piper": "Lade Piper-Stimme {voice} …"
+  "install.loading_piper": "Lade Piper-Stimme {voice} …",
+  "va.w.feels": "gefühlt {value} °",
+  "va.w.wind": "Wind {value} km/h",
+  "va.w.humidity": "Feuchte {value} %",
+  "va.w.today": "Heute",
+  "va.n.live": "LIVE",
+  "va.n.headlines": "Schlagzeilen",
+  "va.sens.normal": "Normal",
+  "va.sens.high": "Empfindlich",
+  "va.sens.max": "Sehr empfindlich",
+  "va.sens_tip": "Wie leicht das Weckwort erkannt wird. „Sehr empfindlich“ reagiert auch auf den Namen allein, löst aber eher versehentlich aus.",
+  "va.place": "Heimatort:",
+  "va.place_hint": "z. B. München (für Wetterfragen ohne Ortsangabe)",
+  "va.phase.stt": "Sprache wird erkannt … {s} s",
+  "va.phase.chat": "Antwort wird erstellt … {s} s",
+  "va.timeout": "{name} hat nach {s} s keine Antwort erhalten und abgebrochen. Bitte erneut versuchen oder einen anderen Assistenten wählen."
 }

@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "işlevli iyi bir genel seçim",
   "ai.ollama.rec.vision": "görselleri anlar",
   "ai.ollama.rec.strong": "güçlü, 16 GB gerekir",
-  "ai.ollama.rec.strong_eu": "güçlü, Avrupa'dan"
+  "ai.ollama.rec.strong_eu": "güçlü, Avrupa'dan",
+  "ai.ollama.rec.tiny": "çok küçük, neredeyse her bilgisayarda çalışır",
+  "ai.ollama.rec.code": "programlama",
+  "ai.ollama.rec.reasoning": "adım adım düşünür (daha yavaş, daha kapsamlı)",
+  "ai.ollama.rec.multilingual": "birçok dil, çeviri için iyi",
+  "ai.ollama.rec.huge": "çok güçlü, 48 GB veya daha fazlası gerekir",
+  "ai.ollama.too_big": "⚠ bu bilgisayarın belleğinden büyük ({ram} GB)",
+  "ai.ollama.library": "ollama.com'daki tüm modeller …"
 }

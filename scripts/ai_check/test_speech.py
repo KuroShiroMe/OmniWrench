@@ -488,7 +488,8 @@ def main() -> int:
         def transcribe(self, samples):
             return "offline frage"
     v.wake_available = lambda: True
-    va.WakeDetector = lambda path, phrases: FakeDetector()
+    real_detector = va.WakeDetector
+    va.WakeDetector = lambda path, phrases, ratio=0.72: FakeDetector()
     wake_then_question = np.concatenate([silence(0.3), voice(*BOB, 0.3, 1), silence(0.5),
                                          voice(*ALICE, 1.5, 2), silence(2.5)])
     v.make_source = lambda: FakeSource("mic", wake_then_question)
@@ -504,6 +505,75 @@ def main() -> int:
     check(wait(lambda: v.state == "wake", 20), "danach wieder Weckwort")
     v.off()
     rs.pump(0.3)
+    # Weckwort unscharf, Empfindlichkeit, automatische Verstärkung
+    check(va.matches("hey zur kon wie spät", va.wake_phrases("Zurkon", "", "normal")), "„zur kon“ = „zurkon“")
+    check(va.matches("ey zurkon", va.wake_phrases("Zurkon", "", "normal")), "„ey“ als Anrede")
+    check(not va.matches("zurkon", va.wake_phrases("Zurkon", "", "high"), va.SENSITIVITY["high"]), "Name allein: nein")
+    check(va.matches("zurkon", va.wake_phrases("Zurkon", "", "max"), va.SENSITIVITY["max"]), "Name allein bei max")
+    check(va.matches("hey zirkon", va.wake_phrases("Zurkon", ""), va.SENSITIVITY["high"]), "unscharf bei high")
+    det = object.__new__(real_detector)
+    det.env = 0.02
+    quiet = (0.005 * np.sin(np.linspace(0, 300, 1600))).astype("float32")
+    for _ in range(40):                                 # Hüllkurve folgt der leisen Umgebung
+        out = det.gain(quiet)
+    check(float(np.abs(out).max()) > 0.03, "leise Sprache verstärkt")
+    det.env = 0.02
+    loud = (0.5 * np.sin(np.linspace(0, 300, 1600))).astype("float32")
+    check(abs(float(np.abs(det.gain(loud)).max()) - 0.5) < 0.01, "laute Sprache unverändert")
+    # Lärmpegel passt sich an: Satzende auch bei Dauerrauschen
+    chunks = []
+    ch = au.Chunker(lambda s, t: chunks.append(len(s)), max_chunk=30)
+    hum = (0.03 * np.random.default_rng(1).standard_normal(16000 * 6)).astype("float32")
+    ch.feed(np.concatenate([hum[:16000 * 2], hum[:16000] + voice(*ALICE, 1.0, 3) * 0.6, hum[:16000 * 3]]))
+    check(chunks and chunks[0] < 16000 * 6, "Satzende trotz Rauschen erkannt")
+    # Wetter und Nachrichten (live_info, Netz simuliert) mit großer Anzeige
+    from omniwrench.ai import functions as fx
+    from omniwrench.ai import live_info
+    check(fx.get("get_weather") and fx.get("get_news"), "Wetter- und Nachrichtenfunktion registriert")
+    real_get = live_info._get
+
+    def fake_get(url, params, timeout=15):
+        if url == live_info.GEO_URL:
+            return json.dumps({"results": [{"name": "Berlin", "country": "Deutschland", "admin1": "Berlin",
+                                            "latitude": 52.5, "longitude": 13.4, "timezone": "Europe/Berlin"}]}).encode()
+        if url == live_info.FORECAST_URL:
+            return json.dumps({"current": {"temperature_2m": 12.4, "apparent_temperature": 10.1,
+                                           "relative_humidity_2m": 81, "weather_code": 63, "wind_speed_10m": 18,
+                                           "is_day": 1, "time": "2026-10-30T09:00"},
+                               "daily": {"time": ["2026-10-30", "2026-10-31", "2026-11-01"],
+                                         "weather_code": [63, 2, 0], "temperature_2m_max": [13, 11, 9],
+                                         "temperature_2m_min": [7, 5, 2],
+                                         "precipitation_probability_max": [90, 20, 0],
+                                         "precipitation_sum": [6.2, 0.4, 0]}}).encode()
+        items = "".join(f"<item><title>Meldung {i} - Quelle {i}</title><source>Quelle {i}</source>"
+                        f"<pubDate>Thu, 30 Oct 2026 0{i}:00:00 GMT</pubDate><link>https://example.org/{i}</link></item>"
+                        for i in range(1, 7))
+        return f"<rss><channel>{items}</channel></rss>".encode()
+    live_info._get = fake_get
+    try:
+        fx.get("get_weather").handler({"place": "Berlin"}, None)
+        rs.pump(0.3)
+        check(v.stage.mode == "state", "fremde Abfrage ändert die Anzeige nicht")
+        v._asking = True
+        w = fx.get("get_weather").handler({"place": "Berlin", "days": 3}, None)
+        check(w["place"] == "Berlin" and w["current"]["kind"] == "rain" and len(w["days"]) == 3, "Wetter gelesen")
+        check(wait(lambda: v.stage.mode == "weather"), "Anzeige zeigt das Wetter")
+        rs.pump(0.5)
+        if shots:
+            v.stage.grab().save(str(shots / "zurkon_weather.png"))
+        n = fx.get("get_news").handler({"topic": "", "limit": 5}, None)
+        check(len(n["items"]) == 5 and n["items"][0]["title"] == "Meldung 1", "Nachrichten gelesen, Quelle entfernt")
+        check(wait(lambda: v.stage.mode == "news"), "Anzeige zeigt Nachrichten")
+        rs.pump(0.5)
+        if shots:
+            v.stage.grab().save(str(shots / "zurkon_news.png"))
+            v.window().grab().save(str(shots / "zurkon.png"))
+        check(fx.get("get_weather").handler({}, None).get("error"), "ohne Ort: Rückfrage")
+    finally:
+        live_info._get = real_get
+        v._asking = False
+    v.stage.show_state()
+    check(v.stage.mode == "state", "zurück zur Zustandsanzeige")
     # Sprache frei wählbar, Offline-Optionen, Stimmen je Anbieter
     v.refresh()
     check(v.stt.findData(va.WHISPER) >= 0 and v.tts.findData(va.PIPER) >= 0, "Whisper lokal und Piper wählbar")

@@ -294,9 +294,17 @@ class Speech(ImageGen):
         body = {"contents": [{"role": "user", "parts": [
                     {"text": prompt}, {"inline_data": {"mime_type": "audio/wav",
                                                        "data": base64.b64encode(wav).decode("ascii")}}]}],
-                "generationConfig": {"temperature": 0}}
+                "generationConfig": {"temperature": 0, "thinkingConfig": {"thinkingLevel": "low"}}}
         url = f"{base}/models/{urllib.parse.quote(model or 'gemini-3.8-flash', safe='-._')}:generateContent"
-        data = aihttp.json_request("POST", url, headers, body, timeout=300)
+        # Mitschreiben braucht kein Nachdenken: „low“ spart oft Sekunden; ältere Modelle kennen es nicht -> ohne
+        timeout = 60 if len(wav) < 2_000_000 else 300
+        try:
+            data = aihttp.json_request("POST", url, headers, body, timeout=timeout)
+        except aihttp.AIError as err:
+            if err.status != 400:
+                raise
+            body["generationConfig"].pop("thinkingConfig")
+            data = aihttp.json_request("POST", url, headers, body, timeout=timeout)
         text = "".join(part.get("text", "") for cand in data.get("candidates") or []
                        for part in (cand.get("content") or {}).get("parts") or [] if not part.get("thought"))
         return parse_speakers(text) if diarize else ([Segment(text.strip())] if text.strip() else [])

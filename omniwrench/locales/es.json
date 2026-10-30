@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "buena opción general con funciones",
   "ai.ollama.rec.vision": "entiende imágenes",
   "ai.ollama.rec.strong": "potente, necesita 16 GB",
-  "ai.ollama.rec.strong_eu": "potente, de Europa"
+  "ai.ollama.rec.strong_eu": "potente, de Europa",
+  "ai.ollama.rec.tiny": "diminuto, funciona en casi cualquier PC",
+  "ai.ollama.rec.code": "programación",
+  "ai.ollama.rec.reasoning": "piensa paso a paso (más lento, más minucioso)",
+  "ai.ollama.rec.multilingual": "muchos idiomas, bueno para traducir",
+  "ai.ollama.rec.huge": "muy potente, necesita 48 GB o más",
+  "ai.ollama.too_big": "⚠ más grande que la memoria de este PC ({ram} GB)",
+  "ai.ollama.library": "Todos los modelos en ollama.com …"
 }

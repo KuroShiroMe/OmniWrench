@@ -151,8 +151,10 @@ class Chunker:
         self.level = rms
         dur = len(frame) / self.rate
         loud = rms > self.threshold()
-        if not loud:                   # Grundrauschen langsam nachführen
+        if not loud:                   # Grundrauschen nachführen
             self.noise = 0.95 * self.noise + 0.05 * rms
+        else:                          # auch bei Dauerlärm (Lüfter, Musik) langsam hoch, sonst endet kein Satz
+            self.noise = min(rms, self.noise * 1.02)
         if not self.buf:
             self.buf_start = self.pos
         self.buf.append(frame)

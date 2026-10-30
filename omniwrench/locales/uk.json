@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "добрий універсальний вибір з функціями",
   "ai.ollama.rec.vision": "розуміє зображення",
   "ai.ollama.rec.strong": "потужна, потрібно 16 ГБ",
-  "ai.ollama.rec.strong_eu": "потужна, з Європи"
+  "ai.ollama.rec.strong_eu": "потужна, з Європи",
+  "ai.ollama.rec.tiny": "крихітна, працює майже на будь-якому ПК",
+  "ai.ollama.rec.code": "програмування",
+  "ai.ollama.rec.reasoning": "міркує крок за кроком (повільніше, ретельніше)",
+  "ai.ollama.rec.multilingual": "багато мов, добре для перекладу",
+  "ai.ollama.rec.huge": "дуже потужна, потребує 48 ГБ або більше",
+  "ai.ollama.too_big": "⚠ більша за пам'ять цього ПК ({ram} ГБ)",
+  "ai.ollama.library": "Усі моделі на ollama.com …"
 }

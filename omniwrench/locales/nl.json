@@ -829,5 +829,12 @@
   "ai.ollama.rec.allround": "goede allrounder met functies",
   "ai.ollama.rec.vision": "begrijpt afbeeldingen",
   "ai.ollama.rec.strong": "krachtig, vereist 16 GB",
-  "ai.ollama.rec.strong_eu": "krachtig, uit Europa"
+  "ai.ollama.rec.strong_eu": "krachtig, uit Europa",
+  "ai.ollama.rec.tiny": "piepklein, draait op bijna elke pc",
+  "ai.ollama.rec.code": "programmeren",
+  "ai.ollama.rec.reasoning": "denkt stap voor stap (trager, grondiger)",
+  "ai.ollama.rec.multilingual": "veel talen, goed om te vertalen",
+  "ai.ollama.rec.huge": "zeer sterk, heeft 48 GB of meer nodig",
+  "ai.ollama.too_big": "⚠ groter dan het geheugen van deze pc ({ram} GB)",
+  "ai.ollama.library": "Alle modellen op ollama.com …"
 }

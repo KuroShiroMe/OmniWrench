@@ -148,6 +148,10 @@ installieren. Tools bieten eigene Funktionen an, z. B.:
 | [AD Benutzerabfrage](Tool-AD-Benutzerabfrage) | Suchergebnisse | – |
 | [Clank – KI-Chat](Tool-Clank) | Arbeitsbereich: Dateien auflisten, lesen, suchen, Git-Status und Änderungen | Datei ändern, Befehl ausführen |
 
+Dazu kommen Alltagsfunktionen ohne Konto: **Wetter** (`get_weather`, Open-Meteo, bis 7 Tage) und **Nachrichten**
+(`get_news`, Google News in der Programmsprache, optional zu einem Thema). Es geht nur der Ort bzw. Suchbegriff
+hinaus. [Mr. Zurkon](Tool-Mr-Zurkon) zeigt die Ergebnisse als große animierte Anzeige.
+
 Welche Funktionen ein Assistent tatsächlich bekommt, hängt von der Stufe im
 [KI-Zugriff](KI-Zugriff-und-Verfremdung) ab (Standard: nur „Beschreibung“). Ändernde Funktionen verlangen
 Stufe 4 und werden **immer** vorher bestätigt.

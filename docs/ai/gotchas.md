@@ -235,3 +235,5 @@
   "tool.name" in app code via a constant (TOOL_NAME).
 - QTextToSpeech.allVoices(None) = access violation on Windows (None -> null QLocale ref); Linux CI hides it (engine
   in Error state). Use availableLocales() + setLocale() + availableVoices(). Smoke test has faulthandler for such crashes.
+- Cloud sandbox proxy blocks open-meteo.com and news.google.com (403): test ai/live_info only with a mocked `_get`
+  (test_speech does). Fuzzy wake match: without a length guard "zurkon" alone matches "hey zurkon" at ratio 0.8.

@@ -81,7 +81,8 @@ def system_prompt(detail: str, project: dict | None = None, extra: str = "") -> 
         _DETAIL_TEXT.get(detail, _DETAIL_TEXT["normal"]),
         "Only when a question concerns the program, its tools or the connected systems, use the provided "
         "functions to look up facts instead of guessing. If a tool that would help is not installed or "
-        "not connected, say so and explain how to install or connect it. For everything else answer directly "
+        "not connected, say so and explain how to install or connect it. For weather and news always use "
+        "get_weather and get_news instead of saying you have no live data. For everything else answer directly "
         "without calling functions.",
         "Values like IP-1, HOST-2 or DOMAIN-1 are placeholders for real data that the program hides "
         "from you; use them as they are, the program translates them back for the user.",

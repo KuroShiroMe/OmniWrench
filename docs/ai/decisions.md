@@ -349,3 +349,5 @@
 - Local tools (Stef 2026-10-29): Ollama is installed/started/filled from OmniWrench (Windows winget/setup, Linux shows
   the command); Whisper/Piper/Vosk/ffmpeg via tool install; ComfyUI/LocalAI only as wiki guide.
 - Audio output default = current system default device (follows changes), fixed device optional.
+- 2026-10-30: Weather/news for assistants without account: Open-Meteo + Google News RSS (app functions, LEVEL_DESCRIBE).
+  Mr. Zurkon shows them only for its own questions (voice or its embedded chat), not for other tools' chats.

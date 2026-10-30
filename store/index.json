@@ -1,7 +1,7 @@
 {
   "format": 1,
   "name": "OmniWrench Store",
-  "generated": "2026-10-29T15:02:55+00:00",
+  "generated": "2026-10-30T08:21:49+00:00",
   "tools": [
     {
       "id": "ms.ad-user-lookup",
@@ -392,7 +392,7 @@
       "name": "Mr. Zurkon – Voice assistant",
       "version": "1.0.0",
       "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
-      "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device.",
+      "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Weather (Open-Meteo) and news (Google News) work without an account and appear as a large animated display. Audio goes to the current default output device.",
       "author": "KuroShiro",
       "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Mr-Zurkon",
       "category": "ai",
@@ -413,7 +413,22 @@
         "Piper",
         "Whisper"
       ],
-      "screenshots": [],
+      "screenshots": [
+        {
+          "file": "screenshots/weather.png",
+          "caption": "Ask for the weather: animated forecast for your place",
+          "url": "screenshots/ai.mr-zurkon/weather.png",
+          "sha256": "603e3f58dd28e65bd0d6cdc287c066a36f97989fb795e89023e4263b6e06363a",
+          "size": 65366
+        },
+        {
+          "file": "screenshots/news.png",
+          "caption": "Ask for the news: headlines with live ticker",
+          "url": "screenshots/ai.mr-zurkon/news.png",
+          "sha256": "07806c6a38df48aee58d832f332a7cefa123847bfa0e044b707834ac97b9420d",
+          "size": 51822
+        }
+      ],
       "single_instance": true,
       "requirements": {},
       "translations": {
@@ -429,8 +444,8 @@
         }
       },
       "download_url": "packages/ai.mr-zurkon-1.0.0.zip",
-      "sha256": "95ada48583b8ba5fe35e759865a4451160a68927f30db726942bec29311b3a32",
-      "size": 17590
+      "sha256": "ec1a200e208d0ec4abaccfedd2c9e618c1d44cfe67d4131ab9d8f45d57cf9524",
+      "size": 25018
     },
     {
       "id": "net.ms-dhcp-extended",

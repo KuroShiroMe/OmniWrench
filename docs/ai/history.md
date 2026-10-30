@@ -602,3 +602,12 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   bar, current default audio device, Vosk hint gone when ready, settings sidebar groups + page KI-Funktionen,
   Ollama install/start/model download (app ai/ollama.py, ui/ai_ollama.py). Settings migrate once from Clank 1.0.x.
   Wiki: 10 tool pages + KI-lokal-mit-Ollama; site card "Zehn KI-Tools". TESTLISTE 12f.
+- 2026-10-30 (Stef: wake word "meh", slow answers, weather/news missing, bigger stylish display, more Ollama models):
+  Mr. Zurkon: WakeDetector AGC (env follower, 1–10x), sensitivity normal/high/max (0.72/0.64/0.56, max = name alone),
+  matches() space-insensitive with length guard; Chunker noise floor follows constant noise; voice chunks max 15 s;
+  Gemini STT thinkingLevel low (retry without on 400), 60 s timeout; THINK_TIMEOUT 60 s with phase counter + give-up.
+  New app module ai/live_info.py (Open-Meteo weather, Google News RSS, no keys, functions get_weather/get_news at
+  LEVEL_DESCRIBE, listener -> Mr. Zurkon). New tools/mr_zurkon/stage.py (QPainter display: state orb, animated weather,
+  news ticker); log small at bottom, settings collapsible, home place. Ollama: ~40 models (★ top 5, ✔ installed,
+  ⚠ > RAM, ollama.com link). Store screenshots weather/news. Wiki Tool-Mr-Zurkon, KI-Assistenten, KI-lokal-mit-Ollama;
+  TESTLISTE 12g. Provider overview images/music/video for Stef (docs/ai-medien-anbieter.md in project files).

@@ -53,8 +53,12 @@ def normalize(text: str) -> str:
     return " ".join(re.sub(r"[^\w\s]", " ", text.lower()).split())
 
 
+SENSITIVITY = {"normal": 0.72, "high": 0.64, "max": 0.56}     # Mindest-Ähnlichkeit je Empfindlichkeit
+THINK_TIMEOUT = 60.0                # so lange auf Erkennung bzw. Antwort warten, dann aufgeben
+
+
 def matches(text: str, phrases: list[str], ratio: float = 0.72) -> bool:
-    """Kommt eine der Wendungen (unscharf) im gehörten Text vor?"""
+    """Kommt eine der Wendungen (unscharf) im gehörten Text vor? Leerzeichen zählen nicht („zur kon“ = „zurkon“)."""
     words = normalize(text).split()
     for phrase in phrases:
         target = normalize(phrase)
@@ -63,16 +67,23 @@ def matches(text: str, phrases: list[str], ratio: float = 0.72) -> bool:
             continue
         if f" {target} " in f" {' '.join(words)} ":
             return True
+        flat = target.replace(" ", "")
         for i in range(0, max(1, len(words) - n + 1)):
-            if difflib.SequenceMatcher(None, " ".join(words[i:i + n]), target).ratio() >= ratio:
-                return True
+            for k in (n, n + 1):                          # Erkennung trennt Wörter („zur kon“)
+                part = "".join(words[i:i + k])
+                if len(part) < len(flat) * 0.8:           # Teilstück wie nur der Name zählt nicht
+                    continue
+                if difflib.SequenceMatcher(None, part, flat).ratio() >= ratio:
+                    return True
     return False
 
 
-def wake_phrases(name: str, variants: str) -> list[str]:
+def wake_phrases(name: str, variants: str, sensitivity: str = "normal") -> list[str]:
     name = name.strip() or DEFAULT_NAME
-    out = [f"hey {name}", f"hei {name}", f"he {name}"]
+    out = [f"hey {name}", f"hei {name}", f"he {name}", f"ey {name}", f"hallo {name}"]
     out += [v.strip() for v in variants.split(",") if v.strip()]
+    if sensitivity == "max":                           # auch der Name allein (mehr Fehlalarme möglich)
+        out.append(name)
     return out
 
 
@@ -91,14 +102,25 @@ def download_model(data_dir: Path, lang: str, progress) -> Path:
 class WakeDetector:
     """Erkennt die Wendungen in einem 16-kHz-Strom mit Vosk (ohne Grammatik, unscharfer Vergleich)."""
 
-    def __init__(self, model_path: Path, phrases: list[str]):
+    def __init__(self, model_path: Path, phrases: list[str], ratio: float = 0.72):
         import vosk
         vosk.SetLogLevel(-1)
         self.vosk = vosk
         self.model = vosk.Model(str(model_path))
         self.rec = vosk.KaldiRecognizer(self.model, audio.RATE)
         self.phrases = phrases
+        self.ratio = ratio
         self.heard = ""
+        self.env = 0.02                 # Hüllkurve der Lautstärke für die automatische Verstärkung
+
+    def gain(self, samples):
+        """Leise Sprache anheben (bis 10-fach), damit Vosk das Weckwort auch bei normaler Lautstärke hört."""
+        import numpy as np
+        x = np.asarray(samples, dtype="float32")
+        rms = float(np.sqrt(np.mean(x * x))) if len(x) else 0.0
+        self.env = max(rms, self.env * 0.97)
+        g = min(10.0, max(1.0, 0.08 / max(self.env, 1e-4)))
+        return np.clip(x * g, -1, 1)
 
     @staticmethod
     def pcm(samples) -> bytes:
@@ -107,13 +129,13 @@ class WakeDetector:
 
     def feed(self, samples) -> str:
         """Gibt den gehörten Text zurück, wenn das Weckwort darin vorkommt, sonst ""."""
-        if self.rec.AcceptWaveform(self.pcm(samples)):
+        if self.rec.AcceptWaveform(self.pcm(self.gain(samples))):
             text = json.loads(self.rec.Result()).get("text", "")
         else:
             text = json.loads(self.rec.PartialResult()).get("partial", "")
         if text:
             self.heard = text
-        if text and matches(text, self.phrases):
+        if text and matches(text, self.phrases, self.ratio):
             self.rec.Reset()
             return text
         return ""
@@ -123,8 +145,11 @@ class WakeDetector:
 
     def transcribe(self, samples) -> str:
         """Ganzer Satz offline (für „Offline (Vosk)“)."""
+        import numpy as np
         rec = self.vosk.KaldiRecognizer(self.model, audio.RATE)
-        rec.AcceptWaveform(self.pcm(samples))
+        x = np.asarray(samples, dtype="float32")
+        peak = float(np.abs(x).max()) if len(x) else 0.0
+        rec.AcceptWaveform(self.pcm(x * min(10.0, 0.7 / peak) if peak > 1e-4 else x))
         return json.loads(rec.FinalResult()).get("text", "")
 
 
@@ -228,6 +253,7 @@ class _Bridge(QObject):
     heard = Signal(str)
     level = Signal(float)
     error = Signal(str)
+    live = Signal(str, object)          # Wetter/Nachrichten aus live_info (Hintergrund-Thread)
 
 
 class VoiceTab(QWidget):
@@ -250,12 +276,19 @@ class VoiceTab(QWidget):
         self._tts = None
         self._player = None
         self._stop = threading.Event()
+        self._level = 0.0                # Mikrofonpegel für die Anzeige
+        self._noise = 0.004              # Grundrauschen, auch im Wartezustand gemessen
+        self._phase = ""                 # "stt" | "chat" während „Denkt nach“
         self.make_source = lambda: audio.Source("mic", self.settings.get("va_mic_device") or "")
         self.bridge = _Bridge()
         self.bridge.woke.connect(self._woke)
         self.bridge.command.connect(self._command_audio)
         self.bridge.heard.connect(lambda t: self.heard.setText(tr("va.heard", text=t)))
         self.bridge.error.connect(self._error)
+        self.bridge.live.connect(self._live_shown)
+        from omniwrench.ai import live_info
+        self._live_listener = lambda kind, data: self.bridge.live.emit(kind, data)
+        live_info.add_listener(self._live_listener)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(0, 0, 0, 0)
@@ -272,8 +305,8 @@ class VoiceTab(QWidget):
             split.addWidget(self.stack)
             split.addWidget(self.panel)
             split.setStretchFactor(0, 3)
-            split.setStretchFactor(1, 2)
-            split.setSizes([620, 420])
+            split.setStretchFactor(1, 1)
+            split.setSizes([780, 340])
             lay.addWidget(split)
         else:
             lay.addWidget(self.stack)
@@ -287,12 +320,7 @@ class VoiceTab(QWidget):
         tr = self.tr_
         w = QWidget()
         lay = QVBoxLayout(w)
-        self.big = QLabel()
-        self.big.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.big.setStyleSheet("font-size: 22px; font-weight: 700; padding: 12px;")
-        lay.addWidget(self.big)
         row = QHBoxLayout()
-        row.addStretch()
         self.on_btn = QPushButton(tr("va.on"))
         self.on_btn.setCheckable(True)
         self.on_btn.toggled.connect(self.switch)
@@ -304,12 +332,14 @@ class VoiceTab(QWidget):
         self.hush = QPushButton("⏹ " + tr("va.hush"))
         self.hush.clicked.connect(self.hush_now)
         row.addWidget(self.hush)
-        row.addStretch()
-        lay.addLayout(row)
         self.heard = QLabel()
-        self.heard.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.heard.setEnabled(False)
-        lay.addWidget(self.heard)
+        row.addWidget(self.heard, 1)
+        lay.addLayout(row)
+        from .stage import Stage
+        self.stage = Stage(tr)
+        self.stage.level_source = lambda: self._level
+        lay.addWidget(self.stage, 5)
 
         setup = QWidget()
         form = QFormLayout(setup)
@@ -321,6 +351,12 @@ class VoiceTab(QWidget):
         self.variants = QLineEdit(self.settings.get("va_variants") or "")
         self.variants.setPlaceholderText(tr("va.variants_hint"))
         wake.addWidget(self.variants, 1)
+        self.sens = QComboBox()
+        for key in SENSITIVITY:
+            self.sens.addItem(tr(f"va.sens.{key}"), key)
+        self.sens.setToolTip(tr("va.sens_tip"))
+        self.sens.setCurrentIndex(max(0, self.sens.findData(self.settings.get("va_sensitivity") or "high")))
+        wake.addWidget(self.sens)
         form.addRow(tr("va.wake"), wake)
         self.engine_row = QWidget()
         eng = QHBoxLayout(self.engine_row)
@@ -395,14 +431,15 @@ class VoiceTab(QWidget):
         more.addWidget(self.limit)
         more.addStretch()
         form.addRow(tr("va.more"), more)
-        self.setup = Section(tr("va.setup"), setup, True)
+        self.place = QLineEdit(self.settings.get("va_place") or "")
+        self.place.setPlaceholderText(tr("va.place_hint"))
+        form.addRow(tr("va.place"), self.place)
+        self.setup = Section(tr("va.setup"), setup, not self.settings.get("va_name"))
         lay.addWidget(self.setup)
-        note = QLabel("🔒 " + tr("va.privacy"))
-        note.setWordWrap(True)
-        note.setEnabled(False)
-        lay.addWidget(note)
         self.log = QTextBrowser()
-        lay.addWidget(self.log, 1)
+        self.log.setMaximumHeight(96)
+        self.log.setToolTip("🔒 " + tr("va.privacy"))
+        lay.addWidget(self.log)
         self.status = QLabel()
         self.status.setWordWrap(True)
         lay.addWidget(self.status)
@@ -612,6 +649,8 @@ class VoiceTab(QWidget):
         s = self.settings
         s.set("va_name", self.name.text().strip() or DEFAULT_NAME)
         s.set("va_variants", self.variants.text().strip())
+        s.set("va_sensitivity", self.sens.currentData() or "high")
+        s.set("va_place", self.place.text().strip())
         self.services.set_default("va_stt", self.stt.currentData() or "")
         self.services.set_default("va_tts", self.tts.currentData() or SYSTEM_VOICE)
         s.set("va_tts_model", self.tts_model.currentData() or "")
@@ -632,7 +671,8 @@ class VoiceTab(QWidget):
             self._state_since = time.time()
             if state in ("command", "followup"):
                 self.chunker = audio.Chunker(lambda s, t: self.bridge.command.emit(s), min_speech=0.4,
-                                             silence_end=1.0, max_chunk=30.0)
+                                             silence_end=1.0, max_chunk=15.0)
+                self.chunker.noise = max(0.004, min(0.05, self._noise))   # Rauschen aus dem Wartezustand
             elif state == "wake" and self.detector is not None:
                 self.detector.reset()
         self._show_state()
@@ -643,12 +683,17 @@ class VoiceTab(QWidget):
         text = {"off": "💤 " + tr("va.state.off"), "wake": "👂 " + tr("va.state.wake", name=name),
                 "command": "🎙 " + tr("va.state.command"), "thinking": "🤔 " + tr("va.state.thinking"),
                 "speaking": "🔊 " + tr("va.state.speaking"), "followup": "🎙 " + tr("va.state.followup")}
-        self.big.setText(text.get(self.state, self.state))
+        self.stage.set_state(self.state, text.get(self.state, self.state), self._caption())
         if hasattr(self, "on_btn"):
             self.on_btn.setText(tr("va.off") if self.on_btn.isChecked() else tr("va.on"))
 
     def _feed(self, samples) -> None:
         """Audio-Thread: je nach Zustand ans Weckwort oder an die Satzaufnahme."""
+        import numpy as np
+        x = np.asarray(samples, dtype="float32")
+        rms = float(np.sqrt(np.mean(x * x))) if len(x) else 0.0
+        self._level = 0.6 * self._level + 0.4 * rms
+        self._noise = 0.8 * self._noise + 0.2 * rms if rms < self._noise else self._noise * 1.01
         with self._lock:
             state, det, chunker = self.state, self.detector, self.chunker
         if state == "wake" and det is not None:
@@ -692,8 +737,10 @@ class VoiceTab(QWidget):
             self.status.setText(tr("va.need_wake"))
             return
         try:
+            sens = self.sens.currentData() or "high"
             self.detector = WakeDetector(model_dir(audio.shared_dir(), self._lang()),
-                                         wake_phrases(self.name.text(), self.variants.text()))
+                                         wake_phrases(self.name.text(), self.variants.text(), sens),
+                                         SENSITIVITY.get(sens, 0.64))
         except Exception as err:  # noqa: BLE001
             self.on_btn.setChecked(False)
             self.status.setText("⚠ " + str(err))
@@ -731,18 +778,48 @@ class VoiceTab(QWidget):
             return
         from PySide6.QtWidgets import QApplication
         QApplication.beep()
+        self.stage.show_state()
+        self.stage.set_answer("")
         self.log.append(f"<span style='color:#9ca3af'>„{html.escape(heard)}“</span>")
         self._set_state("command")
 
     def _watchdog(self) -> None:
         """Zeitlimits: kein Satz nach dem Weckwort / keine Folgefrage -> wieder auf das Weckwort warten."""
         waited = time.time() - self._state_since
+        if self.state == "thinking":
+            self._show_state()                          # Sekunden mitzählen
+            if waited > THINK_TIMEOUT:
+                self._give_up()
+            return
         if self.state == "command" and waited > COMMAND_TIMEOUT and (self.chunker is None or
                                                                      self.chunker.speech == 0):
             self._back_to_wait()
         elif self.state == "followup" and waited > FOLLOWUP_SECONDS and (self.chunker is None or
                                                                          self.chunker.speech == 0):
             self._back_to_wait()
+
+    def _caption(self) -> str:
+        if self.state != "thinking":
+            return ""
+        secs = int(time.time() - self._state_since)
+        return self.tr_("va.phase.chat" if self._phase == "chat" else "va.phase.stt", s=secs)
+
+    def _give_up(self) -> None:
+        """Erkennung oder Antwort bleibt aus (Anbieter überlastet, Netz): nicht ewig warten."""
+        name = (self.stt.currentText() if self._phase == "stt" else self.panel.bot.currentText()) or "?"
+        if self._asking:
+            self._asking = False
+            self.panel.stop()
+        self._error(self.tr_("va.timeout", name=name, s=int(THINK_TIMEOUT)))
+
+    def _live_shown(self, kind: str, data) -> None:
+        """Wetter/Nachrichten, die der Assistent gerade für Mr. Zurkon abgerufen hat, groß zeigen."""
+        if not (self._asking or getattr(self.panel, "_running", False)):    # nur eigene Fragen, nicht die anderer Tools
+            return
+        if kind == "weather" and not data.get("error"):
+            self.stage.show_weather(data)
+        elif kind == "news" and data.get("items"):
+            self.stage.show_news(data)
 
     def _back_to_wait(self) -> None:
         if self.on_btn.isChecked() and self.detector is not None:
@@ -755,6 +832,7 @@ class VoiceTab(QWidget):
     def _command_audio(self, samples) -> None:
         if self.state not in ("command", "followup"):
             return
+        self._phase = "stt"
         self._set_state("thinking")
         stt = self.stt.currentData() or OFFLINE
         model = self.stt_model.currentData() or ""
@@ -794,9 +872,14 @@ class VoiceTab(QWidget):
     def system_hint(self) -> str:
         if not self._asking:
             return ""
-        return ("The user is talking to you by voice and your answer will be read aloud. Answer briefly in plain "
+        hint = ("The user is talking to you by voice and your answer will be read aloud. Answer briefly in plain "
                 "spoken sentences, without Markdown, tables, lists or code unless the user asks for them. If details "
-                "are needed, give the short answer and say that the details are in the chat.")
+                "are needed, give the short answer and say that the details are in the chat. Weather and news "
+                "results are also shown graphically on the user's screen.")
+        place = self.settings.get("va_place") or ""
+        if place:
+            hint += f" The user's home location is {place}; use it for weather questions without a place."
+        return hint
 
     def ask(self, text: str) -> None:
         panel = self.panel
@@ -804,6 +887,8 @@ class VoiceTab(QWidget):
             self._error(self.tr_("va.busy"))
             return
         self._asking = True
+        self._phase = "chat"
+        self._state_since = time.time()
         panel.ask(text, new=self._first_turn)
         self._first_turn = False
         if not panel._running:              # kein Assistent verbunden o. Ä.
@@ -822,6 +907,7 @@ class VoiceTab(QWidget):
                          and m.get("content")), "")
         if not text:
             text = self.tr_("va.failed")
+        self.stage.set_answer(speakable(text, 420, self.tr_("va.code")))
         self.log.append(f"<b>{self.tr_('va.bot')}:</b> {html.escape(speakable(text, 2000, self.tr_('va.code')))}")
         self.speak(speakable(text, self.limit.value(), self.tr_("va.code")))
 
@@ -934,4 +1020,6 @@ class VoiceTab(QWidget):
             self._back_to_wait()
 
     def shutdown(self) -> None:
+        from omniwrench.ai import live_info
+        live_info.remove_listener(self._live_listener)
         self.off()

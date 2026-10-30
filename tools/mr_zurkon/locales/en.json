@@ -77,5 +77,20 @@
   "install.opt_piper": "Piper: natural voices offline (about 80 MB)",
   "install.loading_vosk": "Loading speech model for the wake word …",
   "install.loading_whisper": "Loading Whisper model {model} …",
-  "install.loading_piper": "Loading Piper voice {voice} …"
+  "install.loading_piper": "Loading Piper voice {voice} …",
+  "va.w.feels": "feels like {value} °",
+  "va.w.wind": "wind {value} km/h",
+  "va.w.humidity": "humidity {value} %",
+  "va.w.today": "Today",
+  "va.n.live": "LIVE",
+  "va.n.headlines": "Headlines",
+  "va.sens.normal": "Normal",
+  "va.sens.high": "Sensitive",
+  "va.sens.max": "Very sensitive",
+  "va.sens_tip": "How easily the wake word is detected. \"Very sensitive\" also reacts to the name alone but triggers by accident more often.",
+  "va.place": "Home place:",
+  "va.place_hint": "e.g. Munich (for weather questions without a place)",
+  "va.phase.stt": "Recognising speech … {s} s",
+  "va.phase.chat": "Preparing the answer … {s} s",
+  "va.timeout": "{name} got no answer within {s} s and gave up. Please try again or choose another assistant."
 }

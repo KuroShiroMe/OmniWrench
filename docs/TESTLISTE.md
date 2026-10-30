@@ -435,6 +435,28 @@ Wichtig: **zuerst Clank auf 1.1.0 aktualisieren, bevor Clank geöffnet wird** (s
       GB), Fenster schließen -> Modell in der Liste der Verbindung; Chat antwortet. **Löschen** entfernt das Modell.
 - [ ] Ollama läuft schon: Fenster zeigt Version, kein Installieren-Knopf.
 
+### 12g. Mr. Zurkon: Weckwort, Antwortzeit, Wetter/Nachrichten; Ollama-Auswahl (Stef 2026-10-30)
+- [ ] Mr. Zurkon öffnen: oben Knöpfe, darunter **große Anzeige** (leuchtende Kugel), Einstellungen eingeklappt
+      (wenn schon eingerichtet), Verlauf klein unten.
+- [ ] Einstellungen: **Empfindlichkeit** „Empfindlich“ vorgewählt. „Hey Zurkon“ in **normaler Lautstärke** aus
+      ~1 m Abstand -> erkannt. Kugel pulsiert beim Sprechen. Zuletzt Gehörtes steht neben den Knöpfen.
+- [ ] Empfindlichkeit „Sehr empfindlich“: nur „Zurkon“ sagen -> reagiert.
+- [ ] Frage mit **Offline-STT** (Whisper lokal) und mit **Gemini**: Zähler „Sprache wird erkannt … s“ / „Antwort wird
+      erstellt … s“ läuft; Antwort deutlich schneller als bisher. Bei Lärm im Hintergrund (Radio leise an) endet die
+      Aufnahme trotzdem nach dem Satz (spätestens 15 s).
+- [ ] Bleibt eine Antwort aus (z. B. Netzwerk trennen): nach 60 s Meldung „… hat nach 60 s keine Antwort …“,
+      Mr. Zurkon wartet wieder auf das Weckwort.
+- [ ] **Heimatort** eintragen (z. B. eigene Stadt). „Hey Zurkon, wie wird das Wetter morgen?“ -> Wetteranzeige mit
+      Ort, Temperatur, Animation passend zum Wetter, Tageskarten mit deutschen Tagesnamen; Antwort vorgelesen.
+- [ ] „Wie ist das Wetter in Hamburg?“ -> Hamburg statt Heimatort.
+- [ ] „Was gibt es Neues?“ / „Nachrichten zu Microsoft“ -> Schlagzeilen mit rotem Laufband; Klick auf Meldung öffnet
+      Browser; **✕** zurück zur Kugel.
+- [ ] Chatleiste (nicht Mr. Zurkon): „Wie ist das Wetter in Berlin?“ -> Antwort mit Wetter, Mr. Zurkon-Anzeige
+      ändert sich **nicht**.
+- [ ] Ollama einrichten: Modellauswahl mit ~40 Einträgen, ★ Empfehlungen oben, ✔ bei geladenen Modellen, ⚠ bei
+      Modellen größer als der Arbeitsspeicher (Tooltip). Link „Alle Modelle auf ollama.com …“ öffnet den Browser.
+      Eigenen Namen eintippen (z. B. `smollm2:360m`) -> **Modell laden** lädt genau diesen.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).

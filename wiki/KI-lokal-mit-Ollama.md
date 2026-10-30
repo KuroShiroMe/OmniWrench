@@ -53,7 +53,25 @@ antworten schnell, große können Funktionen und lange Texte besser.
 | `gpt-oss:20b` | 14 GB | stark, braucht 16 GB |
 | `mistral-small3.2` | 15 GB | stark, aus der EU |
 
-Für die eingebauten Funktionen (DHCP, DNS, Arbeitsbereich …) ein Modell mit Funktionsaufrufen wählen
+Das sind die fünf Empfehlungen (★). Die Auswahl im Einrichtungsfenster enthält rund 40 Modelle, nach Größe sortiert
+und nach Zweck beschriftet:
+
+| Zweck | Beispiele |
+|---|---|
+| winzig (unter 2 GB) | `qwen3:0.6b`, `gemma3:1b`, `llama3.2:1b`, `qwen3:1.7b` |
+| klein | `qwen3:4b`, `phi4-mini`, `granite3.3:2b` |
+| Allround | `llama3.1:8b`, `granite3.3:8b`, `mistral-nemo`, `phi4`, `qwen3:14b`, `olmo2:13b` |
+| viele Sprachen / Übersetzen | `aya-expanse:8b` |
+| versteht Bilder | `gemma3:4b`, `granite3.2-vision`, `minicpm-v`, `qwen2.5vl:7b`, `llama3.2-vision`, `gemma3:27b` |
+| denkt Schritt für Schritt | `deepseek-r1:8b`/`14b`/`32b`, `magistral` (EU) |
+| Programmieren | `qwen2.5-coder:7b`/`14b`, `deepseek-coder-v2:16b`, `devstral` (EU), `qwen3-coder:30b` |
+| stark (16–24 GB) | `qwen3:30b`, `qwen3:32b` |
+| Profi-Hardware (48 GB+) | `llama3.3`, `gpt-oss:120b`, `qwen3:235b` |
+
+✔ markiert bereits geladene Modelle, ⚠ Modelle, die größer als der Arbeitsspeicher des PCs sind. Jeder andere Name
+aus dem Katalog lässt sich eintippen; der Link **Alle Modelle auf ollama.com …** öffnet den Katalog.
+
+Für die eingebauten Funktionen (DHCP, DNS, Arbeitsbereich, Wetter …) ein Modell mit Funktionsaufrufen wählen
 (z. B. `qwen3`, `gpt-oss`, `mistral-small3.2`).
 
 ## Ollama auf einem anderen Rechner

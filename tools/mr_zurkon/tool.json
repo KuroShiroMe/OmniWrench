@@ -3,7 +3,7 @@
   "name": "Mr. Zurkon – Voice assistant",
   "version": "1.0.0",
   "description": "Talk to your assistant: offline wake word, speech recognition and answers read aloud.",
-  "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Audio goes to the current default output device.",
+  "long_description": "Listens offline for a wake word (\"Hey Zurkon\", Vosk), records the question and reads the answer aloud – with a system voice, Piper (offline, natural voices) or the voice of a connected provider. Speech recognition by a provider or offline with Whisper local or Vosk. Language and voice can be chosen freely. The conversation runs in an embedded chat with the same assistants, functions and confirmations as the chat panel. Weather (Open-Meteo) and news (Google News) work without an account and appear as a large animated display. Audio goes to the current default output device.",
   "author": "KuroShiro",
   "homepage": "https://github.com/KuroShiroMe/OmniWrench/wiki/Tool-Mr-Zurkon",
   "category": "ai",
@@ -24,7 +24,16 @@
     "Piper",
     "Whisper"
   ],
-  "screenshots": [],
+  "screenshots": [
+    {
+      "file": "screenshots/weather.png",
+      "caption": "Ask for the weather: animated forecast for your place"
+    },
+    {
+      "file": "screenshots/news.png",
+      "caption": "Ask for the news: headlines with live ticker"
+    }
+  ],
   "single_instance": true,
   "requirements": {}
 }

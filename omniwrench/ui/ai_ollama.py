@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import os
 
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
     QAbstractItemView, QComboBox, QDialog, QDialogButtonBox, QHBoxLayout, QHeaderView, QLabel, QLineEdit,
@@ -58,8 +59,9 @@ class OllamaDialog(QDialog):
         prow = QHBoxLayout()
         self.pick = QComboBox()
         self.pick.setEditable(True)
-        for name, gb, key in ollama.RECOMMENDED:
-            self.pick.addItem(f"{name} · ~{gb:g} GB · {tr(f'ai.ollama.rec.{key}')}", name)
+        self.pick.setMaxVisibleItems(20)
+        self.ram = ollama.total_ram_gb()
+        self._fill_pick(set())
         self.pick.lineEdit().setPlaceholderText(tr("ai.ollama.other"))
         prow.addWidget(self.pick, 1)
         self.pull_btn = make_button("⬇ " + tr("ai.ollama.pull"), on_click=self.pull)
@@ -68,6 +70,9 @@ class OllamaDialog(QDialog):
         prow.addWidget(self.del_btn)
         lay.addLayout(prow)
         lay.addWidget(label(tr("ai.ollama.hint"), "Muted", wrap=True))
+        lib = QLabel(f'<a href="{ollama.LIBRARY_URL}">{tr("ai.ollama.library")}</a>')
+        lib.setOpenExternalLinks(True)
+        lay.addWidget(lib)
         self.status = QLabel()
         self.status.setWordWrap(True)
         lay.addWidget(self.status)
@@ -102,11 +107,35 @@ class OllamaDialog(QDialog):
         except (OSError, ValueError) as err:
             self.status.setText("⚠ " + str(err))
             return
+        self._fill_pick({m["name"] for m in found})
         for m in found:
             r = self.table.rowCount()
             self.table.insertRow(r)
             self.table.setItem(r, 0, QTableWidgetItem(m["name"]))
             self.table.setItem(r, 1, QTableWidgetItem(f"{m['size'] / 1e9:.1f} GB"))
+
+    def _fill_pick(self, installed: set[str]) -> None:
+        """Empfehlungen (★) zuerst, dann nach Größe; ✔ = schon geladen, ⚠ = größer als der Arbeitsspeicher."""
+        typed = self.pick.currentText()
+        keep = typed if typed and typed != self.pick.itemText(self.pick.currentIndex()) else ""
+        self.pick.blockSignals(True)
+        self.pick.clear()
+        rows = list(ollama.RECOMMENDED[:ollama.TOP]) + sorted(ollama.RECOMMENDED[ollama.TOP:], key=lambda m: m[1])
+        for i, (name, gb, key) in enumerate(rows):
+            if i == ollama.TOP:
+                self.pick.insertSeparator(self.pick.count())
+            mark = "★ " if i < ollama.TOP else ""
+            if name in installed or f"{name}:latest" in installed:
+                mark = "✔ " + mark
+            text = f"{mark}{name} · ~{gb:g} GB · {tr(f'ai.ollama.rec.{key}')}"
+            self.pick.addItem(text, name)
+            if self.ram and gb > self.ram * 0.85:
+                self.pick.setItemData(self.pick.count() - 1, tr("ai.ollama.too_big", ram=round(self.ram)),
+                                      Qt.ItemDataRole.ToolTipRole)
+                self.pick.setItemText(self.pick.count() - 1, "⚠ " + text)
+        if keep:
+            self.pick.setEditText(keep)
+        self.pick.blockSignals(False)
 
     def models(self) -> list[str]:
         return [self.table.item(r, 0).text() for r in range(self.table.rowCount())]
@@ -138,7 +167,7 @@ class OllamaDialog(QDialog):
         data = self.pick.currentData()
         if data and self.pick.itemText(self.pick.currentIndex()) == text:
             return data
-        return text.split(" ")[0]
+        return text.lstrip("⚠✔★ ").split(" ")[0]
 
     def pull(self) -> None:
         name = self._chosen()

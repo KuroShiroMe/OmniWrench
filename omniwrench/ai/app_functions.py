@@ -110,3 +110,5 @@ def register_app_functions(window) -> None:
                  confirm=True, summary=lambda a: tr("ai.fn.install_tool", tool=a.get("tool_id", ""))),
     ):
         register(fn)
+    from . import live_info
+    live_info.register_functions()
