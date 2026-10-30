@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import http.server
 import json
+import os
 import sys
 import threading
 from pathlib import Path
@@ -345,6 +346,9 @@ def test_comfy(settings, vault, shots) -> None:
         dlg.resize(720, 560)
         dlg.grab().save(str(shots / "comfyui.png"))
     check(dlg.url() == base, "Dialog: Adresse für die Verbindung")
+    from PySide6.QtCore import QThreadPool
+    QThreadPool.globalInstance().waitForDone(10000)
+    dlg.close()
 
 
 def main() -> int:
@@ -418,7 +422,13 @@ def main() -> int:
     check(dlg.bar.maximum() == 100 and dlg.bar.value() == 60, "Balken folgt den Prozenten")
     check(dlg.log.toPlainText().count("%") == 1, f"Prozentzeile ersetzt {dlg.log.toPlainText()!r}")
     print(f"OK: {OK} Prüfungen")
-    return 0
+    # PySide räumt beim Beenden alle Wrapper ab und stürzt dabei gelegentlich in ~QObject ab (nur im Test, nach
+    # allen Prüfungen) – deshalb hier ohne Qt-Aufräumen beenden.
+    from PySide6.QtCore import QThreadPool
+    QThreadPool.globalInstance().waitForDone(10000)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
 
 
 if __name__ == "__main__":

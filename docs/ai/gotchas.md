@@ -239,3 +239,5 @@
   (test_speech does). Fuzzy wake match: without a length guard "zurkon" alone matches "hey zurkon" at ratio 0.8.
 - ComfyUI Desktop listens on 8000, manual/portable ComfyUI on 8188 (find_server tries both). LTX-Video needs 8n+1
   frames and width/height divisible by 32. huggingface.co is blocked in the cloud sandbox: test downloads via fake server.
+- test_ai_tools: PySide's exit cleanup (destroyQCoreApplication -> ~QObject) segfaults sporadically after all checks
+  (seen with and without ComfyUI part). Test ends with os._exit(0) after waitForDone. Watch for exit crashes in the app.
