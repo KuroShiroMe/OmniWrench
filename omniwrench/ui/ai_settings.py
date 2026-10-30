@@ -494,6 +494,8 @@ class ConnectionDialog(QDialog):
         form.addRow(self.model_label, mrow)
         if p is not None and p.id == "ollama":
             form.addRow("", make_button("🦙 " + tr("ai.ollama.button"), on_click=self._ollama))
+        if p is not None and p.id == "comfyui":
+            form.addRow("", make_button("🎨 " + tr("ai.comfy.button"), on_click=self._comfyui))
 
         # Inhalte für Erwachsene: nur bei Anbietern, die das können; Opt-in mit Rückfrage
         self.nsfw = QCheckBox(tr("ai.nsfw.allow"))
@@ -696,8 +698,24 @@ class ConnectionDialog(QDialog):
             self.model.addItems(names)
             self.model.setCurrentText(keep if keep in names else names[0])
 
+    def _comfyui(self) -> None:
+        """ComfyUI installieren, starten, Modelle laden; übernimmt die gefundene Adresse (Desktop: Port 8000)."""
+        from .ai_comfyui import ComfyDialog
+        dlg = ComfyDialog(self.base_url.text().strip(), self.store.settings, self)
+        dlg.exec()
+        if dlg.server:
+            self.base_url.setText(dlg.server)
+
     def _test(self) -> None:
         self.test_status.setText(tr("ai.edit.testing"))
+        if self.p is not None and self.p.id == "comfyui":
+            from omniwrench.ai import comfyui
+            url = self.base_url.text().strip()
+            run_async(lambda: comfyui.version(url),
+                      lambda ver: self.test_status.setText(
+                          f"<span style='color:{theme.current['success']}'>✔ ComfyUI {ver}</span>") if ver
+                      else self._show_error(tr("ai.comfy.err.offline", detail=url)), self._show_error)
+            return
         ok = theme.current["success"]
         run_async(self._adapter_task(lambda a: a.test()),
                   lambda info: self.test_status.setText(
@@ -713,7 +731,7 @@ class ConnectionDialog(QDialog):
         if "<" in c.url:   # Platzhalter wie <ACCOUNT_ID> in der Adresse
             QMessageBox.information(self, self.windowTitle(), tr("ai.edit.fill_url"))
             return
-        if not c.model and self.p and self.p.api not in ("graph_copilot",):
+        if not c.model and self.p and self.p.can_chat and self.p.api not in ("graph_copilot",):
             QMessageBox.information(self, self.windowTitle(), tr("ai.edit.need_model"))
             return
         c.name = self.store.unique_name(c.name, c.id)

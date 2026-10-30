@@ -1,7 +1,8 @@
 # KI lokal mit Ollama
 
 > **Kurz:** So läuft KI in OmniWrench ganz auf dem eigenen Rechner – kostenlos, ohne Konto, ohne dass Daten das
-> Haus verlassen. Ollama für den Chat lässt sich direkt aus OmniWrench installieren und mit Modellen bestücken;
+> Haus verlassen. Ollama für den Chat und ComfyUI für Bilder, Musik und Video lassen sich direkt aus OmniWrench
+> installieren und mit Modellen bestücken;
 > Sprache (Whisper, Piper, Vosk) und ffmpeg richten die KI-Tools bei ihrer Installation selbst ein.
 
 ## Inhalt
@@ -9,6 +10,7 @@
 - [Ollama einrichten](#ollama-einrichten)
 - [Welches Modell?](#welches-modell)
 - [Ollama auf einem anderen Rechner](#ollama-auf-einem-anderen-rechner)
+- [Bilder, Musik und Video mit ComfyUI](#bilder-musik-und-video-mit-comfyui)
 - [Sprache offline](#sprache-offline)
 - [ffmpeg](#ffmpeg)
 - [Andere lokale Programme](#andere-lokale-programme)
@@ -23,7 +25,7 @@
 | Weckwort | Vosk | Bei der Installation von Mr. Zurkon |
 | Vorlesen | Piper oder die Systemstimme | Bei der Installation von Mr. Zurkon |
 | Musik/Video bearbeiten | ffmpeg | Bei der Installation von [Groovitron](Tool-Groovitron) / [Vidcomic](Tool-Vidcomic) |
-| Bilder, Musik, Video erzeugen | – | Nur über Anbieter; lokale Bildprogramme siehe [unten](#andere-lokale-programme) |
+| Bilder, Musik, Video erzeugen | [ComfyUI](https://www.comfy.org) | In OmniWrench: Assistent „ComfyUI“ › **🎨 ComfyUI einrichten …**, siehe [unten](#bilder-musik-und-video-mit-comfyui) |
 
 ## Ollama einrichten
 1. *Extras › Einstellungen › KI-Assistenten* › **Hinzufügen** › Anbieter **Ollama**.
@@ -80,6 +82,33 @@ Läuft Ollama auf einem Server im Netz, in der Verbindung die Adresse eintragen 
 Modelle laden und löschen; Installieren und Starten gehen nur auf dem eigenen Rechner. Auf dem Server muss Ollama
 im Netz lauschen (`OLLAMA_HOST=0.0.0.0`) – nur in vertrauenswürdigen Netzen, Ollama hat keine Anmeldung.
 
+## Bilder, Musik und Video mit ComfyUI
+ComfyUI erzeugt Bilder, Musik und Videos auf dem eigenen PC – kostenlos, ohne Konto. Gut geeignet ist eine
+NVIDIA-Grafikkarte mit mindestens 8 GB Grafikspeicher; ohne Grafikkarte geht es nur sehr langsam.
+
+1. *Extras › Einstellungen › KI-Assistenten* › **Hinzufügen** › Anbieter **ComfyUI** (ohne Anmeldung).
+2. **🎨 ComfyUI einrichten (Installation, Modelle) …** drücken.
+3. Windows ohne ComfyUI: **ComfyUI installieren** installiert *ComfyUI Desktop* über winget (ohne winget öffnet sich
+   die Download-Seite). Danach ComfyUI einmal starten und die Ersteinrichtung abschließen (Grafikkarte wählen,
+   Ordner bestätigen; ComfyUI lädt dabei Python und PyTorch, mehrere GB). Dann **Neu prüfen**.
+   Linux: der angezeigte Befehl installiert ComfyUI nach `~/ComfyUI`; **ComfyUI starten** startet es danach.
+4. Das Fenster findet ComfyUI selbst (Desktop: Port 8000, sonst 8188) und übernimmt die Adresse in die Verbindung.
+   Der **Modellordner** wird von ComfyUI erfragt; sonst `…/ComfyUI/models` wählen.
+5. Modell wählen, **Modell laden**. Abgebrochene Downloads setzen beim nächsten Mal fort. ComfyUI erkennt neue
+   Modelle ohne Neustart.
+6. Speichern. In [Pixelizer](Tool-Pixelizer), [Groovitron](Tool-Groovitron) und [Vidcomic](Tool-Vidcomic) den
+   Anbieter **ComfyUI** wählen.
+
+| Modell | Für | Größe | Grafikspeicher |
+|---|---|---|---|
+| `sdxl-turbo` | Bilder, sehr schnell (512 px) | 6,9 GB | ab 6 GB |
+| `flux-schnell` | Bilder, sehr gute Qualität (1024 px) | 17,2 GB | ab 12 GB |
+| `ltx-video` | Videos 2–10 s, 24 Bilder/s (LTX-Video 2B + T5-Textmodell) | 11,2 GB | ab 8 GB, besser 12 GB |
+| `ace-step` | Musik mit Gesang und eigenem Liedtext, bis 4 min (ACE-Step 3.5B) | 7,7 GB | ab 8 GB |
+
+Eigene Bildmodelle (Stable Diffusion 1.5/SDXL-Checkpoints im Ordner `checkpoints`) lassen sich in Pixelizer als
+Modell `ckpt:<Dateiname>` eintragen. ComfyUI muss nicht offen bleiben, aber laufen, solange erzeugt wird.
+
 ## Sprache offline
 [Kreeli](Tool-Kreeli) und [Mr. Zurkon](Tool-Mr-Zurkon) fragen bei der Installation, welche Offline-Teile sie
 gleich mit einrichten sollen (vorbelegt, abwählbar): Whisper lokal (ca. 630 MB), Vosk fürs Weckwort (ca. 60 MB),
@@ -99,7 +128,7 @@ Anbieter, Adresse eintragen):
 |---|---|---|
 | [LM Studio](https://lmstudio.ai) | Chat mit Oberfläche zum Modellwählen | Lokalen Server in LM Studio starten (Port 1234) |
 | [LocalAI](https://localai.io) | OpenAI-kompatibler Server für Chat, Bilder, Sprache | Docker: `docker run -p 8080:8080 localai/localai`; als „OpenAI-kompatibel“ verbinden |
-| [ComfyUI](https://www.comfy.org) | Bilderzeugung lokal | Wird für Bilder/Video noch nicht direkt unterstützt |
+| [ComfyUI](https://www.comfy.org) | Bilder, Musik, Video lokal | Direkt unterstützt, siehe [oben](#bilder-musik-und-video-mit-comfyui) |
 | llama.cpp, vLLM | Server für eigene Hardware | Siehe [KI-Anbieter](KI-Anbieter) |
 
 ## Fehlerbehebung

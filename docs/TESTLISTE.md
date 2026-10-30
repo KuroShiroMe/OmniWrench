@@ -457,6 +457,24 @@ Wichtig: **zuerst Clank auf 1.1.0 aktualisieren, bevor Clank geöffnet wird** (s
       Modellen größer als der Arbeitsspeicher (Tooltip). Link „Alle Modelle auf ollama.com …“ öffnet den Browser.
       Eigenen Namen eintippen (z. B. `smollm2:360m`) -> **Modell laden** lädt genau diesen.
 
+### 12h. Kostenlos lokal: ComfyUI für Bilder, Musik, Video (Stef 2026-10-30)
+Voraussetzung: NVIDIA-Grafikkarte mit 8 GB+ (sonst sehr langsam), ca. 40 GB frei für alle Modelle.
+- [ ] Einstellungen › KI-Assistenten › Hinzufügen › **ComfyUI** › **🎨 ComfyUI einrichten …**: ohne ComfyUI steht
+      „nicht installiert“ und **ComfyUI installieren**. Installieren -> winget-Fortschritt, danach Hinweis zur
+      Ersteinrichtung. ComfyUI Desktop starten, Ersteinrichtung abschließen, **Neu prüfen** -> „ComfyUI … läuft unter
+      http://127.0.0.1:8000“, Modellordner ausgefüllt.
+- [ ] Modelltabelle: 4 Modelle mit Größe und Status. `sdxl-turbo` wählen › **Modell laden** -> Rückfrage mit GB und
+      Ordner, Fortschritt in % und GB, danach ✔. Download mittendrin durch Beenden von OmniWrench abbrechen, erneut
+      laden -> setzt fort.
+- [ ] Fenster schließen, Verbindung speichern (ohne Modell möglich). **Testen** -> „✔ ComfyUI <Version>“.
+- [ ] Pixelizer › Anbieter ComfyUI, Modell `sdxl-turbo`, Format 16:9, Anzahl 2 -> 2 Bilder nach wenigen Sekunden.
+- [ ] Ohne geladenes Modell (z. B. `flux-schnell`) -> Meldung „In ComfyUI fehlt das Modell (…)“ statt Absturz.
+- [ ] Vidcomic › ComfyUI, `ltx-video`, 5 s, 16:9 -> MP4 mit 5 s (nach dem Laden von `ltx-video`).
+- [ ] Groovitron › ComfyUI, `ace-step`, Beschreibung „lofi, piano, female vocals“, eigener Liedtext, 30 s -> MP3 mit
+      Gesang; ohne Liedtext / „Nur instrumental“ -> Instrumental.
+- [ ] ComfyUI beenden, erneut erzeugen -> „ComfyUI ist nicht erreichbar …“. Abbrechen während der Erzeugung ->
+      ComfyUI bricht den Auftrag ab.
+
 ## Kein Test, nur Einstellung
 
 - [ ] GitHub › Settings › Branches: CI-Prüfungen für `main` als Pflicht markieren (Issue #24).

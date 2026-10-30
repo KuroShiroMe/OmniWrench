@@ -178,6 +178,175 @@ def test_install(manager, settings) -> None:
           str(audio.lib_dir()) in seen["env"].get("PYTHONPATH", ""), "pip ohne --upgrade, Ziel im PYTHONPATH")
 
 
+COMFY = {"posts": [], "files": {"checkpoints": [], "text_encoders": []}, "fail": False}
+PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 32
+BLOB = b"M" * 300_000
+
+
+def fake_comfy() -> str:
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def _send(self, body: bytes, ctype="application/json", code=200, extra=None):
+            self.send_response(code)
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Length", str(len(body)))
+            for k, v in (extra or {}).items():
+                self.send_header(k, v)
+            self.end_headers()
+            self.wfile.write(body)
+
+        def _json(self, data):
+            self._send(json.dumps(data).encode())
+
+        def do_GET(self):  # noqa: N802
+            path = self.path.split("?")[0]
+            if path == "/system_stats":
+                self._json({"system": {"comfyui_version": "0.4.2"}})
+            elif path == "/internal/folder_paths":
+                self._json({"checkpoints": [[COMFY["dir"] + "/checkpoints"], [".safetensors"]]})
+            elif path.startswith("/models/"):
+                self._json(COMFY["files"].get(path[8:], []))
+            elif path.startswith("/object_info/"):
+                self._json({} if path.endswith("SaveVideo") and COMFY.get("old") else {path[13:]: {}})
+            elif path.startswith("/history/"):
+                pid = path[9:]
+                kind = COMFY["kind"]
+                if COMFY["fail"]:
+                    self._json({pid: {"status": {"status_str": "error", "completed": False, "messages": [
+                        ["execution_error", {"exception_message": "CUDA out of memory"}]]}, "outputs": {}}})
+                    return
+                item = {"image": {"images": [{"filename": "a.png", "subfolder": "OmniWrench", "type": "output"},
+                                             {"filename": "p.png", "subfolder": "", "type": "temp"}]},
+                        "music": {"audio": [{"filename": "m.mp3", "subfolder": "", "type": "output"}]},
+                        "video": {"images": [{"filename": "v.mp4", "subfolder": "", "type": "output"}],
+                                  "animated": [True]}}[kind]
+                self._json({pid: {"status": {"status_str": "success", "completed": True}, "outputs": {"9": item}}})
+            elif path == "/view":
+                name = self.path.split("filename=")[1].split("&")[0]
+                self._send(PNG if name.endswith(".png") else b"ID3" + b"0" * 20 if name.endswith(".mp3")
+                           else b"\x00\x00\x00\x18ftypmp42", "application/octet-stream")
+            elif path.startswith("/files/"):
+                rng = self.headers.get("Range")
+                if rng:
+                    start = int(rng.split("=")[1].split("-")[0])
+                    self._send(BLOB[start:], "application/octet-stream", 206)
+                else:
+                    self._send(BLOB, "application/octet-stream")
+            else:
+                self._send(b"{}", code=404)
+
+        def do_POST(self):  # noqa: N802
+            body = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            COMFY["posts"].append((self.path, body))
+            self._json({"prompt_id": "p1", "number": 1} if self.path == "/prompt" else {})
+
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return f"http://127.0.0.1:{srv.server_port}"
+
+
+def test_comfy(settings, vault, shots) -> None:
+    import tempfile
+
+    from omniwrench.ai import chat, comfyui, media
+    from omniwrench.ai.connections import Connection, ConnectionStore
+    from omniwrench.ai.http import AIError
+    base = fake_comfy()
+    models_dir = tempfile.mkdtemp(prefix="comfy_models_")
+    COMFY["dir"] = models_dir
+    for preset in comfyui.PRESETS.values():                 # Downloads vom Test-Server
+        preset["files"] = [(f, n, base + "/files/" + n, gb) for f, n, _, gb in preset["files"]]
+    check(comfyui.version(base) == "0.4.2" and comfyui.find_server(base) == base, "ComfyUI erkannt")
+    check(comfyui.version("http://127.0.0.1:9") == "", "ComfyUI aus")
+    check(comfyui.guess_models_dir(base) == models_dir, "Modellordner von ComfyUI gemeldet")
+    check(comfyui.models_for("image") == ["sdxl-turbo", "flux-schnell"] and comfyui.models_for("music") == ["ace-step"],
+          "Modelle je Art")
+    check(comfyui.video_frames(5) == 121 and (comfyui.video_frames(3) - 1) % 8 == 0, "LTX-Bilderzahl 8n+1")
+    store = ConnectionStore(settings, vault)
+    conn = Connection(id="comfy", name="ComfyUI", provider="comfyui", base_url=base)
+    store.save(conn)
+    check(all(media.supports(conn, k) for k in ("image", "music", "video")), "ComfyUI für Bild, Musik, Video")
+    check(conn.id not in [c.id for c in store.chat_connections()], "kein Chat-Assistent")
+    COMFY["kind"] = "image"
+    try:
+        media.generate(store, conn, "image", media.Request("Ein Serverraum", "sdxl-turbo", "16:9", 2))
+        check(False, "fehlendes Modell gemeldet")
+    except AIError as err:
+        check(err.code == "comfy_missing" and "sd_xl_turbo" in str(err), "fehlendes Modell gemeldet")
+        check("ComfyUI" in chat.error_text(err) and "sd_xl_turbo" in chat.error_text(err), "verständliche Meldung")
+    lines = []
+    comfyui.download("sdxl-turbo", models_dir, progress=lines.append)
+    target = Path(models_dir) / "checkpoints" / "sd_xl_turbo_1.0_fp16.safetensors"
+    check(target.read_bytes() == BLOB and any("100 %" in t for t in lines), "Modell geladen mit Fortschritt")
+    part = Path(models_dir) / "text_encoders" / "t5xxl_fp8_e4m3fn.safetensors.part"
+    part.parent.mkdir(parents=True, exist_ok=True)
+    part.write_bytes(BLOB[:1000])
+    comfyui.download("ltx-video", models_dir)
+    check((Path(models_dir) / "text_encoders" / "t5xxl_fp8_e4m3fn.safetensors").read_bytes() == BLOB,
+          "abgebrochener Download fortgesetzt")
+    COMFY["files"]["checkpoints"] = sorted(p.name for p in (Path(models_dir) / "checkpoints").iterdir())
+    COMFY["files"]["text_encoders"] = ["t5xxl_fp8_e4m3fn.safetensors"]
+    check(comfyui.missing_files("sdxl-turbo", base) == [] and comfyui.missing_files("ace-step", base),
+          "vorhandene Modelle über ComfyUI geprüft")
+    items = media.generate(store, conn, "image", media.Request("Ein Serverraum", "sdxl-turbo", "16:9", 2))
+    wf = COMFY["posts"][-1][1]["prompt"]
+    check(len(items) == 1 and items[0].mime == "image/png", "Bild von ComfyUI (ohne Vorschaubild)")
+    check(wf["4"]["inputs"]["width"] == 768 and wf["4"]["inputs"]["batch_size"] == 2
+          and wf["1"]["inputs"]["ckpt_name"] == "sd_xl_turbo_1.0_fp16.safetensors", "Bild-Workflow")
+    COMFY["kind"] = "video"
+    items = media.generate(store, conn, "video", media.Request("Drohnenflug", "ltx-video", "9:16", duration=4))
+    wf = COMFY["posts"][-1][1]["prompt"]
+    check(items[0].mime == "video/mp4" and wf["6"]["inputs"]["width"] == 480
+          and wf["6"]["inputs"]["length"] == 97 and wf["2"]["inputs"]["type"] == "ltxv", "Video-Workflow")
+    COMFY["kind"] = "music"
+    try:
+        media.generate(store, conn, "music", media.Request("lofi", "ace-step"))
+        check(False, "Musikmodell fehlt")
+    except AIError as err:
+        check(err.code == "comfy_missing", "Musikmodell fehlt")
+    COMFY["files"]["checkpoints"].append("ace_step_v1_3.5b.safetensors")
+    items = media.generate(store, conn, "music", media.Request("lofi, piano", "ace-step", duration=30,
+                                                                lyrics="[verse]\nHallo"))
+    wf = COMFY["posts"][-1][1]["prompt"]
+    check(items[0].mime == "audio/mpeg" and items[0].meta.get("lyrics") and wf["7"]["inputs"]["seconds"] == 30
+          and wf["5"]["inputs"]["lyrics"].startswith("[verse]"), "Musik-Workflow mit Liedtext")
+    COMFY["fail"] = True
+    try:
+        media.generate(store, conn, "music", media.Request("lofi", "ace-step"))
+        check(False, "Fehler von ComfyUI")
+    except AIError as err:
+        check(err.code == "comfy_failed" and "out of memory" in chat.error_text(err), "Fehler von ComfyUI")
+    COMFY["fail"] = False
+    COMFY["old"] = True
+    try:
+        media.generate(store, conn, "video", media.Request("x", "ltx-video"))
+        check(False, "zu altes ComfyUI")
+    except AIError as err:
+        check(err.code == "comfy_old" and "SaveVideo" in str(err), "zu altes ComfyUI")
+    COMFY["old"] = False
+    try:
+        media.generate(store, Connection(id="c2", name="aus", provider="comfyui", base_url="http://127.0.0.1:9"),
+                       "image", media.Request("x", "sdxl-turbo"))
+        check(False, "ComfyUI aus gemeldet")
+    except AIError as err:
+        check(err.code == "comfy_offline", "ComfyUI aus gemeldet")
+    # Dialog
+    from omniwrench.ui.ai_comfyui import ComfyDialog
+    dlg = ComfyDialog(base, settings)
+    check("0.4.2" in dlg.state.text() and dlg.folder.text() == models_dir, "Dialog: läuft, Modellordner erkannt")
+    check(dlg.table.rowCount() == 4 and dlg.table.item(0, 2).text() == "✔", "Dialog: Modelle mit Status")
+    check(settings.get("ai_comfy_models") == models_dir, "Modellordner gemerkt")
+    dlg.table.selectRow(1)
+    dlg.download()
+    check((Path(models_dir) / "checkpoints" / "flux1-schnell-fp8.safetensors").exists(), "Dialog: Modell geladen")
+    if shots:
+        dlg.resize(720, 560)
+        dlg.grab().save(str(shots / "comfyui.png"))
+    check(dlg.url() == base, "Dialog: Adresse für die Verbindung")
+
+
 def main() -> int:
     shots = None
     if "--shots" in sys.argv:
@@ -238,6 +407,7 @@ def main() -> int:
     for tid in ids.values():
         aikit.close_tool(win, tid, rs.pump)
     check(not win.open_tools or all(o.tool_id not in ids.values() for o in win.open_tools.values()), "alle geschlossen")
+    test_comfy(settings, vault, shots)
 
     # Installationsfenster: „NN %“ stellt den Balken und ersetzt die vorige Zeile
     from omniwrench.ui.widgets import TaskDialog

@@ -4,7 +4,7 @@
 > welche Modelle es gibt. Die Liste kommt aus dem Anbieterkatalog und wird über den Store aktualisiert.
 > Einrichten: [KI-Assistenten](KI-Assistenten#assistenten-verbinden).
 
-**Gilt für:** Hauptprogramm ab Version 0.9.0 · **Stand des Katalogs:** 2026-10-29 · **112 Einträge**
+**Gilt für:** Hauptprogramm ab Version 0.9.0 · **Stand des Katalogs:** 2026-10-30 · **112 Einträge**
 
 ## Inhalt
 - [Welcher Anbieter passt?](#welcher-anbieter-passt)
@@ -944,13 +944,13 @@ KoboldCpp: lokaler Server, beliebt für kreatives Schreiben.
 
 ### ComfyUI
 
-ComfyUI: lokale Bild- und Videoerzeugung mit Knoten-Workflows.
+ComfyUI: lokale Bild-, Musik- und Videoerzeugung mit Knoten-Workflows.
 
-**Stärken:** Volle Kontrolle über Stable Diffusion, FLUX und Videomodelle, kostenlos.
+**Stärken:** Kostenlos auf dem eigenen PC: SDXL Turbo und FLUX (Bilder), ACE-Step (Musik), LTX-Video (Video); in OmniWrench mit Einrichtungsdialog.
 
 - **Hersteller:** Comfy (eigener Rechner/Server)
 - **Anmeldung:** Ohne Anmeldung
-- **Kann:** Bild, Video
+- **Kann:** Bild, Musik, Video
 - **Voraussetzung:** Kostenlos. Läuft auf dem eigenen Rechner oder Server und braucht dafür genug Arbeitsspeicher bzw. eine Grafikkarte.
 - **🔞 NSFW-fähig** (je nach Modell, Schalter im Assistenten)
 - [Dokumentation](https://docs.comfy.org)

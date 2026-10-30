@@ -37,7 +37,8 @@
 ## Installation und Voraussetzungen
 Installation über den [Store](Store-und-Tools), ohne zusätzliche Pakete. Gebraucht wird ein verbundener Anbieter,
 der Bilder erzeugen kann: OpenAI, Google Gemini, xAI, Black Forest Labs, fal.ai, Replicate, Stability AI,
-Ideogram, Recraft oder MiniMax (siehe [KI-Anbieter](KI-Anbieter)).
+Ideogram, Recraft oder MiniMax (siehe [KI-Anbieter](KI-Anbieter)). **Kostenlos und lokal:** ComfyUI mit SDXL Turbo
+oder FLUX schnell, siehe [KI lokal](KI-lokal-mit-Ollama#bilder-musik-und-video-mit-comfyui).
 
 ## Erste Schritte
 1. Pixelizer öffnen. Vorbelegt ist der Standard-Assistent für Bilder (*Einstellungen › KI-Funktionen*).
@@ -76,7 +77,7 @@ Keine eigenen Einstellungen. Der Standard-Anbieter steht in *Einstellungen › K
 
 ## Grenzen und bekannte Einschränkungen
 - Format, Anzahl und Vorlagebild hängen vom Anbieter ab; nicht unterstützte Felder sind ausgegraut.
-- Bilderzeugung ist bei den meisten Anbietern kostenpflichtig.
+- Bilderzeugung ist bei den meisten Anbietern kostenpflichtig; lokal mit ComfyUI kostenlos.
 
 ## Fehlerbehebung
 

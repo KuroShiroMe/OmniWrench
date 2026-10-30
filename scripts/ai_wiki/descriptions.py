@@ -43,7 +43,7 @@ D = {
 "jan": ("Jan: Open-Source-Desktop-Programm für lokale Modelle.", "Kostenlos, offline, einfache Oberfläche."),
 "gpt4all": ("GPT4All von Nomic: lokale Modelle auf normalen PCs.", "Läuft auf schwacher Hardware, auch mit eigenen Dokumenten."),
 "koboldcpp": ("KoboldCpp: lokaler Server, beliebt für kreatives Schreiben.", "Ein Programm ohne Installation, ungefiltert je nach Modell."),
-"comfyui": ("ComfyUI: lokale Bild- und Videoerzeugung mit Knoten-Workflows.", "Volle Kontrolle über Stable Diffusion, FLUX und Videomodelle, kostenlos."),
+"comfyui": ("ComfyUI: lokale Bild-, Musik- und Videoerzeugung mit Knoten-Workflows.", "Kostenlos auf dem eigenen PC: SDXL Turbo und FLUX (Bilder), ACE-Step (Musik), LTX-Video (Video); in OmniWrench mit Einrichtungsdialog."),
 "bfl": ("Black Forest Labs (Freiburg) mit den FLUX-Bildmodellen.", "Sehr gute Bildqualität und Textdarstellung, Anbieter aus Deutschland."),
 "recraft": ("Recraft: Bilder, Illustrationen und Vektorgrafiken.", "Einheitliche Stile, Vektorgrafiken (SVG), Logos und Symbole."),
 "stability": ("Stability AI: Stable Diffusion und Stable Audio.", "Bilder und kurze Musikstücke, viele Stilvarianten."),

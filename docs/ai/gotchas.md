@@ -237,3 +237,5 @@
   in Error state). Use availableLocales() + setLocale() + availableVoices(). Smoke test has faulthandler for such crashes.
 - Cloud sandbox proxy blocks open-meteo.com and news.google.com (403): test ai/live_info only with a mocked `_get`
   (test_speech does). Fuzzy wake match: without a length guard "zurkon" alone matches "hey zurkon" at ratio 0.8.
+- ComfyUI Desktop listens on 8000, manual/portable ComfyUI on 8188 (find_server tries both). LTX-Video needs 8n+1
+  frames and width/height divisible by 32. huggingface.co is blocked in the cloud sandbox: test downloads via fake server.

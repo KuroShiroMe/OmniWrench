@@ -611,3 +611,9 @@ Stef gab DhcpScopeManager.ps1 v2.3.1 (WinForms) und wollte das komplette Konzept
   news ticker); log small at bottom, settings collapsible, home place. Ollama: ~40 models (★ top 5, ✔ installed,
   ⚠ > RAM, ollama.com link). Store screenshots weather/news. Wiki Tool-Mr-Zurkon, KI-Assistenten, KI-lokal-mit-Ollama;
   TESTLISTE 12g. Provider overview images/music/video for Stef (docs/ai-medien-anbieter.md in project files).
+- 2026-10-30 (Stef: wants free methods only for testing): ComfyUI integration for images/music/video. New app module
+  ai/comfyui.py (presets sdxl-turbo, flux-schnell, ltx-video, ace-step; API-format workflows; /prompt, /history, /view;
+  find server 8188/8000; /internal/folder_paths; resumable HF downloads; winget Comfy.ComfyUI-Desktop; Linux git
+  command), media.py api "comfyui" for all kinds, ui/ai_comfyui.py dialog (button in comfyui connection editor, test
+  = /system_stats), media-only connections save without model, error texts ai.comfy.err.* (23 locales).
+  test_ai_tools 71 (fake ComfyUI). Wiki KI-lokal-mit-Ollama + Pixelizer/Groovitron/Vidcomic; TESTLISTE 12h.

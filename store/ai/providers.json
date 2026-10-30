@@ -1,6 +1,6 @@
 {
  "format": 1,
- "updated": "2026-10-29T18:00",
+ "updated": "2026-10-30T10:00",
  "categories": [
   "recommended",
   "chat",
@@ -1367,6 +1367,7 @@
    "categories": [
     "local",
     "image",
+    "music",
     "video"
    ],
    "api": "media_only",
@@ -1376,6 +1377,7 @@
    ],
    "capabilities": [
     "image",
+    "music",
     "video"
    ],
    "models": [],
@@ -1386,17 +1388,25 @@
     "image": {
      "api": "comfyui",
      "models": [
-      "workflow"
+      "sdxl-turbo",
+      "flux-schnell"
+     ]
+    },
+    "music": {
+     "api": "comfyui",
+     "models": [
+      "ace-step"
      ]
     },
     "video": {
      "api": "comfyui",
      "models": [
-      "workflow"
+      "ltx-video"
      ]
     }
    },
-   "nsfw": true
+   "nsfw": true,
+   "recommended": true
   },
   {
    "id": "bfl",

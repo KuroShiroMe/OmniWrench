@@ -14,6 +14,7 @@ Unterstützte Bild-Schnittstellen:
     stability_image Stability AI stable-image/generate/<modell> (Multipart, Antwort = Bild)
     ideogram        Ideogram 3.0 generate (Multipart)
     minimax_image   MiniMax image_generation (base64)
+    comfyui         lokales ComfyUI (auch Musik und Video), Workflows in ai/comfyui.py
 """
 
 from __future__ import annotations
@@ -36,9 +37,11 @@ from .http import AIError, Cancelled
 
 KINDS = ("image", "music", "video")
 IMAGE_APIS = ("openai_images", "chatgpt_image", "gemini_image", "bfl", "fal", "replicate", "stability_image",
-              "ideogram", "minimax_image")
-MUSIC_APIS = ("gemini_lyria", "elevenlabs_music", "minimax_music", "stability_audio", "mureka", "fal", "replicate")
-VIDEO_APIS = ("gemini_omni", "xai_video", "minimax_video", "runway", "luma", "seedance", "fal", "replicate")
+              "ideogram", "minimax_image", "comfyui")
+MUSIC_APIS = ("gemini_lyria", "elevenlabs_music", "minimax_music", "stability_audio", "mureka", "fal", "replicate",
+              "comfyui")
+VIDEO_APIS = ("gemini_omni", "xai_video", "minimax_video", "runway", "luma", "seedance", "fal", "replicate",
+              "comfyui")
 SUPPORTED = {"image": IMAGE_APIS, "music": MUSIC_APIS, "video": VIDEO_APIS}
 VIDEO_ASPECTS = ("16:9", "9:16", "1:1")
 RESOLUTIONS = ("720p", "1080p", "480p")
@@ -55,7 +58,8 @@ _PIXELS = {"1:1": (1024, 1024), "16:9": (1344, 768), "9:16": (768, 1344), "4:3":
 _FAL_SIZE = {"1:1": "square_hd", "16:9": "landscape_16_9", "9:16": "portrait_16_9", "4:3": "landscape_4_3",
              "3:4": "portrait_4_3"}
 _EXT = {"image/png": ".png", "image/jpeg": ".jpg", "image/webp": ".webp", "image/gif": ".gif",
-        "audio/mpeg": ".mp3", "audio/wav": ".wav", "video/mp4": ".mp4"}
+        "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/flac": ".flac", "video/mp4": ".mp4",
+        "video/webm": ".webm"}
 
 
 @dataclass
@@ -152,6 +156,13 @@ def _sniff(data: bytes) -> str:
     return "image/png"
 
 
+def _mime_for(name: str, data: bytes) -> str:
+    ext = Path(name).suffix.lower()
+    return {".mp3": "audio/mpeg", ".flac": "audio/flac", ".wav": "audio/wav", ".mp4": "video/mp4",
+            ".webm": "video/webm", ".png": "image/png", ".jpg": "image/jpeg", ".webp": "image/webp"}.get(ext) \
+        or _sniff(data)
+
+
 def _b64(item: dict) -> str:
     return base64.b64encode(item["data"]).decode("ascii")
 
@@ -230,6 +241,18 @@ class ImageGen:
         for m in out:
             m.meta.setdefault("model", req.model)
         return out
+
+    # --- ComfyUI (lokal, kostenlos) -------------------------------------------------------------------
+    def _comfy(self, kind: str, model: str, workflow: dict) -> list[Media]:
+        from . import comfyui
+        comfyui.check_ready(self.conn.url, kind, model)
+        files = comfyui.run(self.conn.url, workflow, self.stop, self.progress, POLL_TIMEOUT.get(kind, 1800))
+        return [Media(data, _mime_for(name, data)) for data, name in files]
+
+    def _comfyui(self, req: Request) -> list[Media]:
+        from . import comfyui
+        return self._comfy("image", req.model, comfyui.image_workflow(req.model, req.prompt, req.negative,
+                                                                       req.aspect, req.count))
 
     # --- OpenAI-kompatibel ---------------------------------------------------------------------------
     def _openai_images(self, req: Request) -> list[Media]:
@@ -472,6 +495,21 @@ class MediaGen(ImageGen):
         if req.lyrics and not req.instrumental:
             text += "\n\nLyrics:\n" + req.lyrics
         return text
+
+    # --- ComfyUI --------------------------------------------------------------------------------------
+    def _music_comfyui(self, req: Request) -> list[Media]:
+        from . import comfyui
+        out = self._comfy("music", req.model, comfyui.music_workflow(req.prompt, req.lyrics, req.duration or 60,
+                                                                      req.instrumental))
+        for m in out:
+            if req.lyrics and not req.instrumental:
+                m.meta["lyrics"] = req.lyrics
+        return out
+
+    def _video_comfyui(self, req: Request) -> list[Media]:
+        from . import comfyui
+        return self._comfy("video", req.model, comfyui.video_workflow(req.prompt, req.negative, req.aspect,
+                                                                      req.duration or 5))
 
     # --- Musik ---------------------------------------------------------------------------------------
     def _music_gemini_lyria(self, req: Request) -> list[Media]:

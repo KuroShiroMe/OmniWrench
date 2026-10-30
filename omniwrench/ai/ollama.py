@@ -25,7 +25,6 @@ SETUP_URL = "https://ollama.com/download/OllamaSetup.exe"
 LINUX_COMMAND = "curl -fsSL https://ollama.com/install.sh | sh"
 WINGET_ID = "Ollama.Ollama"
 NO_WINDOW = 0x08000000 if sys.platform == "win32" else 0
-# (Modell, ca. GB, Text-Schlüssel ai.ollama.rec.*) – Auswahl für den Einstieg; jedes andere Modell lässt sich eintippen
 # Auswahl im Dialog: (Name, ungefähre Größe in GB, Art -> Text ai.ollama.rec.<Art>), nach Art gruppiert.
 # Jeder andere Name aus ollama.com/library lässt sich zusätzlich eintippen.
 RECOMMENDED = (

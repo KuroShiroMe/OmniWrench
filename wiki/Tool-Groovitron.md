@@ -38,7 +38,8 @@ KI-Ordner und wird auch von [Vidcomic](Tool-Vidcomic) genutzt. Abgewählt lässt
 Unter **Linux** zeigt die Installation den Befehl für die Paketverwaltung (`sudo apt install ffmpeg`).
 
 Anbieter mit Musik: u. a. Google Gemini (Lyria), ElevenLabs, MiniMax, Stability, Mureka, fal.ai, Replicate (siehe
-[KI-Anbieter](KI-Anbieter)).
+[KI-Anbieter](KI-Anbieter)). **Kostenlos und lokal:** ComfyUI mit ACE-Step (Gesang, eigener Liedtext), siehe
+[KI lokal](KI-lokal-mit-Ollama#bilder-musik-und-video-mit-comfyui).
 
 ## Erste Schritte
 1. Groovitron öffnen. Vorbelegt ist der Standard-Assistent für Musik.

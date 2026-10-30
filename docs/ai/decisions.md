@@ -351,3 +351,6 @@
 - Audio output default = current system default device (follows changes), fixed device optional.
 - 2026-10-30: Weather/news for assistants without account: Open-Meteo + Google News RSS (app functions, LEVEL_DESCRIBE).
   Mr. Zurkon shows them only for its own questions (voice or its embedded chat), not for other tools' chats.
+- 2026-10-30: Free local media = ComfyUI (not diffusers in-process: torch on Python 3.14 + GPU setup is ComfyUI's job).
+  OmniWrench ships fixed workflows for 4 presets + "ckpt:<file>" for own SD checkpoints; downloads go straight into
+  ComfyUI's models folder. Stef tests free methods only; paid providers are for the community to test.

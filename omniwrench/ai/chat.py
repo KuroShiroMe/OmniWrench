@@ -262,6 +262,8 @@ def error_text(err: Exception) -> str:
             return tr("ai.error.removed", note=tr(f"ai.note.{err.code}") if err.code else "")
         if err.code == "missing_key":
             return tr("ai.error.missing_key")
+        if err.code.startswith("comfy_"):
+            return tr(f"ai.comfy.err.{err.code[6:]}", detail=str(err))
         if err.code == "signed_out":
             return tr("ai.error.signed_out")
         if err.code.startswith("subscription_sharing_usage"):

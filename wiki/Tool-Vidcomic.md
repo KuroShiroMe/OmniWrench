@@ -37,7 +37,8 @@ Wie bei [Groovitron](Tool-Groovitron): Unter **Windows** bietet die Installation
 Paketverwaltung im Protokoll.
 
 Anbieter mit Video: u. a. Google Gemini (Veo, Omni Flash), OpenAI (Sora), xAI, Runway, Luma, Seedance, MiniMax,
-fal.ai, Replicate (siehe [KI-Anbieter](KI-Anbieter)).
+fal.ai, Replicate (siehe [KI-Anbieter](KI-Anbieter)). **Kostenlos und lokal:** ComfyUI mit LTX-Video (2–10 s),
+siehe [KI lokal](KI-lokal-mit-Ollama#bilder-musik-und-video-mit-comfyui).
 
 ## Erste Schritte
 1. Vidcomic öffnen. Vorbelegt ist der Standard-Assistent für Video.
